@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="de.walware.rj.rSetups">
+      <setup
+            id="eu.openanalytics.phaedra.base.r.embeddedServer"
+            name="Embedded R Server">
+      </setup>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.trafficlight.statusChecker">
+      <statusChecker
+            class="eu.openanalytics.phaedra.base.r.rservi.RStatusChecker">
+      </statusChecker>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.base.r.rservi.StartupHook"
+            hookPointId="eu.openanalytics.phaedra.base.environment.loginHookPoint">
+      </hook>
+   </extension>
+
+</plugin>

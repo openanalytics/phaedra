@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: HCA Plate Model
+Bundle-SymbolicName: eu.openanalytics.phaedra.model.plate;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.model.plate.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.search;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.imaging.jp2k;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.model.plate,
+ eu.openanalytics.phaedra.model.plate.compound,
+ eu.openanalytics.phaedra.model.plate.hook,
+ eu.openanalytics.phaedra.model.plate.search,
+ eu.openanalytics.phaedra.model.plate.util,
+ eu.openanalytics.phaedra.model.plate.vo

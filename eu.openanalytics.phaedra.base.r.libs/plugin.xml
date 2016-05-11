@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="de.walware.rj.rSetups">
+      <library
+            group="R_LIBS_USER"
+            location="user-libs/"
+            setupId="eu.openanalytics.phaedra.base.r.embeddedServer">
+      </library>
+   </extension>
+
+</plugin>

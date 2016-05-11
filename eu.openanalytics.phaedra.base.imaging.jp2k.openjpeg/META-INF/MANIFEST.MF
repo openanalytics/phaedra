@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: OpenJPEG based JPEG2000 codec
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.base.imaging.jp2k;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
+ org.openjpeg;bundle-version="2.1.0",
+ net.java.truevfs;bundle-version="0.10.7"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

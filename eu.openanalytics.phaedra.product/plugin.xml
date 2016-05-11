@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="platform"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="eu.openanalytics.phaedra.app"
+            name="Phaedra">
+         <property
+               name="appName"
+               value="Phaedra">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/phaedra16.png,icons/phaedra32.png,icons/phaedra48.png,icons/phaedra64.png,icons/phaedra128.png">
+         </property>
+         <property
+               name="startupForegroundColor"
+               value="FFFFFF">
+         </property>
+         <property
+               name="startupMessageRect"
+               value="22,324,180,15">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="12,350,576,15">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
+         <property
+               name="aboutImage"
+               value="icons/phaedra128.png">
+         </property>
+         <property
+               name="aboutText"
+               value="Phaedra, a High-Content Analysis Application">
+         </property>
+      </product>
+   </extension>
+
+</plugin>

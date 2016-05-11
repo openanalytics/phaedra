@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hookPoint">
+      <hookPoint
+            id="eu.openanalytics.phaedra.validation.validationHookPoint">
+      </hookPoint>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.validation.hook.PrePlateEditValidationChecker"
+            hookPointId="eu.openanalytics.phaedra.model.plate.plateActionHookPoint"
+            priority="0">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.validation.hook.PostValidationCurveInvalidator"
+            hookPointId="eu.openanalytics.phaedra.validation.validationHookPoint"
+            priority="0">
+      </hook>
+   </extension>
+
+</plugin>

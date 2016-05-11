@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="eu.openanalytics.phaedra.ui.user.toolbar"
+               label="Users">
+            <command
+                  commandId="org.eclipse.ui.views.showView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/user.png"
+                  label="User Activity"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.user.UserActivityView">
+               </parameter>
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="eu.openanalytics.phaedra.ui.user.UserActivityView"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/user.png"
+            id="eu.openanalytics.phaedra.ui.user.UserActivityView"
+            name="User Activity"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.richtableviewer.stateStore">
+      <stateStore
+            class="eu.openanalytics.phaedra.ui.user.MementoStateStore"
+            id="MementoStateStore">
+      </stateStore>
+   </extension>
+
+</plugin>

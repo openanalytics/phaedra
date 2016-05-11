@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="persistenceModel" name="PersistenceModel" schema="schema/persistenceModel.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.base.db.prefs.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.base.db.prefs.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.base.environment.prefs.PreferencePage"
+            class="eu.openanalytics.phaedra.base.db.prefs.PreferencePage"
+            id="eu.openanalytics.phaedra.base.db.prefs.PreferencePage"
+            name="Database">
+      </page>
+   </extension>
+
+</plugin>

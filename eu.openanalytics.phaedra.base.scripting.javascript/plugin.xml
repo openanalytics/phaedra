@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.scriptEngine">
+      <scriptEngine
+            class="eu.openanalytics.phaedra.base.scripting.javascript.JavaScriptEngine"
+            fileExtension="js"
+            id="javaScript"
+            isDefault="true"
+            label="JavaScript">
+      </scriptEngine>
+   </extension>
+
+</plugin>

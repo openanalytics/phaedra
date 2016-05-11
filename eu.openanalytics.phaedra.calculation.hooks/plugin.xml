@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PreValidationCheck"
+            hookPointId="eu.openanalytics.phaedra.validation.validationHookPoint"
+            priority="0">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PreCalculationValidationCheck"
+            hookPointId="eu.openanalytics.phaedra.calculation.calculationHookPoint"
+            priority="0">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PostValidationCalculator"
+            hookPointId="eu.openanalytics.phaedra.validation.validationHookPoint">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PostDeletePlateCalculator"
+            hookPointId="eu.openanalytics.phaedra.model.plate.plateActionHookPoint">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PostMovePlateCalculator"
+            hookPointId="eu.openanalytics.phaedra.model.plate.plateActionHookPoint">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PostClonePlateCalculator"
+            hookPointId="eu.openanalytics.phaedra.model.plate.plateActionHookPoint">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.calculation.hooks.PreWellDataEditCheck"
+            hookPointId="eu.openanalytics.phaedra.model.plate.wellDataActionHookPoint">
+      </hook>
+   </extension>
+
+</plugin>

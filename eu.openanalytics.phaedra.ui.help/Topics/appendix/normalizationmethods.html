@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Normalization Methods" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Normalization_Methods_334" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Normalization Methods</title>
+</head>
+<body id="Normalization_Methods_334"><a name="Normalization_Methods_334"><!-- --></a>
+
+
+  <h1 class="topictitle1">Normalization Methods</h1>
+
+  <div>
+    <p>In Phaedra, well feature values can be normalized. They are transformed into values that are relative to the plate's control wells, and allow easier comparison against values from other plates.</p>
+
+    <p>Normalization methods are specified in the protocol class editor, by selecting a feature and selecting a normalization in the list of available methods.</p>
+
+    <p><img src="../../Images/appendix/normalizationmethods.png" alt="normalizationmethods.png" /><br /></p>
+
+    <p>The predefined methods that are available in Phaedra are listed below.</p>
+
+    <div class="p">
+      <table summary="" cellspacing="0" cellpadding="4" border="0" class="simpletablenoborder">
+        <tr>
+          <th valign="bottom" align="left" id="N10045">Method</th>
+
+          <th valign="bottom" align="left" id="N1004B">Formula</th>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%Effect</td>
+
+          <td valign="top" headers="N1004B">( rawValue - lowMedian ) / ( highMedian - lowMedian ) * 100</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%Effect(100-x)</td>
+
+          <td valign="top" headers="N1004B">100 - %Effect</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%Effect(-x)</td>
+
+          <td valign="top" headers="N1004B">- %Effect</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%Effect(x-100)</td>
+
+          <td valign="top" headers="N1004B">%Effect - 100</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">Sigma[H]</td>
+
+          <td valign="top" headers="N1004B">( rawValue - highMedian ) / highStdDev</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">Sigma[L] </td>
+
+          <td valign="top" headers="N1004B">( raw - lowMedian ) / lowStdDev</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTLMin</td>
+
+          <td valign="top" headers="N1004B">%Effect</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTL</td>
+
+          <td valign="top" headers="N1004B">rawValue / highMedian * 100</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTL[L] </td>
+
+          <td valign="top" headers="N1004B">( ( rawValue - lowMedian ) / lowMedian ) * 100</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTL[L=0]</td>
+
+          <td valign="top" headers="N1004B">%CTL[L]</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTL[INV L=0]</td>
+
+          <td valign="top" headers="N1004B">- %CTL[L]</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTL[L=100]</td>
+
+          <td valign="top" headers="N1004B">( rawValue - lowMedian ) * 100</td>
+
+        </tr>
+
+        <tr>
+          <td valign="top" headers="N10045">%CTL[H=0] </td>
+
+          <td valign="top" headers="N1004B">( ( highMedian - rawValue ) / highMedian ) * 100</td>
+
+        </tr>
+
+      </table>
+
+    </div>
+
+    <div class="p">
+      <div class="note"><span class="notetitle">Note:</span> While custom normalization methods are supported, they should be used with great care. Contact a Phaedra administrator before setting a custom normalization formula.</div>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

@@ -1,0 +1,23 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Plate Definition Module
+Bundle-SymbolicName: eu.openanalytics.phaedra.link.platedef;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.link.platedef.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.validation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.gridviewer;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.link.platedef,
+ eu.openanalytics.phaedra.link.platedef.hook,
+ eu.openanalytics.phaedra.link.platedef.link,
+ eu.openanalytics.phaedra.link.platedef.source,
+ eu.openanalytics.phaedra.link.platedef.template,
+ eu.openanalytics.phaedra.link.platedef.template.link

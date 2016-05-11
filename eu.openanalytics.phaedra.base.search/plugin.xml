@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="queryBuilderFactory" name="QueryBuilderFactory" schema="schema/queryBuilderFactory.exsd"/>
+   <extension-point id="securityFilter" name="SecurityFilter" schema="schema/securityFilter.exsd"/>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.base.search.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.base.search.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="query.model">
+         <entityClass
+               class="eu.openanalytics.phaedra.base.search.model.QueryModel">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.base.search.model.QueryFilter">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.base.search.model.QueryOrdering">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.apiProvider">
+      <apiProvider
+            class="eu.openanalytics.phaedra.base.search.ScriptAPI">
+      </apiProvider>
+   </extension>
+
+</plugin>

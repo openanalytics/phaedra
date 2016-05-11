@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Chart Legend - Auxiliary Axes" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Chart_legends_-_Auxiliary_Ax_39" name="DC.Identifier" />
+<link href="../../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Chart Legend - Auxiliary Axes</title>
+</head>
+<body id="Chart_legends_-_Auxiliary_Ax_39"><a name="Chart_legends_-_Auxiliary_Ax_39"><!-- --></a>
+
+
+    <h1 class="topictitle1">Chart Legend - Auxiliary Axes</h1>
+
+    <div>
+        <div class="section">
+            <p><strong>Auxiliary axes</strong> are axes that can visualize an additional dimension of data (i.e. an additional feature) using the chart colors. Using this method, you can for example plot 3 features in a 2D scatter plot: an X feature, an Y feature and a feature on the auxiliary axis.</p>
+
+            <p>To enable auxiliary axes, go to the layer where you wish to add the auxilialy axes and click on <em>Activate color axes</em>: <img src="../../../Images/icons/acolour1.png" alt="acolour1.png" /><br /></p>
+
+            <p>A dialog will appear where you can configure up to 3 auxiliary axes:</p>
+
+            <p><img src="../../../Images/views/charts/chartLegend/chart_auxdialog.png" alt="chart_auxdialog.png" /><br /></p>
+
+            <p>For each auxiliary axis you can define a feature and a shader. Every value of the feature will be translated to a color from the selected shader. If you select more than one auxiliary axis, it is advised to use the Red, Green, en Blue Shaders. This will result in a mixture of rgb colors. Other combinations may be harder to distinguish.</p>
+
+            <p>The <em>lo</em> and <em>hi cut</em> that you can select for each activated auxiliary axis make up the window of data that will be used to define the colors that are used from the shader. For example, when you select a lo cut of 0.1, all data under 10% of the data will be given the lowest color of the shader. If you select a hi cut of 0.9, the 10% of the highest values will be given the highest color value available in the shader.</p>
+
+            <p>Here is an example of a chart with an auxiliary axis. The auxiliary feature is <em>Cell Diameter</em> (as seen in the dialog image above):</p>
+
+            <p><img src="../../../Images/views/charts/chartLegend/chart_auxaxes_example.png" alt="chart_auxaxes_example.png" /><br /></p>
+
+        </div>
+
+    </div>
+
+
+</body>
+</html>

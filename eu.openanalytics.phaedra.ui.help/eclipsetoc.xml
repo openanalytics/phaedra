@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?NLS TYPE="org.eclipse.help.toc"?>
+
+<toc label="Phaedra User Manual" topic="Topics/intro/intro.html">
+<topic label="Introduction" href="Topics/intro/intro.html">
+<topic label="Purpose and Intended Audience" href="Topics/intro/purposeandintendedaudience.html"/>
+<topic label="Installation" href="Topics/intro/installation.html"/>
+</topic>
+<topic label="Phaedra Concepts and Entities" href="Topics/concepts/concepts.html">
+<topic label="Protocol" href="Topics/concepts/protocol.html"/>
+<topic label="Experiment" href="Topics/concepts/experiment.html"/>
+<topic label="Plate" href="Topics/concepts/plate.html"/>
+<topic label="Well" href="Topics/concepts/well.html"/>
+<topic label="Compound" href="Topics/concepts/compound.html"/>
+<topic label="Well Feature" href="Topics/concepts/wellfeature.html"/>
+<topic label="Subwell Item" href="Topics/concepts/subwellitem.html"/>
+<topic label="Subwell Feature" href="Topics/concepts/subwellfeature.html"/>
+</topic>
+<topic label="Getting Started" href="Topics/gettingstarted/gettingstarted.html">
+<topic label="The Workbench" href="Topics/gettingstarted/workbench.html"/>
+<topic label="Import Plates" href="Topics/howto/importplates.html"/>
+<topic label="Navigation" href="Topics/gettingstarted/navigation.html"/>
+<topic label="Linking Plate Definitions" href="Topics/howto/linkingplatedefinitions.html"/>
+<topic label="Viewing Plates" href="Topics/gettingstarted/viewingplates.html"/>
+</topic>
+<topic label="How To" href="Topics/howto/howto.html">
+<topic label="Creating Charts" href="Topics/howto/charting.html"/>
+<topic label="Create a new Protocol" href="Topics/howto/createnewprotocol.html"/>
+<topic label="Creating a Plate Layout Template" href="Topics/howto/createplatelayout.html"/>
+<topic label="Customizing the Workbench" href="Topics/howto/customizeworkbench.html"/>
+<topic label="Edit a Protocol Class" href="Topics/howto/editprotocolclass.html"/>
+<topic label="Data Export" href="Topics/howto/export.html"/>
+<topic label="Image Analysis" href="Topics/howto/imageanalysis.html"/>
+<topic label="Import Plates" href="Topics/howto/importplates.html"/>
+<topic label="Linking Plate Definitions" href="Topics/howto/linkingplatedefinitions.html"/>
+<topic label="Rejecting Wells" href="Topics/howto/rejectwells.html"/>
+<topic label="Reporting" href="Topics/howto/reporting.html"/>
+<topic label="Searching Items" href="Topics/howto/search.html"/>
+<topic label="Silos" href="Topics/howto/silos.html"/>
+<topic label="Subwell Classification" href="Topics/howto/subwellclassification.html"/>
+<topic label="Validation and Approval" href="Topics/howto/validationapproval.html"/>
+<topic label="Run a Workflow" href="Topics/howto/workflows.html"/>
+</topic>
+<topic label="Views" href="Topics/views/views.html">
+<topic label="General">
+<topic label="Console View" href="Topics/views/general/console.html"/>
+<topic label="Error Log View" href="Topics/views/general/error_log.html"/>
+<topic label="Internal Web Browser" href="Topics/views/general/internalBrowser.html"/>
+<topic label="Progress View" href="Topics/views/general/progress.html"/>
+</topic>
+<topic label="Image">
+<topic label="Image Settings View" href="Topics/views/image/imageSettings.html"/>
+<topic label="Subwell Image Set View" href="Topics/views/image/subwellImages.html"/>
+<topic label="Well Image View" href="Topics/views/image/wellImage.html">
+<topic label="Well Image Menu" href="Topics/views/image/well_image/navigation.html"/>
+<topic label="Image Channels" href="Topics/views/image/well_image/imageChannels.html"/>
+<topic label="Linked Views" href="Topics/views/image/well_image/linkedViews.html"/>
+<topic label="Other Image Views" href="Topics/views/image/well_image/other.html"/>
+</topic>
+<topic label="Well Images Set View" href="Topics/views/image/wellImages.html"/>
+</topic>
+<topic label="Inspectors">
+<topic label="Cell Inspector" href="Topics/views/inspectors/cellInspector.html"/>
+<topic label="Compound Inspector" href="Topics/views/inspectors/compoundInspector.html"/>
+<topic label="Experiment Inspector" href="Topics/views/inspectors/experimentInspector.html"/>
+<topic label="Feature Selector" href="Topics/views/inspectors/featureInspector.html"/>
+<topic label="Plate Inspector" href="Topics/views/inspectors/plateInspector.html"/>
+<topic label="Well Inspector" href="Topics/views/inspectors/wellInspector.html"/>
+</topic>
+<topic label="Reporting">
+<topic label="PDF Viewer" href="Topics/views/reporting/pdfviewer.html"/>
+<topic label="Report Designer" href="Topics/views/reporting/report_designer.html"/>
+</topic>
+<topic label="Plate Charts">
+<topic label="Plate Box-whisker" href="Topics/views/plate_charts/plate_box_whisker.html"/>
+<topic label="Experiment Plate Trend" href="Topics/views/plate_charts/experiment_plate_trend.html"/>
+</topic>
+<topic label="Well Charts">
+<topic label="Well 1D Density Plot" href="Topics/views/well_charts/well_1d_density_plot.html"/>
+<topic label="Well 1D Histogram" href="Topics/views/well_charts/well_1d_histogram.html"/>
+<topic label="Well 2D Contour Plot" href="Topics/views/well_charts/well_2d_contour_plot.html"/>
+<topic label="Well 2D Density Plot" href="Topics/views/well_charts/well_2d_density_plot.html"/>
+<topic label="Well 2D Scatter Plot" href="Topics/views/well_charts/well_2d_scatter_plot.html"/>
+<topic label="Well 2D Scatter-Density Plot" href="Topics/views/well_charts/well_2d_scatter_density_plot.html"/>
+<topic label="Well 3D Scatter Plot" href="Topics/views/well_charts/well_3d_scatter_plot.html"/>
+<topic label="Well Feature Correlation Matrix" href="Topics/views/well_charts/well_feature_correlation_matrix.html"/>
+<topic label="Feature Scatter Matrix" href="Topics/views/well_charts/feature_scatter_matrix.html"/>
+<topic label="Well Parallel Coordinates Plot" href="Topics/views/well_charts/well_parallel_coordinates_plot.html"/>
+<topic label="Well Spider Plot" href="Topics/views/well_charts/well_spider_plot.html"/>
+</topic>
+<topic label="Subwell Charts">
+<topic label="Subwell 1D Density Plot" href="Topics/views/subwell_charts/subwell_1d_density_plot.html"/>
+<topic label="Subwell 1D Histogram" href="Topics/views/subwell_charts/subwell_1d_histogram.html"/>
+<topic label="Subwell 2D Contour Plot" href="Topics/views/subwell_charts/subwell_2d_contour_plot.html"/>
+<topic label="Subwell 2D Density Plot" href="Topics/views/subwell_charts/subwell_2d_density_plot.html"/>
+<topic label="Subwell 2D Scatter Plot" href="Topics/views/subwell_charts/subwell_2d_scatter_plot.html"/>
+<topic label="Subwell 2D Scatter-Density Plot" href="Topics/views/subwell_charts/subwell_2d_scatter_density_plot.html"/>
+<topic label="Subwell 3D Scatter Plot" href="Topics/views/subwell_charts/subwell_3d_scatter_plot.html"/>
+<topic label="Subwell Feature Correlation Matrix" href="Topics/views/subwell_charts/subwell_feature_correlation_matrix.html"/>
+<topic label="Subwell Parallel Coordinates Plot" href="Topics/views/subwell_charts/subwell_parallel_coordinates_plot.html"/>
+</topic>
+<topic label="Silo Charts">
+<topic label="Silo 1D Density Plot" href="Topics/views/silo_charts/silo_1d_density_plot.html"/>
+<topic label="Silo 1D Histogram Plot" href="Topics/views/silo_charts/silo_1d_histogram_plot.html"/>
+<topic label="Silo 2D Density Plot" href="Topics/views/silo_charts/silo_2d_density_plot.html"/>
+<topic label="Silo 2D Scatter Plot" href="Topics/views/silo_charts/silo_2d_scatter_plot.html"/>
+<topic label="Silo 3D Scatter Plot" href="Topics/views/silo_charts/silo_3d_scatter_plot.html"/>
+<topic label="Silo Parallel Coordinates Plot" href="Topics/views/silo_charts/silo_parallel_coordinates_plot.html"/>
+</topic>
+<topic label="Chart Views" href="Topics/views/chartViews.html">
+<topic label="Chart Settings and Preferences" href="Topics/views/charting/chartSettings.html"/>
+<topic label="Chart Settings - Zooming, Selection, Panning" href="Topics/views/charting/chartSettingsZoomSelectPan.html"/>
+<topic label="Chart Settings - Layers" href="Topics/views/charting/chartSettingsLayers.html"/>
+<topic label="Chart Settings - 1D Density Chart Settings" href="Topics/views/charting/chartSettings1dDensity.html"/>
+<topic label="Chart Settings - 2D Density Chart Settings" href="Topics/views/charting/chartSettings2dDensity.html"/>
+<topic label="Chart Settings - Scatter Plot Settings" href="Topics/views/charting/chartSettingsScatterPlot.html"/>
+<topic label="Chart Settings - Scatter-Density Chart Settings" href="Topics/views/charting/chartSettingsScatterDensityPlot.html"/>
+<topic label="Chart Settings - Contour Plot Settings" href="Topics/views/charting/chartSettingsContour.html"/>
+<topic label="Chart Settings - Gates" href="Topics/views/charting/chartSettingsGates.html"/>
+<topic label="Chart Legends" href="Topics/views/charting/chartLegends.html"/>
+<topic label="Chart Legend - Filtering" href="Topics/views/charting/chartLegendsFiltering.html"/>
+<topic label="Chart Legend - Axis Expressions" href="Topics/views/charting/chartLegendsAxisExpressions.html"/>
+<topic label="Chart Legend - Auxiliary Axes" href="Topics/views/charting/chartLegendsAuxAxes.html"/>
+<topic label="Chart Legend - Aggregation" href="Topics/views/charting/chartLegendsAggregation.html"/>
+<topic label="Heatmap Layers and Charts" href="Topics/editors/data_editors/heatmapcharts.html"/>
+</topic>
+<topic label="Other">
+<topic label="Dose-Response Curve View" href="Topics/views/other/dose_response_curve.html"/>
+<topic label="Feature Prefix Table" href="Topics/views/other/featurePrefixTable.html"/>
+<topic label="Grouped View" href="Topics/views/other/groupedViews.html"/>
+<topic label="Multiple Plate Quick Heatmap" href="Topics/views/other/multiplequickheatmap.html"/>
+<topic label="Navigator" href="Topics/views/other/navigator.html"/>
+<topic label="Plate Statistics" href="Topics/views/other/plateStatistcs.html"/>
+<topic label="Plate Template Browser" href="Topics/views/other/plateTemplateBrowser.html"/>
+<topic label="Quick Heatmap View" href="Topics/views/other/quickHeatmap.html"/>
+<topic label="Subwell Data View" href="Topics/views/other/subWellDataView.html"/>
+</topic>
+</topic>
+<topic label="Editors">
+<topic label="Protocol Class Editor" href="Topics/editors/settings_editors/protocoll_class_editor/intro.html">
+<topic label="General Settings" href="Topics/editors/settings_editors/protocoll_class_editor/general.html"/>
+<topic label="Well Features" href="Topics/editors/settings_editors/protocoll_class_editor/wellfeatures.html"/>
+<topic label="Subwell Features" href="Topics/editors/settings_editors/protocoll_class_editor/subwellfeatures.html"/>
+<topic label="Image Settings" href="Topics/editors/settings_editors/protocoll_class_editor/imagesettings.html"/>
+</topic>
+<topic label="Protocol Browser" href="Topics/editors/data_editors/protocolBrowser.html"/>
+<topic label="Plate Browser" href="Topics/editors/data_editors/plateBrowser.html">
+<topic label="Plate Browser - Plate List" href="Topics/editors/data_editors/plateBrowser/plateList.html"/>
+<topic label="Plate Browser - Heatmap Thumbnails" href="Topics/editors/data_editors/plateBrowser/heatmapThumbs.html"/>
+</topic>
+<topic label="Well Browser" href="Topics/editors/data_editors/wellBrowser.html">
+<topic label="Plate View" href="Topics/editors/data_editors/wellBrowser/plateview.html"/>
+<topic label="Table View" href="Topics/editors/data_editors/wellBrowser/tableview.html"/>
+</topic>
+<topic label="ROI Editor" href="Topics/editors/data_editors/imageEditor.html"/>
+</topic>
+<topic label="Appendix" href="Topics/appendix/appendix.html">
+<topic label="Normalization Methods" href="Topics/appendix/normalizationmethods.html"/>
+<topic label="Roles and Security" href="Topics/appendix/rolessecurity.html"/>
+</topic>
+</toc>

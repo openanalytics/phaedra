@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.ui.protocol.protocolWizard">
+      <wizard
+            class="eu.openanalytics.phaedra.ui.protocol.template.TemplateWizard"
+            description="Create a new protocol using a template (advanced)."
+            icon="icons/template.png"
+            name="Template Wizard">
+      </wizard>
+   </extension>
+
+</plugin>

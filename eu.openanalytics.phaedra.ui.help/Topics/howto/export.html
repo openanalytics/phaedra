@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Data Export" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Export_80" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Data Export</title>
+</head>
+<body id="Export_80"><a name="Export_80"><!-- --></a>
+
+
+  <h1 class="topictitle1">Data Export</h1>
+
+  <div>
+    <div class="section">
+      <p>Phaedra supports export of data into Excel (<em>xlsx</em>) or Text (<em>txt</em> or <em>csv</em>) format. The items that can be exported are:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li><strong>Well data</strong>, including well number, compound information, plate barcode, feature values and curve fit results</li>
+
+          <li><strong>Subwell data</strong>, including well number and subwell feature values</li>
+
+        </ul>
+
+      </div>
+
+      <p>Note that depending on the number of plates being exported, this operation may take some time to complete.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Exporting well data</h2>
+      
+      <p>To export well data, right-click on an experiment and select <strong>Export &gt; Export Well Data</strong>.</p>
+
+      <p><img src="../../Images/howto/export/exportWellData.png" alt="exportWellData.png" /><br /></p>
+
+      <p>A dialog will open, where you can select the well features that should be exported.</p>
+
+      <p><img src="../../Images/howto/export/exportWellData_1.png" alt="exportWellData_1.png" /><br /></p>
+
+      <p>In the next screen, you can set filters on which plates to include in the export. For example, you can export only plates that belong to a specific plate library.</p>
+
+      <div class="p">
+        <div class="note"><span class="notetitle">Note:</span> By default, invalidated and disapproved plates are <strong>not</strong> exported. To export them, check the options <strong>Include invalidated plates</strong> and <strong>Include disapproved plates</strong>.</div>
+
+      </div>
+
+      <p><img src="../../Images/howto/export/exportWellData_2.png" alt="exportWellData_2.png" /><br /></p>
+
+      <p>In the next screen, you can set filters on which wells to include in the export. For example, you can limit the export to a specific set of compounds.</p>
+
+      <div class="p">
+        <div class="note"><span class="notetitle">Note:</span> By default, rejected wells are <strong>not</strong> exported. To export them, check the option <strong>Include rejected wells</strong>.</div>
+
+      </div>
+
+      <p><img src="../../Images/howto/export/exportWellData_3.png" alt="exportWellData_3.png" /><br /></p>
+
+      <p>In the final screen, you can specify which columns to include in the exported file. Also, here you need to specify the output location of the export file.</p>
+
+      <p><img src="../../Images/howto/export/exportWellData_4.png" alt="exportWellData_4.png" /><br /></p>
+
+      <p>Click on <strong>Select Destination</strong> to set a location for the export file, and a file type (Excel or Text).</p>
+
+      <p>When you have set a destination, you can click <strong>Finish</strong> to start the export process. You will get a notification when the export is complete.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Exporting subwell data</h2>
+      
+      <p>The process to export subwell data is very similar to the well data export described above. Right-click on the plates or experiment to export, and select <strong>Export &gt; Export Subwell Data</strong>.</p>
+
+      <p>A dialog will open, where you can select the subwell features to export.</p>
+
+      <p><img src="../../Images/howto/export/exportSubwellData_1.png" alt="exportSubwellData_1.png" /><br /></p>
+
+      <p>In the next screen, you can filter the data by selecting a specific well type, or by selecting a random subset of the data to export. This may be useful if you only need a sample of the full dataset, which may contain many millions of rows.</p>
+
+      <p><img src="../../Images/howto/export/exportSubwellData_2.png" alt="exportSubwellData_2.png" /><br /></p>
+
+      <p>In the final screen, you must select a destination location for the export file. Click on <strong>Change...</strong> to select a destination and a file type (Excel, Text or HDF5).</p>
+
+      <p><img src="../../Images/howto/export/exportSubwellData_3.png" alt="exportSubwellData_3.png" /><br /></p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

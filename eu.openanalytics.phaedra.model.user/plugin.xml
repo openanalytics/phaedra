@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="hca.model.user">
+         <entityClass
+               class="eu.openanalytics.phaedra.model.user.vo.Preference">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.model.user.vo.User">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.model.user.vo.UserSession">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferencePersistor">
+      <preferencePersistor
+            class="eu.openanalytics.phaedra.model.user.util.PreferencePersistor">
+      </preferencePersistor>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.model.user.util.OnLoginHook"
+            hookPointId="eu.openanalytics.phaedra.base.environment.loginHookPoint"
+            priority="0">
+      </hook>
+   </extension>
+
+</plugin>

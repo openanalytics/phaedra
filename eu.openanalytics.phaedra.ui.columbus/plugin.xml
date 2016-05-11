@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.ui.link.importer.importWizard">
+      <importWizard
+            class="eu.openanalytics.phaedra.ui.columbus.importwizard.ColumbusImportWizard"
+            description="Import data from a Columbus instance."
+            icon="icons/columbus.png"
+            name="Columbus Importer">
+      </importWizard>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.ui.protocol.protocolWizard">
+      <wizard
+            class="eu.openanalytics.phaedra.ui.columbus.protocolwizard.ColumbusProtocolWizard"
+            description="Create a new protocol based on a Columbus screen."
+            icon="icons/columbus.png"
+            name="Columbus Wizard">
+      </wizard>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.ui.columbus.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.ui.columbus.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.link.importer.preferences.PreferencePage"
+            class="eu.openanalytics.phaedra.ui.columbus.preferences.PreferencePage"
+            id="eu.openanalytics.phaedra.ui.columbus.preferences.PreferencePage"
+            name="Opera">
+      </page>
+   </extension>
+
+</plugin>

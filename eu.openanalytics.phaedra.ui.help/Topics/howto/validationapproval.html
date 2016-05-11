@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Validation and Approval" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Validation_and_Approval_77" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Validation and Approval</title>
+</head>
+<body id="Validation_and_Approval_77"><a name="Validation_and_Approval_77"><!-- --></a>
+
+
+  <h1 class="topictitle1">Validation and Approval</h1>
+
+  <div>
+    <div class="section">
+      <p>Validation and approval are two important steps in the data processing flow of Phaedra.</p>
+
+      <p><img src="../../Images/howto/validationapprovalflow.png" alt="validationapprovalflow.png" /><br /></p>
+
+      <div class="p">
+        <br /><ul>
+          <li>The validation step is required to confirm that <strong>the experimental data has been obtained under the right conditions</strong>. Any outliers or disturbing factors have been accounted for, and the resulting data can be safely used to draw conclusions from.</li>
+
+          <li>The approval step is required to confirm that the data has been reviewed by at least 2 persons, and <strong>the results are allowed to be published in a data warehouse</strong> (if applicable).</li>
+
+        </ul>
+
+      </div>
+
+      <p>When a plate is validated or approved, additional constraints are placed on it:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>Validation: in a validated plate, control wells cannot be rejected anymore. They are effectively frozen.</li>
+
+          <li>Approval: an approved plate cannot be modified in any way. The whole plate is effectively frozen.</li>
+
+        </ul>
+
+      </div>
+
+      <p>Any member of the protocol's team can validate (or un-validate) a plate. For approval, manager-level access is required.</p>
+
+      <p><strong>Compound validation</strong> is an optional step. In plates containing dose-response curves, individual compounds can be invalidated, enabling you to upload only a part of the plate's dose-response curves into the data warehouse. If compound validation is not performed, all compounds are assumed to be valid when the plate gets validated.</p>
+
+      <div class="p">
+        <div class="note"><span class="notetitle">Note:</span> All validation and approval actions are logged by the system for traceability and data integrity reasons.</div>
+
+      </div>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Validating plates</h2>
+      
+      <p>Validating a plate is very straightforward. Right-click on the plate or plates, and select <strong>Validation &gt; Validate Plate(s)</strong>.</p>
+
+      <p><img src="../../Images/howto/validationapproval.png" alt="validationapproval.png" /><br /></p>
+
+      <p>In the plate list, the validation flag in the <strong>V</strong> column represents the plate's current validation status:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>White flag: no validation has been applied yet</li>
+
+          <li>Green flag: the plate has been validated</li>
+
+          <li>Red flag: the plate has been invalidated</li>
+
+        </ul>
+
+      </div>
+
+      <p>When you invalidate a plate, you must specify a reason for the invalidation:</p>
+
+      <p><img src="../../Images/howto/validationapproval4.png" alt="validationapproval4.png" /><br /></p>
+
+      <p>As long as the plate has not been approved or disapproved, you can undo validation by selecting <strong>Reset Validation</strong>.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Validating compounds</h2>
+      
+      <p>As mentioned earlier in this topic, compound validation is an <strong>optional</strong> step. If you do not invalidate compounds explicitly, all compounds will be considered valid.</p>
+
+      <p>To perform compound validation, open a compound browser by right-clicking on a plate or experiment, and selecting <strong>Browse Dose-Response Curves</strong>.</p>
+
+      <p><img src="../../Images/howto/validationapproval2.png" alt="validationapproval2.png" /><br /></p>
+
+      <p>In the compound browser, the <strong>CV</strong> column represents the compound validation status. Its colors are similar to those of the plate validation flag in the plate list:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>White: no validation has been applied yet</li>
+
+          <li>Green: the compound has been validated</li>
+
+          <li>Red: the compound has been invalidated</li>
+
+        </ul>
+
+      </div>
+
+      <p>To invalidate a compound, right-click on it and select <strong>Validation &gt; Invalidate Compound</strong>.</p>
+
+      <p><img src="../../Images/howto/validationapproval3.png" alt="validationapproval3.png" /><br /></p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Approving plates</h2>
+      
+      <p>To approve or disapprove plates, you need manager-level access. If you do not have this access level, you will get an error message when trying to perform plate approval. Contact a Phaedra administrator if you wish to receive this access level.</p>
+
+      <p>Plate approval can be done by selecting one or more plates, right-clicking and selecting <strong>Approval &gt; Approve Plate(s)</strong>.</p>
+
+      <p><img src="../../Images/howto/validationapproval5.png" alt="validationapproval5.png" /><br /></p>
+
+      <p>In the plate list, the approval flag in the <strong>A</strong> column represents the current approval status:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>White flag: approval has not been applied yet</li>
+
+          <li>Green flag: the plate has been approved</li>
+
+          <li>Red flag: the plate has been disapproved</li>
+
+        </ul>
+
+      </div>
+
+      <p>When performing plate approval, there are several rules to keep in mind:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>If the plate has not been validated yet, approval is not possible: you will get an error message.</li>
+
+          <li>If the plate has been invalidated, the actions <strong>Approve Plate</strong> and <strong>Disapprove Plate</strong> will both set the plate's approval status to <strong>Disapproved</strong>. In other words, an invalidated plate cannot be approved.</li>
+
+          <li>If the protocol has been configured for data warehouse uploading, it may take up to a day for the plate's results to be uploaded after approval has been set.</li>
+
+        </ul>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

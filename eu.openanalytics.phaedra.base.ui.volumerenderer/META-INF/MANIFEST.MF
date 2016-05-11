@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Volume Image Rendering
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.ui.volumerenderer;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.ui.volumerenderer.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
+ org.jogl;bundle-version="2.0.0",
+ loci.bioformats;bundle-version="4.4.8"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .
+Export-Package: eu.openanalytics.phaedra.base.ui.volumerenderer

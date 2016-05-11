@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: HDF-5 Interface
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.hdf5
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.hdf5.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.util,
+ eu.openanalytics.phaedra.base.environment,
+ ch.systemsx.jhdf5;bundle-version="12.2.3";visibility:=reexport
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.hdf5,
+ eu.openanalytics.phaedra.base.hdf5.parallel,
+ eu.openanalytics.phaedra.base.hdf5.util

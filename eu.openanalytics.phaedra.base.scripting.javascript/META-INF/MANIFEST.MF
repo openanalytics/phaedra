@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Eclipse-BuddyPolicy: global
+Bundle-ManifestVersion: 2
+Bundle-Name: JavaScript Engine
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.scripting.javascript;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.scripting.javascript.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.scripting,
+ eu.openanalytics.phaedra.base.console,
+ eu.openanalytics.phaedra.base.util
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

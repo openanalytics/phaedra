@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
+<product name="Phaedra" uid="eu.openanalytics.phaedra.product.platform" id="eu.openanalytics.phaedra.product.platform" application="eu.openanalytics.phaedra.app" version="1.0.0" useFeatures="true" includeLaunchers="true">
+
+   <aboutInfo>
+      <image path="/eu.openanalytics.phaedra.product/icons/phaedra128.png"/>
+      <text>
+         Phaedra, a High-Content Analysis Application
+      </text>
+   </aboutInfo>
+
+   <configIni use="default">
+   </configIni>
+
+   <launcherArgs>
+      <vmArgs>-Xmx2G -Dosgi.parentClassloader=ext -Declipse.p2.unsignedPolicy=allow
+      </vmArgs>
+      <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts
+      </vmArgsMac>
+   </launcherArgs>
+
+   <windowImages i16="/eu.openanalytics.phaedra.product/icons/phaedra16.png" i32="/eu.openanalytics.phaedra.product/icons/phaedra32.png" i48="/eu.openanalytics.phaedra.product/icons/phaedra48.png" i64="/eu.openanalytics.phaedra.product/icons/phaedra64.png" i128="/eu.openanalytics.phaedra.product/icons/phaedra128.png"/>
+
+   <splash
+      location="eu.openanalytics.phaedra.product"
+      startupProgressRect="12,350,576,15"
+      startupMessageRect="22,324,180,15"
+      startupForegroundColor="FFFFFF" />
+   <launcher name="phaedra">
+      <solaris/>
+      <win useIco="true">
+         <ico path="phaedraicons.ico"/>
+         <bmp/>
+      </win>
+   </launcher>
+
+   <vm>
+      <windows include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8</windows>
+   </vm>
+
+   <plugins>
+   </plugins>
+
+   <features>
+      <feature id="org.eclipse.platform" version="4.5.0.v20150603-2358"/>
+      <feature id="eu.openanalytics.phaedra.jre" version="1.0.0" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.base" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.base.http" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.base.imaging" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.base.r" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.base.ui" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.base.thirdparty" version="1.0.0.qualifier"/>
+      <feature id="eu.openanalytics.phaedra.hcs" version="1.0.0.qualifier" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.hcs.ui" version="1.0.0.qualifier" installMode="root"/>
+   </features>
+
+   <configurations>
+      <plugin id="org.eclipse.core.runtime" autoStart="true" startLevel="0" />
+      <plugin id="org.eclipse.equinox.common" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.ds" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.event" autoStart="true" startLevel="2" />
+      <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
+      <property name="osgi.framework.extensions" value="jre.java8.profile" />
+   </configurations>
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
+
+</product>

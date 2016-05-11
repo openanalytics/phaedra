@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Preference Store
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.pref.store;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.pref.store.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.commands;bundle-version="3.6.0",
+ org.eclipse.ui.workbench;bundle-version="3.7.0",
+ org.eclipse.ui;bundle-version="3.7.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.pref.store

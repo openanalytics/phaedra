@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: User Service UI
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.user;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.user.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.model.user;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

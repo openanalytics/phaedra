@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="configurableColumnType" name="ConfigurableColumnType" schema="schema/configurableColumnType.exsd"/>
+   <extension-point id="stateStore" name="StateStore" schema="schema/stateStore.exsd"/>
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="focusControl.is.table">
+         <with
+               variable="activeFocusControl">
+            <instanceof
+                  value="org.eclipse.swt.widgets.Table">
+            </instanceof>
+         </with>
+      </definition>
+   </extension>
+
+</plugin>

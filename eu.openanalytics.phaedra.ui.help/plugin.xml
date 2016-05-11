@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin>
+    <extension point="org.eclipse.help.toc">
+		<toc file="eclipsetoc.xml" primary="true"/>
+	</extension>
+    <extension point="org.eclipse.help.contexts">
+		<contexts file="eclipsecontexts.xml"/>
+	</extension>
+	<extension point="org.eclipse.help.index">
+		<index file="index.xml"/>
+	</extension>
+</plugin>

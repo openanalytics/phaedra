@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Silo Model
+Bundle-SymbolicName: eu.openanalytics.phaedra.silo;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.silo.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.base.event,
+ eu.openanalytics.phaedra.base.hdf5,
+ eu.openanalytics.phaedra.base.console,
+ eu.openanalytics.phaedra.calculation,
+ eu.openanalytics.phaedra.model.protocol,
+ eu.openanalytics.phaedra.model.plate,
+ eu.openanalytics.phaedra.model.subwell
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.silo,
+ eu.openanalytics.phaedra.silo.accessor,
+ eu.openanalytics.phaedra.silo.util,
+ eu.openanalytics.phaedra.silo.vo

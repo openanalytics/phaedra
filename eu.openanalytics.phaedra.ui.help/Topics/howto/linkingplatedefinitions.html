@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Linking Plate Definitions" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Linking_Plate_Definitions_332" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Linking Plate Definitions</title>
+</head>
+<body id="Linking_Plate_Definitions_332"><a name="Linking_Plate_Definitions_332"><!-- --></a>
+
+
+  <h1 class="topictitle1">Linking Plate Definitions</h1>
+
+  <div>
+    <p>When a plate is imported in Phaedra, only its raw data is imported: well features, subwell features, raw images and image overlays.</p>
+
+    <p>Before well features can be normalized, the plate needs to be linked to its definition, or layout.</p>
+
+    <p><img src="../../Images/howto/plate_layout_system.png" alt="plate_layout_system.png" /><br /></p>
+
+    <p>A plate that has not been linked to its definition, will usually show as a grey heatmap, filled with NaN (Not a Number) feature values and EMPTY well types.</p>
+
+    <p>Phaedra assumes that plate definitions are stored in an external plate management system, and can retrieve the plate layout from such a system. If a plate has no formal definition, a <strong>layout template</strong> can be created to link with the plate instead.</p>
+
+    <div class="section"><h2 class="sectiontitle">Linking with a plate management system</h2>
+      
+      <p>When linking a plate via a plate management system, the plate must have a correct barcode. Right-click on the plate and select <strong>Link Plate Definitions</strong>.</p>
+
+      <p><img src="../../Images/howto/linkplatedef1.png" alt="linkplatedef1.png" /><br /></p>
+
+      <div class="p">
+        <div class="note"><span class="notetitle">Note:</span> You can also select and link multiple plates at once, or even a whole experiment.</div>
+
+      </div>
+
+      <p>A dialog will appear allowing you to select the plate management system to link with.</p>
+
+      <p><img src="../../Images/howto/linkplatedef2.png" alt="linkplatedef2.png" /><br /></p>
+
+      <p>When linking, Phaedra will look for plate definitions with the specified barcodes. If your plate barcodes in Phaedra do not match the barcodes in the plate management system, you can modify the barcodes here by clicking on a barcode and typing another barcode instead.</p>
+
+      <p>Select <strong>Link</strong> to retrieve the plate definitions and apply them to the plates.</p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

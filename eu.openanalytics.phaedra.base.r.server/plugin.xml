@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="de.walware.rj.rSetups">
+      <base
+            location="R/"
+            setupId="eu.openanalytics.phaedra.base.r.embeddedServer">
+      </base>
+   </extension>
+
+</plugin>

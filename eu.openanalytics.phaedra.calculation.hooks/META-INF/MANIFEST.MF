@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Calculation Hooks
+Bundle-SymbolicName: eu.openanalytics.phaedra.calculation.hooks;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.calculation.hooks.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.model.curve;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.validation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.event;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.calculation.hooks

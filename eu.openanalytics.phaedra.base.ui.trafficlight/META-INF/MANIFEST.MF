@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Trafficlight
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.ui.trafficlight;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.ui.trafficlight.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.ui.forms,
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.ui.trafficlight

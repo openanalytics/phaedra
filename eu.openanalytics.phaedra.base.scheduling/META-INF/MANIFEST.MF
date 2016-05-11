@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Scheduling
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.scheduling;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.scheduling.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ org.quartz;bundle-version="2.1.6";visibility:=reexport
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Export-Package: eu.openanalytics.phaedra.base.scheduling
+Bundle-ActivationPolicy: lazy

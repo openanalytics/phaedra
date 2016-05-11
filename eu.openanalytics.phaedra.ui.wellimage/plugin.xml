@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.ui.wellimage.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.richtableviewer.configurableColumnType">
+      <configurableColumnType
+            class="eu.openanalytics.phaedra.ui.wellimage.table.JP2KImageConfigurableColumnType"
+            id="eu.openanalytics.phaedra.ui.wellimage.table.JP2KImageConfigurableColumnType">
+      </configurableColumnType>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.imaging.overlay.imageOverlay">
+      <imageOverlay
+            class="eu.openanalytics.phaedra.ui.wellimage.overlay.ImageThumbOverlay"
+            id="imagethumb.overlay">
+      </imageOverlay>
+      <imageOverlay
+            class="eu.openanalytics.phaedra.ui.wellimage.overlay.RegionOverlay"
+            id="region.overlay">
+      </imageOverlay>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.ui.wellimage.Image"
+            class="eu.openanalytics.phaedra.ui.wellimage.preferences.ImageToolTipPreferencePage"
+            id="eu.openanalytics.phaedra.ui.wellimage.ImageToolTipPreferencePage"
+            name="Tooltip Images">
+      </page>
+      <page
+            class="eu.openanalytics.phaedra.ui.wellimage.preferences.ImagePreferencePage"
+            id="eu.openanalytics.phaedra.ui.wellimage.Image"
+            name="Images">
+      </page>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.ui.wellimage.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+</plugin>

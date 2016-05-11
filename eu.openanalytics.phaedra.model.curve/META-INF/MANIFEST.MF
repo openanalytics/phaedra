@@ -1,0 +1,27 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Curve Model
+Bundle-SymbolicName: eu.openanalytics.phaedra.model.curve;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.model.curve.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.search;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.validation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.r.rservi;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.model.curve,
+ eu.openanalytics.phaedra.model.curve.fit,
+ eu.openanalytics.phaedra.model.curve.search,
+ eu.openanalytics.phaedra.model.curve.util,
+ eu.openanalytics.phaedra.model.curve.vo

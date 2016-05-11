@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="httpService" name="HTTPService" schema="schema/httpService.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.base.http.server.OnLoginHook"
+            hookPointId="eu.openanalytics.phaedra.base.environment.loginHookPoint">
+      </hook>
+   </extension>
+
+</plugin>

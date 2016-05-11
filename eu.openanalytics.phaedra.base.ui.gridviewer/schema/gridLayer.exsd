@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="eu.openanalytics.phaedra.base.ui.gridviewer" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appinfo>
+         <meta.schema plugin="eu.openanalytics.phaedra.base.ui.gridviewer" id="gridLayer" name="GridLayer"/>
+      </appinfo>
+      <documentation>
+         This extension point allows the addition of IGridLayer objects to a GridViewer instance with a specific id.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
+      <complexType>
+         <choice minOccurs="1" maxOccurs="unbounded">
+            <element ref="gridLayer"/>
+         </choice>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="name" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute translatable="true"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="gridLayer">
+      <complexType>
+         <attribute name="id" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="class" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":eu.openanalytics.phaedra.base.ui.gridviewer.layer.IGridLayer"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="gridId" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="defaultEnabled" type="boolean">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="icon" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appinfo>
+                  <meta.attribute kind="resource"/>
+               </appinfo>
+            </annotation>
+         </attribute>
+         <attribute name="position" type="string">
+            <annotation>
+               <documentation>
+                  A number indicating the position in the layer stack. A low number puts the layer towards the bottom, a high number puts the layer towards the top.
+               </documentation>
+            </annotation>
+         </attribute>
+         <attribute name="userMode" type="string">
+            <annotation>
+               <documentation>
+                  An optional, comma-separated list of user modes where the element provider should be applied to. E.g. to show a layer only in Advanced mode, list the Advanced usermode in this attribute.
+If no value is specified, the element is shown always.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+
+
+
+
+
+</schema>

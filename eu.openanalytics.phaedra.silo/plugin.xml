@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="silo.model">
+         <entityClass
+               class="eu.openanalytics.phaedra.silo.vo.Silo">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.silo.vo.SiloGroup">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.calculation.jepScanner">
+      <jepScanner
+            class="eu.openanalytics.phaedra.silo.jep.SiloScanner"
+            name="eu.openanalytics.phaedra.silo.jep.SiloAccessorScanner">
+      </jepScanner>
+      <jepScanner
+            class="eu.openanalytics.phaedra.silo.jep.SubWellFeatureSiloScanner"
+            name="eu.openanalytics.phaedra.silo.jep.SubWellFeatureSiloScanner">
+      </jepScanner>
+      <jepScanner
+            class="eu.openanalytics.phaedra.silo.jep.WellFeatureSiloScanner"
+            name="eu.openanalytics.phaedra.silo.jep.WellFeatureSiloScanner">
+      </jepScanner>
+      <jepScanner
+            class="eu.openanalytics.phaedra.silo.jep.WellPropertySiloScanner"
+            name="eu.openanalytics.phaedra.silo.jep.WellPropertySiloScanner">
+      </jepScanner>
+   </extension>
+
+</plugin>

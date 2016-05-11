@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Data Linker
+Bundle-SymbolicName: eu.openanalytics.phaedra.link.data;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.link.data.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.validation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.link.platedef;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hdf5;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.seda;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.link.data,
+ eu.openanalytics.phaedra.link.data.addfeatures,
+ eu.openanalytics.phaedra.link.data.hook,
+ eu.openanalytics.phaedra.link.data.preferences

@@ -1,0 +1,24 @@
+protocol.name=New Protocol
+protocol.team=My Team
+
+template=columbus
+
+subwelldata.filepattern=Well(.*)_Detail\.txt
+
+imagedata.channel.1.name=Nuc Stain
+imagedata.channel.1.filepattern=(.*)_Field(\d+)_Ch1\.tif
+imagedata.channel.1.source=columbus
+imagedata.channel.1.montage=true
+
+imagedata.channel.2.name=Cell Stain
+imagedata.channel.2.filepattern=(.*)_Field(\d+)_Ch2\.tif
+imagedata.channel.2.source=columbus
+imagedata.channel.2.montage=true
+
+imagedata.channel.3.name=Nuc Outlines
+imagedata.channel.3.type=Overlay
+imagedata.channel.3.filepattern=Well(.*)_AllFields_NucOutlines\.tif
+
+imagedata.channel.4.name=Cell Outlines
+imagedata.channel.4.type=Overlay
+imagedata.channel.4.filepattern=Well(.*)_AllFields_CellOutlines\.tif

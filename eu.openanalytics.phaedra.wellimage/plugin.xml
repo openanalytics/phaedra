@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.wellimage.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.ui.wellimage.Image"
+            class="eu.openanalytics.phaedra.wellimage.preferences.SubWellImagePreferencePage"
+            id="eu.openanalytics.phaedra.wellimage.preferences.SubWellImagePreferencePage"
+            name="Subwell Images">
+      </page>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferencePersistor">
+      <preferencePersistor
+            class="eu.openanalytics.phaedra.wellimage.preferences.PreferenceProvider">
+      </preferencePersistor>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.apiProvider">
+      <apiProvider
+            class="eu.openanalytics.phaedra.wellimage.ScriptAPI">
+      </apiProvider>
+   </extension>
+
+</plugin>

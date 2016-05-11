@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Well Features" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Well_Features_128" name="DC.Identifier" />
+<link href="../../../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Well Features</title>
+</head>
+<body id="Well_Features_128"><a name="Well_Features_128"><!-- --></a>
+
+
+  <h1 class="topictitle1">Well Features</h1>
+
+  <div>
+    <p>This section contains all the defined Well Features which can be used.</p>
+
+    <p><img src="../../../../Images/Editors/protocol_class_editor/protocolclasswellfeatures.png" /><br /></p>
+
+    
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+        
+        
+        <tbody>
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><strong>Setting</strong></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%"><strong>Description</strong></td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Key</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Indicates if this feature is a key feature. </td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Req</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Indicates if this feature is a required feature. If the feature is required, a value for this feature must be provided.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Calc</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Indicates if this feature is a calculated feature. Calculated features use formulas to determine its value.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Fitted</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Indicates if this feature is a fitted feature. Fitted features are features with a configured dose-response curve.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Feature</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">The name of the feature (must match the name in the imported file)</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Alias</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">The alias of the feature. If an alias is provided, the alias will be used throughout Phaedra. The alias is used to shorten the feature name.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Group</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Grouping is used to bring structure to a large number of features and make selections in dialogs easier.</td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+</div>
+
+    <div class="section"><h2 class="sectiontitle">Add feature</h2>
+      
+      <p>To add a new feature, click the "Add feature" link</p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/addfeature.png" /><br /></p>
+
+      <p>After clicking the "Add feature" link, a panel on the right will open allowing you to create a new feature.</p>
+
+      <p><strong>General Feature Section</strong></p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/generalfeaturesection.png" /><br /></p>
+
+      
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+          
+          
+          <tbody>
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Name</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">The name of the Feature</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Alias</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">The alias of the feature. If an alias is provided, the alias will be used throughout Phaedra tables. The alias is used to shorten the feature name.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Description</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">The description of the feature (free text)</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Format</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">The format determines the display of the values. You can choose a format from the list or fill in your own format type. A hashtag (#) stands for optional zero's and a zero (0) stands for required zero's. E.g. the value 14.5 will be formated to 14.5 with the mask 0.### or will be formated to 14.500 with the mask 0.000</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Group</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Determines to which group this feature belongs. The default value is empty. To add a group click the "Manage Groups" link.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">This is a</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">
+                <br /><ul>
+                  <li>Required feature (if missing, plate calculation fails). This means that the Well must have a value for this feature</li>
+
+                  <li>Key feature (available in all tables and charts). This means that this feature will be available in all Well Tables and Charts by default.</li>
+
+                  <li>Numeric feature (contains a numeric value). This means that the feature value must be numeric.</li>
+
+                  <li>Export feature (after approval, will be exported to data warehouse).</li>
+
+                </ul>
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+</div>
+
+      <p />
+
+      <p><strong>Calculation Section</strong></p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/calculationfeaturesection.png" /><br /></p>
+
+      
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+          
+          
+          <tbody>
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Formula</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">To turn a feature into a Calculated Feature, you can enter your formula here. Note that your formula must be in the same language as specified in the Language setting below. (If the language is <a href="../../../views/charting/chartLegendsAxisExpressions.html">JEP</a>, you can construct a formula with the "Edit expression..." function)</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Language</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">The language in which the formula is written</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Calculation</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Determines when and how recalculation is done.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Sequence</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">If some calculated features depend on other calculated features, the order of calculation is important, and must be specified. Features are calculated from low to high sequence. Sequence 0 means it will be calculated before all other features.</td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+</div>
+
+      <p />
+
+      <p><strong id="Well_Features_128__Normalization_Section_topic_body_section_1_p_10_b"><a name="Well_Features_128__Normalization_Section_topic_body_section_1_p_10_b"><!-- --></a>Normalization Section</strong></p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/normalizationfeaturesection.png" /><br /></p>
+
+      <p>To normalize this feature, choose a normalization method and the control types for normalization. If control types are not set, the protocol class defaults will be used.</p>
+
+      <p>Predefined Method</p>
+
+      <br /><ol>
+        <li>Choose a Normalization Type</li>
+
+        <li>Choose a Low Control Type</li>
+
+        <li>Choose a High Control Type</li>
+
+      </ol>
+
+      <p>Custom Method</p>
+
+      <br /><ol>
+        <li>Type your normalization formula based on the language selected in the Language section. (If the language is JEP, you can construct a formula with the "Edit..." function)</li>
+
+        <li>Select a scope for the normalization</li>
+
+      </ol>
+
+      <p><strong>Classification Section</strong></p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/classificationfeaturesection.png" /><br /></p>
+
+      <p>Define all the different types you will use in this classification feature. You can add a feature class by clicking on the "Add Class" link.</p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/addclass.png" /><br /></p>
+
+      <p>A new class will be added.</p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/newclass.png" /><br /></p>
+
+      <p>To edit the class, simply click on the field you would like to edit.</p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/editclass.png" /><br /></p>
+
+      <div class="note"><span class="notetitle">Note:</span> to remove a class, simply select the class followed by clicking on the "Remove class" link</div>
+
+      <p />
+
+      <p><strong>Color Method Section</strong></p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/colorfeaturesection.png" /><br /></p>
+
+      <p>The color method is used in plate heatmaps and other visual components. Simply choose a Color Method from the list and define it's settings by clicking on the "Settings..." button </p>
+
+      
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+          
+          
+          <tbody>
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Classification lookup</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Uses the colors exactly as defined in the Classification section of this feature.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Min-Max</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Distributes the colors evenly between the minimum and the maximum value of this feature. You can define the Colors given to min and max. All values in between will be a varying mix of the two colors.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Manual Min - Max</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Distributes the colors evenly between the manually defined minimum and maximum value of this feature. You can define the Colors given to min and max. All values in between will be a varying mix of the two colors.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Min - Mean - Max</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Similar to min-max but uses a 3 color scheme; the color of the mean can also be specified. All values in between will be a varying mix of the 3 colors.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">LC-HC</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Similar to min-mean max, but adds 2 extra colors for the mean Low and High control values. Distributes the colors evenly between the minimum and the maximum value of this feature.  all values in between will be a varying mix of the 5 colors. </td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">LC</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Same as LC-HC,  but without HC color. All values in between will be a varying mix of 4 colors.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">HC</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Same as LC-HC,  but without LC color. All values in between will be a varying mix of 4 colors.</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Lookup</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">An arbitrary number of distinct colors can be added.</td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+</div>
+
+      <p />
+
+      <p><strong>Curve Section</strong></p>
+
+      <p><img src="../../../../Images/Editors/protocol_class_editor/curvefeaturesection.png" /><br /></p>
+
+      <p>Set the properties below to perform curve fitting on this feature.</p>
+
+      
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+          
+          
+          <tbody>
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Curve Kind</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Determines the kind of curve will be displayed</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Curve Model</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Determines which model will be used for the curves</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Curve Method</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Determines which method will be used for the curves</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Curve Type</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Determines which type will be used for the curves</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Curve Threshold</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">&#xA0;</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Manual LB</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Specify this when using PL3L</td>
+
+            </tr>
+
+            <tr>
+              <td class="cellrowborder" valign="top" width="NaN%">Manual UB</td>
+
+              <td class="cellrowborder" valign="top" width="NaN%">Specify this when you use PL3U</td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+</div>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Edit Feature</h2>
+      
+      <p>Editing Features use the same principles as the "Add Feature" functionality </p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Delete Feature</h2>
+      
+      <p>You can delete a feature by selecting it in the list followed by clicking the "Delete feature(s)" link. All the values within the feature will also be deleted.</p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

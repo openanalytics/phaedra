@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Rejecting Wells" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Rejecting_Wells_337" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Rejecting Wells</title>
+</head>
+<body id="Rejecting_Wells_337"><a name="Rejecting_Wells_337"><!-- --></a>
+
+
+  <h1 class="topictitle1">Rejecting Wells</h1>
+
+  <div>
+    <p>An important part of the plate validation process is the identification and elimination of wells that did not generate appropriate results. In Phaedra, these wells are called <strong>outliers</strong>, and they can be rejected with one of two status codes:</p>
+
+    <div class="p">
+      <br /><ul>
+        <li><strong>Technical outlier</strong>: the circumstances in which the results were obtained, are not correct. For example, the well image contains unwanted artifacts or debris, or the microscope was out of focus during image acquisition, or the image analysis program failed to analyze the image correctly. These wells will be excluded from any further processing or calculation.</li>
+
+        <li><strong>Biological outlier</strong>: the biological effect is unexpected. For example, there were too few cells for reliable measurement due to cell death, or the effect is disturbed by an external biological factor. For traceability and data integrity reasons, these wells will still appear on dose-response curves as red crosses (though they will not partake in the curve fitting procedure).</li>
+
+      </ul>
+
+    </div>
+
+    <p>In addition, certain plate effects may affect the results in multiple wells at once. If the errors are too large to correct individually, or too risky to compensate via normalization, these wells may need to be rejected as a group.</p>
+
+    <p>To reject one or more wells, you need to select them first. This can be done in many ways:</p>
+
+    <div class="p">
+      <br /><ul>
+        <li>Select the wells in a plate heatmap or table</li>
+
+        <li>Select the wells in a dose-response curve</li>
+
+        <li>Select the wells in the result set of a query</li>
+
+        <li>Select the wells in a well scatter plot</li>
+
+        <li>...</li>
+
+      </ul>
+
+    </div>
+
+    <p>To select multiple wells, hold down the <strong>Ctrl</strong> key while selecting them. Once you have made a selection, right-click on one of the wells and select <strong>Reject Well(s)</strong>.</p>
+
+    <p><img src="../../Images/howto/rejectwells.png" alt="rejectwells.png" /><br /></p>
+
+    <p>A dialog will appear asking you to specify a rejection status and a reason for rejection. These fields are required, you cannot leave them blank.</p>
+
+    <p><img src="../../Images/howto/rejectwells2.png" alt="rejectwells2.png" /><br /></p>
+
+    <p>Once the wells have been rejected, the following happens:</p>
+
+    <div class="p">
+      <br /><ul>
+        <li>If the rejected wells are sample wells, their dose-response curves are re-fit.</li>
+
+        <li>If the rejected wells are control wells, the whole plate is recalculated, including re-normalization of all wells and re-fitting of all curves.</li>
+
+        <li>The rejected wells will be marked with a red (biological outlier) or yellow (technical outlier) cross on the plate heatmap.</li>
+
+      </ul>
+
+    </div>
+
+    <div class="p">
+      <div class="note"><span class="notetitle">Note:</span> You cannot reject <strong>control</strong> wells on a plate that has been <strong>validated</strong>. You cannot reject <strong>any</strong> wells on a plate that has been <strong>approved</strong>. </div>
+
+    </div>
+
+    <p>Well rejections are logged in a history table, which can be inspected at any time for traceability and data integrity purposes. To do this, right-click on a well and select <strong>Inspectors &gt; Well Inspector</strong>. At the bottom of the Well Inspector is the History table, which will list all rejection actions that have been performed on the selected well.</p>
+
+    <p><img src="../../Images/howto/rejectwells3.png" alt="rejectwells3.png" /><br /></p>
+
+  </div>
+
+
+</body>
+</html>

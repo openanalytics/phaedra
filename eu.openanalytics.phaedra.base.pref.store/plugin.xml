@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="preferenceProvider" name="PreferenceProvider" schema="schema/preferenceProvider.exsd"/>
+   <extension-point id="preferencePersistor" name="PreferencePersistor" schema="schema/preferencePersistor.exsd"/>
+
+</plugin>

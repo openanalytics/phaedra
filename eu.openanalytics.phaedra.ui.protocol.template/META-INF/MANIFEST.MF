@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: UI for Protocol Templates
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.protocol.template;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.protocol.template.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.ui.forms,
+ eu.openanalytics.phaedra.protocol.template;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.editor;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.ui.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

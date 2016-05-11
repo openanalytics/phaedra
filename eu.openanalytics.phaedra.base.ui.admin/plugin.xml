@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="eu.openanalytics.phaedra.base.ui.admin.fs.browser.FSBrowser"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/drive_key.png"
+            id="eu.openanalytics.phaedra.base.ui.admin.fs.browser.FSBrowser"
+            name="Admin File Server Browser"
+            restorable="true">
+      </view>
+      <view
+            class="eu.openanalytics.phaedra.base.ui.admin.CacheManagerView"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/database.png"
+            id="eu.openanalytics.phaedra.base.ui.admin.CacheManagerView"
+            name="Cache Manager"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="eu.openanalytics.phaedra.base.ui.admin.fs.editor.SimpleEditor"
+            default="false"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/pencil.png"
+            id="eu.openanalytics.phaedra.base.ui.admin.fs.editor.SimpleEditor"
+            name="Simple Editor">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="menu:adminMenu?after=additions">
+         <command
+               commandId="org.eclipse.ui.views.showView"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/drive_key.png"
+               label="File Server Browser"
+               style="push">
+            <parameter
+                  name="org.eclipse.ui.views.showView.viewId"
+                  value="eu.openanalytics.phaedra.base.ui.admin.fs.browser.FSBrowser">
+            </parameter>
+         </command>
+         <command
+               commandId="org.eclipse.ui.views.showView"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/database.png"
+               label="Cache Manager"
+               style="push">
+            <parameter
+                  name="org.eclipse.ui.views.showView.viewId"
+                  value="eu.openanalytics.phaedra.base.ui.admin.CacheManagerView">
+            </parameter>
+         </command>
+      </menuContribution>
+   </extension>
+
+</plugin>

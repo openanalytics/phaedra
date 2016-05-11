@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Export UI
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.export;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.export.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.model.curve;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.subwell;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.export;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.ui.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
+ org.eclipse.nebula.widgets.calendarcombo;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

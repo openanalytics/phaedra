@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="gridLayer" name="GridLayer" schema="schema/gridLayer.exsd"/>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            description="Context for a Grid Viewer"
+            id="eu.openanalytics.phaedra.base.ui.gridviewer.context"
+            name="Grid Viewer Context"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.base.ui.gridviewer.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.base.ui.gridviewer.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.ui.plate.preferences.GridviewerPreferencePage"
+            class="eu.openanalytics.phaedra.base.ui.gridviewer.preferences.GridPreferencePage"
+            id="eu.openanalytics.phaedra.base.ui.gridviewer.preferences.GridPreferencePage"
+            name="Global Settings">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="focusControl.is.grid">
+         <with
+               variable="activeFocusControl">
+            <instanceof
+                  value="eu.openanalytics.phaedra.base.ui.gridviewer.widget.Grid">
+            </instanceof>
+         </with>
+      </definition>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.util.copyTextProvider">
+      <copyTextProvider
+            class="eu.openanalytics.phaedra.base.ui.gridviewer.widget.copy.GridCopyTextProvider"
+            name="eu.openanalytics.phaedra.base.ui.gridviewer.widget.copy.GridCopyTextProvider">
+      </copyTextProvider>
+   </extension>
+
+</plugin>

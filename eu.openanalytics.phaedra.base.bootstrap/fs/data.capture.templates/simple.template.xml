@@ -1,0 +1,44 @@
+<data-capture-config>
+
+	<module id="locate.plates" name="Locate plates" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">locate.plate.folders</parameter>
+			<parameter key="plate.folder.pattern">${plate.folderpattern}</parameter>
+			<parameter key="plate.folder.barcode.group">1</parameter>
+		</parameters>
+	</module>
+
+	<module id="gather.welldata" name="Gather well data" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">capture.welldata</parameter>
+			<parameter key="parser.id">txt.welldata.parser</parameter>
+			<parameter key="file.path">${welldata.path}</parameter>
+			<parameter key="file.pattern">${welldata.filepattern}</parameter>
+		</parameters>
+	</module>
+
+	<module id="gather.subwelldata" name="Gather sub-well data" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">capture.subwelldata</parameter>
+			<parameter key="parser.id">txt.subwelldata.parser</parameter>
+			<parameter key="file.path">${subwelldata.path}</parameter>
+			<parameter key="file.pattern">${subwelldata.filepattern}</parameter>
+		</parameters>
+	</module>
+
+	<module id="gather.imagedata" name="Gather image data" type="ImageCompressionModule">
+		<parameters>
+			<parameter key="config">
+				<components>
+				<#list imagedata.channel as c>
+					<component>
+						<compression type="${c.type!'i97'}" <#if c.type != 'r53'>slope="${c.slope!'39000'}"</#if>/>
+						<files path="${imagedata.path}" pattern="${c.filepattern}" pattern-id-groups="1" />
+					</component>
+				</#list>
+				</components>
+			</parameter>
+		</parameters>
+	</module>
+	
+</data-capture-config>

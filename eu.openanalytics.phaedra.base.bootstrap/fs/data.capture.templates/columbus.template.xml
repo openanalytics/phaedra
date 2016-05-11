@@ -1,0 +1,99 @@
+<data-capture-config>
+<!-- TODO support subwelldata montage -->
+<!-- TODO support literal montage layout -->
+
+<#assign nrMontageChannels = 0>
+<#assign nrColumbusChannels = 0>
+<#list imagedata.channel as c>
+	<#if c.montage?? && c.montage == 'true'> <#assign nrMontageChannels = nrMontageChannels + 1> </#if>
+	<#if c.source?? && c.source == 'columbus'> <#assign nrColumbusChannels = nrColumbusChannels + 1> </#if>
+</#list>
+
+	<module id="download.data" name="Download data" type="ColumbusDownloadModule">
+		<parameters>
+			<parameter key="download.image.data"><#if nrColumbusChannels gt 0>true<#else>false</#if></parameter>
+			<parameter key="download.meas.data">true</parameter>
+			<parameter key="download.res.data">true</parameter>
+		</parameters>
+	</module>
+
+	<module id="gather.measdata" name="Gather plate data" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">capture.columbus.measdata</parameter>
+			<parameter key="meas.file.path">.</parameter>
+			<parameter key="meas.file.pattern">Meas_(\d+)\.xml</parameter>
+		</parameters>
+	</module>
+
+	<module id="gather.welldata" name="Gather well data" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">capture.columbus.welldata</parameter>
+			<parameter key="welldata.file.path">.</parameter>
+			<parameter key="welldata.file.pattern">Results_Analysis\.xml</parameter>
+			<parameter key="optional">true</parameter>
+		</parameters>
+	</module>
+
+<#if subwelldata?? && subwelldata.filepattern??>
+	<module id="gather.subwelldata" name="Gather sub-well data" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">capture.subwelldata</parameter>
+			<parameter key="parser.id">txt.subwelldata.parser</parameter>
+			<parameter key="file.path">${r'${image.path}\${experimentName}\${barcode}'}</parameter>
+			<parameter key="file.pattern">${subwelldata.filepattern}</parameter>
+			<parameter key="file.pattern.wellid.group">1</parameter>
+		</parameters>
+	</module>
+</#if>
+
+<#if nrMontageChannels gt 0>
+	<module id="montage" name="Montage fields" type="MontageModule">
+		<parameters>
+			<parameter key="config">
+				<montage layoutSource="<#if nrColumbusChannels gt 0>meas<#else>square</#if>" padding="0" />
+				<imagedata>
+					<components>
+<#list imagedata.channel as c>
+<#if c.montage?? && c.montage == 'true'>
+						<component
+							path=<#if c.source?? && c.source == 'columbus'>"."<#else>"${r'${image.path}\${experimentName}\${barcode}'}"</#if>
+							pattern="${c.filepattern}"
+							pattern-id-groups="${c.idgroup!'1'}"
+							pattern-field-group="${c.fieldgroup!'2'}"
+							output="${r'${wellNr}'}_ch${c_index + 1}.tif">
+						</component>
+</#if>
+</#list>
+					</components>
+				</imagedata>
+			</parameter>
+		</parameters>
+	</module>
+</#if>
+	
+	<module id="gather.imagedata" name="Gather image data" type="ImageCompressionModule">
+		<parameters>
+			<parameter key="config">
+				<components>
+<#list imagedata.channel as c>
+					<component>
+						<compression type="${c.type!'i97'}" slope="${c.slope!'39000'}" />
+<#if c.montage?? && c.montage == 'true'>
+						<files path="${r'${reading.imagePath.montaged}'}" pattern="(.+)_ch${c_index + 1}\.tif" pattern-id-groups="1" />
+<#else>
+						<files path="${r'${image.path}\${experimentName}\${barcode}'}" pattern="${c.filepattern}"/>
+</#if>
+					</component>
+</#list>
+				</components>
+			</parameter>
+		</parameters>
+	</module>
+	
+	<module id="rename.barcodes" name="Renaming barcodes" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">rename.columbus.barcodes</parameter>
+		</parameters>
+	</module>
+
+</data-capture-config>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="elementProvider" name="ElementProvider" schema="schema/elementProvider.exsd"/>
+   <extension-point id="elementHandler" name="ElementHandler" schema="schema/elementHandler.exsd"/>
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            class="eu.openanalytics.phaedra.base.ui.navigator.Navigator"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/folder_explore.png"
+            id="eu.openanalytics.phaedra.base.ui.navigator.Navigator"
+            name="Navigator"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="eu.openanalytics.phaedra.base.ui.navigator.util.NavigatorModelTester"
+            id="eu.openanalytics.phaedra.base.ui.navigator.NavigatorModelTester"
+            namespace="eu.openanalytics.phaedra.base.ui.navigator.model"
+            properties="elementDataClass"
+            type="eu.openanalytics.phaedra.base.ui.navigator.model.IElement">
+      </propertyTester>
+   </extension>
+
+</plugin>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.link.importer.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.link.importer.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="eu.openanalytics.phaedra.link.importer.preferences.PreferencePage"
+            id="eu.openanalytics.phaedra.link.importer.preferences.PreferencePage"
+            name="Import">
+      </page>
+   </extension>
+
+</plugin>

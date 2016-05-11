@@ -1,0 +1,34 @@
+<config>
+	<settings>
+		<setting name="email.suffix">pheadra.io</setting>
+		<!-- <setting name="email.smtp.host"></setting> -->
+		<!-- <setting name="pwd.path">\\path\to\pwddir</setting> -->
+	</settings>
+
+	<environments>
+		<environment name="Embedded">
+			<fs><path>./embedded.env</path></fs>
+			<db><url>jdbc:h2:./embedded.env/db</url></db>
+		</environment>
+		<!--
+		<environment name="Example distributed environment">
+			<fs>
+				<path>\\path\to\fileshare</path>
+				<user>Domain\ServiceAccount</user>
+				<password source="pwd" id="ServiceAccount"/>
+			</fs>
+			<db>
+				<url>jdbc:urlTo/dbInstance</url>
+				<user>dbUser</user>
+				<password source="pwd" id="dbUser"/>
+			</db>
+			<auth>
+				<url>ldaps://url</url>
+				<default.domain>MyDomain</default.domain>
+				<group.prefix>GROUP_PREFIX_</group.prefix>
+				<group.filter>OU=SomeUnit,DC=my,DC=company,DC=com</group.filter>
+			</auth>
+		</environment>
+		-->
+	</environments>
+</config>

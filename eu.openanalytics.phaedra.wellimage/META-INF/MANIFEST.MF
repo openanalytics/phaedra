@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Image API
+Bundle-SymbolicName: eu.openanalytics.phaedra.wellimage;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.wellimage.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.subwell;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.imaging.jp2k;bundle-version="1.0.0";visibility:=reexport,
+ eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hdf5;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.wellimage,
+ eu.openanalytics.phaedra.wellimage.component,
+ eu.openanalytics.phaedra.wellimage.provider

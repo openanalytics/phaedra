@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Silos" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Working_With_Silos_134" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Silos</title>
+</head>
+<body id="Working_With_Silos_134"><a name="Working_With_Silos_134"><!-- --></a>
+
+
+  <h1 class="topictitle1">Silos</h1>
+
+  <div>
+    <div class="section">
+      <p>A <strong>silo</strong> is a container for data that you can assemble and manage yourself. Phaedra offers two types of silos:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>Well silos</li>
+
+          <li>Subwell silos</li>
+
+        </ul>
+
+      </div>
+
+      <p>You can create a new silo at any time, using any data you have access to. Silos can be created for various purposes:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>Assemble a training set for a machine-learning workflow</li>
+
+          <li>Collect different types of outlier wells for QC</li>
+
+          <li>Collect representative wells or cells for use in charts or presentations</li>
+
+          <li>Etc.</li>
+
+        </ul>
+
+      </div>
+
+      <p>A silo is saved on the Phaedra server. This means you can access it from any location or computer, if you are logged in to Phaedra. You can also share your silos with other users, for viewing only or with full access.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Creating a new silo</h2>
+      
+      <p>To create a new silo, go to the Navigator, right-click on the Silos item and select <strong>Create New Silo</strong>.</p>
+
+      <p><img src="../../Images/howto/working_with_silos/creatingSilo.png" /><br /></p>
+
+      <p>In the silo creation dialog, you can provide a name, a description, and several other settings:</p>
+
+      <p><img src="../../Images/howto/working_with_silos/creatingSilo2.png" /><br /></p>
+
+      <div class="p">
+        <div class="note"><span class="notetitle">Note:</span> To create a silo, you must select a protocol class. A silo cannot contain data from different protocol classes.</div>
+
+      </div>
+
+      <p>Click Ok to create the silo. You will find the new silo in the Navigator, under <em>Silos &gt; My Silos</em>.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Viewing a silo</h2>
+      
+      <p>You can open a silo by double-clicking on it in the Navigator. Doing so will open a silo view, containing two panels.</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>The upper panel shows the <strong>groups</strong> that are contained in the silo.</li>
+
+          <li>The lower panel shows the contents of the selected group. At the bottom are two tabs to switch between a table presentation and an image presentation.</li>
+
+        </ul>
+
+      </div>
+
+      <p><img src="../../Images/howto/silo.png" alt="silo.png" /><br /></p>
+
+      <p>A group is represented as a two-dimensional table. The rows represent the wells or cells (depending on the silo type). The columns represent the features.</p>
+
+      <p>In addition to features, columns can also be used to display other information, such as images or a custom calculation formula.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Adding data to a silo</h2>
+      
+      <p>Data is added to a silo using the copy &amp; paste mechanism.</p>
+
+      <p>First, select the data to add. This could be anywhere, for example on a heatmap, in a chart or in a query result table. Right-click on the items and select <strong>Copy &gt; Copy Items</strong>.</p>
+
+      <p><img src="../../Images/howto/silo2.png" alt="silo2.png" /><br /></p>
+
+      <p>Then, open the silo, right-click inside the group panel and select an appropriate paste action.</p>
+
+      <p>For example, to paste a selection of wells in a new group, select <strong>Paste Wells &gt; Paste Wells as New Group</strong>.</p>
+
+      <p><img src="../../Images/howto/silo3.png" alt="silo3.png" /><br /></p>
+
+      <p>Initially, the new group will contain just one column: the Well ID. To add more columns, click on the <strong>Feature Selection</strong> button.</p>
+
+      <p><img src="../../Images/howto/silo4.png" alt="silo4.png" /><br /></p>
+
+      <p>In the Feature Selection dialog, you can select the features that should be added to the group's columns.</p>
+
+      <p>Besides features, you can add custom columns as well. To do this, right-click inside the group panel, and select <strong>Add Column</strong>.</p>
+
+      <p><img src="../../Images/howto/silo5.png" alt="silo5.png" /><br /></p>
+
+      <p>You can add two types of columns:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li><strong>Regular column</strong>: here you can provide the column's data manually, by double-clicking on a cell in the table and entering a value.</li>
+
+          <li><strong>JEP column</strong>: here you can provide a calculation formula, which will be evaluated for each row in the table.</li>
+
+        </ul>
+
+      </div>
+
+      <p>When you are done adding data, click on the <strong>Save</strong> button to save the changes to the silo.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Managing silos</h2>
+      
+      <p>To manage a silo, right-click on it in the Navigator.</p>
+
+      <p><img src="../../Images/howto/silo6.png" alt="silo6.png" /><br /></p>
+
+      <p>To change the silo's name or sharing options, select <strong>Modify Silo</strong>. To create a copy of the silo, select <strong>Duplicate Silo</strong>. To delete the silo, select <strong>Delete Silo</strong>.</p>
+
+      <p>These actions only work on silos you own, or silos that have been shared with you with modification permissions.</p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

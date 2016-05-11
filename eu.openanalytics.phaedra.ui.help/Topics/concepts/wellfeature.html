@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Well Feature" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Well_Feature_139" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Well Feature</title>
+</head>
+<body id="Well_Feature_139"><a name="Well_Feature_139"><!-- --></a>
+
+
+ <h1 class="topictitle1">Well Feature</h1>
+
+ <div>
+  <p>A <strong>well feature</strong> defines an aggregated value per well. For example, consider a well feature named "Cell Count", representing the total number of cells that have been detected in a well.</p>
+
+  <p>Well features are usually provided by the image analysis software. But they may also be calculated in Phaedra, based on subwell features or even other well features. Such a <strong>calculated feature</strong> has a formula associated with it, which will be evaluated by Phaedra and yields a single numeric value per well, just like a regular well feature.</p>
+
+  <p>A typical example of a calculated feature is a ratio between two marker intensity features, one in the cell nucleus, the other in the cell cytoplasm. Such a ratio feature can then be used to study translocation activity.</p>
+
+  <p>Well features are often <strong>normalized</strong> to express their values in a relative way, allowing the values to be compared across plates. Taking again the "Cell Count" feature as an example, this feature could be normalized with the %CTL formula, which will express the value as a percentage relative to the median of the high control wells. If the high controls are assumed to contain a "healthy" amount of cells, the resulting value can be used to identify cell death.</p>
+
+  <p>An important purpose for well features is in <strong>dose-response curve fitting</strong>. When a compound is tested against different concentrations in different wells, the well feature values from those wells can be used to generate a dose-response curve.</p>
+
+  <p><img src="../../Images/concepts/_dose-response.png" alt="_dose-response.png" /><br /></p>
+
+  <p>One dose-response curve can be configured per well feature in the protocol class.</p>
+
+ </div>
+
+
+</body>
+</html>

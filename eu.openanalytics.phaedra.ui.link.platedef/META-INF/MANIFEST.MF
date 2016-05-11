@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Plate Definition UI
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.link.platedef;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.link.platedef.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.link.platedef;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.gridviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.ui.protocol;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

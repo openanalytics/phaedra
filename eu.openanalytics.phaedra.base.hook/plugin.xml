@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="hookPoint" name="HookPoint" schema="schema/hookPoint.exsd"/>
+   <extension-point id="hook" name="Hook" schema="schema/hook.exsd"/>
+
+</plugin>

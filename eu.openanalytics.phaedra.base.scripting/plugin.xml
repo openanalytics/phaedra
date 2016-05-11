@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="scriptEngine" name="ScriptEngine" schema="schema/scriptEngine.exsd"/>
+   <extension-point id="apiProvider" name="APIProvider" schema="schema/apiProvider.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.apiProvider">
+      <apiProvider
+            class="eu.openanalytics.phaedra.base.scripting.api.BaseScriptAPI">
+      </apiProvider>
+   </extension>
+
+</plugin>

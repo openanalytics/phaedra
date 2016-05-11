@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Search Framework
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.search;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.search.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.persistence.jpa;bundle-version="2.3.0",
+ org.eclipse.persistence.jpa.osgi;bundle-version="2.3.0",
+ javax.persistence;bundle-version="2.0.3",
+ org.springframework;bundle-version="3.0.5",
+ eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.search,
+ eu.openanalytics.phaedra.base.search.model,
+ eu.openanalytics.phaedra.base.search.preferences

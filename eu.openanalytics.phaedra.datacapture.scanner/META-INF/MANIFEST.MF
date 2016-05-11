@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Data Capture Server
+Bundle-SymbolicName: eu.openanalytics.phaedra.datacapture.scanner;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.datacapture.scanner.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.scheduling;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.seda;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.datacapture.scanner,
+ eu.openanalytics.phaedra.datacapture.scanner.model

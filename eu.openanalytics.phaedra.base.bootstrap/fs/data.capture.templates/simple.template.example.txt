@@ -1,0 +1,28 @@
+protocol.name=New Protocol
+protocol.team=My Team
+
+template=simple
+
+plate.folderpattern=(.+)
+
+welldata.path=.
+welldata.filepattern=[Ww]elldata\.txt
+
+subwelldata.path=.
+subwelldata.filepattern=[Ww]ell(\d+)\.txt
+
+imagedata.path=.
+
+imagedata.channel.1.name=Channel 1
+imagedata.channel.1.filepattern=[Ww]ell(\d+)_ch1\.tif
+
+imagedata.channel.2.name=Channel 2
+imagedata.channel.2.filepattern=[Ww]ell(\d+)_ch2\.tif
+
+imagedata.channel.3.name=Overlay 1
+imagedata.channel.3.type=Overlay
+imagedata.channel.3.filepattern=[Ww]ell(\d+)_ch1_overlay\.png
+
+imagedata.channel.4.name=Overlay 2
+imagedata.channel.4.type=Overlay
+imagedata.channel.4.filepattern=[Ww]ell(\d+)_ch2_overlay\.png

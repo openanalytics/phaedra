@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.environment.bootstrapper">
+      <bootstrapper
+            class="eu.openanalytics.phaedra.base.bootstrap.db.DatabaseBootstrapper"
+            sequence="0">
+      </bootstrapper>
+      <bootstrapper
+            class="eu.openanalytics.phaedra.base.bootstrap.fs.FileServerBootstrapper"
+            sequence="1">
+      </bootstrapper>
+   </extension>
+
+</plugin>

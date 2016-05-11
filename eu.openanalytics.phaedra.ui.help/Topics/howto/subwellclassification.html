@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Subwell Classification" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Sub-well_Classification_34" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Subwell Classification</title>
+</head>
+<body id="Sub-well_Classification_34"><a name="Sub-well_Classification_34"><!-- --></a>
+
+
+  <h1 class="topictitle1">Subwell Classification</h1>
+
+  <div>
+    <p>It is often useful to divide a set of data into distinct groups, or classes. Phaedra supports this notion on the subwell level, through the concept of <strong>subwell classification</strong>. A common scenario is cell classification, where cells are labeled to distinguish living cells from dead cells, fluorescence-expressing cells versus non-expressing cells, etc.</p>
+
+    <div class="section"><h2 class="sectiontitle">Classification Features</h2>
+      
+      <p>Before classification can be performed, a <strong>classification feature</strong> must first be defined. This is a feature whose value is the class that has been assigned to each subwell item.</p>
+
+      <p><img src="../../Images/howto/editprotocolclass5.png" alt="editprotocolclass5.png" /><br /></p>
+
+      <p>For example, you can define a classification feature called 'Cell State' with two classes: Living and Dead.</p>
+
+      <p>For more information about setting up a classification feature, see <a href="editprotocolclass.html">Editing the Protocol Class</a>.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Manual classification</h2>
+      
+      <p>With manual classification, classes are assigned to cells by selecting groups of cells on an image, in a table or in a plot.</p>
+
+      <p>Once a selection has been made, a class can be assigned to the selection by clicking on the classification button:<img src="../../Images/views/classificationButton.png" alt="classificationButton.png" /><br /></p>
+
+      <p><img src="../../Images/views/classificationDialog.png" alt="classificationDialog.png" /><br /></p>
+
+      <div class="p">
+        <br /><ul>
+          <li><strong>Classification feature</strong>: this box shows the available classification features. While this is exceptional, some protocols have multiple classification features. Select the one you want to use here.</li>
+
+          <li><strong>Available classes</strong>: this table lists the available classes for the selected classification feature. Each class has a <em>name</em>, a <em>color</em>, a <em>symbol</em> and an optional <em>description</em>. Furthermore, the number of items (e.g. cells) that match the class is shown as a number and a percentage of the entire well.</li>
+
+          <li><strong>Affected items</strong>: this table lists the items that will be affected by the classification. To change this set, close the dialog, make another selection and click the classification button again.</li>
+
+          <li><strong>Save or close</strong>: when you are done making changes, you can either click Save to keep the changes or Close to discard the changes.</li>
+
+        </ul>
+
+      </div>
+
+      <p><img src="../../Images/views/classificationInScatter.png" alt="classificationInScatter.png" /><br /></p>
+
+      <p>After confirming the classification, the items will be updated with their new class value. This may trigger a recalculation, for example when calculated well features have been defined that use a classification feature in their formula.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Automated classification</h2>
+      
+      <p>Manual classification is not always feasible. If you need to perform classification on a large number of wells, you may consider using automated classification. This requires the use of a workflow. See <a href="workflows.html">Using Workflows</a> for more information about running a workflow, or contact a Phaedra administrator to help you with setting up a new workflow.</p>
+
+      <p>Of course, automated classification only works if the classification criteria can be applied by the computer itself, without user intervention or visual inspection. A typical example of automated classification is applying a fixed threshold on a subwell feature that expresses marker intensity.</p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

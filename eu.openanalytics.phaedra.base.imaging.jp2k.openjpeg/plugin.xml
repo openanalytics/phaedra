@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.imaging.jp2k.codec">
+      <codec
+            class="eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg.OpenJPEGCodec"
+            preferred="false">
+      </codec>
+   </extension>
+
+</plugin>

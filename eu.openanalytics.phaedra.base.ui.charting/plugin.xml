@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="eu.openanalytics.phaedra.base.ui.charting.chartLayer" name="Chart Layer" schema="schema/chartLayer.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.base.ui.charting.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.base.ui.charting.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="eu.openanalytics.phaedra.base.ui.charting.preferences.PreferencePage"
+            id="eu.openanalytics.phaedra.base.ui.charting.preferences.PreferencePage"
+            name="Charting">
+      </page>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.charting.chartLayer">
+      <chartLayer
+            class="eu.openanalytics.phaedra.base.ui.charting.v2.layer.SelectionChartLayer"
+            dimensions="0"
+            id="eu.openanalytics.phaedra.base.ui.charting.v2.layer.SelectionChartLayer"
+            name="Selection">
+      </chartLayer>
+      <chartLayer
+            class="eu.openanalytics.phaedra.base.ui.charting.v2.chart.contour.Contour3DChartLayer"
+            dimensions="3"
+            id="eu.openanalytics.phaedra.base.ui.charting.v2.chart.contour.Contour3DChartLayer"
+            name="Contour 3D">
+      </chartLayer>
+      <chartLayer
+            class="eu.openanalytics.phaedra.base.ui.charting.v2.chart.scatterdensity.ScatterDensity3DChartLayer"
+            dimensions="3"
+            id="eu.openanalytics.phaedra.base.ui.charting.v2.chart.scatterdensity.ScatterDensity3DChartLayer"
+            name="Scatter Density 3D">
+      </chartLayer>
+   </extension>
+   
+
+</plugin>

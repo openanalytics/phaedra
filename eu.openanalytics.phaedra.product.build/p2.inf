@@ -1,0 +1,7 @@
+instructions.configure=\
+  addProgramArg(programArg:-data);\
+  addProgramArg(programArg:@user.home/phaedra-workspace);\
+  addProgramArg(programArg:--launcher.defaultAction);\
+  addProgramArg(programArg:openFile);\
+  addRepository(type:0,name:Phaedra Updates,location:http${#58}//update.phaedra.io/1.x/);\
+  addRepository(type:1,name:Phaedra Updates,location:http${#58}//update.phaedra.io/1.x/);

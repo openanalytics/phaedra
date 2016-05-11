@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="ui.partsettings">
+         <entityClass
+               class="eu.openanalytics.phaedra.ui.partsettings.vo.PartSettings">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+
+</plugin>

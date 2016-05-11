@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="headlessStartup" name="HeadlessStartup" schema="schema/headlessStartup.exsd"/>
+   <extension
+         id="eu.openanalytics.phaedra.app.headless"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="eu.openanalytics.phaedra.app.headless.Application">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.app.headless.headlessStartup">
+      <startup
+            class="eu.openanalytics.phaedra.app.headless.updater.Updater">
+      </startup>
+   </extension>
+
+</plugin>

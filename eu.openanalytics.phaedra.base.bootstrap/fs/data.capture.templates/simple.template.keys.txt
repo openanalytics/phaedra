@@ -1,0 +1,71 @@
+{
+	"template": {
+		"description": "The id of the template to use",
+		"defaultValue": "simple"
+	},
+	"protocolclass.name": {
+		"description": "The name of the new protocol class",
+		"defaultValue": "${protocol.name}"
+	},
+	"protocolclass.description": {
+		"description": "The description of the new protocol class"
+	},
+	"protocol.name": {
+		"description": "The name of the new protocol",
+		"defaultValue": "New Protocol"
+	},
+	"protocol.description": {
+		"description": "The description of the new protocol"
+	},
+	"protocol.team": {
+		"description": "The team that owns the new protocol",
+		"defaultValue": "Global"
+	},
+	"plate.folderpattern": {
+		"description": "The regex pattern of a folder representing a plate"
+	},
+	"welldata.path": {
+		"description": "The path, relative to the plate folder, containing the well data file(s)"
+	},
+	"welldata.filepattern": {
+		"description": "The regex pattern of the file containing the well data"
+	},
+	"subwelldata.path": {
+		"description": "The path where the subwell data files are located",
+		"type": "path"
+	},
+	"subwelldata.filepattern": {
+		"description": "The regex pattern of the subwell data files",
+		"type": "regex"
+	},
+	"imagedata.path": {
+		"description": "The path where all images are located",
+		"type": "path"
+	},
+	"imagedata.channel.*.name": {
+		"description": "The name of the image channel"
+	},
+	"imagedata.channel.*.type": {
+		"description": "The type of the image channel",
+		"defaultValue": "Raw"
+	},
+	"imagedata.channel.*.depth": {
+		"description": "The bit depth of the image channel",
+		"type": "numeric",
+		"defaultValue": "16"
+	},
+	"imagedata.channel.*.slope": {
+		"description": "The compression slope of the image channel",
+		"type": "numeric",
+		"defaultValue": "40000"
+	},
+	"imagedata.channel.*.filepattern": {
+		"description": "The regex pattern of the image channel files",
+		"type": "regex"
+	},
+	"imagedata.channel.*.path": {
+		"description": "The path of the image channel files",
+		"type": "path",
+		"defaultValue": "${imagedata.path}"
+	}
+}

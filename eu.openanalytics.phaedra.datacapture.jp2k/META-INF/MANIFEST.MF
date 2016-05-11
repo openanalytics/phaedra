@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Image Compression for Data Capture
+Bundle-SymbolicName: eu.openanalytics.phaedra.datacapture.jp2k;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.datacapture.jp2k.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.console;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.imaging.jp2k;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

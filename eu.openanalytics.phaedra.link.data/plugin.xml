@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.link.data.preferences.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.link.data.preferences.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hookPoint">
+      <hookPoint
+            id="eu.openanalytics.phaedra.link.data.dataHookPoint">
+      </hookPoint>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.seda.stage">
+      <stage
+            eventHandler="eu.openanalytics.phaedra.link.data.DataLinkTaskQueue"
+            id="DataLinkTaskQueue">
+      </stage>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.link.data.addfeatures.PreLinkHeadlessHook"
+            hookPointId="eu.openanalytics.phaedra.link.data.dataHookPoint"
+            priority="1">
+      </hook>
+   </extension>
+
+</plugin>

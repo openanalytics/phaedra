@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="ROI Editor" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Image_Editor_231" name="DC.Identifier" />
+<link href="../../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>ROI Editor</title>
+</head>
+<body id="Image_Editor_231"><a name="Image_Editor_231"><!-- --></a>
+
+
+  <h1 class="topictitle1">ROI Editor</h1>
+
+  <div>
+    <p>The ROI Editor in Phaedra is actually an <em>Image Region/Cells Creator</em>, not a general image editor.</p>
+
+    <p>The ROI editor allows to indicate regions of interest in the images (ROIs). You can configure these regions by adding a classification well feature in the Protocol. Each "class" will be used as a region. The ROIS have a color as configured in the protocol. The example below shows a mouse whole-brain slice (35,000 by 25,000 pixels) with amyloid plaques detected.</p>
+
+    <p><img src="../../../Images/Editors/imageeditor/_Image Editor.png" alt="_Image Editor.png" /><br /></p>
+
+    <p>The user has to draw the different brain regions as indicated in the top right panel, as follows:</p>
+
+    <br /><ol>
+      <li>Click on the region you want to draw, e.g. Hippocampus</li>
+
+      <li>Draw the region with the mouse.</li>
+
+      <li>If you made a mistake, click "Undo"</li>
+
+      <li>Do the same for the other regions.</li>
+
+      <li>Click Save to store the regions</li>
+
+    </ol>
+
+    <p>The regions are stored as image overlay channels. A number of features can now be calculated. These have been entered in the protocol class as 
+      calculated features. In this example, Phaedra will calculate the number and the area of the plaques within each region, and stores the values in the Database. </p>
+
+  </div>
+
+
+</body>
+</html>

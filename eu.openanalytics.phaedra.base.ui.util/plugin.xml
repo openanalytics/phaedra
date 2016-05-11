@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="decoratorProvider" name="DecoratorProvider" schema="schema/decoratorProvider.exsd"/>
+   <extension-point id="copyTextProvider" name="copyTextProvider" schema="schema/copyTextProvider.exsd"/>
+   <extension
+         point="org.eclipse.ui.contexts">
+      <context
+            description="A view that is copyable"
+            id="eu.openanalytics.phaedra.base.ui.util.copyable"
+            name="Copyable View"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+      <context
+            description="A context for controls that support copy-paste"
+            id="eu.openanalytics.phaedra.base.ui.util.CopyPasteContext"
+            name="Copy Paste Context"
+            parentId="org.eclipse.ui.contexts.window">
+      </context>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="eu.openanalytics.phaedra.base.ui.util.view.ShowSecondayViewHandler"
+            id="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+            name="Show Secondary View">
+            <commandParameter
+      			id="org.eclipse.ui.views.showView.viewId"
+      			name="%command.showView.viewIdParameter"/>
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyItems"
+            id="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyItems"
+            name="Copy Items">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CutItems"
+            id="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CutItems"
+            name="Cut Items">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.base.ui.util.copy.cmd.PasteItems"
+            id="eu.openanalytics.phaedra.base.ui.util.copy.cmd.PasteItems"
+            name="Paste Items">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyView"
+            id="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyView"
+            name="Copy View">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+      <definition
+            id="activePart.is.copyable">
+         <with
+               variable="activePart">
+            <test
+                  property="eu.openanalytics.phaedra.base.ui.util.copyable">
+            </test>
+         </with>
+      </definition>
+   </extension>
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            class="eu.openanalytics.phaedra.base.ui.util.copy.CopyableTester"
+            id="eu.openanalytics.phaedra.base.ui.util.copy.CopyableTester"
+            namespace="eu.openanalytics.phaedra.base.ui.util"
+            properties="copyable"
+            type="java.lang.Object">
+      </propertyTester>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.base.ui.util.pref.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="org.eclipse.ui.preferencePages.Workbench"
+            class="eu.openanalytics.phaedra.base.ui.util.pref.PreferencePage"
+            id="eu.openanalytics.phaedra.base.ui.util.pref.PreferencePage"
+            name="Highlighting">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <key
+            commandId="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyItems"
+            contextId="eu.openanalytics.phaedra.base.ui.util.CopyPasteContext"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+C">
+      </key>
+      <key
+            commandId="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CutItems"
+            contextId="eu.openanalytics.phaedra.base.ui.util.CopyPasteContext"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+X">
+      </key>
+      <key
+            commandId="eu.openanalytics.phaedra.base.ui.util.copy.cmd.PasteItems"
+            contextId="eu.openanalytics.phaedra.base.ui.util.CopyPasteContext"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="CTRL+V">
+      </key>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.base.ui.util.pref.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.util.copyTextProvider">
+      <copyTextProvider
+            class="eu.openanalytics.phaedra.base.ui.util.copy.extension.TableCopyTextProvider"
+            name="eu.openanalytics.phaedra.base.ui.util.copy.extension.TableCopyTextProvider">
+      </copyTextProvider>
+   </extension>
+
+</plugin>

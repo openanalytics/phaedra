@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Console
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.console;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.console.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.ui.console;bundle-version="3.5.100",
+ org.eclipse.core.runtime,
+ org.eclipse.jface.text;bundle-version="3.7.0",
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.console

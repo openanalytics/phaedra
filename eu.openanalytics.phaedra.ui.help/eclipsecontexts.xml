@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+    <?NLS TYPE="org.eclipse.help.contexts"?>
+
+    <contexts>
+<context id="viewConsole">
+<topic label="Console View" href="Topics/views/general/console.html"/>
+</context>
+<context id="viewErrorLog">
+<topic label="Error Log View" href="Topics/views/general/error_log.html"/>
+</context>
+<context id="viewInternalWebBrowser">
+<topic label="Internal Web Browser" href="Topics/views/general/internalBrowser.html"/>
+</context>
+<context id="viewProgress">
+<topic label="Progress View" href="Topics/views/general/progress.html"/>
+</context>
+<context id="viewImageSettings">
+<topic label="Image Settings View" href="Topics/views/image/imageSettings.html"/>
+</context>
+<context id="viewSubwellImages">
+<topic label="Subwell Image Set View" href="Topics/views/image/subwellImages.html"/>
+</context>
+<context id="viewWellImage">
+<topic label="Well Image View" href="Topics/views/image/wellImage.html"/>
+</context>
+<context id="viewWellImages">
+<topic label="Well Images Set View" href="Topics/views/image/wellImages.html"/>
+</context>
+<context id="viewCellInspector">
+<topic label="Cell Inspector" href="Topics/views/inspectors/cellInspector.html"/>
+</context>
+<context id="viewCompoundInspector">
+<topic label="Compound Inspector" href="Topics/views/inspectors/compoundInspector.html"/>
+</context>
+<context id="viewExperimentInspector">
+<topic label="Experiment Inspector" href="Topics/views/inspectors/experimentInspector.html"/>
+</context>
+<context id="viewFeatureInspector">
+<topic label="Feature Selector" href="Topics/views/inspectors/featureInspector.html"/>
+</context>
+<context id="viewPlateInspector">
+<topic label="Plate Inspector" href="Topics/views/inspectors/plateInspector.html"/>
+</context>
+<context id="viewWellInspector">
+<topic label="Well Inspector" href="Topics/views/inspectors/wellInspector.html"/>
+</context>
+<context id="viewExperimentPlateTrend">
+<topic label="Experiment Plate Trend" href="Topics/views/plate_charts/experiment_plate_trend.html"/>
+</context>
+<context id="viewPlateBoxWhisker">
+<topic label="Plate Box-whisker" href="Topics/views/plate_charts/plate_box_whisker.html"/>
+</context>
+<context id="viewPDFViewer">
+<topic label="PDF Viewer" href="Topics/views/reporting/pdfviewer.html"/>
+</context>
+<context id="viewReportDesigner">
+<topic label="Report Designer" href="Topics/views/reporting/report_designer.html"/>
+</context>
+<context id="SiloDensityWeka1DView">
+<topic label="Silo 1D Density Plot" href="Topics/views/silo_charts/silo_1d_density_plot.html"/>
+</context>
+<context id="SiloHistogram1DView">
+<topic label="Silo 1D Histogram Plot" href="Topics/views/silo_charts/silo_1d_histogram_plot.html"/>
+</context>
+<context id="SiloDensity2DView">
+<topic label="Silo 2D Density Plot" href="Topics/views/silo_charts/silo_2d_density_plot.html"/>
+</context>
+<context id="SiloScatter2DView">
+<topic label="Silo 2D Scatter Plot" href="Topics/views/silo_charts/silo_2d_scatter_plot.html"/>
+</context>
+<context id="SiloScatter3DView">
+<topic label="Silo 3D Scatter Plot" href="Topics/views/silo_charts/silo_3d_scatter_plot.html"/>
+</context>
+<context id="SiloParallelCoordinatesView">
+<topic label="Silo Parallel Coordinates Plot" href="Topics/views/silo_charts/silo_parallel_coordinates_plot.html"/>
+</context>
+<context id="SubWellDensityWeka1DView">
+<topic label="Subwell 1D Density Plot" href="Topics/views/subwell_charts/subwell_1d_density_plot.html"/>
+</context>
+<context id="SubWellHistogram1DView">
+<topic label="Subwell 1D Histogram" href="Topics/views/subwell_charts/subwell_1d_histogram.html"/>
+</context>
+<context id="SubWellContour2DView">
+<topic label="Subwell 2D Contour Plot" href="Topics/views/subwell_charts/subwell_2d_contour_plot.html"/>
+</context>
+<context id="SubWellDensity2DView">
+<topic label="Subwell 2D Density Plot" href="Topics/views/subwell_charts/subwell_2d_density_plot.html"/>
+</context>
+<context id="SubWellScatter2DView">
+<topic label="Subwell 2D Scatter Plot" href="Topics/views/subwell_charts/subwell_2d_scatter_plot.html"/>
+</context>
+<context id="SubWellScatterDensity2DView">
+<topic label="Subwell 2D Scatter-Density Plot" href="Topics/views/subwell_charts/subwell_2d_scatter_density_plot.html"/>
+</context>
+<context id="SubWellScatter3DView">
+<topic label="Subwell 3D Scatter Plot" href="Topics/views/subwell_charts/subwell_3d_scatter_plot.html"/>
+</context>
+<context id="viewSubwellFeatureCorrelationMatrix">
+<topic label="Subwell Feature Correlation Matrix" href="Topics/views/subwell_charts/subwell_feature_correlation_matrix.html"/>
+</context>
+<context id="SubWellParallelCoordinatesView">
+<topic label="Subwell Parallel Coordinates Plot" href="Topics/views/subwell_charts/subwell_parallel_coordinates_plot.html"/>
+</context>
+<context id="viewScatterMatrix">
+<topic label="Feature Scatter Matrix" href="Topics/views/well_charts/feature_scatter_matrix.html"/>
+</context>
+<context id="WellDensityWeka1DView">
+<topic label="Well 1D Density Plot" href="Topics/views/well_charts/well_1d_density_plot.html"/>
+</context>
+<context id="WellHistogram1DView">
+<topic label="Well 1D Histogram" href="Topics/views/well_charts/well_1d_histogram.html"/>
+</context>
+<context id="WellContour2DView">
+<topic label="Well 2D Contour Plot" href="Topics/views/well_charts/well_2d_contour_plot.html"/>
+</context>
+<context id="WellDensity2DView">
+<topic label="Well 2D Density Plot" href="Topics/views/well_charts/well_2d_density_plot.html"/>
+</context>
+<context id="WellScatter2DView">
+<topic label="Well 2D Scatter Plot" href="Topics/views/well_charts/well_2d_scatter_plot.html"/>
+</context>
+<context id="WellScatterDensity2DView">
+<topic label="Well 2D Scatter-Density Plot" href="Topics/views/well_charts/well_2d_scatter_density_plot.html"/>
+</context>
+<context id="WellScatter3DView">
+<topic label="Well 3D Scatter Plot" href="Topics/views/well_charts/well_3d_scatter_plot.html"/>
+</context>
+<context id="viewWellFeatureCorrelationMatrix">
+<topic label="Well Feature Correlation Matrix" href="Topics/views/well_charts/well_feature_correlation_matrix.html"/>
+</context>
+<context id="WellParallelCoordinatesView">
+<topic label="Well Parallel Coordinates Plot" href="Topics/views/well_charts/well_parallel_coordinates_plot.html"/>
+</context>
+<context id="viewWellSpiderPlot">
+<topic label="Well Spider Plot" href="Topics/views/well_charts/well_spider_plot.html"/>
+</context>
+<context id="viewFeaturePrefixTable">
+<topic label="Feature Prefix Table" href="Topics/views/other/featurePrefixTable.html"/>
+</context>
+<context id="viewGroupedView">
+<topic label="Grouped View" href="Topics/views/other/groupedViews.html"/>
+</context>
+<context id="viewMultiplePlateQuickHeatmap">
+<topic label="Multiple Plate Quick Heatmap" href="Topics/views/other/multiplequickheatmap.html"/>
+</context>
+<context id="viewNavigator">
+<topic label="Navigator" href="Topics/views/other/navigator.html"/>
+</context>
+<context id="viewPlateStatistics">
+<topic label="Plate Statistics" href="Topics/views/other/plateStatistcs.html"/>
+</context>
+<context id="viewPlateTemplateBrowser">
+<topic label="Plate Template Browser" href="Topics/views/other/plateTemplateBrowser.html"/>
+</context>
+<context id="viewQuickHeatmap">
+<topic label="Quick Heatmap View" href="Topics/views/other/quickHeatmap.html"/>
+</context>
+<context id="viewSubWellData">
+<topic label="Subwell Data View" href="Topics/views/other/subWellDataView.html"/>
+</context>
+<context id="viewProtocolBrowser">
+<topic label="Protocol Browser" href="Topics/editors/data_editors/protocolBrowser.html"/>
+</context>
+<context id="viewExperimentBrowser">
+<topic label="Experiment Browser" href="../PLUGINS_ROOT//Topics/editors/data_editors/experimentBrowser.html"/>
+</context>
+<context id="viewProtocolClassBrowser">
+<topic label="Protocol Class Browser" href="../PLUGINS_ROOT//Topics/editors/data_editors/protocolClassBrowser.html"/>
+</context>
+<context id="viewProtocolClassSettings">
+<topic label="Protocol Class Editor" href="Topics/editors/settings_editors/protocoll_class_editor/intro.html"/>
+</context>
+<context id="viewQueryEditor">
+<topic label="Query Framework" href="../PLUGINS_ROOT//Topics/editors/data_editors/queryFramework.html"/>
+</context>
+<context id="viewPlateBrowser">
+<topic label="Plate Browser" href="Topics/editors/data_editors/plateBrowser.html"/>
+</context>
+<context id="viewWellBrowser">
+<topic label="Well Browser" href="Topics/editors/data_editors/wellBrowser.html"/>
+</context>
+<context id="viewCharts">
+<topic label="Chart Views" href="Topics/views/chartViews.html"/>
+</context>
+</contexts>

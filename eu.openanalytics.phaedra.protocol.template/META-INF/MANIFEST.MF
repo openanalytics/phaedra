@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Protocol Templates
+Bundle-SymbolicName: eu.openanalytics.phaedra.protocol.template;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.protocol.template.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0";visibility:=reexport,
+ eu.openanalytics.phaedra.base.imaging.jp2k;bundle-version="1.0.0",
+ org.freemarker.freemarker;bundle-version="2.3.20",
+ com.google.gson;bundle-version="2.2.3"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.protocol.template,
+ eu.openanalytics.phaedra.protocol.template.model,
+ eu.openanalytics.phaedra.protocol.template.validation

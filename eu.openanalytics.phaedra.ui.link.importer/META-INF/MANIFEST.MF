@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Importer UI
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.link.importer;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.link.importer.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.ui.forms,
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.link.importer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.link.data;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.ui.plate;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.ui.link.importer.addfeature,
+ eu.openanalytics.phaedra.ui.link.importer.util,
+ eu.openanalytics.phaedra.ui.link.importer.wizard

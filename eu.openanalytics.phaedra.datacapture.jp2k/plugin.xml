@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.module">
+      <module
+            class="eu.openanalytics.phaedra.datacapture.jp2k.ImageCompressionModule"
+            type="ImageCompressionModule">
+      </module>
+   </extension>
+
+</plugin>

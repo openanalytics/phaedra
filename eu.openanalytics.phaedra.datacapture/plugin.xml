@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="module" name="Module" schema="schema/module.exsd"/>
+   <extension-point id="fieldLayoutSource" name="FieldLayoutSource" schema="schema/fieldLayoutSource.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.module">
+      <module
+            class="eu.openanalytics.phaedra.datacapture.scripting.ScriptedModule"
+            type="ScriptedModule">
+      </module>
+      <module
+            class="eu.openanalytics.phaedra.datacapture.montage.MontageModule"
+            type="MontageModule">
+      </module>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="hca.model.datacapture">
+         <entityClass
+               class="eu.openanalytics.phaedra.datacapture.model.PlateReading">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.datacapture.model.SavedLogEvent">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.fieldLayoutSource">
+      <fieldLayoutSource
+            class="eu.openanalytics.phaedra.datacapture.montage.layout.LiteralFieldLayoutSource"
+            id="literal">
+      </fieldLayoutSource>
+      <fieldLayoutSource
+            class="eu.openanalytics.phaedra.datacapture.montage.layout.SquareFieldLayoutSource"
+            id="square">
+      </fieldLayoutSource>
+      <fieldLayoutSource
+            class="eu.openanalytics.phaedra.datacapture.montage.layout.CalculatedFieldLayoutSource"
+            id="calculated">
+      </fieldLayoutSource>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.seda.stage">
+      <stage
+            eventHandler="eu.openanalytics.phaedra.datacapture.queue.DataCaptureJobQueue"
+            id="datacapture.DataCaptureJobQueue">
+      </stage>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.apiProvider">
+      <apiProvider
+            class="eu.openanalytics.phaedra.datacapture.scripting.ScriptAPI">
+      </apiProvider>
+   </extension>
+
+</plugin>

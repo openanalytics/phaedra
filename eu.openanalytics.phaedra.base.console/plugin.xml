@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="toolbar:org.eclipse.ui.console.ConsoleView?after=additions">
+         <dynamic
+               class="eu.openanalytics.phaedra.base.console.ConsoleSwitcher"
+               id="eu.openanalytics.phaedra.base.console.ConsoleSwitcher">
+         </dynamic>
+      </menuContribution>
+   </extension>
+
+</plugin>

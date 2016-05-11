@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="scannerType" name="ScannerType" schema="schema/scannerType.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="hca.model.datacapture.scanner">
+         <entityClass
+               class="eu.openanalytics.phaedra.datacapture.scanner.model.ScanJob">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.scanner.scannerType">
+      <scannerType
+            class="eu.openanalytics.phaedra.datacapture.scanner.internal.FolderScannerType"
+            id="folderScanner">
+      </scannerType>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scheduling.scheduler">
+      <Scheduler
+            class="eu.openanalytics.phaedra.datacapture.scanner.internal.ScanJobScheduler"
+            id="eu.openanalytics.phaedra.datacapture.scanner.internal.ScannerJobScheduler">
+      </Scheduler>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.seda.stage">
+      <stage
+            eventHandler="eu.openanalytics.phaedra.datacapture.scanner.queue.ScanJobQueue"
+            id="datacapture.ScanJobQueue">
+      </stage>
+   </extension>
+
+</plugin>

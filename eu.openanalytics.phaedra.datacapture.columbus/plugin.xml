@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.scanner.scannerType">
+      <scannerType
+            class="eu.openanalytics.phaedra.datacapture.columbus.ColumbusScannerType"
+            id="columbusScanner">
+      </scannerType>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.fieldLayoutSource">
+      <fieldLayoutSource
+            class="eu.openanalytics.phaedra.datacapture.columbus.montage.MeasFieldLayoutSource"
+            id="meas">
+      </fieldLayoutSource>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.module">
+      <module
+            class="eu.openanalytics.phaedra.datacapture.columbus.ColumbusDownloadModule"
+            type="ColumbusDownloadModule">
+      </module>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.datacapture.columbus.prefs.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.apiProvider">
+      <apiProvider
+            class="eu.openanalytics.phaedra.datacapture.columbus.ScriptAPI">
+      </apiProvider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.datacapture.columbus.prefs.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.link.importer.preferences.PreferencePage"
+            class="eu.openanalytics.phaedra.datacapture.columbus.prefs.PreferencePage"
+            id="eu.openanalytics.phaedra.datacapture.columbus.prefs.PreferencePage"
+            name="Columbus">
+      </page>
+   </extension>
+
+</plugin>

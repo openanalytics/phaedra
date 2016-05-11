@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: HCA User Model
+Bundle-SymbolicName: eu.openanalytics.phaedra.model.user;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.model.user.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0";visibility:=reexport,
+ eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.model.user,
+ eu.openanalytics.phaedra.model.user.util,
+ eu.openanalytics.phaedra.model.user.vo

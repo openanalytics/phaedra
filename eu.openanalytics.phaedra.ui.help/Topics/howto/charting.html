@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Creating Charts" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Creating_Charts_343" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Creating Charts</title>
+</head>
+<body id="Creating_Charts_343"><a name="Creating_Charts_343"><!-- --></a>
+
+
+  <h1 class="topictitle1">Creating Charts</h1>
+
+  <div>
+    <p>Phaedra contains an advanced charting component, which allows you to create plots of almost any data in various types of one-, two- or three-dimensional charts:</p>
+
+    <div class="p">
+      <br /><ul>
+        <li>Scatter plots</li>
+
+        <li>Histograms</li>
+
+        <li>Density plots</li>
+
+        <li>Trend plots, line plots, contour plots, parallel coordinates plots, etc.</li>
+
+      </ul>
+
+    </div>
+
+    <p>In addition, these charts are <strong>layered</strong>, which means you can add multiple plots on top of each other. For example, you can make a density plot of an experiment's sample wells, and add a scatter plot on top that highlights the experiment's high control wells.</p>
+
+    <p>Beyond that, charts can be configured in great detail. The most important settings are described in this topic.</p>
+
+    <div class="section"><h2 class="sectiontitle">Opening a Chart View</h2>
+      
+      <p>To create a chart, the first step is to open a <strong>Chart View</strong> on a selection of data. Right-click on a selection of plates or wells, and select one of the available chart types.</p>
+
+      <p><img src="../../Images/howto/charting.png" alt="charting.png" /><br /></p>
+
+      <p>As you can see, there are 3 categories of charts:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li><em>Plate charts</em>: use these charts to plot plate statistics</li>
+
+          <li><em>Well charts</em>: use these charts to plot well features</li>
+
+          <li><em>Subwell charts</em>: use these charts to plot subwell features</li>
+
+        </ul>
+
+      </div>
+
+      <p>For example, to view the correlation between two well features in a plate, select the plate and open a Well 2D Scatter Plot. </p>
+
+      <p><img src="../../Images/howto/charting2.png" alt="charting2.png" /><br /></p>
+
+      <p>Each blue dot represents one well of the selected plate. To select the features that should be plotted, use the X and Y buttons in the view's toolbar.</p>
+
+      <p><img src="../../Images/howto/charting3.png" alt="charting3.png" /><br /></p>
+
+      <p>All charts are interactive, which means you can select wells in the chart by holding down the mouse button and drawing a circle around the items you want to select.</p>
+
+      <p><img src="../../Images/howto/charting4.png" alt="charting4.png" /><br /></p>
+
+      <p>If another view on the same plate is open (for example, a heatmap), the selection will be highlighted there. To clear a selection, simply click somewhere in the chart area.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Chart Legend</h2>
+      
+      <p>Below the plot, the chart legend is displayed. This legend contains a lot of information, and allows you to change many chart settings as well. For a full description of these settings, refer to the topic <a href="../views/chartViews.html">Chart Views</a>.</p>
+
+      <p>The most important settings are explained below.</p>
+
+      <p><img src="../../Images/howto/charting5.png" alt="charting5.png" /><br /></p>
+
+      <p>The legend will contain one row for each chart layer. You can hide a layer by unchecking the corresponding row.</p>
+
+      <p>In addition, if data has been grouped, one row per group will be listed. To change the grouping method (by compound, by plate, etc), click on the "No Grouping" item in the <strong>Grouping</strong> column and select a method from the list.</p>
+
+      <p>To change the symbol size of a group, click on the number in the <strong>Size</strong> column and enter a new value.</p>
+
+      <p>Other, advanced settings can be accessed via the buttons in the <strong>Actions</strong> column.</p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

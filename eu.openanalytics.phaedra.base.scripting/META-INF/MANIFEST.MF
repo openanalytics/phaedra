@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Scripting
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.scripting;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.scripting.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.console;bundle-version="1.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.scripting,
+ eu.openanalytics.phaedra.base.scripting.api,
+ eu.openanalytics.phaedra.base.scripting.engine

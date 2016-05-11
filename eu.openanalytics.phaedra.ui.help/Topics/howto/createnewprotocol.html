@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Create a new Protocol" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Create_a_new_Protocol_329" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Create a new Protocol</title>
+</head>
+<body id="Create_a_new_Protocol_329"><a name="Create_a_new_Protocol_329"><!-- --></a>
+
+
+  <h1 class="topictitle1">Create a new Protocol</h1>
+
+  <div>
+    <p>A protocol (and by extension, a protocol class) is the parent object where you will import experiments and plates into. It represents the execution phase of a screening assay, and contains a number of settings related to the instrument used for reading out the plates, and the image analysis used to identify the contents of the plates.</p>
+
+    <p>To create a new protocol, select <strong>File &gt; Create New Protocol</strong>.</p>
+
+    <p><img src="../../Images/howto/createnewprotocol.png" alt="createnewprotocol.png" /><br /></p>
+
+    <p>Setting up a protocol can be a difficult task, requiring careful configuration and some technical knowledge. Phaedra offers several functions to make this process easier:</p>
+
+    <div class="p">
+      <br /><ul>
+        <li>If the plate readouts have been stored and analyzed in a Columbus system, use the <strong>Columbus Wizard</strong>. This is the easiest method for setting up a new protocol.</li>
+
+        <li>If the plates have been read out and analyzed using an instrument and analysis software that Phaedra supports, use the <strong>Template Wizard</strong>. This is an intermediate method and requires knowledge of file name patterns and locations.</li>
+
+        <li>If none of the above apply, you need to create a protocol (and protocol class) from scratch. Contact a Phaedra administrator to assist you with this process.</li>
+
+      </ul>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Columbus Wizard</h2>
+      
+      <p>The Columbus Wizard is an intuitive way to set up a new Columbus-based protocol. It will automatically inspect the data that is stored in Columbus, and suggest an appropriate protocol configuration for you.</p>
+
+      <p>Start by selecting a screen in the list of available screens. Phaedra will start inspecting the data in the selected screen and construct a skeleton for the new protocol. If you select an invalid screen (for example, a screen without plate measurements or image analysis results), an error message will be displayed.</p>
+
+      <p>Enter a name for the new protocol, and select the team that will own the new protocol.</p>
+
+      <p><img src="../../Images/howto/columbusprotocolwizard.png" alt="columbusprotocolwizard.png" /><br /></p>
+
+      <p>In the next screen, you can tune the settings related to image channels.</p>
+
+      <p><img src="../../Images/howto/columbusprotocolwizard2.png" alt="columbusprotocolwizard2.png" /><br /></p>
+
+      <div class="p">
+        <br /><ul>
+          <li>You can rearrange the channel order using the arrow buttons on the left.</li>
+
+          <li>You can rename each channel, and change the color it is rendered in.</li>
+
+          <li>You can change the contrast stretching of each channel, using the contrast min-max sliders.</li>
+
+          <li>You can remove a channel using the trashcan icon to the right.</li>
+
+        </ul>
+
+      </div>
+
+      <div class="p">
+        <div class="tip"><span class="tiptitle">Tip:</span> Hover your cursor over a channel thumbnail to see a larger image.</div>
+
+        <div class="tip"><span class="tiptitle">Tip:</span> While most instruments generate 16bit images, they rarely use the full range for intensity values. A maximum contrast of around 4000 (12bit) is usually enough to show the image clearly while keeping background noise to a minimum.</div>
+
+      </div>
+
+      <p>In the next screen you can select which well features to define in the protocol class. By default, all well features that have been found in the image analysis result set, will be added.</p>
+
+      <p><img src="../../Images/howto/columbusprotocolwizard3.png" alt="columbusprotocolwizard3.png" /><br /></p>
+
+      <p>To unselect a feature, click on the green tick sign to the left of the feature. To mark a feature as a Key feature, click on the red cross sign in the <strong>Is Key</strong> column.</p>
+
+      <div class="p">
+        <div class="note"><span class="notetitle">Note:</span> You can still add, remove, or modify features later in the protocol class editor.</div>
+
+      </div>
+
+      <p>In the final screen, you can select which subwell features to define in the protocol class. This process is very similar to the previous screen, for well feature definitions.</p>
+
+      <p>After clicking <strong>Finish</strong>, the new protocol is created and will be ready for importing plates into.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Template Wizard</h2>
+      
+      <p>Phaedra contains a number of protocol templates, which are a kind of blueprints for new protocols. These templates already contain technical settings for dealing with a particular combination of instrument and image analysis program.</p>
+
+      <p><img src="../../Images/howto/templatewizard.png" alt="templatewizard.png" /><br /></p>
+
+      <p>When you select one of these templates, its contents will be shown in the area below. Any problematic settings will be underlined in yellow (warnings) or red (errors). Hover your cursor over the problematic line to get more information about the problem.</p>
+
+      <p><img src="../../Images/howto/templatewizard2.png" alt="templatewizard2.png" /><br /></p>
+
+      <p>Some of the settings in the template are <strong>regular expressions</strong>, for example file name patterns. These settings can be tested by selecting the <strong>Pattern Tester</strong> tab to the right of the screen.</p>
+
+      <p>Using this tool, you can test the correctness of a pattern by evaluating it on a set of files.</p>
+
+      <p><img src="../../Images/howto/templatewizard3.png" alt="templatewizard3.png" /><br /></p>
+
+      <p>First, select the setting you want to test. In the above image, the file pattern for image channel 3 is being tested.</p>
+
+      <p>Next, select a folder containing images. Phaedra will scan the folder and highlight the files that match the pattern in green. In addition, if your pattern contains groups (surrounded by brackets), those will be highlighted in blue.</p>
+
+      <p>When all settings have been set, click <strong>Finish</strong> to create the new protocol.</p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

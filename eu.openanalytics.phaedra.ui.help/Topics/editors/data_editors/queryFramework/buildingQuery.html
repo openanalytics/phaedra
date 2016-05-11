@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Building a query" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Building_a_query_85" name="DC.Identifier" />
+<link href="../../../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Building a query</title>
+</head>
+<body id="Building_a_query_85"><a name="Building_a_query_85"><!-- --></a>
+
+
+  <h1 class="topictitle1">Building a query</h1>
+
+  <div>
+    <div class="section"><strong><u>Query settings</u></strong><p>A query has several settings you can modify in order to keep track of your queries.</p>
+
+      <img src="../../../../Images/Editors/queryFramework/query_overview.png" alt="query_overview.png" /><br />
+      <br /><ul><li><strong>Name</strong>: You can input any text here as a name, that will be shown in the Navigator. For Examples/Public queries, use a meaningful short name.</li>
+<li><strong>Description</strong>: A longer text that will be used as a tooltip.</li>
+<li><strong>Remark</strong>: Extra tips which may be useful in longer queries.</li>
+<li><strong>Owner</strong>: The name of the query Owner, your name if you are building one. [this is automatically filled]</li>
+<li><strong>Result Type</strong>: This determines the filters and filter combinations you can specify.</li>
+<li><strong>Max Results</strong>: When building a query, we advise to use a small number of results to get quicker results. Switch off before you save.</li>
+<li><strong>Public</strong>: After saving, a query will be available for everyone. If not checked, a Query will be private.</li>
+<li><strong>Example</strong>: Query will end up in a special “Example Queries”section in the navigator. Public, for training. </li>
+<li><strong><a href="#Building_a_query_85__filters">Query Filters</a></strong>: Specify any number of criteria to return only the data you want.</li>
+<li><strong><a href="#Building_a_query_85__orderings">Query Orderings</a></strong>: Specify any number of (hierarchical) sorting criteria to return data in the order you want.</li>
+<li><strong><a href="usingResults.html">Query Results</a></strong>: Table with results, returned by the database. Different Result Types have different columns. You can reorder by clicking on a column header.</li>
+</ul>
+</div>
+
+    <div class="section" id="Building_a_query_85__filters"><a name="Building_a_query_85__filters"><!-- --></a><strong><u>Query Filters</u></strong><p>You don't need to know a programming language to build these queries. You can simply use the filters to add criteria.</p>
+<p>You can add filters by using: <img src="../../../../Images/Editors/queryFramework/query_filter_add.png" alt="query_filter_add.png" /><br /></p>
+<p>When you start entering values in the fields, extra fields may appear if needed. The different fields represent different parts of a selection, as shown in the figure below:</p>
+<p><img src="../../../../Images/Editors/queryFramework/query_filter.png" alt="query_filter.png" /><br /></p>
+<p>On the image above, the query would read as "Give me all the plates that were uploaded by dwuyts".</p>
+<br /><ol><li><strong>Filter Object</strong>: First criteria element is the result type</li>
+<li><strong>Object Tag</strong>: One of the meta data items of that object.</li>
+<li><strong>Comparison</strong>: Logical operators and mathematical comparators to build constraints. <br /><ol type="a"><li>Logical: <strong>IS</strong> or <strong>IS NOT</strong> (True or False)</li>
+<li>Mathematical: [text] in, like, equal to, starting with, ... [numbers] empty, NaN (not a number), ...</li>
+</ol>
+</li>
+<li><strong>Object Value</strong>: Text or numerical part. The way to fill this parameter depends on the selected comparison. If applicable, a "Case Sensitive" button will appear after the input, as shown below:</li>
+</ol>
+
+      <img src="../../../../Images/Editors/queryFramework/query_filter2.png" alt="query_filter2.png" /><br />
+      <p>Functions of the buttons:</p>
+
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all"><tbody><tr><td class="cellrowborder" valign="top" width="NaN%"><img src="../../../../Images/Editors/queryFramework/query_filter_add.png" alt="query_filter_add.png" /><br /></td>
+<td class="cellrowborder" valign="top" width="NaN%">Add more filters</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="NaN%"><img src="../../../../Images/Editors/queryFramework/query_filter_remove.png" alt="query_filter_remove.png" /><br /></td>
+<td class="cellrowborder" valign="top" width="NaN%">Remove a filter</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Every filter that you add will be seen as an extra constraint. So it is not possible to filter results that follow only one of the set filters.</p>
+</div>
+
+    <div class="section" id="Building_a_query_85__orderings"><a name="Building_a_query_85__orderings"><!-- --></a><strong><u>Query Orderings</u></strong>
+      <p>If you want to show your result in a certain order (sorted), you can use the orderings to order on a result parameter. </p>
+
+      <img src="../../../../Images/Editors/queryFramework/query_ordering.png" alt="query_ordering.png" /><br />
+      <p>Functions of the buttons:</p>
+
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all"><tbody><tr><td class="cellrowborder" valign="top" width="NaN%"><img src="../../../../Images/Editors/queryFramework/query_filter_add.png" alt="query_filter_add.png" /><br /></td>
+<td class="cellrowborder" valign="top" width="NaN%">Add an order</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="NaN%"><img src="../../../../Images/Editors/queryFramework/query_filter_remove.png" alt="query_filter_remove.png" /><br /></td>
+<td class="cellrowborder" valign="top" width="NaN%">Remove an ordering</td>
+</tr>
+<tr><td class="cellrowborder" valign="top" width="NaN%"><img src="../../../../Images/Editors/queryFramework/query_ordering_updown.png" alt="query_ordering_updown.png" /><br /></td>
+<td class="cellrowborder" valign="top" width="NaN%">Change the sequence.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The sequence in which you make these orderings, will influence the end result. The first ordering will be used first. If there are more results with the first ordering, the second ordering will be applied etc.</p>
+</div>
+
+  </div>
+
+
+</body>
+</html>

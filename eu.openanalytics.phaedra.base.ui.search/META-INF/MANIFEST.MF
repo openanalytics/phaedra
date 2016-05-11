@@ -1,0 +1,27 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Search Framework UI
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.ui.search;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.ui.search.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.ui.forms,
+ eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.search;bundle-version="1.0.0";visibility:=reexport,
+ eu.openanalytics.phaedra.base.ui.nattable;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.editor;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.navigator;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
+ org.eclipse.nebula.widgets.tablecombo;bundle-version="1.0.0",
+ org.apache.commons.lang3;bundle-version="3.1.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.base.ui.search,
+ eu.openanalytics.phaedra.base.ui.search.cmd,
+ eu.openanalytics.phaedra.base.ui.search.editor,
+ eu.openanalytics.phaedra.base.ui.search.preferences

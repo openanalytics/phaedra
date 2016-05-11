@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Chart Settings - 2D Density Chart Settings" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Chart_Settings_-_Density_Char_46" name="DC.Identifier" />
+<link href="../../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Chart Settings - 2D Density Chart Settings</title>
+</head>
+<body id="Chart_Settings_-_Density_Char_46"><a name="Chart_Settings_-_Density_Char_46"><!-- --></a>
+
+
+    <h1 class="topictitle1">Chart Settings - 2D Density Chart Settings</h1>
+
+    <div>
+        <div class="section">
+            <p>The <em>2D Density Chart</em> has some settings that are different from all the other charts. These settings are explained in this section.</p>
+
+        </div>
+
+        <div class="section"><h2 class="sectiontitle">How does a 2D Density Chart work?</h2>
+            
+            <p>In a 2D Density Chart, the color of each point is determined by how many points are "near" or on top of each other. This amount of points (or <em>density</em>) will correspond with a color in a shader. </p>
+
+            <p><img src="../../../Images/views/subwell_charts/_contour plot.png" alt="subwell_2d_density.png" /><br /></p>
+
+            <p>In this density plot, contour and cell image layers are added.</p>
+
+            <p>In the image above, the points are colored by a rainbow shader. <img src="../../../Images/icons/rainbowShader.png" alt="rainbowShader.png" /><br />  You can see that the lowest possible value is white and the highest possible value is red. In regions where there are no points (lowest density), a white color is shown. Regions with more points are colored purple, blue, green, yellow and eventually red (highest density).</p>
+
+            <p>This makes the 2D Density Charts useful to distinguish areas containing many data points, whereas a scatter chart would just show a smear of points. A scatter Density Chart combines the best of both features in one layer.</p>
+
+        </div>
+
+        <div class="section"><h2 class="sectiontitle">Density chart Settings</h2><p>To adjust the Density Chart settings, go to the chart legend and click the <em>Adjust settings</em> button <img src="../../../Images/icons/book_edit.png" alt="book_edit.png" /><br /> . The following dialog will pop up:</p>
+
+            <img src="../../../Images/views/charts/chartSettings/chart_density_options.png" alt="chart_density_options.png" /><br />
+            
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+                    
+                    
+                    <tbody>
+                        <tr>
+                            <td class="cellrowborder" valign="top" width="NaN%">Choose a shader</td>
+
+                            <td class="cellrowborder" valign="top" width="NaN%">Select the shader you want to use.</td>
+
+                        </tr>
+
+                        <tr>
+                            <td class="cellrowborder" valign="top" width="NaN%">Lo cut</td>
+
+                            <td class="cellrowborder" valign="top" width="NaN%">Select the bottom margin of the window of data that will be used to define the colors. (e.g. If you select a lo cut of 0.1, all data under 10% of the data will be given the lowest color of the shader)</td>
+
+                        </tr>
+
+                        <tr>
+                            <td class="cellrowborder" valign="top" width="NaN%">Hi cut</td>
+
+                            <td class="cellrowborder" valign="top" width="NaN%">Select the upper margin of the window of data that will be used to define the colors. (e.g. If you select a hi cut of 0.9, the 10% of the highest values will be given the highest color value available in the shader)</td>
+
+                        </tr>
+
+                        <tr>
+                            <td class="cellrowborder" valign="top" width="NaN%">Set blur value</td>
+
+                            <td class="cellrowborder" valign="top" width="NaN%">This will add a Gaussian filter to the Density Chart which will blur the image. Increasing the value will increase the blur. The minimum value is 4 and the maximum is 16. This reduces the "raggedness" of the color edges.</td>
+
+                        </tr>
+
+                        <tr>
+                            <td class="cellrowborder" valign="top" width="NaN%">Set pixel size</td>
+
+                            <td class="cellrowborder" valign="top" width="NaN%">This is the size of one point in the chart. Increasing this will result in higher color values as more points will lay on top of each other. This enhances the inspection of low density regions.</td>
+
+                        </tr>
+
+                        <tr>
+                            <td class="cellrowborder" valign="top" width="NaN%">Select a weight axis</td>
+
+                            <td class="cellrowborder" valign="top" width="NaN%">Selecting a weight axis is similar to selecting an <em>auxiliary axis</em> in the scatter charts. When you select a weight axis, the color of the points is not only determined by the amount of points near each other, but also by the value of this weight axis that is represented by a feature.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+    </div>
+
+
+</body>
+</html>

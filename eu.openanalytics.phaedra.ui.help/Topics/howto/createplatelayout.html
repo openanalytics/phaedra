@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Creating a Plate Layout Template" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Create_a_Plate_Layout_Template_339" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Creating a Plate Layout Template</title>
+</head>
+<body id="Create_a_Plate_Layout_Template_339"><a name="Create_a_Plate_Layout_Template_339"><!-- --></a>
+
+
+  <h1 class="topictitle1">Creating a Plate Layout Template</h1>
+
+  <div>
+    <div class="section">
+      <p>As discussed in the topic <a href="linkingplatedefinitions.html">Linking Plate Definitions</a>, a plate can be linked either against a plate <strong>definition</strong> (stored in an external plate management system) or against a plate <strong>layout template</strong> (created and stored in Phaedra). This topic explains how to create and use a plate layout template.</p>
+
+      <p>To create a new plate layout template, select the <strong>Create New Plate Template</strong> button in the toolbar:</p>
+
+      <p><img src="../../Images/howto/createplatelayout.png" alt="createplatelayout.png" /><br /></p>
+
+      <p>A <strong>plate template editor</strong> will open. In this view, you can fill the layout, in several steps:</p>
+
+      <div class="p">
+        <br /><ul>
+          <li>Specify a unique name for the layout, and the protocol it will be used for</li>
+
+          <li>Specify the plate dimensions (rows x columns)</li>
+
+          <li>Specify the control wells</li>
+
+          <li>Specify the sample wells, including their compounds and concentrations</li>
+
+        </ul>
+
+      </div>
+
+      <p><img src="../../Images/howto/createplatelayout2.png" alt="createplatelayout2.png" /><br /></p>
+
+      <p>To assign a well type, a compound or a concentration to a well, follow these steps:</p>
+
+      <div class="p">
+        <br /><ol>
+          <li>Select one or more wells</li>
+
+          <li>In the Well Properties panel, select a well type and click <strong>Apply</strong></li>
+
+          <li>Enter a compound type and number, and click <strong>Apply</strong></li>
+
+          <li>Enter a compound concentration and click <strong>Apply</strong></li>
+
+        </ol>
+
+      </div>
+
+      <p>When the layout has been completed, click the <strong>Save</strong> button to save the template.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Browsing plate layout templates</h2>
+      
+      <p>To see which templates are currently available in Phaedra, select the <strong>Plate Template Browser</strong> button in the toolbar:</p>
+
+      <p><img src="../../Images/howto/createplatelayout3.png" alt="createplatelayout3.png" /><br /></p>
+
+      <p>The <strong>Plate Template Browser</strong> view will open, showing a list of protocols, and a list of available templates underneath each protocol.</p>
+
+      <p>Double-click on a template to view its details. If you are the author of the template, you can modify it and save the changes by clicking the <strong>Save</strong> button again.</p>
+
+      <p><img src="../../Images/howto/createplatelayout4.png" alt="createplatelayout4.png" /><br /></p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Using a plate layout template</h2>
+      
+      <p>To link a plate with a plate layout template, follow the steps outlined in the topic <a href="linkingplatedefinitions.html">Linking Plate Defintions</a>. But instead of selecting a plate management system in the list, select the option <strong>Layout Template</strong>.</p>
+
+      <p><img src="../../Images/howto/createplatelayout5.png" alt="createplatelayout5.png" /><br /></p>
+
+      <p>Click the <strong>Select...</strong> button to choose the template you want to use.</p>
+
+      <p><img src="../../Images/howto/createplatelayout6.png" alt="createplatelayout6.png" /><br /></p>
+
+      <p>Click <strong>Ok</strong> and proceed to link the plate as normally.</p>
+
+    </div>
+
+    <div class="section"><h2 class="sectiontitle">Combining plate definitions and plate layout templates</h2>
+      
+      <p>In some cases, it may be useful to use a plate definition and a plate layout template together. For example, consider a scenario where the plate definition contains only sample information: it specifies sample well locations, compounds and concentrations, but not control well information.</p>
+
+      <p>In such a case, a plate layout template may be used to complement the plate definition, resulting in a complete plate layout.</p>
+
+      <p><img src="../../Images/howto/createplatelayout7.png" alt="createplatelayout7.png" /><br /></p>
+
+      <p>To create such a 'complementary' plate layout template, follow these steps:</p>
+
+      <div class="p">
+        <br /><ol>
+          <li>Create the layout as described previously.</li>
+
+          <li>For all wells that have already been defined by the plate definition (e.g. all the sample wells), you must check the <strong>Skip Wells</strong> option. If you do not do this, the template will <strong>override</strong> the information retrieved from the plate definition, resulting in an incorrect layout!</li>
+
+          <li>Save the layout</li>
+
+          <li>Link the plates with their plate definition <strong>first</strong>, then link them again, but this time with the layout template.</li>
+
+        </ol>
+
+      </div>
+
+      <p><img src="../../Images/howto/createplatelayout8.png" alt="createplatelayout8.png" /><br /></p>
+
+    </div>
+
+  </div>
+
+
+</body>
+</html>

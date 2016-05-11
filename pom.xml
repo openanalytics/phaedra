@@ -1,0 +1,153 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>eu.openanalytics.phaedra</groupId>
+	<artifactId>eu.openanalytics.phaedra.build</artifactId>
+	<packaging>pom</packaging>
+	<version>1.0.0-SNAPSHOT</version>
+
+	<properties>
+		<tycho.version>0.24.0</tycho.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<modules>
+		<module>eu.openanalytics.phaedra.jre</module>
+		<module>eu.openanalytics.phaedra.targetdef</module>
+		<module>eu.openanalytics.phaedra.product.build</module>
+		<module>eu.openanalytics.phaedra.installer</module>
+		
+		<module>eu.openanalytics.phaedra</module>
+		<module>eu.openanalytics.phaedra.app</module>
+		<module>eu.openanalytics.phaedra.app.headless</module>
+		<module>eu.openanalytics.phaedra.product</module>
+		
+		<module>eu.openanalytics.phaedra.base.thirdparty</module>
+		
+		<module>eu.openanalytics.phaedra.base</module>
+		<module>eu.openanalytics.phaedra.base.bootstrap</module>
+		<module>eu.openanalytics.phaedra.base.cache</module>
+		<module>eu.openanalytics.phaedra.base.console</module>
+		<module>eu.openanalytics.phaedra.base.db</module>
+		<module>eu.openanalytics.phaedra.base.email</module>
+		<module>eu.openanalytics.phaedra.base.environment</module>
+		<module>eu.openanalytics.phaedra.base.event</module>
+		<module>eu.openanalytics.phaedra.base.fs</module>
+		<module>eu.openanalytics.phaedra.base.hdf5</module>
+		<module>eu.openanalytics.phaedra.base.hook</module>
+		<module>eu.openanalytics.phaedra.base.pref.store</module>
+		<module>eu.openanalytics.phaedra.base.scheduling</module>
+		<module>eu.openanalytics.phaedra.base.scripting</module>
+		<module>eu.openanalytics.phaedra.base.scripting.javascript</module>
+		<module>eu.openanalytics.phaedra.base.search</module>
+		<module>eu.openanalytics.phaedra.base.security</module>
+		<module>eu.openanalytics.phaedra.base.seda</module>
+		<module>eu.openanalytics.phaedra.base.ui.icons</module>
+		<module>eu.openanalytics.phaedra.base.ui.trafficlight</module>
+		<module>eu.openanalytics.phaedra.base.ui.util</module>
+		<module>eu.openanalytics.phaedra.base.util</module>	
+
+		<module>eu.openanalytics.phaedra.base.http</module>
+		<module>eu.openanalytics.phaedra.base.http.server</module>
+		<module>eu.openanalytics.phaedra.base.http.server.jetty</module>
+		<module>eu.openanalytics.phaedra.base.http.server.jetty.ssl</module>
+
+		<module>eu.openanalytics.phaedra.base.imaging</module>
+		<module>eu.openanalytics.phaedra.base.imaging.jp2k</module>
+		<module>eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg</module>
+		<module>eu.openanalytics.phaedra.base.imaging.overlay</module>
+		<module>eu.openanalytics.phaedra.base.imaging.util</module>
+		
+		<module>eu.openanalytics.phaedra.base.r</module>
+		<module>eu.openanalytics.phaedra.base.r.libs</module>
+		<module>eu.openanalytics.phaedra.base.r.rservi</module>
+		<module>eu.openanalytics.phaedra.base.r.server</module>
+		
+		<module>eu.openanalytics.phaedra.base.ui</module>
+		<module>eu.openanalytics.phaedra.base.ui.admin</module>
+		<module>eu.openanalytics.phaedra.base.ui.charting</module>
+		<module>eu.openanalytics.phaedra.base.ui.colormethod</module>
+		<module>eu.openanalytics.phaedra.base.ui.editor</module>
+		<module>eu.openanalytics.phaedra.base.ui.gridviewer</module>
+		<module>eu.openanalytics.phaedra.base.ui.nattable</module>
+		<module>eu.openanalytics.phaedra.base.ui.navigator</module>
+		<module>eu.openanalytics.phaedra.base.ui.richtableviewer</module>
+		<module>eu.openanalytics.phaedra.base.ui.search</module>
+		<module>eu.openanalytics.phaedra.base.ui.thumbnailviewer</module>
+		<module>eu.openanalytics.phaedra.base.ui.volumerenderer</module>
+		
+		<module>eu.openanalytics.phaedra.hcs</module>
+		<module>eu.openanalytics.phaedra.calculation</module>
+		<module>eu.openanalytics.phaedra.calculation.hooks</module>
+		<module>eu.openanalytics.phaedra.datacapture</module>
+		<module>eu.openanalytics.phaedra.datacapture.columbus</module>
+		<module>eu.openanalytics.phaedra.datacapture.jp2k</module>
+		<module>eu.openanalytics.phaedra.datacapture.metrics</module>
+		<module>eu.openanalytics.phaedra.datacapture.parser</module>
+		<module>eu.openanalytics.phaedra.datacapture.scanner</module>
+		<module>eu.openanalytics.phaedra.export</module>
+		<module>eu.openanalytics.phaedra.link.data</module>
+		<module>eu.openanalytics.phaedra.link.data.notification</module>
+		<module>eu.openanalytics.phaedra.link.hooks</module>
+		<module>eu.openanalytics.phaedra.link.importer</module>
+		<module>eu.openanalytics.phaedra.link.platedef</module>
+		<module>eu.openanalytics.phaedra.model.curve</module>
+		<module>eu.openanalytics.phaedra.model.log</module>
+		<module>eu.openanalytics.phaedra.model.plate</module>
+		<module>eu.openanalytics.phaedra.model.protocol</module>
+		<module>eu.openanalytics.phaedra.model.subwell</module>
+		<module>eu.openanalytics.phaedra.model.user</module>
+		<module>eu.openanalytics.phaedra.protocol.template</module>
+		<module>eu.openanalytics.phaedra.silo</module>
+		<module>eu.openanalytics.phaedra.validation</module>
+		<module>eu.openanalytics.phaedra.wellimage</module>
+		
+		<module>eu.openanalytics.phaedra.hcs.ui</module>
+		<module>eu.openanalytics.phaedra.ui.columbus</module>
+		<module>eu.openanalytics.phaedra.ui.curve</module>
+		<module>eu.openanalytics.phaedra.ui.export</module>
+		<module>eu.openanalytics.phaedra.ui.help</module>
+		<module>eu.openanalytics.phaedra.ui.link.importer</module>
+		<module>eu.openanalytics.phaedra.ui.link.platedef</module>
+		<module>eu.openanalytics.phaedra.ui.partsettings</module>
+		<module>eu.openanalytics.phaedra.ui.plate</module>
+		<module>eu.openanalytics.phaedra.ui.protocol</module>
+		<module>eu.openanalytics.phaedra.ui.protocol.template</module>
+		<module>eu.openanalytics.phaedra.ui.silo</module>
+		<module>eu.openanalytics.phaedra.ui.subwell</module>
+		<module>eu.openanalytics.phaedra.ui.user</module>
+		<module>eu.openanalytics.phaedra.ui.wellimage</module>
+	</modules>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-maven-plugin</artifactId>
+				<version>${tycho.version}</version>
+				<extensions>true</extensions>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<version>${tycho.version}</version>
+				<configuration>
+					<target>
+						<artifact>
+							<groupId>eu.openanalytics.phaedra</groupId>
+							<artifactId>eu.openanalytics.phaedra.targetdef</artifactId>
+							<version>1.0.0-SNAPSHOT</version>
+						</artifact>
+					</target>
+					<environments>
+						<environment>
+							<os>win32</os>
+							<ws>win32</ws>
+							<arch>x86_64</arch>
+						</environment>
+					</environments>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

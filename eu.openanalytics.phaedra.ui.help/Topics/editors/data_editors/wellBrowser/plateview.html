@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Plate View" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Plate_View_217" name="DC.Identifier" />
+<link href="../../../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Plate View</title>
+</head>
+<body id="Plate_View_217"><a name="Plate_View_217"><!-- --></a>
+
+
+  <h1 class="topictitle1">Plate View</h1>
+
+  <div>
+    <p>The plate view shows a grid where each cell represents a well. Phaedra uses a plate layout to determine each well type (Sample, LC, etc.).</p>
+
+    <p><img src="../../../../Images/Editors/well_browser/plateview.png" alt="plateview.png" /><br /></p>
+
+    <p>The plate view or plate grid is built with different layers. These layers include:</p>
+
+    <br /><ul>
+      <li>Heatmap: a color scheme linked with the currently chosen feature in the <a href="../../../views/inspectors/featureInspector.html">Feature Selector</a></li>
+
+      <li>Multi-Feature Heatmap: A layer representing several features simultaneously using a small chart that is displayed in each well.</li>
+
+    </ul>
+
+    <div class="note"><span class="notetitle">Note:</span> You will have to right-click and configure Multi-Feature Heatmap.</div>
+
+    <br /><ul>
+      <li>Well Type: The plate template color scheme</li>
+
+      <li>Image: the well image</li>
+
+      <li>Different kinds of curves. For more info go to <a href="../heatmapcharts.html">heatmap and charts.</a></li>
+
+      <li>Status indicator: e.g. Rejected wells will get a red or yellow cross.</li>
+
+      <li>Value labels: e.g. Well type (Sample, HC, etc.)</li>
+
+    </ul>
+
+    <p>Selecting different layers will lead to different results:</p>
+
+    <p><img src="../../../../Images/Editors/well_browser/_Heatmap Layers- example_3.png" /><br /></p>
+
+    <div class="tip"><span class="tiptitle">Tip:</span> To get the best result with these layers, we recommend that you only use the layers that you need. Otherwise there will be too much overlaying information.</div>
+
+    <p>If you want more Heatmaps, you can always open the <a href="../../../views/other/quickHeatmap.html">Quick heatmap</a> view, which offers the same functionality as the plate view.</p>
+
+    <p>Layer settings are remembered for the current setting. So, if you open another plate, all the previously selected layers will be shown.</p>
+
+    <p>To select wells in a heatmap, click and drag to select any rectangular section. To add disjoint regions, use control -click (and drag).</p>
+
+    <p>Then right-click to select the action to execute, e.g. making a chart with these well or their subwell-data, or rejecting the wells.</p>
+
+    <p>The complete list of context actions is shown here:</p>
+
+    <p><img src="../../../../Images/Editors/well_browser/_heatmap - context actions.png" alt="_heatmap - context actions.png" /><br /></p>
+
+    
+<div class="tablenoborder"><table summary="" cellspacing="0" cellpadding="4" frame="border" border="1" rules="all">
+        
+        
+        <tbody>
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Browse Compounds</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Browse the Well's Compounds</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../views/other/subWellDataView.html">Browse Subwell Data</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Browse the Well's Subwell Data</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../views/image/subwellImages.html">Show Subwell Image Set</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Show the Well's Subwell Image Set</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../views/image/wellImage.html">Show Well Image</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Show the Well's Image</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../views/other/dose_response_curve.html">Show Dose-Response Curve</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Show the Well's Dose-Response Curve</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../views/other/quickHeatmap.html">Show Quick Heatmap</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Show the Well's Quick Heatmap</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Inspectors</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Open an inspector.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Accept Well(s)</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Accept a well.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Reject Well(s)</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Reject a well.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Edit Well Description</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Edit the Well's descriptions</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../howto/validationapproval.html">Validation</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Validate a plate by choosing one of the options</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../howto/validationapproval.html">Approval</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Approve a plate by choosing one of the options</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Recalculate Plate(s)</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Triggers Recalcutation of the selected plate(s)</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../howto/linkingplatedefinitions.html">Link Plate Definitions</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Link Plate Definitions to a plate</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../views/chartViews.html">Charts</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Here you can select different charts that will open in a new view.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../howto/export.html">Export</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Opens the Export options.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../howto/workflows.html">Workflows</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Opens Knime Workflows.</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Copy</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">
+              <br /><ul>
+                <li>Copy Items: Copy the item for use in other views or editors (e.g. Silos)</li>
+
+                <li>Copy Qualified Names: This is the full path to the selected item so you can show others where you are working.</li>
+
+              </ul>
+
+            </td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%"><a href="../../../howto/subwellclassification.html">Edit Classification</a></td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Here you can modify the classification</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Layers</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Here you can select the different layers that are shown on the heatmaps</td>
+
+          </tr>
+
+          <tr>
+            <td class="cellrowborder" valign="top" width="NaN%">Configure Value Label</td>
+
+            <td class="cellrowborder" valign="top" width="NaN%">Here you can select the different labels that you see on each cell of the grid</td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+</div>
+
+  </div>
+
+
+</body>
+</html>

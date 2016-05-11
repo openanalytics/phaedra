@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="colorMethod" name="ColorMethod" schema="schema/colorMethod.exsd"/>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.colormethod.colorMethod">
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.minmax.MinMaxColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.minmax.MinMaxColorMethod"
+            name="Min-Max">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.lchc.LcHcColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.lchc.LcHcColorMethod"
+            name="LC-HC">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.minmeanmax.MinMeanMaxColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.minmeanmax.MinMeanMaxColorMethod"
+            name="Min-Mean-Max">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.lookup.LookupColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.lookup.LookupColorMethod"
+            name="Lookup">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.lc.LcColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.lc.LcColorMethod"
+            name="LC">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.hc.HcColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.hc.HcColorMethod"
+            name="HC">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.manminmax.ManualMinMaxColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.manminmax.ManualMinMaxColorMethod"
+            name="Manual Min-Max">
+      </colorMethod>
+      <colorMethod
+            class="eu.openanalytics.phaedra.base.ui.colormethod.manminmeanmax.ManualMinMeanMaxColorMethod"
+            id="eu.openanalytics.phaedra.base.ui.colormethod.manminmeanmax.ManualMinMeanMaxColorMethod"
+            name="Manual Min-Mean-Max">
+      </colorMethod>
+   </extension>
+
+</plugin>

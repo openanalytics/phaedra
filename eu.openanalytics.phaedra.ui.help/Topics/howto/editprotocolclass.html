@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta content="topic" name="DC.Type" />
+<meta name="DC.Title" content="Edit a Protocol Class" />
+<meta content="XHTML" name="DC.Format" />
+<meta content="Edit_a_Protocol_340" name="DC.Identifier" />
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Edit a Protocol Class</title>
+</head>
+<body id="Edit_a_Protocol_340"><a name="Edit_a_Protocol_340"><!-- --></a>
+
+
+    <h1 class="topictitle1">Edit a Protocol Class</h1>
+
+    <div>
+        <p>After setting up a new protocol (and corresponding protocol class), there is often a need to modify it afterwards. Especially during the assay development phase, protocols may change significantly over time.</p>
+
+        <p>Phaedra offers a tool called the <strong>Protocol Class Editor</strong> to allow you to make such modifications. To open this editor, right-click on a protocol and select <strong>Edit Protocol Class</strong>.</p>
+
+        <p><img src="../../Images/howto/editprotocolclass.png" alt="editprotocolclass.png" /><br /></p>
+
+        <div class="p">
+            <div class="note"><span class="notetitle">Note:</span> A protocol class may be <strong>locked</strong>. In that case, it cannot be modified anymore, and you will get a message when trying to open the protocol class editor. You can still view all the settings, but you cannot change them.</div>
+
+        </div>
+
+        <p>At the bottom of the editor, you will see 4 tabs:</p>
+
+        <p><img src="../../Images/howto/editprotocolclass2.png" alt="editprotocolclass2.png" /><br /></p>
+
+        <div class="p">
+            <br /><ul>
+                <li><strong>General</strong>: contains general information about the protocol class, such as its name, description and status.</li>
+
+                <li><strong>Well Features</strong>: here, the full list of well features is shown. Each feature can be configured individually: normalization, calculation, curve fitting, etc.</li>
+
+                <li><strong>Sub-Well Features</strong>: similar to the previous tab, but lists the subwell features instead.</li>
+
+                <li><strong>Image Settings</strong>: this tab shows the configured image channels, and a number of settings for each channel including contrast, bit depth, color mask, etc.</li>
+
+            </ul>
+
+        </div>
+
+        <div class="section"><h2 class="sectiontitle">General Settings</h2>
+            
+            <p>This section contains general information about the protocol class, including its name, description and status.</p>
+
+            <p><img src="../../Images/howto/editprotocolclass3.png" alt="editprotocolclass3.png" /><br /></p>
+
+            <p>Additional settings on this tab include:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Default Well Feature:</em> Select which well feature is displayed by default when you first access data from this protocol class.</li>
+
+                    <li><em>Default Link Source:</em> Select which plate definition source is selected by default when you want to link plates with their plate definition.</li>
+
+                    <li><em>Default Capture Configuration:</em> Select which data capture configuration is selected by default when you want to import data.</li>
+
+                    <li><em>Low Control Type:</em> Select which well type represents the Low Control (i.e. no biological effect, or 0% effect).</li>
+
+                    <li><em>High Control Type:</em> Select which well type represents the High Control (i.e. full biological effect, or 100% effect).</li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        <div class="section"><h2 class="sectiontitle">Well Features</h2>
+            
+            <p>In the Well Features tab, you can modify the list of available well features, and configure the details of each well feature.</p>
+
+            <p><img src="../../Images/howto/editprotocolclass4.png" alt="editprotocolclass4.png" /><br /></p>
+
+            <p>The screen is divided into two panels: the left panel shows a list of well features, while the right panel shows the details of the selected feature.</p>
+
+            <p>In the left panel, the following information is shown:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Key:</em> if the feature is a key feature, a key icon is shown.</li>
+
+                    <li><em>Req:</em> if the feature is a required feature, a star icon is shown.</li>
+
+                    <li><em>Calc:</em> if the feature is a calculated feature, a calculation symbol is shown.</li>
+
+                    <li><em>Fitted:</em> if the feature has a dose-response curve configured, a curve symbol is shown.</li>
+
+                    <li><em>Feature:</em> shows the full name of the feature</li>
+
+                    <li><em>Alias:</em> shows an optional short name for the feature</li>
+
+                    <li><em>Group:</em> if the feature has been added to a Feature Group, the group's name is shown here.</li>
+
+                </ul>
+
+            </div>
+
+            <p>If you select a feature, the right panel will show the following information in the <strong>General Section</strong>:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Name:</em> the feature's full name.</li>
+
+                    <li><em>Alias:</em> the feature's short name (optional).</li>
+
+                    <li><em>Description:</em> a description for the feature (optional).</li>
+
+                    <li><em>Format:</em> if the feature is numeric, a format pattern for the feature's representation. Use this setting to define how many decimals should be displayed.</li>
+
+                    <li><em>Group:</em> the Feature Group the feature belongs to (optional).</li>
+
+                </ul>
+
+            </div>
+
+            <p>In the <strong>Calculation Section</strong>, you can enter a formula for the feature, to turn the feature into a calculated feature.</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Formula:</em> the calculation formula for the feature.</li>
+
+                    <li><em>Language:</em> the language the formula is written in (default JEP).</li>
+
+                    <li><em>Calculation:</em> the trigger for recalculation (default: whenever the plate is recalculated).</li>
+
+                    <li><em>Sequence:</em> a priority number for recalculation. Sequence 0 has the highest priority. Use this if you have multiple calculated features that depend on each other.</li>
+
+                </ul>
+
+            </div>
+
+            <p>In the <strong>Normalization Section</strong>, you can choose a normalization method for the feature.</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Predefined method:</em> select one of the available normalization methods here.</li>
+
+                    <li><em>Low Control Type:</em> select which well type represents the Low Control (this overrides the value selected in the General Settings page).</li>
+
+                    <li><em>High Control Type:</em> select which well type represents the High Control (this overrides the value selected in the General Settings page).</li>
+
+                    <li><em>Custom method:</em> use this option to define your own normalization method formula.</li>
+
+                    <li><em>Language:</em> the language the normalization formula is written in.</li>
+
+                    <li><em>Scope:</em> the scope of the normalization: plate-wide or experiment-wide.</li>
+
+                </ul>
+
+            </div>
+
+            <p>In the <strong>Classification Section</strong>, you can define a class list for this feature, turning it into a classification feature.</p>
+
+            <p>The <strong>pattern</strong> column determines the numeric value that represents a class. This is a very important concept and should be configured properly for correct classification results. There are two approaches:</p>
+
+            <p><strong>Non-overlapping classes:</strong> a well can belong to only one class. Define the pattern as an incrementing binary number, for example:</p>
+
+            <p><img src="../../Images/howto/editprotocolclass5.png" alt="editprotocolclass5.png" /><br /></p>
+
+            <p><strong>Overlapping classes:</strong> a well can belong to two or more classes. Define the pattern as a binary number with dots as wildcards, for example: </p>
+
+            <p><img src="../../Images/howto/editprotocolclass6.png" alt="editprotocolclass6.png" /><br /></p>
+
+            <p>In the above example, a well can belong to:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li>Parent class only (pattern 0100)</li>
+
+                    <li>Parent class and child class 1 (pattern 0101)</li>
+
+                    <li>Parent class and child class 2 (pattern 0110)</li>
+
+                </ul>
+
+            </div>
+
+            <p>In the <strong>Color Method Section</strong>, you can select and customize a coloring method for this feature, to use on heatmaps.</p>
+
+            <p>Select a color method from the list, and click <strong>Settings...</strong> to customize the color method.</p>
+
+            <p>In the <strong>Curve Section</strong>, you can configure the dose-response curve that should be calculated on this feature. The settings are:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Curve Kind</em>: the kind of curve to fit: One-Site Binding (OSB) or Lowest Active Concentration (pLAC).</li>
+
+                    <li><em>Curve Mode</em>l: the curve model, depending on the selected kind.</li>
+
+                    <li><em>Curve Method</em>: the fitting method, depending on the selected kind.</li>
+
+                    <li><em>Curve Type</em>: the direction of the curve: ascending (A) or descending (D).</li>
+
+                    <li><em>Curve Threshold</em>: for pLAC curves, you can specify a manual threshold here, instead of using a calculated threshold.</li>
+
+                    <li><em>Manual LB</em>: for OSB curves, you can specify a manual lower bound, instead of using a calculating bound.</li>
+
+                    <li><em>Manual UB</em>: for OSB curves, you can specify a manual upper bound, instead of using a calculating bound.</li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+        <div class="section"><h2 class="sectiontitle">Sub-Well Features</h2>
+            
+            <p>In the subwell features tab, you can modify the list of available subwell features, and configure the details of each subwell feature.</p>
+
+            <p>The configuration is analogue to the configuration of well features. Refer to the previous topic for more information.</p>
+
+        </div>
+
+        <div class="section"><h2 class="sectiontitle">Image Settings</h2>
+            
+            <p>In the image settings tab, you can customize how images are rendered in Phaedra. An image consists of a series of <strong>image channels</strong>, which Phaedra displays on top of each other.</p>
+
+            <p>Each image channel can be configured with a color, contrast and several additional settings.</p>
+
+            <p>General image settings:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Default image scale</em>: when a well image is opened, it will be displayed at the selected scale by default.</li>
+
+                    <li><em>Gamma</em>: select the default gamma that should be applied to the whole image.</li>
+
+                    <li><em>Pixel size</em>: define the size (in square microns) of one pixel. This information can be used by calculated features to calculate exact areas and dimensions.</li>
+
+                </ul>
+
+            </div>
+
+            <p>Image channel settings:</p>
+
+            <div class="p">
+                <br /><ul>
+                    <li><em>Name</em>: the name of the image channel</li>
+
+                    <li><em>Description</em>: an optional description of the image channel</li>
+
+                    <li><em>Type</em>: the type of the channel. Typically, <strong>Raw</strong> is used for images obtained from the instrument, while <strong>Overlay</strong> is used for label images generated by the image analysis routine.</li>
+
+                    <li><em>Bit Depth</em>: the depth of the channel (i.e. bits per pixel). Default: 16 bits per pixel.</li>
+
+                    <li><em>Visible In</em>: determine whether or not an image channel should be visible by default. In thumbnails, you may want to disable overlay channels by default, as they are poorly visible in small scales.</li>
+
+                    <li><em>Coloring</em>: select a color mask for the image channel. Phaedra will render the channel in this color, to distinguish it from other channels.</li>
+
+                    <li><em>Alpha</em>: set the alpha value (opacity) of a channel. A value of 0 means transparent, a value of 255 means opaque. For overlay channels only.</li>
+
+                    <li><em>Min, Max</em>: set the contrast of a channel. For raw channels only.</li>
+
+                </ul>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+</body>
+</html>
