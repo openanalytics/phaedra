@@ -24,6 +24,8 @@ public class FileServerBootstrapper implements IBootstrapper {
 		try {
 			URL fsPath = FileLocator.find(Activator.getDefault().getBundle(), new org.eclipse.core.runtime.Path("/fs"), null);
 			fsPath = FileLocator.toFileURL(fsPath);
+			// URLs are not properly encoded, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=145096
+			fsPath = new URL(fsPath.toString().replace(" ", "%20"));
 			final Path basePath = Paths.get(fsPath.toURI());
 			Files.walkFileTree(basePath, new SimpleFileVisitor<Path>() {
 				@Override
