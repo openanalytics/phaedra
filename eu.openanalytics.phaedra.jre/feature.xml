@@ -2,7 +2,7 @@
 <feature
       id="eu.openanalytics.phaedra.jre"
       label="Embedded JRE"
-      version="1.0.0"
+      version="1.0.0.qualifier"
       provider-name="OpenAnalytics">
 
 </feature>

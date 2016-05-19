@@ -44,7 +44,7 @@
 
    <features>
       <feature id="org.eclipse.platform" version="4.5.0.v20150603-2358"/>
-      <feature id="eu.openanalytics.phaedra.jre" version="1.0.0" installMode="root"/>
+      <feature id="eu.openanalytics.phaedra.jre" version="1.0.0.qualifier" installMode="root"/>
       <feature id="eu.openanalytics.phaedra" version="1.0.0.qualifier" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base" version="1.0.0.qualifier" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base.http" version="1.0.0.qualifier" installMode="root"/>

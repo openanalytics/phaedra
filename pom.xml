@@ -9,6 +9,7 @@
 	<properties>
 		<tycho.version>0.24.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<build.tools.dir>C:/Phaedra-build</build.tools.dir>
 	</properties>
 
 	<modules>
