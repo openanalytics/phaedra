@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Cellprofiler Integration
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.cellprofiler;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.cellprofiler.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.ui.protocol,
+ eu.openanalytics.phaedra.base.ui.util,
+ eu.openanalytics.phaedra.base.util,
+ eu.openanalytics.phaedra.datacapture.parser;bundle-version="1.0.0",
+ com.bytecode.opencsv;bundle-version="2.3.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy

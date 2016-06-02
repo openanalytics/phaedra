@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.ui.protocol.protocolWizard">
+      <wizard
+            class="eu.openanalytics.phaedra.ui.cellprofiler.wizard.CellprofilerProtocolWizard"
+            description="Create a new protocol based on a Cellprofiler dataset"
+            icon="icons/cp_32.png"
+            name="Cellprofiler Wizard">
+      </wizard>
+   </extension>
+
+</plugin>
