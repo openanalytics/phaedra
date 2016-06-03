@@ -17,6 +17,7 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 	public void addPages() {
 		addPage(new SelectFolderPage());
 		addPage(new SelectWellDataPage());
+		addPage(new SelectImageDataPage());
 	}
 
 	@Override
@@ -32,5 +33,8 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 		
 		public String[] wellDataHeaders;
 		public String[] selectedWellDataHeaders;
+		
+		public Path[] imageFolderCandidates;
+		public Path selectedImageFolder;
 	}
 }

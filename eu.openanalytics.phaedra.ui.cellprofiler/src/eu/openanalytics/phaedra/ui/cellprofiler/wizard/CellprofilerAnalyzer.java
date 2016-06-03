@@ -28,6 +28,9 @@ public class CellprofilerAnalyzer {
 			if (csvFiles.isEmpty()) throw new IOException("No data files found in the folder");
 			state.wellDataCandidates = csvFiles.stream().toArray(i -> new Path[i]);
 			
+			List<Path> imageFolders = getChildren(state.selectedFolder, p -> hasChildren(p, this::isImageFile));
+			state.imageFolderCandidates = imageFolders.stream().toArray(i -> new Path[i]);
+			
 			monitor.done();
 		} catch (Exception e) {
 			throw new InvocationTargetException(e);
@@ -61,7 +64,19 @@ public class CellprofilerAnalyzer {
 		}
 	}
 	
+	private boolean hasChildren(Path path, Predicate<Path> condition) {
+		try (Stream<Path> matches = Files.find(path, 1, (p, a) -> p != path && condition.test(p))) {
+			return matches.findAny().isPresent();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
 	private boolean isCSVFile(Path path) {
 		return Pattern.matches(".*\\.(csv|txt)", path.toFile().getName().toLowerCase());
+	}
+	
+	private boolean isImageFile(Path path) {
+		return Pattern.matches(".*\\.(png|tif|tiff|bmp|jpg|jpeg)", path.toFile().getName().toLowerCase());
 	}
 }
