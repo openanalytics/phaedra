@@ -230,6 +230,10 @@ public class CompressWellCallable implements Callable<String[]>, Serializable {
 		if (settings != null && settings.slope != 0) output.slope = settings.slope;
 		else if (defaults != null && defaults.slope != 0) output.slope = defaults.slope;
 
+		// Psnr
+		if (settings != null && settings.psnr != 0) output.psnr = settings.psnr;
+		else if (defaults != null && defaults.psnr != 0) output.psnr = defaults.psnr;
+
 		// Precincts
 		if (settings != null && settings.precincts != null) output.precincts = settings.precincts;
 		else if (defaults != null && defaults.precincts != null) output.precincts = defaults.precincts;
