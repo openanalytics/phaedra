@@ -15,11 +15,13 @@ import org.eclipse.swt.widgets.Composite;
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizardPage;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
+import eu.openanalytics.phaedra.ui.cellprofiler.widget.ChannelComposer;
 import eu.openanalytics.phaedra.ui.cellprofiler.wizard.CellprofilerProtocolWizard.WizardState;
 
 public class SelectImageDataPage extends BaseStatefulWizardPage {
 
 	private TableViewer imageFolderTableViewer;
+	private ChannelComposer channelComposer;
 	private WizardState wizardState;
 	
 	protected SelectImageDataPage() {
@@ -48,6 +50,9 @@ public class SelectImageDataPage extends BaseStatefulWizardPage {
 			}
 		});
 		
+		channelComposer = new ChannelComposer(area);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(channelComposer);
+		
 		setTitle("Select Image Data");
     	setDescription("Select the folder containing the images.");
     	setControl(area);
@@ -67,6 +72,12 @@ public class SelectImageDataPage extends BaseStatefulWizardPage {
 	
 	private void setSelectedFolder() {
 		wizardState.selectedImageFolder = SelectionUtils.getFirstObject(imageFolderTableViewer.getSelection(), Path.class);
+		/*
+		 * TODO
+		 * -inspect folder
+		 * -ask user to select patterns for each channel
+		 * -if montage is required, ask user to select?
+		 */
 	}
 }
 
