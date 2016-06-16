@@ -82,6 +82,7 @@ public class RServiManager {
 			}
 		}
 		catch (RjException e) {
+			stop();
 			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Embedded R instance could not created.", e));
 		}
 	}
@@ -100,6 +101,7 @@ public class RServiManager {
 		if (rPoolManager != null) {
 			try {
 				rPoolManager.stop(0);
+				rPoolManager = null;
 				// PoolManager needs 1 sec to shut down its pool.
 				// If we exit too soon, R instances (java.exe) will hang around.
 				Thread.sleep(1200);

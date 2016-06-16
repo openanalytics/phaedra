@@ -10,7 +10,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.statushandlers.StatusManager;
 
 import de.walware.rj.eclient.graphics.comclient.ERClientGraphicActionsFactory;
 import de.walware.rj.eclient.graphics.comclient.ERGraphicFactory;
@@ -19,6 +18,7 @@ import de.walware.rj.rsetups.RSetupUtil;
 import de.walware.rj.server.RjsComConfig;
 import de.walware.rj.servi.RServi;
 import eu.openanalytics.phaedra.base.environment.prefs.Prefs;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
 public class RService {
 
@@ -111,8 +111,7 @@ public class RService {
 				rServiManager.setEmbedded(rHome);
 				running = true;
 			} catch (Exception e) {
-				StatusManager.getManager().handle(
-					new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Error starting R Servi", e), StatusManager.SHOW | StatusManager.LOG);
+				EclipseLog.error("Error starting R Servi", e, Activator.getDefault());
 			}
 		}
 	}
