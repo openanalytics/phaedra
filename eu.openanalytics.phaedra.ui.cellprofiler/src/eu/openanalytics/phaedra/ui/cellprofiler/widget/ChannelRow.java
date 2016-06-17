@@ -1,6 +1,12 @@
 package eu.openanalytics.phaedra.ui.cellprofiler.widget;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -20,8 +26,12 @@ import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 
+/**
+ * TODO Montage, pattern groups
+ */
 class ChannelRow extends Composite {
 
+	private ChannelComposer composer;
 	private ImageChannel channel;
 	
 	private Label sequenceLbl;
@@ -31,6 +41,7 @@ class ChannelRow extends Composite {
 	
 	public ChannelRow(ChannelComposer composer, ImageChannel channel) {
 		super(composer.getChannelRowArea(), SWT.BORDER);
+		this.composer = composer;
 		this.channel = channel;
 		GridLayoutFactory.fillDefaults().numColumns(9).spacing(0, 0).applyTo(this);
 		
@@ -49,14 +60,14 @@ class ChannelRow extends Composite {
 		
 		nameTxt = new Text(this, SWT.BORDER);
 		nameTxt.addModifyListener(e -> channel.setName(nameTxt.getText()));
-		GridDataFactory.fillDefaults().hint(120, SWT.DEFAULT).applyTo(nameTxt);
+		GridDataFactory.fillDefaults().hint(120, SWT.DEFAULT).align(SWT.BEGINNING, SWT.CENTER).applyTo(nameTxt);
 		
 		colorMaskBtn = new ColorSelector(this);
 		colorMaskBtn.addListener(e -> channel.setColorMask(ColorUtils.rgbToHex(colorMaskBtn.getColorValue())));
 		GridDataFactory.fillDefaults().indent(5, 0).applyTo(colorMaskBtn.getButton());
 		
 		patternLbl = new Label(this, SWT.BORDER);
-		GridDataFactory.fillDefaults().grab(true,false).indent(5, 0).applyTo(patternLbl);
+		GridDataFactory.fillDefaults().grab(true,false).align(SWT.FILL, SWT.CENTER).indent(5, 0).applyTo(patternLbl);
 		
 		Button editPatternBtn = new Button(this, SWT.PUSH);
 		editPatternBtn.setText("...");
@@ -88,20 +99,44 @@ class ChannelRow extends Composite {
 	}
 	
 	private void editPattern() {
-		//TODO
+		new EditPatternDialog(getShell(), channel, composer.getImageFolder()).open();
+		refresh();
 	}
 	
 	private void previewImage() {
-		//TODO
-//		String filePath = "C:/Dev/Testdata/cellprofiler/12175829_Phenix/outlines/003003-1-001001001.png";
-		String filePath = "C:/Dev/Testdata/cellprofiler/ExampleFlyImages/01_POS002_D.TIF";
-//		String filePath = "C:/Dev/Testdata/a549/A549-Exp5-plate1-RSV/001-001/results/Well0003_mode1_z000_t000_mosaic.tif";
+		if (channel.getDescription() == null || channel.getDescription().isEmpty()) return;
+		Path sampleFilePath = null;
+		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(composer.getImageFolder())) {
+			Pattern pattern = Pattern.compile(channel.getDescription());
+            for (Path path : directoryStream) {
+            	Matcher matcher = pattern.matcher(path.getFileName().toString());
+            	if (matcher.matches()) {
+            		sampleFilePath = path;
+            		break;
+            	}
+            }
+		} catch (PatternSyntaxException e) {
+			MessageDialog.openError(getShell(), "Cannot Preview", "Invalid pattern: " + channel.getDescription());
+			return;
+		} catch (IOException e) {
+			MessageDialog.openError(getShell(), "Cannot Preview", "Failed to locate sample image: " + e.getMessage());
+			return;
+		}
+		if (sampleFilePath == null) {
+			MessageDialog.openError(getShell(), "Cannot Preview", "No image found matching the pattern: " + channel.getDescription());
+			return;
+		}
 		
 		try {
-			ImageData imageData = FileUtils.getExtension(filePath).equalsIgnoreCase("tif") ? TIFFCodec.read(filePath)[0] : new ImageLoader().load(filePath)[0];
-			channel.setBitDepth(imageData.depth);
+			String ext = FileUtils.getExtension(sampleFilePath.getFileName().toString());
+			String fullPath = sampleFilePath.toFile().getAbsolutePath();
+			ImageData imageData = ext.equalsIgnoreCase("tif") ? TIFFCodec.read(fullPath)[0] : new ImageLoader().load(fullPath)[0];
+			
+			int actualDepth = imageData.depth == 24 ? 8 : imageData.depth;
+			int maxLevel = (int) Math.pow(2, actualDepth) - 1;
+			channel.setBitDepth(actualDepth);
 			channel.setLevelMin(0);
-			channel.setLevelMax((int) Math.pow(2, imageData.depth) - 1);
+			if (channel.getLevelMax() == 0 || channel.getLevelMax() > maxLevel) channel.setLevelMax(maxLevel);
 			
 			new ImagePreviewDialog(getShell(), channel, imageData).open();
 		} catch (IOException e) {

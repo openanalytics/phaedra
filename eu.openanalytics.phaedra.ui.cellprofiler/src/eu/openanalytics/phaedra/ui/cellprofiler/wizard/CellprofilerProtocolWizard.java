@@ -1,9 +1,12 @@
 package eu.openanalytics.phaedra.ui.cellprofiler.wizard;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizard;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
+import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 
 public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 
@@ -22,6 +25,7 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 
 	@Override
 	public boolean performFinish() {
+		super.performFinish();
 		return false;
 	}
 	
@@ -36,5 +40,7 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 		
 		public Path[] imageFolderCandidates;
 		public Path selectedImageFolder;
+		
+		public List<ImageChannel> imageChannels = new ArrayList<>();
 	}
 }

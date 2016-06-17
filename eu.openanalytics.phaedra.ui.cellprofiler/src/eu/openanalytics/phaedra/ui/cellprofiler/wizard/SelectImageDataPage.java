@@ -11,6 +11,7 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizardPage;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
@@ -34,7 +35,7 @@ public class SelectImageDataPage extends BaseStatefulWizardPage {
 		GridLayoutFactory.fillDefaults().applyTo(area);
 		
 		imageFolderTableViewer = new TableViewer(area, SWT.BORDER);
-		GridDataFactory.fillDefaults().grab(true, false).hint(400, 120).applyTo(imageFolderTableViewer.getControl());
+		GridDataFactory.fillDefaults().grab(true, false).hint(400, 100).applyTo(imageFolderTableViewer.getControl());
 		imageFolderTableViewer.addSelectionChangedListener(e -> setSelectedFolder());
 		imageFolderTableViewer.setContentProvider(new ArrayContentProvider());
 		
@@ -45,10 +46,12 @@ public class SelectImageDataPage extends BaseStatefulWizardPage {
 			@Override
 			public void update(ViewerCell cell) {
 				if (cell.getElement() == null) return;
-				Path relative = wizardState.selectedFolder.relativize((Path) cell.getElement());
+				Path relative = wizardState.selectedFolder.getParent().relativize((Path) cell.getElement());
 				cell.setText(relative.toString());
 			}
 		});
+		
+		new Label(area, SWT.NONE).setText("Image channels:");
 		
 		channelComposer = new ChannelComposer(area);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(channelComposer);
@@ -67,17 +70,13 @@ public class SelectImageDataPage extends BaseStatefulWizardPage {
 	
 	@Override
 	public void collectState(IWizardState state) {
-		// Nothing to do.
+		wizardState.imageChannels = channelComposer.getImageChannels();
 	}
 	
 	private void setSelectedFolder() {
 		wizardState.selectedImageFolder = SelectionUtils.getFirstObject(imageFolderTableViewer.getSelection(), Path.class);
-		/*
-		 * TODO
-		 * -inspect folder
-		 * -ask user to select patterns for each channel
-		 * -if montage is required, ask user to select?
-		 */
+		channelComposer.setImageFolder(wizardState.selectedImageFolder);
+		setPageComplete(true);
 	}
 }
 

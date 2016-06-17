@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.ui.cellprofiler.widget;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,7 @@ public class ChannelComposer extends Composite {
 
 	private Composite channelRowArea;
 	private List<ChannelRow> channelRows;
+	private Path imageFolder;
 	
 	public ChannelComposer(Composite parent) {
 		super(parent, SWT.NONE);
@@ -45,6 +47,21 @@ public class ChannelComposer extends Composite {
 	
 	public Composite getChannelRowArea() {
 		return channelRowArea;
+	}
+	
+	public List<ImageChannel> getImageChannels() {
+		List<ImageChannel> channels = new ArrayList<>();
+		for (ChannelRow row: channelRows) channels.add(row.getChannel());
+		channels.sort((c1, c2) -> c1.getSequence() - c2.getSequence());
+		return channels;
+	}
+	
+	public Path getImageFolder() {
+		return imageFolder;
+	}
+	
+	public void setImageFolder(Path imageFolder) {
+		this.imageFolder = imageFolder;
 	}
 	
 	public void addChannel(ImageChannel channel) {
