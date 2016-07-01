@@ -291,7 +291,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		}
 	}
 
-	public void loadImagesJob() {
+	public Job loadImagesJob() {
 		if (loadJobInProgress != null) {
 			// A job is already in progress: abort it.
 			loadJobInProgress.cancel();
@@ -311,6 +311,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		});
 		loadJobInProgress = loadJob;
 		loadJob.schedule();
+		return loadJob;
 	}
 
 	/**

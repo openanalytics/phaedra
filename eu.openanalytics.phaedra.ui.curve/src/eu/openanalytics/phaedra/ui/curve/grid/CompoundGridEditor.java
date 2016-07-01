@@ -175,6 +175,13 @@ public class CompoundGridEditor extends DecoratedEditor {
 		super.dispose();
 	}
 
+	/**
+	 * TODO Should be removed, but it's used (in a dirty way) by CompoundGridEditorContentProvider
+	 */
+	public List<Compound> getCompounds() {
+		return compounds;
+	}
+	
 	/*
 	 * ****************
 	 * Loading & saving
