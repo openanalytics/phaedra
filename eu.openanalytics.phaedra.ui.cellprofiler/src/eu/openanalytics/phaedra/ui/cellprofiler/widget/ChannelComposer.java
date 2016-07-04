@@ -130,7 +130,6 @@ public class ChannelComposer extends Composite {
 	private ImageChannel createChannel() {
 		ImageChannel channel = ProtocolService.getInstance().createChannel(null);
 		channel.setSequence(1);
-		channel.setDescription(".*");
 		return channel;
 	}
 	

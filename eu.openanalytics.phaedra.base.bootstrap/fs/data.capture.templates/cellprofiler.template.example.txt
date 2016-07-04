@@ -1,0 +1,31 @@
+protocol.name=New Protocol
+protocol.team=Global
+
+template=cellprofiler
+
+plate.folderpattern=(.*)
+
+welldata.path=.
+welldata.filepattern=well\.csv
+
+imagedata.channel.1.name=Nuc Stain
+imagedata.channel.1.path=images
+imagedata.channel.1.filepattern=(\d{3})(\d{3})-(\d)-001001001\.tif
+imagedata.channel.1.montage=true
+
+imagedata.channel.2.name=Cell Stain
+imagedata.channel.2.path=images
+imagedata.channel.2.filepattern=(\d{3})(\d{3})-(\d)-001001002\.tif
+imagedata.channel.2.montage=true
+
+imagedata.channel.3.name=Nuc Outlines
+imagedata.channel.3.path=outlines
+imagedata.channel.3.type=Overlay
+imagedata.channel.3.filepattern=(\d{3})(\d{3})-(\d)-001001001\.png
+imagedata.channel.3.montage=true
+
+imagedata.channel.4.name=Cell Outlines
+imagedata.channel.4.path=outlines
+imagedata.channel.4.type=Overlay
+imagedata.channel.4.filepattern=(\d{3})(\d{3})-(\d)-001001002\.png
+imagedata.channel.4.montage=true

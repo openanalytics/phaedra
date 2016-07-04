@@ -1,9 +1,5 @@
 package eu.openanalytics.phaedra.ui.cellprofiler.widget;
 
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -12,23 +8,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
-
 public class EditPatternDialog extends TitleAreaDialog {
 
 	private PatternTester patternTester;
+	private PatternConfig patternConfig;
 	
-	private Map<String,String> patterns;
-	private ImageChannel channel;
-	private Path imageFolder;
-	
-	public EditPatternDialog(Shell parentShell, ImageChannel channel, Path imageFolder) {
+	public EditPatternDialog(Shell parentShell, PatternConfig patternConfig) {
 		super(parentShell);
-		this.channel = channel;
-		this.imageFolder = imageFolder;
-		
-		patterns = new HashMap<>();
-		patterns.put(channel.getName(), channel.getDescription());
+		this.patternConfig = patternConfig;
 	}
 
 	@Override
@@ -50,16 +37,10 @@ public class EditPatternDialog extends TitleAreaDialog {
 
 		patternTester = new PatternTester();
 		patternTester.createComposite(main);
-		patternTester.loadSettings(patterns, imageFolder.toFile().getAbsolutePath(), true);
+		patternTester.loadConfig(patternConfig, this::setErrorMessage);
 		
 		setTitle("Edit Pattern");
 		setMessage("Adjust the pattern for the image files of this channel.");
 		return main;
-	}
-	
-	@Override
-	protected void okPressed() {
-		channel.setDescription(patterns.get(channel.getName()));
-		super.okPressed();
 	}
 }

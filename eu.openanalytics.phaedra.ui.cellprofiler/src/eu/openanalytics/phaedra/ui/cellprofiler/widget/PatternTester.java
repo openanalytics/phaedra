@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Consumer;
 import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,19 +37,20 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.base.ui.util.misc.FolderSelector;
+import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.SWTUtils;
+import eu.openanalytics.phaedra.ui.cellprofiler.widget.PatternConfig.GroupRole;
 
 public class PatternTester {
 
-	private Combo settingCmb;
 	private Text patternTxt;
 	private FolderSelector folderSelector;
 	private TreeViewer matchViewer;
 	private Label matchesLbl;
+	private Combo[] groupRoleCmb;
 	
-	private Map<String, String> patterns;
-	private String testFolder;
-	
+	private PatternConfig config;
+	private Consumer<String> errorHandler;
 	private TestPatternJob job;
 	
 	public Composite createComposite(Composite parent) {
@@ -58,18 +59,11 @@ public class PatternTester {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(area);
 
 		Label lbl = new Label(area, SWT.NONE);
-		lbl.setText("Setting:");
-		
-		settingCmb = new Combo(area, SWT.READ_ONLY);
-		settingCmb.addListener(SWT.Selection, event -> patternTxt.setText(patterns.get(settingCmb.getText())));
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(settingCmb);
-		
-		lbl = new Label(area, SWT.NONE);
 		lbl.setText("Pattern:");
 		
 		patternTxt = new Text(area, SWT.BORDER);
 		patternTxt.addModifyListener(event -> {
-			patterns.put(settingCmb.getText(), patternTxt.getText());
+			config.pattern = patternTxt.getText();
 			testPattern();
 		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(patternTxt);
@@ -79,7 +73,7 @@ public class PatternTester {
 		
 		folderSelector = new FolderSelector(area, SWT.PUSH);
 		folderSelector.addListener(SWT.Selection, event -> {
-			testFolder = folderSelector.getSelectedFolder();
+			config.folder = folderSelector.getSelectedFolder();
 			testPattern();
 		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(folderSelector);
@@ -91,47 +85,63 @@ public class PatternTester {
 		matchViewer = new TreeViewer(area);
 		matchViewer.setContentProvider(new MatchesContentProvider());
 		matchViewer.setLabelProvider(new MatchesLabelProvider());
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(matchViewer.getControl());
+		GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 150).applyTo(matchViewer.getControl());
 		
 		lbl = new Label(area, SWT.NONE);
 		matchesLbl = new Label(area, SWT.NONE);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(matchesLbl);
+
+		lbl = new Label(area, SWT.NONE);
+		lbl.setText("Groups:");
+		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
+		
+		Composite groupComp = new Composite(area, SWT.BORDER);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(groupComp);
+		GridLayoutFactory.fillDefaults().numColumns(2).margins(5, 5).applyTo(groupComp);
+		
+		groupRoleCmb = new Combo[3];
+		for (int i = 0; i < groupRoleCmb.length; i++) {
+			new Label(groupComp, SWT.NONE).setText("Group " + (i+1) + " role:");
+			groupRoleCmb[i] = new Combo(groupComp, SWT.READ_ONLY);
+			final int index = i;
+			groupRoleCmb[i].addListener(SWT.Selection, e -> {
+				config.groupRoles[index] = GroupRole.valueOf(groupRoleCmb[index].getText());
+			});
+		}
 		
 		return area;
 	}
 	
-	public void loadSettings(Map<String,String> patterns, String startFolder, boolean patternEditable) {
-		this.patterns = patterns;
-		this.testFolder = startFolder;
+	public void loadConfig(PatternConfig config, Consumer<String> errorHandler) {
+		this.config = config;
+		this.errorHandler = errorHandler;
 		
-		String[] settings = patterns.keySet().toArray(new String[patterns.size()]);
-		Arrays.sort(settings);
-		
-		String currentSetting = settingCmb.getText();
-		settingCmb.setItems(settings);
-		if (settingCmb.getItemCount() > 0) {
-			if (!currentSetting.isEmpty()) settingCmb.select(settingCmb.indexOf(currentSetting));
-			else settingCmb.select(0);
-		}
-		
-		String newPattern = patterns.get(settingCmb.getText());
+		String newPattern = config.pattern;
 		if (newPattern == null) newPattern = "";
 		patternTxt.setText(newPattern);
-		patternTxt.setEditable(patternEditable);
+		patternTxt.setEditable(config.patternEditable);
 		
-		if (startFolder != null) folderSelector.setSelectedFolder(startFolder);
+		if (config.folder != null) folderSelector.setSelectedFolder(config.folder);
+		folderSelector.setEnabled(config.folderEditable);
+		
+		for (int i = 0; i < config.groupRoles.length; i++) {
+			String[] items = Arrays.stream(GroupRole.values()).map(r -> r.toString()).toArray(n -> new String[n]);
+			groupRoleCmb[i].setItems(items);
+			groupRoleCmb[i].select(CollectionUtils.find(items, config.groupRoles[i].toString()));
+			groupRoleCmb[i].setEnabled(config.groupsEditable);
+		}
 	}
 	
 	private void testPattern() {
 		String regex = patternTxt.getText();
-		if (regex.isEmpty() || testFolder == null) {
-			matchesLbl.setText("Matches: 0");
+		if (regex.isEmpty() || config.folder == null) {
+			matchesLbl.setText("No matches");
 			matchViewer.setInput(null);
 			return;
 		}
 
 		if (job != null) job.cancel();
-		job = new TestPatternJob(regex, testFolder);
+		job = new TestPatternJob(regex, config.folder);
 		job.schedule();
 	}
 
@@ -211,10 +221,7 @@ public class PatternTester {
 			try {
 				pattern = Pattern.compile(regex);
 			} catch (PatternSyntaxException e) {
-				Display.getDefault().asyncExec(() -> {
-					matchesLbl.setText("Invalid pattern");
-					matchViewer.setInput(matches);
-				});
+				updateUI(matches, "Invalid pattern");
 				return Status.OK_STATUS;
 			}
 
@@ -239,23 +246,36 @@ public class PatternTester {
 	            }
 	        } catch (IOException e) {
 	        	Display.getDefault().asyncExec(() -> {
-					matchesLbl.setText("Failed to list folder contents");
-					matchViewer.setInput(matches);
+	        		updateUI(matches, "Failed to list folder contents");
 				});
 				return Status.OK_STATUS;
 			}
 			
 			matches.sort((m1,m2) -> m1.fileName.compareTo(m2.fileName));
-			
-			Display.getDefault().asyncExec(() -> {
-				if (matchesLbl.isDisposed()) return;
-				long matchCount = matches.stream().filter(m -> m.isMatch).count();
-				matchesLbl.setText("Matches: " + matchCount);
-				matchViewer.setInput(matches);
-			});
-
+			updateUI(matches, null);
 			monitor.done();
 			return Status.OK_STATUS;
+		}
+		
+		private void updateUI(List<PatternMatch> matches, String msg) {
+			Display.getDefault().asyncExec(() -> {
+				if (matchesLbl.isDisposed()) return;
+				
+				errorHandler.accept(msg);
+				
+				long matchCount = matches.stream().filter(m -> m.isMatch).count();
+				matchesLbl.setText(matchCount + " matches");
+				matchViewer.setInput(matches);
+
+				int groupCount = 0;
+				if (matchCount > 0) {
+					PatternMatch sample = matches.stream().filter(m -> m.isMatch).findAny().orElse(null);
+					if (sample != null) groupCount = sample.groups.length;
+				}
+				for (int i = 0; i < groupRoleCmb.length; i++) {
+					groupRoleCmb[i].setEnabled(i < groupCount && config.groupsEditable);
+				}
+			});
 		}
 	}
 }

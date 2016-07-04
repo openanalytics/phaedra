@@ -1,7 +1,7 @@
 {
 	"template": {
 		"description": "The id of the template to use",
-		"defaultValue": "simple"
+		"defaultValue": "cellprofiler"
 	},
 	"protocolclass.name": {
 		"description": "The name of the new protocol class",
@@ -29,14 +29,6 @@
 	},
 	"welldata.filepattern": {
 		"description": "The regex pattern of the file containing the well data"
-	},
-	"subwelldata.path": {
-		"description": "The path where the subwell data files are located",
-		"type": "path"
-	},
-	"subwelldata.filepattern": {
-		"description": "The regex pattern of the subwell data files",
-		"type": "regex"
 	},
 	"imagedata.path": {
 		"description": "The path where all images are located",
@@ -80,6 +72,11 @@
 		"description": "The path of the image channel files",
 		"type": "path",
 		"defaultValue": "${imagedata.path}"
+	},
+	"imagedata.channel.*.montage": {
+		"description": "Should this channel be montaged or not?",
+		"type": "boolean",
+		"defaultValue": "false"
 	},
 	"imagedata.channel.*.idgroup": {
 		"description": "The group in the filepattern that refers to the well number or position",

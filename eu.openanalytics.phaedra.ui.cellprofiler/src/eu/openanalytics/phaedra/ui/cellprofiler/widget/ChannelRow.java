@@ -12,6 +12,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.ColorSelector;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
@@ -27,12 +28,13 @@ import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 
 /**
- * TODO Montage, pattern groups
+ * TODO Verify pattern groups
  */
 class ChannelRow extends Composite {
 
 	private ChannelComposer composer;
 	private ImageChannel channel;
+	private PatternConfig patternConfig;
 	
 	private Label sequenceLbl;
 	private Text nameTxt;
@@ -43,6 +45,14 @@ class ChannelRow extends Composite {
 		super(composer.getChannelRowArea(), SWT.BORDER);
 		this.composer = composer;
 		this.channel = channel;
+		
+		patternConfig = new PatternConfig();
+		patternConfig.patternEditable = true;
+		patternConfig.groupsEditable = true;
+		patternConfig.folder = composer.getImageFolder().toFile().getAbsolutePath();
+		channel.getChannelConfig().put("pattern", patternConfig.pattern);
+		channel.getChannelConfig().put("groupRoles", PatternConfig.serializeRoles(patternConfig.groupRoles));
+		
 		GridLayoutFactory.fillDefaults().numColumns(9).spacing(0, 0).applyTo(this);
 		
 		sequenceLbl = new Label(this, SWT.NONE);
@@ -95,19 +105,27 @@ class ChannelRow extends Composite {
 		sequenceLbl.setText("" + channel.getSequence());
 		nameTxt.setText(channel.getName());
 		colorMaskBtn.setColorValue(ColorUtils.hexToRgb(channel.getColorMask()));
-		patternLbl.setText(channel.getDescription());
+		patternLbl.setText(channel.getChannelConfig().get("pattern"));
 	}
 	
 	private void editPattern() {
-		new EditPatternDialog(getShell(), channel, composer.getImageFolder()).open();
+		int retCode = new EditPatternDialog(getShell(), patternConfig).open();
+		if (retCode == Window.OK) {
+			channel.getChannelConfig().put("pattern", patternConfig.pattern);
+			channel.getChannelConfig().put("groupRoles", PatternConfig.serializeRoles(patternConfig.groupRoles));
+		} else {
+			patternConfig.pattern = channel.getChannelConfig().get("pattern");
+			patternConfig.groupRoles = PatternConfig.deserializeRoles(channel.getChannelConfig().get("groupRoles"));
+		}
 		refresh();
 	}
 	
 	private void previewImage() {
-		if (channel.getDescription() == null || channel.getDescription().isEmpty()) return;
+		String regex = channel.getChannelConfig().get("pattern");
+		if (regex == null || regex.isEmpty()) return;
 		Path sampleFilePath = null;
 		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(composer.getImageFolder())) {
-			Pattern pattern = Pattern.compile(channel.getDescription());
+			Pattern pattern = Pattern.compile(regex);
             for (Path path : directoryStream) {
             	Matcher matcher = pattern.matcher(path.getFileName().toString());
             	if (matcher.matches()) {
