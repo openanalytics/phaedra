@@ -363,6 +363,10 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	}
 
 	public void loadSettings(Properties properties) {
+		loadSettings(properties, true);
+	}
+	
+	public void loadSettings(Properties properties, boolean loadImages) {
 		int imageHeight = properties.getProperty(ROW_HEIGHT, getImageHeight());
 		int imageWidth = properties.getProperty(COLUMN_WIDTH, imageHeight);
 		setImageSize(imageWidth, imageHeight);
@@ -376,7 +380,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 			boolean[] temp = (boolean[]) property;
 			for (int i = 0; i < temp.length && i < channels.length; i++) channels[i] = temp[i];
 		}
-		loadImagesJob();
+		if (loadImages) loadImagesJob();
 	}
 
 	public Map<int[], AbstractCellPainter> getCustomPainters() {
