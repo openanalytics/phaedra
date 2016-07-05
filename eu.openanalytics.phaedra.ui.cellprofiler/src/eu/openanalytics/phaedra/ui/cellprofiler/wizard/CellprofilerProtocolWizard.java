@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -92,17 +93,12 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 
 		public Protocol run(WizardState state) {
 			try {
-				//TODO Support multiple well id columns
-				//TODO Relative paths need ./ prefix
-				//TODO Image bitdepth incorrect, raw vs overlay
-				//TODO txt.welldata.parser doesn't support well ids like '003003'
-				
 				StringBuilder template = new StringBuilder();
 				template.append("protocol.name=" + state.protocolName + "\n");
 				template.append("protocol.team=" + state.protocolTeam + "\n");
 				template.append("template=cellprofiler\n");
-				template.append("plate.folderpattern=(.*)\n");
-				template.append("welldata.path=" + state.selectedFolder.relativize(state.selectedWellDataFile.getParent()).toString() + "\n");
+				template.append("plate.folderpattern=" + guessPlateFolderPattern(state.selectedFolder) + "\n");
+				template.append("welldata.path=" + makeRelative(state.selectedWellDataFile.getParent(), state.selectedFolder) + "\n");
 				template.append("welldata.filepattern=" + state.selectedWellDataFile.getFileName().toString() + "\n");
 				template.append("welldata.idcolumn=" + Arrays.stream(state.selectedWellDataHeaders).collect(Collectors.joining(",")) + "\n");
 				
@@ -110,7 +106,7 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 					ImageChannel ch = state.imageChannels.get(i);
 
 					template.append("imagedata.channel." + (i+1) + ".name=" + ch.getName() + "\n");
-					template.append("imagedata.channel." + (i+1) + ".path=" + state.selectedFolder.relativize(state.selectedImageFolder).toString() + "\n");
+					template.append("imagedata.channel." + (i+1) + ".path=" + makeRelative(state.selectedImageFolder, state.selectedFolder) + "\n");
 					template.append("imagedata.channel." + (i+1) + ".filepattern=" + ch.getChannelConfig().get("pattern") + "\n");
 					template.append("imagedata.channel." + (i+1) + ".color=" + ch.getColorMask() + "\n");
 
@@ -145,6 +141,19 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 						"An error occurred while creating the protocol:\n" + e.getMessage());
 				return null;
 			}
+		}
+		
+		private String guessPlateFolderPattern(Path selectedFolder) {
+			String regex = "(\\d+.*)";
+			String folderName = selectedFolder.getFileName().toString();
+			if (Pattern.matches(regex, folderName)) return regex;
+			return "(.*)";
+		}
+		
+		private String makeRelative(Path path, Path base) {
+			 String rel = base.relativize(path).toString();
+			 if (!rel.isEmpty()) rel = "/" + rel;
+			 return "." + rel;
 		}
 	}
 }

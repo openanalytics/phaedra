@@ -15,6 +15,7 @@
 			<parameter key="file.path">${welldata.path}</parameter>
 			<parameter key="file.pattern">${welldata.filepattern}</parameter>
 			<parameter key="column.separator">,</parameter>
+			<parameter key="wellid.pattern">(\d{3})(\d{3})</parameter>
 <#if welldata.idcolumn??>
 			<parameter key="wellid.column">${welldata.idcolumn}</parameter>
 </#if>

@@ -7,6 +7,8 @@ load("script://dc/common.js");
 var colSep = params.get("column.separator") || "\t";
 var commentSign = params.get("comment.sign") || "#";
 var wellIdColName = params.get("wellid.column");
+var wellIdPattern = params.get("wellid.pattern");
+if (wellIdPattern != null) wellIdPattern = java.util.regex.Pattern.compile(wellIdPattern);
 
 var lines = API.get("ParserUtils").toLines(data, false);
 var headers = null;
@@ -40,7 +42,7 @@ if (wellIdCol == -1) throw "Well id column not found: " + wellIdColName;
 var maxPos = [0, 0];
 var maxNr = 0;
 for (var i in dataLines) {
-	var wellId = dataLines[i][wellIdCol];
+	var wellId = parseWellId(dataLines[i][wellIdCol]);
 	if (API.get("NumberUtils").isNumeric(wellId)) {
 		maxNr = parseInt(wellId);
 	} else {
@@ -54,7 +56,7 @@ var plateDims = calculatePlateSize(maxNr, maxPos[1], true);
 // Process the data lines into well data
 var plate = API.get("ModelUtils").createPlate(model, plateDims[0], plateDims[1]);
 for (var i in dataLines) {
-	var wellId = dataLines[i][wellIdCol];
+	var wellId = parseWellId(dataLines[i][wellIdCol]);
 	var pos = null;
 	if (API.get("NumberUtils").isNumeric(wellId)) {
 		pos = API.get("NumberUtils").getWellPosition(parseInt(wellId), plate.getColumns());
@@ -70,4 +72,14 @@ for (var i in dataLines) {
 		if (API.get("NumberUtils").isDouble(value)) featureValue.setNumericValue(parseFloat(value));
 		else featureValue.setStringValue(value);		
 	}
+}
+
+function parseWellId(wellId) {
+	if (wellIdPattern == null) return wellId;
+	var m = wellIdPattern.matcher(wellId);
+	if (m.matches()) {
+		if (m.groupCount() == 1) return m.group(1);
+		else if (m.groupCount() == 2) return "R" + m.group(1) + "C" + m.group(2);
+	}
+	return wellId;
 }

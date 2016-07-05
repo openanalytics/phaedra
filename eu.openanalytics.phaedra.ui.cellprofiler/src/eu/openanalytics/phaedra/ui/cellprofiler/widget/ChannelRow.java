@@ -1,10 +1,8 @@
 package eu.openanalytics.phaedra.ui.cellprofiler.widget;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -35,6 +33,7 @@ class ChannelRow extends Composite {
 	private ChannelComposer composer;
 	private ImageChannel channel;
 	private PatternConfig patternConfig;
+	private ImageData sampleImageData;
 	
 	private Label sequenceLbl;
 	private Text nameTxt;
@@ -113,6 +112,7 @@ class ChannelRow extends Composite {
 		if (retCode == Window.OK) {
 			channel.getChannelConfig().put("pattern", patternConfig.pattern);
 			channel.getChannelConfig().put("groupRoles", PatternConfig.serializeRoles(patternConfig.groupRoles));
+			loadSampleImage();
 		} else {
 			patternConfig.pattern = channel.getChannelConfig().get("pattern");
 			patternConfig.groupRoles = PatternConfig.deserializeRoles(channel.getChannelConfig().get("groupRoles"));
@@ -120,45 +120,41 @@ class ChannelRow extends Composite {
 		refresh();
 	}
 	
-	private void previewImage() {
-		String regex = channel.getChannelConfig().get("pattern");
-		if (regex == null || regex.isEmpty()) return;
+	private void loadSampleImage() {
 		Path sampleFilePath = null;
-		try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(composer.getImageFolder())) {
-			Pattern pattern = Pattern.compile(regex);
-            for (Path path : directoryStream) {
-            	Matcher matcher = pattern.matcher(path.getFileName().toString());
-            	if (matcher.matches()) {
-            		sampleFilePath = path;
-            		break;
-            	}
-            }
+		try {
+			Pattern pattern = Pattern.compile(patternConfig.pattern);
+			sampleFilePath = Files.list(composer.getImageFolder()).filter(p -> pattern.matcher(p.getFileName().toString()).matches()).findAny().orElse(null);
 		} catch (PatternSyntaxException e) {
-			MessageDialog.openError(getShell(), "Cannot Preview", "Invalid pattern: " + channel.getDescription());
+			MessageDialog.openError(getShell(), "Error", "Invalid pattern: " + patternConfig.pattern);
 			return;
 		} catch (IOException e) {
-			MessageDialog.openError(getShell(), "Cannot Preview", "Failed to locate sample image: " + e.getMessage());
+			MessageDialog.openError(getShell(), "Error", "Failed to locate sample image: " + e.getMessage());
 			return;
 		}
 		if (sampleFilePath == null) {
-			MessageDialog.openError(getShell(), "Cannot Preview", "No image found matching the pattern: " + channel.getDescription());
+			MessageDialog.openError(getShell(), "Error", "No image found matching the pattern: " + patternConfig.pattern);
 			return;
 		}
-		
+
 		try {
 			String ext = FileUtils.getExtension(sampleFilePath.getFileName().toString());
 			String fullPath = sampleFilePath.toFile().getAbsolutePath();
-			ImageData imageData = ext.equalsIgnoreCase("tif") ? TIFFCodec.read(fullPath)[0] : new ImageLoader().load(fullPath)[0];
-			
-			int actualDepth = imageData.depth == 24 ? 8 : imageData.depth;
+			sampleImageData = ext.equalsIgnoreCase("tif") ? TIFFCodec.read(fullPath)[0] : new ImageLoader().load(fullPath)[0];
+
+			int actualDepth = sampleImageData.depth == 24 ? 8 : sampleImageData.depth;
 			int maxLevel = (int) Math.pow(2, actualDepth) - 1;
 			channel.setBitDepth(actualDepth);
 			channel.setLevelMin(0);
 			if (channel.getLevelMax() == 0 || channel.getLevelMax() > maxLevel) channel.setLevelMax(maxLevel);
-			
-			new ImagePreviewDialog(getShell(), channel, imageData).open();
+			channel.setType(actualDepth == 1 ? ImageChannel.CHANNEL_TYPE_OVERLAY : ImageChannel.CHANNEL_TYPE_RAW);
 		} catch (IOException e) {
-			MessageDialog.openError(getShell(), "Cannot preview image", "Failed to create preview: " + e.getMessage());
+			MessageDialog.openError(getShell(), "Error", "Failed to inspect sample image: " + e.getMessage());
 		}
+	}
+	
+	private void previewImage() {
+		if (sampleImageData == null) loadSampleImage();
+		if (sampleImageData != null) new ImagePreviewDialog(getShell(), channel, sampleImageData).open();
 	}
 }
