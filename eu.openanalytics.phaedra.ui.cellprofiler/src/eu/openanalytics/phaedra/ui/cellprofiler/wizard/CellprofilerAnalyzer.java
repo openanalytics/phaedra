@@ -29,7 +29,6 @@ public class CellprofilerAnalyzer {
 			state.wellDataCandidates = csvFiles.stream().toArray(i -> new Path[i]);
 			
 			List<Path> imageFolders = getChildren(state.selectedFolder, p -> hasChildren(p, this::isImageFile));
-			if (hasChildren(state.selectedFolder, this::isImageFile)) imageFolders.add(0, state.selectedFolder);
 			state.imageFolderCandidates = imageFolders.stream().toArray(i -> new Path[i]);
 			
 			monitor.done();
