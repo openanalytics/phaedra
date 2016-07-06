@@ -12,7 +12,6 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
@@ -29,7 +28,7 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 	private FolderSelector folderSelector;
 	private Text protocolNameText;
 	private ComboViewer teamComboViewer;
-	private Button autoImportBtn;
+//	private Button autoImportBtn;
 	
 	private WizardState wstate;
 	
@@ -52,9 +51,9 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(folderSelector);
 		
-		autoImportBtn = new Button(area, SWT.CHECK);
-		autoImportBtn.setText("Import this plate immediately after creating the protocol.");
-		GridDataFactory.fillDefaults().indent(20, 0).applyTo(autoImportBtn);
+//		autoImportBtn = new Button(area, SWT.CHECK);
+//		autoImportBtn.setText("Import this plate immediately after creating the protocol.");
+//		GridDataFactory.fillDefaults().indent(20, 0).applyTo(autoImportBtn);
 		
 		Group group = new Group(area, SWT.NONE);
 		group.setText("Protocol");
@@ -98,7 +97,7 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 	public void collectState(IWizardState state) {
 		wstate.protocolName = protocolNameText.getText();
 		wstate.protocolTeam = teamComboViewer.getCombo().getText();
-		wstate.autoImport = autoImportBtn.getSelection();
+//		wstate.autoImport = autoImportBtn.getSelection();
 	}
 	
 	private void analyzeSelectedFolder(String folder) {
