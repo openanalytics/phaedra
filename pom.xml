@@ -104,6 +104,7 @@
 		<module>eu.openanalytics.phaedra.wellimage</module>
 		
 		<module>eu.openanalytics.phaedra.hcs.ui</module>
+		<module>eu.openanalytics.phaedra.ui.cellprofiler</module>
 		<module>eu.openanalytics.phaedra.ui.columbus</module>
 		<module>eu.openanalytics.phaedra.ui.curve</module>
 		<module>eu.openanalytics.phaedra.ui.export</module>
