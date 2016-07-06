@@ -43,6 +43,7 @@ public class ChannelComposer extends Composite {
 		clearBtn.setImage(IconManager.getIconImage("delete.png"));
 		
 		channelRows = new ArrayList<>();
+		setEnabled(imageFolder != null);
 	}
 	
 	public Composite getChannelRowArea() {
@@ -62,6 +63,7 @@ public class ChannelComposer extends Composite {
 	
 	public void setImageFolder(Path imageFolder) {
 		this.imageFolder = imageFolder;
+		setEnabled(imageFolder != null);
 	}
 	
 	public void addChannel(ImageChannel channel) {
