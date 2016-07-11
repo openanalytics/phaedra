@@ -19,6 +19,8 @@ import eu.openanalytics.phaedra.ui.cellprofiler.wizard.CellprofilerProtocolWizar
 
 public class CellprofilerAnalyzer {
 
+	public static final CellprofilerAnalyzer INSTANCE = new CellprofilerAnalyzer();
+	
 	public void analyzeFolder(WizardState state, IProgressMonitor monitor) throws InvocationTargetException {
 		try {
 			monitor.beginTask("Analyzing " + state.selectedFolder.getFileName(), IProgressMonitor.UNKNOWN);
@@ -26,7 +28,7 @@ public class CellprofilerAnalyzer {
 			
 			List<Path> csvFiles = getChildren(state.selectedFolder, this::isCSVFile);
 			if (csvFiles.isEmpty()) throw new IOException("No data files found in the folder");
-			state.wellDataCandidates = csvFiles.stream().toArray(i -> new Path[i]);
+			state.dataFileCandidates = csvFiles.stream().toArray(i -> new Path[i]);
 			
 			List<Path> imageFolders = getChildren(state.selectedFolder, p -> hasChildren(p, this::isImageFile));
 			state.imageFolderCandidates = imageFolders.stream().toArray(i -> new Path[i]);
@@ -37,7 +39,7 @@ public class CellprofilerAnalyzer {
 		}
 	}
 	
-	public void analyzeWelldataFile(WizardState state, IProgressMonitor monitor) throws InvocationTargetException {
+	public void analyzeWellDataFile(WizardState state, IProgressMonitor monitor) throws InvocationTargetException {
 		try {
 			monitor.beginTask("Analyzing " + state.selectedWellDataFile.getFileName(), IProgressMonitor.UNKNOWN);
 			
@@ -53,6 +55,33 @@ public class CellprofilerAnalyzer {
 			monitor.done();
 		} catch (Exception e) {
 			throw new InvocationTargetException(e);
+		}
+	}
+	
+	public void analyzeSubWellDataFile(WizardState state, IProgressMonitor monitor) throws InvocationTargetException {
+		try {
+			monitor.beginTask("Analyzing " + state.selectedSubWellDataFile.getFileName(), IProgressMonitor.UNKNOWN);
+			
+			try (CSVReader reader = new CSVReader(new FileReader(state.selectedSubWellDataFile.toFile()))) {
+				state.subWellDataHeaders = reader.readNext();
+				Arrays.sort(state.subWellDataHeaders);
+			}
+			
+			if (state.subWellDataHeaders == null || state.subWellDataHeaders.length == 0) {
+				throw new IOException("No valid headers found in file");
+			}
+			
+			monitor.done();
+		} catch (Exception e) {
+			throw new InvocationTargetException(e);
+		}
+	}
+	
+	public Path getSample(Path folder, String pattern) {
+		try (Stream<Path> matches = Files.find(folder, Integer.MAX_VALUE, (p, a) -> Pattern.matches(pattern, p.getFileName().toString()))) {
+			return matches.findAny().orElse(null);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	

@@ -36,6 +36,7 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 	public void addPages() {
 		addPage(new SelectFolderPage());
 		addPage(new SelectWellDataPage());
+		addPage(new SelectSubWellDataPage());
 		addPage(new SelectImageDataPage());
 	}
 
@@ -77,12 +78,22 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 		public String protocolTeam;
 		public boolean autoImport;
 
-		public Path[] wellDataCandidates;
+		public Path[] dataFileCandidates;
+		
 		public Path selectedWellDataFile;
-
 		public String[] wellDataHeaders;
 		public String[] selectedWellDataHeaders;
 
+		public boolean includeSubWellData;
+		public boolean singleSubWellDataFile;
+		
+		public Path selectedSubWellDataFile;
+		public String[] subWellDataHeaders;
+		public String[] selectedSubWellDataHeaders;
+		
+		public Path subWellDataFolder;
+		public String subWellDataFilePattern;
+		
 		public Path[] imageFolderCandidates;
 		public Path selectedImageFolder;
 
@@ -100,7 +111,18 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 				template.append("plate.folderpattern=" + guessPlateFolderPattern(state.selectedFolder) + "\n");
 				template.append("welldata.path=" + makeRelative(state.selectedWellDataFile.getParent(), state.selectedFolder) + "\n");
 				template.append("welldata.filepattern=" + state.selectedWellDataFile.getFileName().toString() + "\n");
-				template.append("welldata.idcolumn=" + Arrays.stream(state.selectedWellDataHeaders).collect(Collectors.joining(",")) + "\n");
+				String idColumn = Arrays.stream(state.selectedWellDataHeaders).collect(Collectors.joining(","));
+				if (!idColumn.isEmpty()) template.append("welldata.idcolumn=" + idColumn + "\n");
+				
+				if (state.includeSubWellData) {
+					Path swPath = state.singleSubWellDataFile ? state.selectedSubWellDataFile.getParent() : state.subWellDataFolder;
+					template.append("subwelldata.path=" + makeRelative(swPath, state.selectedFolder) + "\n");
+					String swPattern = state.singleSubWellDataFile ? state.selectedSubWellDataFile.getFileName().toString() : state.subWellDataFilePattern;
+					template.append("subwelldata.filepattern=" + swPattern + "\n");
+					if (state.singleSubWellDataFile) {
+						template.append("subwelldata.idcolumn=" + Arrays.stream(state.selectedSubWellDataHeaders).collect(Collectors.joining(",")) + "\n");
+					}
+				}
 				
 				for (int i=0; i<state.imageChannels.size(); i++) {
 					ImageChannel ch = state.imageChannels.get(i);
@@ -129,9 +151,18 @@ public class CellprofilerProtocolWizard extends BaseStatefulWizard {
 					}
 				}
 
-				for (int i=0; i<state.wellDataHeaders.length; i++) {
-					template.append("wellfeature." + (i+1) + ".name=" + state.wellDataHeaders[i] + "\n");
-					template.append("wellfeature." + (i+1) + ".numeric=true\n");
+				if (state.wellDataHeaders != null) {
+					for (int i=0; i<state.wellDataHeaders.length; i++) {
+						template.append("wellfeature." + (i+1) + ".name=" + state.wellDataHeaders[i] + "\n");
+						template.append("wellfeature." + (i+1) + ".numeric=true\n");
+					}
+				}
+				
+				if (state.subWellDataHeaders != null) {
+					for (int i=0; i<state.subWellDataHeaders.length; i++) {
+						template.append("subwellfeature." + (i+1) + ".name=" + state.subWellDataHeaders[i] + "\n");
+						template.append("subwellfeature." + (i+1) + ".numeric=true\n");
+					}
 				}
 
 				return ProtocolTemplateService.getInstance().executeTemplate(template.toString(), new NullProgressMonitor());

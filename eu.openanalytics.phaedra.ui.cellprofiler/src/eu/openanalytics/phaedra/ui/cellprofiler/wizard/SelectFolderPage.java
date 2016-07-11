@@ -28,7 +28,6 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 	private FolderSelector folderSelector;
 	private Text protocolNameText;
 	private ComboViewer teamComboViewer;
-//	private Button autoImportBtn;
 	
 	private WizardState wstate;
 	
@@ -50,10 +49,6 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 			}
 		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(folderSelector);
-		
-//		autoImportBtn = new Button(area, SWT.CHECK);
-//		autoImportBtn.setText("Import this plate immediately after creating the protocol.");
-//		GridDataFactory.fillDefaults().indent(20, 0).applyTo(autoImportBtn);
 		
 		Group group = new Group(area, SWT.NONE);
 		group.setText("Protocol");
@@ -97,7 +92,6 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 	public void collectState(IWizardState state) {
 		wstate.protocolName = protocolNameText.getText();
 		wstate.protocolTeam = teamComboViewer.getCombo().getText();
-//		wstate.autoImport = autoImportBtn.getSelection();
 	}
 	
 	private void analyzeSelectedFolder(String folder) {
@@ -110,7 +104,7 @@ public class SelectFolderPage extends BaseStatefulWizardPage {
 		
 		String errMessage = null;
 		try {
-			getContainer().run(true, false, (monitor) -> new CellprofilerAnalyzer().analyzeFolder(wstate, monitor));
+			getContainer().run(true, false, (monitor) -> CellprofilerAnalyzer.INSTANCE.analyzeFolder(wstate, monitor));
 		} catch (Exception e) {
 			errMessage = (e instanceof InvocationTargetException && e.getCause() != null) ? e.getCause().getMessage() : e.getMessage();
 		}

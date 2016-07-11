@@ -18,6 +18,9 @@ public class PatternConfig {
 		pattern = ".*";
 		groupRoles = new GroupRole[] { GroupRole.None, GroupRole.None, GroupRole.None };
 		folder = ".";
+		patternEditable = true;
+		groupsEditable = false;
+		folderEditable = false;
 	}
 	
 	public enum GroupRole {

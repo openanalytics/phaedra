@@ -22,6 +22,22 @@
 		</parameters>
 	</module>
 
+<#if subwelldata.path??>
+	<module id="gather.subwelldata" name="Gather subwell data" type="ScriptedModule">
+		<parameters>
+			<parameter key="script.id">capture.subwelldata</parameter>
+			<parameter key="parser.id">txt.subwelldata.parser</parameter>
+			<parameter key="file.path">${subwelldata.path}</parameter>
+			<parameter key="file.pattern">${subwelldata.filepattern}</parameter>
+			<parameter key="column.separator">,</parameter>
+			<parameter key="wellid.pattern">(\d{3})(\d{3})</parameter>
+<#if subwelldata.idcolumn??>
+			<parameter key="wellid.column">${subwelldata.idcolumn}</parameter>
+</#if>
+		</parameters>
+	</module>
+</#if>
+
 <#assign nrMontageChannels = 0>
 <#list imagedata.channel as c>
 	<#if c.montage?? && c.montage == 'true'> <#assign nrMontageChannels = nrMontageChannels + 1> </#if>
