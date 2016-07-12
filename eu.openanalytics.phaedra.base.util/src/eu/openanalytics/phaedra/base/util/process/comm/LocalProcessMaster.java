@@ -18,6 +18,7 @@ import org.osgi.framework.Bundle;
 import eu.openanalytics.phaedra.base.util.Activator;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.base.util.threading.ThreadPool;
 
 /**
@@ -45,6 +46,9 @@ public class LocalProcessMaster {
 	private String protocolName;
 	private String wd;
 
+	private static String folderSeparator = ProcessUtils.isWindows() ? "\\" : "/";
+	private static String javaExecutable = ProcessUtils.isWindows() ? "\\bin\\javaw.exe" : "/bin/java";
+	
 	public LocalProcessMaster(int slaves, String[] plugins, String[] extraWDFiles, String protocolName) {
 		javaPath = getJavaExecutable();
 		className = LocalProcessSlave.class.getName();
@@ -120,12 +124,9 @@ public class LocalProcessMaster {
 	}
 
 	private static String getJavaExecutable() {
-		String javaPath = "jre\\bin\\javaw.exe";
+		String javaPath = "jre" + javaExecutable;
 		if (!new File(javaPath).exists()) {
-			javaPath = "c:\\program files\\java\\jdk1.8.0\\bin\\javaw.exe";
-			if (!new File(javaPath).exists()) {
-				javaPath = System.getProperty("java.home") + "\\bin\\javaw.exe";
-			}
+			javaPath = System.getProperty("java.home") + javaExecutable;
 		}
 		javaPath = new File(javaPath).getAbsolutePath();
 		return javaPath;
@@ -146,8 +147,8 @@ public class LocalProcessMaster {
 		if (location.startsWith(prefix)) {
 			location = location.substring(prefix.length());
 		}
-		location = location.replace('/', '\\');
-		if (location.startsWith("\\")) {
+		location = location.replace("/", folderSeparator);
+		if (ProcessUtils.isWindows() && location.startsWith(folderSeparator)) {
 			location = location.substring(1);
 		}
 		if (location.endsWith("\\")) {

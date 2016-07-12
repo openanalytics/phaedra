@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.app;
 
+
 import javax.swing.UIManager;
 
 import org.eclipse.jface.action.IContributionItem;
@@ -14,6 +15,7 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 import eu.openanalytics.phaedra.base.util.misc.VersionUtils;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
@@ -36,10 +38,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		configurer.setTitle(getTitle());
 		configurer.setShowPerspectiveBar(true);
 
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e){
-			// Fallback to default look and feel
+		if (ProcessUtils.isWindows()) {
+			// Note: this causes a crash on Ubuntu/gtk
+			try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); } catch (Exception e) {}
 		}
 
 		IPreferenceStore apiStore = PlatformUI.getPreferenceStore();
