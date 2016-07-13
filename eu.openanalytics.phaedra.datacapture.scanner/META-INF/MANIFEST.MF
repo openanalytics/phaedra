@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.scheduling;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.seda;bundle-version="1.0.0"
+ eu.openanalytics.phaedra.base.seda;bundle-version="1.0.0",
+ org.eclipse.persistence.jpa;bundle-version="2.3.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.datacapture.scanner,

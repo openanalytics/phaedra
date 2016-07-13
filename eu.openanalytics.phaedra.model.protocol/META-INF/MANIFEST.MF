@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ui,
  eu.openanalytics.phaedra.model.log;bundle-version="1.0.0";visibility:=reexport,
  eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0";visibility:=reexport,
  eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.search;bundle-version="1.0.0"
+ eu.openanalytics.phaedra.base.search;bundle-version="1.0.0",
+ org.eclipse.persistence.jpa;bundle-version="2.3.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.model.protocol,
