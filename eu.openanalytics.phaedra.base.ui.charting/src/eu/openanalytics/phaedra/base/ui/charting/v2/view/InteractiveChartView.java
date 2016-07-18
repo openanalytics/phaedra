@@ -774,7 +774,7 @@ public class InteractiveChartView<ENTITY, ITEM> extends BaseChartView<ENTITY, IT
 			zoomImage = ImageIO.read(url);
 
 			// Create a cursor image matching the systems preferred size.
-			Dimension cursorDim = Toolkit.getDefaultToolkit().getBestCursorSize(0, 0);
+			Dimension cursorDim = Toolkit.getDefaultToolkit().getBestCursorSize(16, 16);
 			int imgW = zoomImage.getWidth(null);
 			int imgH = zoomImage.getHeight(null);
 			cursorHotSpot[0] = imgW / 2;

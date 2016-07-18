@@ -8,7 +8,6 @@ import java.sql.Statement;
 
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.export.Activator;
 import eu.openanalytics.phaedra.export.core.ExportException;
 import eu.openanalytics.phaedra.export.core.util.SQLUtils;
 
@@ -81,7 +80,7 @@ public class QueryExecutor {
 			}
 
 			long duration = System.currentTimeMillis() - startTime;
-			EclipseLog.info("Query executed in " + duration + "ms.", Activator.getDefault());
+			EclipseLog.debug("Query executed in " + duration + "ms.", QueryExecutor.class);
 			
 		} catch (SQLException e) {
 			throw new ExportException("Query execution failed: " + e.getMessage(), e);

@@ -153,19 +153,20 @@ public class IncludeDataPage extends BaseExportWizardPage {
 	private void promptFileSelector() {
 		String fileName = "export";
 		if (protocolName != null) fileName = protocolName;
-		if (path != null) fileName = path;
+		if (path != null) fileName = WriterFactory.removeFileType(path);
 		
 		FileDialog dialog = new FileDialog(getShell(), SWT.SAVE);
 		dialog.setFilterExtensions(fileTypes);
 		dialog.setFilterNames(fileTypeNames);
 		dialog.setFileName(fileName);
+		if (fileType != null) dialog.setFilterIndex(CollectionUtils.find(fileTypes, fileType));
 		dialog.setText("Select a destination for the export");
 		String selectedPath = dialog.open();
 		
 		if (selectedPath == null) return;
 		
 		fileType = fileTypes[dialog.getFilterIndex()];
-		if (!selectedPath.endsWith(fileType)) selectedPath += "." + fileType;
+		selectedPath = WriterFactory.applyFileType(selectedPath, fileType);
 		
 		if (new File(selectedPath).exists()) {
 			boolean confirmed = MessageDialog.openConfirm(getShell(), "File exists",
