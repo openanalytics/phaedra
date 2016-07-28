@@ -10,6 +10,7 @@
 		<tycho.version>0.24.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.tools.dir>C:/Phaedra-build</build.tools.dir>
+		<!-- <build.tools.dir>/home/frederick/projects/phaedra/phaedra-build</build.tools.dir> -->
 	</properties>
 
 	<modules>
@@ -60,9 +61,13 @@
 		<module>eu.openanalytics.phaedra.base.imaging.util</module>
 		
 		<module>eu.openanalytics.phaedra.base.r</module>
-		<module>eu.openanalytics.phaedra.base.r.libs</module>
 		<module>eu.openanalytics.phaedra.base.r.rservi</module>
+		<module>eu.openanalytics.phaedra.base.r.libs</module>
+		<module>eu.openanalytics.phaedra.base.r.libs.linux.gtk.x86_64</module>
+		<module>eu.openanalytics.phaedra.base.r.libs.win32.win32.x86_64</module>
 		<module>eu.openanalytics.phaedra.base.r.server</module>
+		<module>eu.openanalytics.phaedra.base.r.server.linux.gtk.x86_64</module>
+		<module>eu.openanalytics.phaedra.base.r.server.win32.win32.x86_64</module>
 		
 		<module>eu.openanalytics.phaedra.base.ui</module>
 		<module>eu.openanalytics.phaedra.base.ui.admin</module>
@@ -145,6 +150,11 @@
 						<environment>
 							<os>win32</os>
 							<ws>win32</ws>
+							<arch>x86_64</arch>
+						</environment>
+						<environment>
+							<os>linux</os>
+							<ws>gtk</ws>
 							<arch>x86_64</arch>
 						</environment>
 					</environments>

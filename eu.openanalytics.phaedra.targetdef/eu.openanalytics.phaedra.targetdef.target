@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="Phaedra Target" sequenceNumber="505">
+<?pde version="3.8"?><target name="Phaedra Target" sequenceNumber="512">
 <locations>
-<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="org.eclipse.platform.feature.group" version="4.5.0.v20150603-2358"/>
-<unit id="org.eclipse.equinox.executable.feature.group" version="3.6.200.v20150602-1417"/>
-<unit id="org.eclipse.rcp.feature.group" version="4.5.0.v20150603-2331"/>
-<repository location="http://download.eclipse.org/releases/mars"/>
-</location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="phaedra.thirdparty.platform.feature.group" version="1.0.0.201605191503"/>
 <repository location="http://libs.phaedra.io"/>
 </location>
+<location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.platform.feature.group" version="4.6.0.v20160606-1342"/>
+<unit id="org.eclipse.equinox.executable.feature.group" version="3.6.300.v20160525-1303"/>
+<unit id="org.eclipse.rcp.feature.group" version="4.6.0.v20160606-1342"/>
+<repository location="http://download.eclipse.org/releases/neon"/>
+</location>
 </locations>
-<environment>
-<os>win32</os>
-<ws>win32</ws>
-<arch>x86_64</arch>
-<nl>en_US</nl>
-</environment>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 </target>
