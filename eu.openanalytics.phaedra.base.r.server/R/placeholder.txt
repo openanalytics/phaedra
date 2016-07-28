@@ -1,1 +1,0 @@
-This folder contains the R binaries that should be bundled with Phaedra

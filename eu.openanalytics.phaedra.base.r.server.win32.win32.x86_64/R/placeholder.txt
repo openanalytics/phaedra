@@ -1,0 +1,1 @@
+To make sure the empty folder gets committed into Git.

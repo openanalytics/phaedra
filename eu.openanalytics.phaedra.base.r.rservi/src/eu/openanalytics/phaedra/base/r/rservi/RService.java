@@ -19,6 +19,7 @@ import de.walware.rj.server.RjsComConfig;
 import de.walware.rj.servi.RServi;
 import eu.openanalytics.phaedra.base.environment.prefs.Prefs;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 
 public class RService {
 
@@ -92,8 +93,8 @@ public class RService {
 				
 				// Adjust PATH to include R binary path.
 				String rHome = setup.getRHome();
-				boolean x64 = setup.getOSArch().contains("64");
-				String binPath = x64 ? rHome+"/bin/x64" : rHome+"/bin/i386";
+				String binPath = rHome+"/bin";	
+				if (ProcessUtils.isWindows()) binPath += (setup.getOSArch().contains("64") ? "/x64" : "/i386");
 				String rNodePath = binPath + File.pathSeparator + System.getenv("PATH");
 				extraVars.put("PATH", rNodePath);
 				
@@ -101,7 +102,7 @@ public class RService {
 				StringBuilder libString = new StringBuilder();
 				List<String> userLibs = setup.getRLibsUser();
 				for (String lib: userLibs) {
-					libString.append(lib + ";");
+					libString.append(lib + File.pathSeparator);
 				}
 				extraVars.put("R_LIBS_USER", libString.toString());
 				
