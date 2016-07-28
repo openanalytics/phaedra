@@ -138,6 +138,7 @@ public class TemplateManager {
 		templateCache.clear();
 		String path = TEMPLATE_REPO_PATH;
 		try {
+			if (!Screening.getEnvironment().getFileServer().isDirectory(path)) return;
 			List<String> items = Screening.getEnvironment().getFileServer().dir(path);
 			items.parallelStream().forEach(item -> {
 				try {
