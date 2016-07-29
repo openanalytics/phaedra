@@ -1,6 +1,10 @@
-<project name="eu.openanalytics.phaedra.installer" default="make-installer">
+<project name="eu.openanalytics.phaedra.installer" default="all">
 	
 	<property file="build.properties" />
+	
+	<condition property="iswin32">
+		<os family="windows"/>
+	</condition>
 	
 	<target name="prepare-installer">
 		<delete dir="${build.dir}" />
@@ -26,6 +30,10 @@
 		<move todir="${project.build.directory}">
 		    <fileset dir="${build.dir}"/>
 		</move>
+	</target>
+	
+	<target name="all" if="iswin32">
+		<antcall target="make-installer"/>
 	</target>
 	
 </project>
