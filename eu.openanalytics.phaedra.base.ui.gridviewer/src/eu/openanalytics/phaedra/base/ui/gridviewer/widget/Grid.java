@@ -235,14 +235,14 @@ public class Grid extends Canvas implements MouseListener, MouseMoveListener, Ke
 
 	@Override
 	public void mouseDown(MouseEvent e) {
-		if (!selectionEnabled) return;
+		if (!selectionEnabled || e.button != 1) return;
 		dragging = true;
 		dragArea = new Rectangle(e.x,e.y,0,0);
 	}
 
 	@Override
 	public void mouseUp(MouseEvent e) {
-		if (!selectionEnabled) return;
+		if (!selectionEnabled || e.button != 1) return;
 
 		dragging = false;
 		if (dragArea == null) return;
