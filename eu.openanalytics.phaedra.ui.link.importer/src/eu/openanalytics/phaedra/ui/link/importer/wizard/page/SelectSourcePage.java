@@ -10,8 +10,6 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -45,8 +43,6 @@ public class SelectSourcePage extends BaseStatefulWizardPage {
 		viewer = FolderBrowserFactory.createBrowser(container);
 
 		Tree tree = viewer.getTree();
-		tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		tree.setLayout(new GridLayout());
 		tree.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -57,7 +53,8 @@ public class SelectSourcePage extends BaseStatefulWizardPage {
 				}
 			}
 		});
-
+		GridDataFactory.fillDefaults().grab(true, false).hint(SWT.DEFAULT, 400).applyTo(tree);
+		
 		Label lbl = new Label(container, SWT.NONE);
 		lbl.setText("Selected folder:");
 

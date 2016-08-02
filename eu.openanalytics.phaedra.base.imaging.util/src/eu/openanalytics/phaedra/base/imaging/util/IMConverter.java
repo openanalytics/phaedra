@@ -1,28 +1,36 @@
 package eu.openanalytics.phaedra.base.imaging.util;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 
-import eu.openanalytics.phaedra.base.util.process.ProcessHolder;
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.Path;
+import org.osgi.framework.Bundle;
+
+import eu.openanalytics.phaedra.base.util.io.FileUtils;
+import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 
-public class IMConverter extends ProcessHolder {
+public class IMConverter {
 
-	private static IMConverter instance;
+	private static String executable;
 	
-	private final static String[] REQUIRED_FILES = {
-		"os/win32/${arch}/convert.exe",
-		"os/win32/${arch}/vcomp100.dll"
-	};
-	
-	public void initialize() throws IOException {
-		String arch = ProcessUtils.isSystem64Bit() ? "x86_64" : "x86";
-		
-		String[] requiredFiles = new String[REQUIRED_FILES.length];
-		for (int i=0; i<requiredFiles.length; i++) {
-			requiredFiles[i] = REQUIRED_FILES[i].replace("${arch}", arch);
+	private static void initialize() throws IOException {
+		if (ProcessUtils.isWindows()) {
+			String tempDir = FileUtils.generateTempFolder(true);
+			Bundle bundle = Activator.getContext().getBundle();
+			String[] requiredFiles = { "os/win32/x86_64/convert.exe", "os/win32/x86_64/vcomp100.dll" };
+			for (String file: requiredFiles) {
+				URL url = FileLocator.find(bundle, new Path(file), null);
+				String destination = tempDir + "/" + FileUtils.getName(file);
+				StreamUtils.copyAndClose(url.openStream(), new FileOutputStream(destination));
+			}
+			executable = tempDir + "/convert.exe";
+		} else {
+			// Use pre-installed ImageMagick
+			executable = "convert";
 		}
-		
-		super.initialize(Activator.getContext().getBundle().getSymbolicName(), requiredFiles);
 	}
 	
 	public static void convert(String input, String args, String output) throws IOException {
@@ -41,14 +49,11 @@ public class IMConverter extends ProcessHolder {
 	
 	public static void convert(String[] args) throws IOException {
 		synchronized(IMConverter.class) {
-			if (instance == null) {
-				instance = new IMConverter();
-				instance.initialize();
-			}
+			if (executable == null) initialize();
 		}
 		
 		String[] cmd = new String[args.length + 1];
-		cmd[0] = instance.getDir() + "/convert.exe";
+		cmd[0] = executable;
 		for (int i=0; i<args.length; i++) cmd[1+i] = args[i];
 		
 		try {
