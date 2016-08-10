@@ -9,6 +9,8 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+
 
 public class CodecFactory {
 
@@ -65,5 +67,6 @@ public class CodecFactory {
 				// Ignore invalid extensions.
 			}
 		}
+		EclipseLog.info(String.format("%d codecs registered. Preferred codec: %s", codecs.size(), preferredCodec), Activator.getDefault());
 	}
 }
