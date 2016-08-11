@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: HDF-5 Interface
-Bundle-SymbolicName: eu.openanalytics.phaedra.base.hdf5
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.hdf5;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.hdf5.Activator
 Bundle-Vendor: OpenAnalytics
