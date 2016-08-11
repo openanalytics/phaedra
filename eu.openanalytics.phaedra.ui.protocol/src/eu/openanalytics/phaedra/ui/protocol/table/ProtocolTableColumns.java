@@ -40,7 +40,7 @@ public class ProtocolTableColumns {
 		config.setEditingConfig(ColumnEditingFactory.create("getDescription", "setDescription", saver, canEditColumn));
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Team Code", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Team", ColumnDataType.String, 150);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
