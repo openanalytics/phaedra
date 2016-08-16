@@ -15,7 +15,6 @@ import org.nfunk.jep.function.Comparative;
 
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.jep.JEPFunction;
-import eu.openanalytics.phaedra.calculation.jep.functions.Avg;
 import eu.openanalytics.phaedra.calculation.jep.functions.CostumComparative;
 import eu.openanalytics.phaedra.calculation.jep.functions.Count;
 import eu.openanalytics.phaedra.calculation.jep.functions.CstOp;
@@ -97,7 +96,6 @@ public class JEPParser {
 		jep.addComplex();
 		jep.addFunction(JEPFunction.logicle.getFunctionName(), new Logicle());
 		jep.addFunction(JEPFunction.glog.getFunctionName(), new Glog());
-		jep.addFunction(JEPFunction.average.getFunctionName(), new Avg());
 		jep.addFunction(JEPFunction.stdev.getFunctionName(), new StDev());
 		jep.addFunction(JEPFunction.var.getFunctionName(), new Var());
 		jep.addFunction(JEPFunction.med.getFunctionName(), new Med());

@@ -15,7 +15,9 @@ public class MontageConfig {
 	public String subwellDataParserId;
 	public String[] subwellDataXFeatures;
 	public String[] subwellDataYFeatures;
-
+	public String[] subwellDataXFeaturePatterns;
+	public String[] subwellDataYFeaturePatterns;
+	
 	public ImageComponent[] imageComponents;
 	
 	public static class ImageComponent {

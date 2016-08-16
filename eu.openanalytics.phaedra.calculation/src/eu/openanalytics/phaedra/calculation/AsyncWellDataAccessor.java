@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
@@ -147,18 +147,18 @@ public class AsyncWellDataAccessor {
 
 		@Override
 		public void run(IProgressMonitor monitor) {
+			SubMonitor subMonitor = SubMonitor.convert(monitor, "Loading Well Feature Values", 100);
 			try {
-				monitor.beginTask("Loading Well Feature Values", 100);
 				int nrofWells = wells.size();
 				if (nrofWells == 1) {
 					WellDataAccessor.fetchFeatureValues(wells.get(0), features, true);
 				} else {
-					WellDataAccessor.fetchFeatureValues(wells, features, true, new SubProgressMonitor(monitor, 100));
+					WellDataAccessor.fetchFeatureValues(wells, features, true, subMonitor.split(90));
 				}
 			} catch (Exception e) {
 				EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 			} finally {
-				monitor.done();
+				subMonitor.done();
 			}
 		}
 

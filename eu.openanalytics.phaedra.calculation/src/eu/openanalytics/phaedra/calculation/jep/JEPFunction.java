@@ -286,14 +286,6 @@ public enum JEPFunction {
 			return "Minimum in argument list" + getMultipleString();
 		}
 	},
-	/** average in argument list. */
-	average {
-		/** {@inheritDoc} */
-		@Override
-		String getDescription() {
-			return "Average in argument list" + getMultipleString();
-		}
-	},
 	stdev {
 		/** {@inheritDoc} */
 		@Override

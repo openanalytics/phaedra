@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -52,19 +53,16 @@ public class SubwellDataProcessor {
 	private FieldLayout fieldLayout;
 	private Point imageDimensions;
 	private boolean fullImageDimensions;
-	
-	private int modifyFeatureCount;
+	private boolean modifiesFeatures;
 	
 	public void init(MontageConfig montageConfig) {
 		this.montageConfig = montageConfig;
 		
-		modifyFeatureCount = 0;
-		if (montageConfig.subwellDataXFeatures != null) {
-			modifyFeatureCount += montageConfig.subwellDataXFeatures.length;
-		}
-		if (montageConfig.subwellDataYFeatures != null) {
-			modifyFeatureCount += montageConfig.subwellDataYFeatures.length;
-		}
+		this.modifiesFeatures = false;
+		if (montageConfig.subwellDataXFeatures != null && montageConfig.subwellDataXFeatures.length > 0) modifiesFeatures = true;
+		if (montageConfig.subwellDataYFeatures != null && montageConfig.subwellDataYFeatures.length > 0) modifiesFeatures = true;
+		if (montageConfig.subwellDataXFeaturePatterns != null && montageConfig.subwellDataXFeaturePatterns.length > 0) modifiesFeatures = true;
+		if (montageConfig.subwellDataYFeaturePatterns != null && montageConfig.subwellDataYFeaturePatterns.length > 0) modifiesFeatures = true;
 	}
 	
 	public void setImageDimensions(Point imageDimensions, boolean fullDimensions) {
@@ -74,7 +72,7 @@ public class SubwellDataProcessor {
 	
 	public void process(PlateReading reading, String outputPath, DataCaptureContext context, IProgressMonitor monitor) throws DataCaptureException {
 		// Abort if there are no features to modify.
-		if (modifyFeatureCount == 0) return;
+		if (!modifiesFeatures) return;
 		if (monitor.isCanceled()) return;
 		
 		if (imageDimensions == null || (imageDimensions.x == 0 && imageDimensions.y == 0)) {
@@ -161,8 +159,8 @@ public class SubwellDataProcessor {
 		}
 		
 		// Find out which features need to be updated, and whether or not a "Field" feature should be added.
-		int[] xFeatureIndices = getXFeatureIndices(parsedFeatures);
-		int[] yFeatureIndices = getYFeatureIndices(parsedFeatures);
+		BitSet xFeatures = getXFeatureIndices(parsedFeatures);
+		BitSet yFeatures = getYFeatureIndices(parsedFeatures);
 		int fieldFeatureIndex = getFieldFeatureIndex(parsedFeatures);
 		
 		boolean isSingleField = (fieldFiles.size() == 1 && fieldFiles.keySet().contains("-1"));
@@ -200,12 +198,10 @@ public class SubwellDataProcessor {
 						double value = Double.NaN;
 						if (ds != null && ds.isNumeric()) {
 							float[][] data = ds.getAllNumericValues();
-							if (CollectionUtils.contains(xFeatureIndices, i)) {
-								boolean horizontal = true;
-								value = calculateValue(data[0][row], fieldNr, horizontal);
-							} else if (CollectionUtils.contains(yFeatureIndices, i)) {
-								boolean horizontal = false;
-								value = calculateValue(data[0][row], fieldNr, horizontal);
+							if (xFeatures.get(i)) {
+								value = calculateValue(data[0][row], fieldNr, true);
+							} else if (yFeatures.get(i)) {
+								value = calculateValue(data[0][row], fieldNr, false);
 							} else {
 								value = data[0][row];
 							}
@@ -240,25 +236,35 @@ public class SubwellDataProcessor {
 		return -1;
 	}
 	
-	private int[] getXFeatureIndices(String[] features) {
-		List<Integer> indices = new ArrayList<>();
-		
+	private BitSet getXFeatureIndices(String[] features) {
+		BitSet bitset = new BitSet(features.length);
 		for (int i=0; i<features.length; i++) {
-			int index = CollectionUtils.find(montageConfig.subwellDataXFeatures, features[i]);
-			if (index != -1) indices.add(i);
+			if (CollectionUtils.contains(montageConfig.subwellDataXFeatures, features[i])) bitset.set(i);
 		}
-		
-		return CollectionUtils.toIntArray(indices);
+		if (montageConfig.subwellDataXFeaturePatterns != null) {
+			for (String regex: montageConfig.subwellDataXFeaturePatterns) {
+				Pattern pattern = Pattern.compile(regex);
+				for (int i=0; i<features.length; i++) {
+					if (pattern.matcher(features[i]).matches()) bitset.set(i);
+				}
+			}
+		}
+		return bitset;
 	}
 	
-	private int[] getYFeatureIndices(String[] features) {
-		List<Integer> indices = new ArrayList<>();
-		
+	private BitSet getYFeatureIndices(String[] features) {
+		BitSet bitset = new BitSet(features.length);
 		for (int i=0; i<features.length; i++) {
-			int index = CollectionUtils.find(montageConfig.subwellDataYFeatures, features[i]);
-			if (index != -1) indices.add(i);
+			if (CollectionUtils.contains(montageConfig.subwellDataYFeatures, features[i])) bitset.set(i);
 		}
-		
-		return CollectionUtils.toIntArray(indices);
+		if (montageConfig.subwellDataYFeaturePatterns != null) {
+			for (String regex: montageConfig.subwellDataYFeaturePatterns) {
+				Pattern pattern = Pattern.compile(regex);
+				for (int i=0; i<features.length; i++) {
+					if (pattern.matcher(features[i]).matches()) bitset.set(i);
+				}
+			}
+		}
+		return bitset;
 	}
 }

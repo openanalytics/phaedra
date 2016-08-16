@@ -35,13 +35,20 @@ public class MontageConfigParser {
 				config.subwellDataParserId = parserTag.getAttribute("id");
 			}
 		
-			List<String> features = new ArrayList<>();
 			Element featuresTag = XmlUtils.getFirstElement("x-features", swTag);
+			List<String> features = new ArrayList<>();
 			NodeList featureTags = XmlUtils.findTags("feature", featuresTag);
 			for (int i=0; i<featureTags.getLength(); i++) {
 				features.add(featureTags.item(i).getTextContent());
 			}
 			config.subwellDataXFeatures = features.toArray(new String[features.size()]);
+			
+			features.clear();
+			featureTags = XmlUtils.findTags("featurePattern", featuresTag);
+			for (int i=0; i<featureTags.getLength(); i++) {
+				features.add(featureTags.item(i).getTextContent());
+			}
+			config.subwellDataXFeaturePatterns = features.toArray(new String[features.size()]);
 			
 			features.clear();
 			featuresTag = XmlUtils.getFirstElement("y-features", swTag);
@@ -50,6 +57,13 @@ public class MontageConfigParser {
 				features.add(featureTags.item(i).getTextContent());
 			}
 			config.subwellDataYFeatures = features.toArray(new String[features.size()]);
+			
+			features.clear();
+			featureTags = XmlUtils.findTags("featurePattern", featuresTag);
+			for (int i=0; i<featureTags.getLength(); i++) {
+				features.add(featureTags.item(i).getTextContent());
+			}
+			config.subwellDataYFeaturePatterns = features.toArray(new String[features.size()]);
 		}
 		
 		List<ImageComponent> components = new ArrayList<>();
