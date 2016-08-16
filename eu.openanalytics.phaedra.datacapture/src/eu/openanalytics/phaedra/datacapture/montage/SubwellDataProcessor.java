@@ -4,6 +4,7 @@ import java.awt.Point;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -13,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
@@ -113,8 +116,9 @@ public class SubwellDataProcessor {
 			if (monitor.isCanceled()) return;
 			monitor.subTask("Processing well " + wellId);
 			
-			context.getActiveModule().getConfig().getParameters().setParameter("wellNr", wellId);
-			String outputFile = outputPath + "/" + CaptureUtils.resolveVars(montageConfig.subwellDataOutput, false);
+			String outputFile = outputPath + "/" + CaptureUtils.resolveVars(
+					montageConfig.subwellDataOutput, false,
+					Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 			
 			modifySubwellData(wellId, inputFileMap, outputFile);
 			

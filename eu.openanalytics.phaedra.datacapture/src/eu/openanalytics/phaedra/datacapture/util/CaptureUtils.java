@@ -238,6 +238,10 @@ public class CaptureUtils {
 	}
 	
 	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex) {
+		return resolveVars(unresolvedValue, escapeValuesForRegex, null);
+	}
+	
+	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex, Map<String,String> localVariables) {
 		if (unresolvedValue == null || unresolvedValue.isEmpty()) return unresolvedValue;
 		
 		char varStart = '$';
@@ -273,15 +277,21 @@ public class CaptureUtils {
 				}
 				if (hasVarEnd) {
 					String varName = unresolvedValue.substring(varStartPosition, varEndPosition);
-					Object varValueObject = VariableResolver.get(varName);
 					String varValue = null;
-					if (varValueObject == null) varValue = "" + varStart + varStart2 + varName + varEnd;
-					else varValue = varValueObject.toString();
+					if (localVariables != null) {
+						varValue = localVariables.get(varName);
+					}
+					if (varValue == null) {
+						Object varValueObject = VariableResolver.get(varName);
+						if (varValueObject != null) varValueObject.toString();	
+					}
+					if (varValue == null) {
+						varValue = "" + varStart + varStart2 + varName + varEnd;
+					}
 					
 					//Fix: var value may contain reserved regex characters.
-					if (escapeValuesForRegex) {
-						varValue = escapeRegexChars(varValue);
-					}
+					if (escapeValuesForRegex) varValue = escapeRegexChars(varValue);
+					
 					resolvedValue.append(varValue);
 					position = varEndPosition;
 				} else {

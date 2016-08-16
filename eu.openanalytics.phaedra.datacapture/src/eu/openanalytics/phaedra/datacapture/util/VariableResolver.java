@@ -27,10 +27,13 @@ public class VariableResolver {
 
 		Object value = null;
 		
-		if (key.startsWith(READING_PREFIX) && ctx.getActiveReading() != null) {
-			// Look in the reading-specific parameters (DataCaptureContext)
-			ParameterGroup params = ctx.getParameters(ctx.getActiveReading());
-			if (params != null) value = params.getParameter(key.substring(READING_PREFIX.length()));
+		if (ctx.getActiveReading() != null) {
+			if (key.equals("barcode") || key.equals(READING_PREFIX + ".barcode")) return ctx.getActiveReading().getBarcode();
+			else if (key.startsWith(READING_PREFIX)) {
+				// Look in the reading-specific parameters (DataCaptureContext)
+				ParameterGroup params = ctx.getParameters(ctx.getActiveReading());
+				if (params != null) value = params.getParameter(key.substring(READING_PREFIX.length()));
+			}
 		} else {
 			// 1. Look in task parameters (i.e. "runtime" parameters)
 			value = ctx.getTask().getParameters().get(key);

@@ -3,11 +3,14 @@ package eu.openanalytics.phaedra.datacapture.montage;
 import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubProgressMonitor;
@@ -98,8 +101,8 @@ public class ImageProcessor {
 			
 			MTExecutor<String> threadPool = createThreadPool();
 			for (String wellId: idSet) {
-				context.getActiveModule().getConfig().getParameters().setParameter("wellNr", wellId);
-				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false);
+				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false,
+						Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 				MTCallable<String> task = new MTCallable<>();
 				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile));
 				threadPool.queue(task);

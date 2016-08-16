@@ -100,9 +100,6 @@ public class MontageModule extends AbstractModule {
 		Boolean importImageData = (Boolean)getConfig().getParameters().getParameter("importImageData");
 		Boolean importSubWellData = (Boolean)getConfig().getParameters().getParameter("importSubWellData");
 		
-		// Note: not used for shared parameters anymore, but ${barcode} is still used a lot by capture configs.
-		getConfig().getParameters().setParameter("barcode", reading.getBarcode());
-		
 		context.getParameters(reading).setParameter("imagePath.montaged", outputPath);
 		context.getParameters(reading).setParameter("subwellDataPath.montaged", outputPath);
 		

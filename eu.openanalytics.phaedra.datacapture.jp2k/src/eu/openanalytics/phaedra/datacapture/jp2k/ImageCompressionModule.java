@@ -96,9 +96,6 @@ public class ImageCompressionModule extends AbstractModule {
 			throw new DataCaptureException("Plate layout unknown. Please make sure the welldata is captured as well.");
 		}
 		
-		// Note: not used for shared parameters anymore, but ${barcode} is still used a lot by capture configs.
-		getConfig().getParameters().setParameter("barcode", reading.getBarcode());
-		
 		String workingDir = FileUtils.generateTempFolder(true);
 	
 		try {
