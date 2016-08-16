@@ -75,7 +75,7 @@
 					<component>
 						<compression type="${c.type!'i97'}" slope="${c.slope!'39000'}" />
 <#if c.montage?? && c.montage == 'true'>
-						<files path="${r'${reading.imagePath.montaged}'}" pattern="(.+)_ch${c_index + 1}\.tif" pattern-id-groups="1" />
+						<files path="${r'${reading.image.path.montaged}'}" pattern="(.+)_ch${c_index + 1}\.tif" pattern-id-groups="1" />
 <#else>
 						<files path="${c.path}" pattern="${c.filepattern}" pattern-id-groups="${c.idgroup!'1'}"/>
 </#if>

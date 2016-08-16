@@ -100,8 +100,8 @@ public class MontageModule extends AbstractModule {
 		Boolean importImageData = (Boolean)getConfig().getParameters().getParameter("importImageData");
 		Boolean importSubWellData = (Boolean)getConfig().getParameters().getParameter("importSubWellData");
 		
-		context.getParameters(reading).setParameter("imagePath.montaged", outputPath);
-		context.getParameters(reading).setParameter("subwellDataPath.montaged", outputPath);
+		context.getParameters(reading).setParameter("image.path.montaged", outputPath);
+		context.getParameters(reading).setParameter("subwelldata.path.montaged", outputPath);
 		
 		if ((importImageData == null || importImageData.booleanValue()) && montageConfig.imageComponents != null) {
 			context.getLogger().info(reading, "Creating image montage for " + montageConfig.imageComponents.length + " channel(s)");

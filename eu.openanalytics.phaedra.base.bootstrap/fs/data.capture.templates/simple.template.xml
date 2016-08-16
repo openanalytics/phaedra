@@ -26,6 +26,7 @@
 		</parameters>
 	</module>
 
+<#if imagedata?? && imagedata.channel?? >
 	<module id="gather.imagedata" name="Gather image data" type="ImageCompressionModule">
 		<parameters>
 			<parameter key="config">
@@ -40,5 +41,6 @@
 			</parameter>
 		</parameters>
 	</module>
-	
+</#if>
+
 </data-capture-config>

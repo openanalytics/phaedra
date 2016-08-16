@@ -42,6 +42,20 @@ function findFile(basePath, filePattern, optional) {
 }
 
 /**
+ * Find the first folder matching a pattern.
+ *
+ * @param basePath The folder to search in. This may be a relative path, in which case it will be resolved for the current reading's source path.
+ * @param folderPattern The regex pattern that the folder must match.
+ * @returns The path to the matching folder, or null if no match was found.
+ */
+function findFolder(basePath, folderPattern) {
+	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
+	var folderPath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, folderPattern);
+	if (new java.io.File(folderPath).isDirectory()) return folderPath;
+	else return null;
+}
+
+/**
  * Find multiple files or folders matching a pattern.
  * 
  * @param basePath The folder to search in. This may be a relative path, in which case it will be resolved for the current reading's source path.
@@ -345,14 +359,18 @@ function getParameter(name, defaultValue) {
 }
 
 /**
- * Set a reading-specific parameter in the shared configuration (accessible by all modules).
+ * Set a parameter in the shared configuration (accessible by all modules).
  * 
  * @param name The name of the parameter to set.
  * @param value The value to set.
  */
-function setSharedParameter(name, value) {
-	if (name.startsWith("reading.")) name = name.substring(8);
-	ctx.getParameters(reading).setParameter(name, value);
+function setParameter(name, value) {
+	if (name.startsWith("reading.")) {
+		name = name.substring(8);
+		ctx.getParameters(reading).setParameter(name, value);
+	} else {
+		ctx.getTask().getParameters().put(name, value);
+	}
 }
 
 status = "Common functions loaded.";

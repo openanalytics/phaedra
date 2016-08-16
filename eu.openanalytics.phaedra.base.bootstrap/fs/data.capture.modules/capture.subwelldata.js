@@ -1,7 +1,7 @@
 /*
  * Supported formats:
- * - One file per plate: the data contains a well id column, and plate dimensions will be determined by the file contents
- * - One file per well: the filename contains the well id, and plate dimensions will be taken from reading.getRows() and reading.getColumns()
+ * - One file per plate (the data contains a well id column) (plate dimensions will be determined by the file contents)
+ * - One file per well (the filename contains the well id) (plate dimensions will be taken from reading.getRows() and reading.getColumns())
  */
 
 load("script://dc/common.js");
@@ -32,6 +32,9 @@ forEachReading(function (reading) {
 				plate.setColumns(reading.getColumns());
 				plate.removeWell(1,1);
 				plate.addWell(wellPos[0], wellPos[1], well);	
+			} else if (reading.getRows() == 0 && reading.getColumns() == 0) {
+				reading.setRows(plate.getRows());
+				reading.setColumns(plate.getColumns());
 			}
 			saveModel(model);
 			delete model;

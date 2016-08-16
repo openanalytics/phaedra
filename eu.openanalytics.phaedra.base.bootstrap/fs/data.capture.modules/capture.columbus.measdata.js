@@ -7,7 +7,6 @@ var plateRowsXPath = "/Measurement/PlateLayout/PlateDescription/@Rows";
 var plateColsXPath = "/Measurement/PlateLayout/PlateDescription/@Columns";
 
 forEachReading(function(reading) {
-
 	// Locate the measurement file
 	var measFilePath = findFile(basePath, filePattern, false);
 
@@ -19,10 +18,6 @@ forEachReading(function(reading) {
 	if (plateCols == 0) plateCols = API.get("XmlUtils").findString(plateColsXPath, doc);
 	reading.setRows(plateRows);
 	reading.setColumns(plateCols);
-
-	// Set the meas file path as a shared parameter (e.g. so the montage module can use it)
-	setSharedParameter("reading.measFilePath", measFilePath);
-
 });
 
 // Take the InstanceFileShare parameter and set it as a parameter "image.path"
@@ -30,4 +25,4 @@ var imagePath = getParameter("InstanceFileShare");
 if (imagePath === undefined) {
 	imagePath = eu.openanalytics.phaedra.datacapture.columbus.prefs.Prefs.getDefaultLogin().fileShare;
 }
-task.getParameters().put("image.path", imagePath);
+setParameter("image.path", imagePath);

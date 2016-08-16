@@ -4,14 +4,17 @@ load("script://dc/common.js");
  * This module takes an input folder and scans it for the presence of 'plate folders'.
  * For each plate folder, a new PlateReading object will be instantiated and added to the DataCaptureContext.
  *
- * Expected parameters:
- * plate.folder.pattern			- A regex pattern that a folder must match in order to be considered a plate folder.
- * plate.folder.barcode.group	- The group within the pattern that represents the plate barcode.
+ * Parameters:
+ * plate.folder.pattern - A regex pattern that a folder must match in order to be considered a plate folder.
+ * plate.folder.barcode.group - The group within the pattern that represents the plate barcode.
+ * plate.folder.sequence.group - (Optional) The group within the pattern that represents the plate sequence.
  */
 
 monitor.beginTask("Locating plate folders", 100);
 
 var pattern = getParameter("plate.folder.pattern", ".*");
+var barcodeGroup = getParameter("plate.folder.barcode.group", 1);
+var sequenceGroup = getParameter("plate.folder.sequence.group");
 var sourcePath = task.getSource();
 
 scanFolder(task.getSource());
@@ -49,11 +52,9 @@ function createReading(path) {
 		var reading = ctx.createNewReading(i+1);
 		reading.setSourcePath(path);
 
-		var barcodeGroup = getParameter("plate.folder.barcode.group");
 		var barcode = matchPattern(fileName, pattern, barcodeGroup);
 		reading.setBarcode(barcode);
 		
-		var sequenceGroup = getParameter("plate.folder.sequence.group");
 		if (sequenceGroup != null) {
 			var sequence = matchPattern(fileName, pattern, sequenceGroup);
 			if (API.get("NumberUtils").isNumeric(sequence)) reading.setFileInfo(sequence);
