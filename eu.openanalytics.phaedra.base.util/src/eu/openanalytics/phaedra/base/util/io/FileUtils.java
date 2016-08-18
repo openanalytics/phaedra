@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.base.util.io;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
@@ -9,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -580,28 +578,5 @@ public class FileUtils {
 	
 	public static void remove(String path) throws IOException {
 		org.apache.commons.io.FileUtils.deleteDirectory(new File(path));
-	}
-	
-	public static String resolveMappedPath(String path) throws IOException {
-		if(isUNC(path)) return path;
-		
-		String drive = path.substring(0, 2);
-		Runtime rt = Runtime.getRuntime();
-		Process process = rt.exec("net use " + drive);
-		
-		InputStream in = process.getInputStream();
-		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
-		
-		String line = null;
-		String[] components = null;
-		while (null != (line = bufferedReader.readLine())) {
-			// Split on whitespace; line break, tab, space
-			// [0] Remote
-			// [2] \\share
-			components = line.split("\\s+");
-			if(components[0].equals("Remote"))
-				path = path.replace(drive, components[2]);
-		}	
-		return path;
 	}
 }
