@@ -8,7 +8,7 @@
 <repository location="http://download.eclipse.org/releases/neon"/>
 </location>
 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
-<unit id="phaedra.thirdparty.platform.feature.group" version="1.0.0.201608221506"/>
+<unit id="phaedra.thirdparty.platform.feature.group" version="0.0.0"/>
 <repository location="http://fcm-consulting.be/phaedra.libs"/>
 </location>
 </locations>
