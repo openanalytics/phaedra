@@ -33,6 +33,10 @@
             hookPointId="eu.openanalytics.phaedra.link.data.dataHookPoint"
             priority="1">
       </hook>
+      <hook
+            class="eu.openanalytics.phaedra.link.data.OnLoginHook"
+            hookPointId="eu.openanalytics.phaedra.base.environment.loginHookPoint">
+      </hook>
    </extension>
 
 </plugin>

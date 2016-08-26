@@ -283,7 +283,7 @@ public class CaptureUtils {
 					}
 					if (varValue == null) {
 						Object varValueObject = VariableResolver.get(varName);
-						if (varValueObject != null) varValueObject.toString();	
+						if (varValueObject != null) varValue = varValueObject.toString();	
 					}
 					if (varValue == null) {
 						varValue = "" + varStart + varStart2 + varName + varEnd;

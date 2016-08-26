@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 
 public class HookService {
@@ -97,8 +98,10 @@ public class HookService {
 		HookPoint hookPoint = hookIdMap.get(hookPointId);
 		if (hookPoint == null) return NO_HOOKS;
 		HookList list = hookMap.get(hookPoint);
-		IHook[] hooks = list.getHooks();
-		if (hooks == null) return NO_HOOKS;
+		HookRef[] refs = list.getHooks();
+		if (refs == null || refs.length == 0) return NO_HOOKS;
+		IHook[] hooks = new IHook[refs.length];
+		for (int i = 0; i < hooks.length; i++) hooks[i] = refs[i].get();
 		return hooks;
 	}
 	
@@ -119,24 +122,16 @@ public class HookService {
 		// Fetch all hooks.
 		config = Platform.getExtensionRegistry().getConfigurationElementsFor(IHook.EXT_PT_ID);
 		for (IConfigurationElement el : config) {
-			try {
-				Object o = el.createExecutableExtension(IHook.ATTR_CLASS);
-				if (o instanceof IHook) {
-					IHook hook = (IHook)o;
-					String hookPointId = el.getAttribute(IHook.ATTR_HOOK_ID);
-					String priorityString = el.getAttribute(IHook.ATTR_PRIORITY);
-					int priority = 10;
-					if (priorityString != null && NumberUtils.isDouble(priorityString)) {
-						priority = Integer.parseInt(priorityString);
-					}
-					HookPoint hookPoint = hookIdMap.get(hookPointId);
-					if (hookPoint != null) {
-						HookList list = hookMap.get(hookPoint);
-						list.add(hook, priority);
-					}
-				}
-			} catch (CoreException e) {
-				// Invalid extension.
+			String priorityString = el.getAttribute(IHook.ATTR_PRIORITY);
+			int priority = 10;
+			if (priorityString != null && NumberUtils.isDouble(priorityString)) {
+				priority = Integer.parseInt(priorityString);
+			}
+			String hookPointId = el.getAttribute(IHook.ATTR_HOOK_ID);
+			HookPoint hookPoint = hookIdMap.get(hookPointId);
+			if (hookPoint != null) {
+				HookList list = hookMap.get(hookPoint);
+				list.add(new HookRef(el), priority);
 			}
 		}
 		
@@ -151,26 +146,26 @@ public class HookService {
 	}
 	
 	private static class HookList {
-		private List<IHook> hooks;
-		private Map<IHook, Integer> priorities;
-		private IHook[] sortedHooks;
+		private List<HookRef> hooks;
+		private Map<HookRef, Integer> priorities;
+		private HookRef[] sortedHooks;
 		
 		public HookList() {
 			hooks = new ArrayList<>();
 			priorities = new HashMap<>();
-			sortedHooks = new IHook[0];
+			sortedHooks = new HookRef[0];
 		}
 		
-		public void add(IHook hook, int priority) {
-			hooks.add(hook);
-			priorities.put(hook, priority);
+		public void add(HookRef hookRef, int priority) {
+			hooks.add(hookRef);
+			priorities.put(hookRef, priority);
 		}
 		
 		public void sort() {
-			List<IHook> sortedHookList = new ArrayList<>(hooks);
-			Collections.sort(sortedHookList, new Comparator<IHook>() {
+			List<HookRef> sortedHookList = new ArrayList<>(hooks);
+			Collections.sort(sortedHookList, new Comparator<HookRef>() {
 				@Override
-				public int compare(IHook o1, IHook o2) {
+				public int compare(HookRef o1, HookRef o2) {
 					if (o1 == null) return -1;
 					if (o2 == null) return 1;
 					int p1 = priorities.get(o1);
@@ -178,11 +173,34 @@ public class HookService {
 					return p1 - p2;
 				}
 			});
-			sortedHooks = sortedHookList.toArray(new IHook[sortedHookList.size()]);
+			sortedHooks = sortedHookList.toArray(new HookRef[sortedHookList.size()]);
 		}
 		
-		public IHook[] getHooks() {
+		public HookRef[] getHooks() {
 			return sortedHooks;
+		}
+	}
+	
+	private static class HookRef {
+		
+		private IConfigurationElement el;
+		private IHook delegate;
+		
+		public HookRef(IConfigurationElement el) {
+			this.el = el;
+		}
+		
+		public synchronized IHook get() {
+			if (delegate == null) resolve();
+			return delegate;
+		}
+		
+		private void resolve() {
+			try {
+				delegate = (IHook) el.createExecutableExtension(IHook.ATTR_CLASS);
+			} catch (CoreException e) {
+				EclipseLog.error("Failed to resolve hook: " + el.getAttribute(IHook.ATTR_CLASS), e, Activator.getDefault());
+			}
 		}
 	}
 }
