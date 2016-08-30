@@ -49,11 +49,6 @@
 		<module>eu.openanalytics.phaedra.base.ui.util</module>
 		<module>eu.openanalytics.phaedra.base.util</module>	
 
-		<module>eu.openanalytics.phaedra.base.http</module>
-		<module>eu.openanalytics.phaedra.base.http.server</module>
-		<module>eu.openanalytics.phaedra.base.http.server.jetty</module>
-		<module>eu.openanalytics.phaedra.base.http.server.jetty.ssl</module>
-
 		<module>eu.openanalytics.phaedra.base.imaging</module>
 		<module>eu.openanalytics.phaedra.base.imaging.jp2k</module>
 		<module>eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg</module>

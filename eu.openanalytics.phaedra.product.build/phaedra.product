@@ -47,7 +47,6 @@
       <feature id="eu.openanalytics.phaedra.jre" installMode="root"/>
       <feature id="eu.openanalytics.phaedra" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base" installMode="root"/>
-      <feature id="eu.openanalytics.phaedra.base.http" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base.imaging" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base.r" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base.ui" installMode="root"/>
