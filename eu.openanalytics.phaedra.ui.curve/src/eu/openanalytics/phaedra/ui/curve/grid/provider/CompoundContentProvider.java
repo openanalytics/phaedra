@@ -32,6 +32,7 @@ import org.eclipse.nebula.widgets.nattable.sort.SortConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
 
 import chemaxon.formats.MolFormatException;
 import chemaxon.formats.MolImporter;
@@ -50,6 +51,7 @@ import eu.openanalytics.phaedra.base.util.convert.AWTImageConverter;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.base.util.threading.ThreadPool;
 import eu.openanalytics.phaedra.base.util.threading.ThreadUtils;
 import eu.openanalytics.phaedra.model.curve.Activator;
@@ -522,9 +524,10 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 							curveLoadedCount.addAndGet(1);
 
 							// Send the render task to another thread, so this thread can keep loading curves.
-							tp.schedule(() -> {
-								CurveService.getInstance().getCurveImage(curve, imageX, imageY);
-							});
+							//FIX Ubuntu/Cairo: new Image() may cause deadlock when called from non-UI thread.
+							Runnable curveImageGetter = () -> CurveService.getInstance().getCurveImage(curve, imageX, imageY);
+							if (ProcessUtils.isWindows()) tp.schedule(curveImageGetter);
+							else Display.getDefault().asyncExec(curveImageGetter);
 
 							monitor.worked(1);
 							if (curveLoadedCount.get() >= curveCount) break;
