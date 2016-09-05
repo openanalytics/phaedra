@@ -71,7 +71,8 @@ public class ImageProcessor {
 			} else {
 				context.getLogger().warn(reading, "Image path not found: " + resolvedPath);
 			}
-			FilePatternInterpreter interpreter = new FilePatternInterpreter(component.pattern, component.patternIdGroups, component.patternFieldGroup);
+			String resolvedPattern = CaptureUtils.resolveVars(component.pattern);
+			FilePatternInterpreter interpreter = new FilePatternInterpreter(resolvedPattern, component.patternIdGroups, component.patternFieldGroup);
 			
 			Set<Integer> uniqueFields = new HashSet<>();
 			Set<String> idSet = new HashSet<>();
