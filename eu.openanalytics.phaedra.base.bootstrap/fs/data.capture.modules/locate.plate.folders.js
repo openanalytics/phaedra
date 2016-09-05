@@ -16,6 +16,7 @@ var pattern = getParameter("plate.folder.pattern", ".*");
 var barcodeGroup = getParameter("plate.folder.barcode.group", 1);
 var sequenceGroup = getParameter("plate.folder.sequence.group");
 var sourcePath = task.getSource();
+var readingNr = 1;
 
 scanFolder(task.getSource());
 
@@ -49,7 +50,7 @@ function createReading(path) {
 	var file = new java.io.File(path);
 	if (file.isDirectory()) {
 		var fileName = file.getName();
-		var reading = ctx.createNewReading(i+1);
+		var reading = ctx.createNewReading(readingNr++);
 		reading.setSourcePath(path);
 
 		var barcode = matchPattern(fileName, pattern, barcodeGroup);
