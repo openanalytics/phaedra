@@ -15,13 +15,12 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.ui.editor.EditorFactory;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
-import eu.openanalytics.phaedra.base.ui.navigator.interaction.BaseElementHandler;
 import eu.openanalytics.phaedra.base.ui.navigator.model.IElement;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.vo.Silo;
 import eu.openanalytics.phaedra.ui.silo.dialog.SiloDialog;
 
-public class SiloHandler extends BaseElementHandler {
+public class SiloHandler extends BaseHandler {
 
 	@Override
 	public boolean matches(IElement element) {
@@ -93,6 +92,8 @@ public class SiloHandler extends BaseElementHandler {
 		mgr.add(new Separator("siloChartMenu"));
 
 		mgr.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+		
+		addCreateCmds(element, mgr);
 	}
 
 	@Override

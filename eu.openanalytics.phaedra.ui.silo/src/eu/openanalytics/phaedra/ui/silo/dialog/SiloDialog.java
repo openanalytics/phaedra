@@ -31,15 +31,9 @@ public class SiloDialog extends TitleAreaDialog {
 	private AccessScope oldScope;
 	private boolean oldIsExample;
 
-	public SiloDialog(Shell parentShell, ProtocolClass pClass) {
-		super(parentShell);
-
-		this.silo = SiloService.getInstance().createSilo(pClass);
-	}
-
 	public SiloDialog(Shell parentShell, ProtocolClass pClass, GroupType type) {
 		super(parentShell);
-
+		if (type == null) type = GroupType.WELL;
 		this.silo = SiloService.getInstance().createSilo(pClass, type);
 	}
 
@@ -66,9 +60,7 @@ public class SiloDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-
 		SiloComposite container = new SiloComposite(dialogArea, SWT.NONE, silo, isExisting, hasParent);
 		container.addModifyListener(new ModifyListener() {
 			@Override
@@ -78,8 +70,7 @@ public class SiloDialog extends TitleAreaDialog {
 		});
 
 		setTitle(title);
-		setMessage("Enter a name and description for the silo.");
-
+		setMessage("Configure the properties of the new silo.");
 		return parent;
 	}
 

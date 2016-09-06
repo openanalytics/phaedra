@@ -26,21 +26,14 @@ public class SiloGroupDialog extends TitleAreaDialog {
 	private boolean isExisting;
 	private boolean hasChildren;
 
-	public SiloGroupDialog(Shell parentShell, ProtocolClass pClass) {
-		super(parentShell);
-
-		this.siloGroup = SiloService.getInstance().createSiloGroup(pClass, GroupType.WELL, AccessScope.PRIVATE);
-	}
-
 	public SiloGroupDialog(Shell parentShell, ProtocolClass pClass, GroupType type) {
 		super(parentShell);
-
+		if (type == null) type = GroupType.WELL;
 		this.siloGroup = SiloService.getInstance().createSiloGroup(pClass, type, AccessScope.PRIVATE);
 	}
 
 	public SiloGroupDialog(Shell parentShell, SiloGroup siloGroup) {
 		super(parentShell);
-
 		this.siloGroup = siloGroup;
 		this.isExisting = true;
 		this.hasChildren = siloGroup.getSilos() != null && !siloGroup.getSilos().isEmpty();
@@ -61,9 +54,7 @@ public class SiloGroupDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-
 		SiloGroupComposite container = new SiloGroupComposite(dialogArea, SWT.NONE, siloGroup, hasChildren);
 		container.addModifyListener(new ModifyListener() {
 			@Override
@@ -71,10 +62,8 @@ public class SiloGroupDialog extends TitleAreaDialog {
 				getButton(IDialogConstants.OK_ID).setEnabled(!siloGroup.getName().isEmpty());
 			}
 		});
-
 		setTitle(title);
-		setMessage("Enter a name and description for the silo group.");
-
+		setMessage("Configure the properties of the new silo group.");
 		return parent;
 	}
 

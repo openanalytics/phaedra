@@ -484,6 +484,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 				})
 				.addSelectionProvider(createSelectionTransformer())
 				.build(tableContainer, false, menuMgr);
+		table.setVisible(!eventList.isEmpty());
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(table);
 
 		// Needed for Static Filter.
@@ -1020,7 +1021,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			eventList.getReadWriteLock().writeLock().unlock();
 		}
 
-		// Update rows for Thumbnailer.
+		table.setVisible(!eventList.isEmpty());
 		thumbnailViewer.setInput(eventList);
 	}
 

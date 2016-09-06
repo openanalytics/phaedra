@@ -5,16 +5,17 @@ import java.util.Set;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IWorkbenchActionConstants;
 
 import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.AccessScope;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
-import eu.openanalytics.phaedra.base.ui.navigator.interaction.BaseElementHandler;
 import eu.openanalytics.phaedra.base.ui.navigator.model.IElement;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.silo.SiloService;
@@ -22,12 +23,11 @@ import eu.openanalytics.phaedra.silo.vo.Silo;
 import eu.openanalytics.phaedra.silo.vo.SiloGroup;
 import eu.openanalytics.phaedra.ui.silo.dialog.SiloGroupDialog;
 
-public class GroupHandler extends BaseElementHandler {
+public class GroupHandler extends BaseHandler {
 
 	@Override
 	public boolean matches(IElement element) {
-		return (element.getId().startsWith(SiloProvider.GROUP))
-				|| (element.getId().startsWith(SiloProvider.PCLASS));
+		return (element.getId().startsWith(SiloProvider.GROUP)) || (element.getId().startsWith(SiloProvider.PCLASS));
 	}
 
 	@Override
@@ -68,6 +68,10 @@ public class GroupHandler extends BaseElementHandler {
 		};
 		action.setImageDescriptor(IconManager.getIconDescriptor("folder_delete.png"));
 		mgr.add(action);
+		
+		mgr.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+		
+		addCreateCmds(element, mgr);
 	}
 
 	@Override

@@ -23,35 +23,15 @@ public class CreateSilo extends AbstractHandler {
 		return execute(event, null, null);
 	}
 	
-	public static void execute() {
-		try {
-			new CreateSilo().execute(null);
-		} catch (ExecutionException e) {}
-	}
-	
-	public static void executeProtocolClass(ProtocolClass pClass, GroupType type) {
-		try {
-			new CreateSilo().execute(null, pClass, type);
-		} catch (ExecutionException e) {}
-	}
-
-	private Object execute(ExecutionEvent event, ProtocolClass pClass, GroupType type)  throws ExecutionException {
-		if (event != null) {
-			// Get the ProtocolClass
+	public static Object execute(ExecutionEvent event, ProtocolClass pClass, GroupType type) {
+		if (pClass == null && event != null) {
 			ISelection selection = (ISelection) HandlerUtil.getCurrentSelection(event);
 			PlatformObject object = SelectionUtils.getFirstObject(selection, PlatformObject.class);
-			if (object != null) {
-				pClass = (ProtocolClass) object.getAdapter(ProtocolClass.class);
-			}
+			if (object != null) pClass = (ProtocolClass) object.getAdapter(ProtocolClass.class);
 		}
 
 		// Open the creation dialog for a Silo
-		SiloDialog dialog;
-		if (type == null) {
-			dialog = new SiloDialog(Display.getDefault().getActiveShell(), pClass);
-		} else {
-			dialog = new SiloDialog(Display.getDefault().getActiveShell(), pClass, type);
-		}
+		SiloDialog dialog = new SiloDialog(Display.getDefault().getActiveShell(), pClass, type);
 		int retCode = dialog.open();
 		Silo silo = dialog.getSilo();
 		if (retCode == Window.CANCEL || silo == null) return null;

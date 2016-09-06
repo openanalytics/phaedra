@@ -20,37 +20,16 @@ public class CreateSiloGroup extends AbstractHandler {
 		return execute(event, null, null);
 	}
 	
-	public static void execute() {
-		try {
-			new CreateSiloGroup().execute(null);
-		} catch (ExecutionException e) {}
-	}
-	
-	public static void executeProtocolClass(ProtocolClass pClass, GroupType type) {
-		try {
-			new CreateSiloGroup().execute(null, pClass, type);
-		} catch (ExecutionException e) {}
-	}
-
-	private Object execute(ExecutionEvent event, ProtocolClass pClass, GroupType type)  throws ExecutionException {
-		if (event != null) {
-			// Get the ProtocolClass
+	public static Object execute(ExecutionEvent event, ProtocolClass pClass, GroupType type) {
+		if (pClass == null && event != null) {
 			ISelection selection = (ISelection) HandlerUtil.getCurrentSelection(event);
 			PlatformObject object = SelectionUtils.getFirstObject(selection, PlatformObject.class);
-			if (object != null) {
-				pClass = (ProtocolClass) object.getAdapter(ProtocolClass.class);
-			}
+			if (object != null) pClass = (ProtocolClass) object.getAdapter(ProtocolClass.class);
 		}
-
-		// Open the creation dialog for a Silo
-		SiloGroupDialog dialog;
-		if (type == null) {
-			dialog = new SiloGroupDialog(Display.getDefault().getActiveShell(), pClass);
-		} else {
-			dialog = new SiloGroupDialog(Display.getDefault().getActiveShell(), pClass, type);
-		}
-		dialog.open();
 		
+		// Open the creation dialog for a Silo
+		SiloGroupDialog dialog = new SiloGroupDialog(Display.getDefault().getActiveShell(), pClass, type);
+		dialog.open();
 		return null;
 	}
 

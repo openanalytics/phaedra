@@ -79,9 +79,76 @@ public class SiloComposite extends Composite {
 		});
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(descriptionTxt);
 
+		// Only allow changing Type and Protocol Class on new silos
+		if (!isExisting && !hasParent) {
+			lbl = new Label(this, SWT.NONE);
+			lbl.setText("Data type:");
+			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
+
+			Composite typeContainer = new Composite(this, SWT.NONE);
+			GridDataFactory.fillDefaults().applyTo(typeContainer);
+			GridLayoutFactory.fillDefaults().numColumns(2).applyTo(typeContainer);
+
+			wellTypeRadio = new Button(typeContainer, SWT.RADIO);
+			wellTypeRadio.setText("Well data");
+			wellTypeRadio.setSelection(silo.getType() == GroupType.WELL.getType());
+			wellTypeRadio.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					silo.setType(GroupType.WELL.getType());
+					if (selectionListener != null) {
+						selectionListener.widgetSelected(e);
+					}
+				}
+			});
+
+			subwellTypeRadio = new Button(typeContainer, SWT.RADIO);
+			subwellTypeRadio.setText("Subwell data");
+			subwellTypeRadio.setSelection(silo.getType() == GroupType.SUBWELL.getType());
+			subwellTypeRadio.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					silo.setType(GroupType.SUBWELL.getType());
+					if (selectionListener != null) {
+						selectionListener.widgetSelected(e);
+					}
+				}
+			});
+
+			if (silo.getProtocolClass() == null) {
+				lbl = new Label(this, SWT.NONE);
+				lbl.setText("Protocol Class:");
+
+				final List<ProtocolClass> pClasses = ProtocolService.getInstance().getProtocolClasses();
+				Collections.sort(pClasses, ProtocolUtils.PROTOCOLCLASS_NAME_SORTER);
+				String[] pClassNames = new String[pClasses.size()];
+				int index = 0;
+				for (ProtocolClass pClass : pClasses) {
+					pClassNames[index++] = pClass.getName();
+				}
+				pClassCombo = new Combo(this, SWT.NONE);
+				pClassCombo.setItems(pClassNames);
+				pClassCombo.select(0);
+				pClassCombo.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						ProtocolClass pClass =  pClasses.get(pClassCombo.getSelectionIndex());
+						silo.setProtocolClass(pClass);
+						if (selectionListener != null) {
+							selectionListener.widgetSelected(e);
+						}
+					}
+				});
+				GridDataFactory.fillDefaults().grab(true, false).applyTo(pClassCombo);
+				new ComboAutoCompleteField(pClassCombo);
+
+				silo.setProtocolClass(pClasses.get(0));
+			}
+		}
+		
 		if (!hasParent) {
 			lbl = new Label(this, SWT.NONE);
-			lbl.setText("Share Options:");
+			lbl.setText("Sharing:");
 			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
 
 			sharingCombo = new Combo(this, SWT.CHECK);
@@ -120,71 +187,6 @@ public class SiloComposite extends Composite {
 					}
 				}
 			});
-		}
-
-		// Only allow changing Type and Protocol Class on non existing Silos.
-		if (!isExisting && !hasParent) {
-			lbl = new Label(this, SWT.NONE);
-
-			Composite typeContainer = new Composite(this, SWT.NONE);
-			GridDataFactory.fillDefaults().applyTo(typeContainer);
-			GridLayoutFactory.fillDefaults().numColumns(2).applyTo(typeContainer);
-
-			wellTypeRadio = new Button(typeContainer, SWT.RADIO);
-			wellTypeRadio.setText("Well Type");
-			wellTypeRadio.setSelection(silo.getType() == GroupType.WELL.getType());
-			wellTypeRadio.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					silo.setType(GroupType.WELL.getType());
-					if (selectionListener != null) {
-						selectionListener.widgetSelected(e);
-					}
-				}
-			});
-
-			subwellTypeRadio = new Button(typeContainer, SWT.RADIO);
-			subwellTypeRadio.setText("Subwell Type");
-			subwellTypeRadio.setSelection(silo.getType() == GroupType.SUBWELL.getType());
-			subwellTypeRadio.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					silo.setType(GroupType.SUBWELL.getType());
-					if (selectionListener != null) {
-						selectionListener.widgetSelected(e);
-					}
-				}
-			});
-
-			if (silo.getProtocolClass() == null) {
-				lbl = new Label(this, SWT.NONE);
-				lbl.setText("Select Protocol Class:");
-
-				final List<ProtocolClass> pClasses = ProtocolService.getInstance().getProtocolClasses();
-				Collections.sort(pClasses, ProtocolUtils.PROTOCOLCLASS_NAME_SORTER);
-				String[] pClassNames = new String[pClasses.size()];
-				int index = 0;
-				for (ProtocolClass pClass : pClasses) {
-					pClassNames[index++] = pClass.getName();
-				}
-				pClassCombo = new Combo(this, SWT.NONE);
-				pClassCombo.setItems(pClassNames);
-				pClassCombo.select(0);
-				pClassCombo.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						ProtocolClass pClass =  pClasses.get(pClassCombo.getSelectionIndex());
-						silo.setProtocolClass(pClass);
-						if (selectionListener != null) {
-							selectionListener.widgetSelected(e);
-						}
-					}
-				});
-				GridDataFactory.fillDefaults().grab(true, false).applyTo(pClassCombo);
-				new ComboAutoCompleteField(pClassCombo);
-
-				silo.setProtocolClass(pClasses.get(0));
-			}
 		}
 	}
 
