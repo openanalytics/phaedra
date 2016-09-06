@@ -32,7 +32,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.window.Window;
 import org.eclipse.nebula.jface.tablecomboviewer.TableComboViewer;
 import org.eclipse.nebula.widgets.nattable.NatTable;
@@ -108,7 +108,6 @@ public class QueryEditor extends EditorPart {
 	private Text queryNameTxt;
 	private Text queryDescriptionTxt;
 	private Text queryOwnerTxt;
-	private Text remarkTxt;
 	private Button publicBtn;
 	private Button exampleBtn;
 	private TableComboViewer resultTypeComboViewer;
@@ -181,52 +180,72 @@ public class QueryEditor extends EditorPart {
 		// section 1: general query settings
 
 		Section section = FormEditorUtils.createSection("Query Settings", form.getBody(), formToolkit);
-		Composite container = FormEditorUtils.createComposite(6, section, formToolkit);
+		Composite container = FormEditorUtils.createComposite(4, section, formToolkit);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(section);
 
-		this.resourceManager = new LocalResourceManager(JFaceResources.getResources(), container);
+		resourceManager = new LocalResourceManager(JFaceResources.getResources(), container);
 
 		Label queryNameLbl = FormEditorUtils.createLabel("Name:", container, formToolkit);
 		GridDataFactory.fillDefaults().applyTo(queryNameLbl);
 
-		createNameText(container);
+		queryNameTxt = formToolkit.createText(container, queryModel.getName(), SWT.SINGLE | SWT.WRAP);
+		queryNameTxt.addModifyListener(e -> {
+			queryModel.setName(queryNameTxt.getText());
+			form.setText(queryModel.getName());
+			setPartName(queryModel.getName());
+		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(queryNameTxt);
 
 		Label ownerLbl = FormEditorUtils.createLabel("Owner:", container, formToolkit);
 		GridDataFactory.fillDefaults().applyTo(ownerLbl);
 
-		createOwnerText(container);
-		GridDataFactory.fillDefaults().applyTo(queryOwnerTxt);
+		queryOwnerTxt = formToolkit.createText(container, queryModel.getOwner(), SWT.READ_ONLY);
+		GridDataFactory.fillDefaults().hint(130, SWT.DEFAULT).applyTo(queryOwnerTxt);
+
+		Label queryDescriptionLbl = FormEditorUtils.createLabel("Description:", container, formToolkit);
+		GridDataFactory.fillDefaults().applyTo(queryDescriptionLbl);
+
+		queryDescriptionTxt = formToolkit.createText(container, queryModel.getDescription(), SWT.SINGLE | SWT.WRAP);
+		queryDescriptionTxt.addModifyListener(e -> queryModel.setDescription(queryDescriptionTxt.getText()));
+		GridDataFactory.fillDefaults().hint(25, SWT.DEFAULT).applyTo(queryDescriptionTxt);
+
+		maxResultsBtn = formToolkit.createButton(container, "Max results:", SWT.CHECK);
+		maxResultsBtn.setSelection(queryModel.isMaxResultsSet());
+		maxResultsBtn.addListener(SWT.Selection, e -> {
+			queryModel.setMaxResultsSet(maxResultsBtn.getSelection());
+			maxResultsTxt.setEnabled(queryModel.isMaxResultsSet());
+		});
+		GridDataFactory.fillDefaults().applyTo(maxResultsBtn);
+
+		maxResultsTxt = formToolkit.createText(container, "" + queryModel.getMaxResults());
+		maxResultsTxt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
+		maxResultsTxt.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				try {
+					queryModel.setMaxResults(Integer.parseInt(maxResultsTxt.getText()));
+				} catch (Exception ex) {
+				}
+			}
+		});
+		maxResultsTxt.addListener(SWT.FocusOut, e -> maxResultsTxt.setText("" + queryModel.getMaxResults()));
+		GridDataFactory.fillDefaults().applyTo(maxResultsTxt);
 
 		Label resultTypeLbl = FormEditorUtils.createLabel("Result Type:", container, formToolkit);
-		GridDataFactory.fillDefaults().indent(10, SWT.DEFAULT).applyTo(resultTypeLbl);
+		GridDataFactory.fillDefaults().applyTo(resultTypeLbl);
 
 		TableCombo resultTypeCombo = new TableCombo(container, SWT.BORDER | SWT.READ_ONLY);
 		createResultTypeComboViewer(resultTypeCombo);
 		GridDataFactory.fillDefaults().applyTo(resultTypeCombo);
 
-		Label queryDescriptionLbl = FormEditorUtils.createLabel("Description:", container, formToolkit);
-		GridDataFactory.fillDefaults().applyTo(queryDescriptionLbl);
+		publicBtn = formToolkit.createButton(container, "Public", SWT.CHECK);
+		publicBtn.setSelection(queryModel.isPublicQuery());
+		publicBtn.addListener(SWT.Selection, e -> queryModel.setPublicQuery(publicBtn.getSelection()));
+		GridDataFactory.fillDefaults().applyTo(publicBtn);
 
-		createQueryDescriptionText(container);
-		GridDataFactory.fillDefaults().hint(25, SWT.DEFAULT).span(3, 1).applyTo(queryDescriptionTxt);
-
-		createMaximumResultsButton(container);
-		GridDataFactory.fillDefaults().indent(10, SWT.DEFAULT).applyTo(maxResultsBtn);
-
-		createMaxResultsText(container);
-		GridDataFactory.fillDefaults().applyTo(maxResultsTxt);
-
-		Label remarkLbl = FormEditorUtils.createLabel("Remark:", container, formToolkit);
-		GridDataFactory.fillDefaults().applyTo(remarkLbl);
-
-		createRemarkText(container);
-		GridDataFactory.fillDefaults().hint(25, SWT.DEFAULT).span(3, 1).applyTo(remarkTxt);
-
-		createPublicButton(container);
-		GridDataFactory.fillDefaults().indent(10, SWT.DEFAULT).applyTo(publicBtn);
-
-		createExampleButton(container);
+		exampleBtn = formToolkit.createButton(container, "Example", SWT.CHECK);
+		exampleBtn.setSelection(queryModel.isExample());
+		exampleBtn.addListener(SWT.Selection, e -> queryModel.setExample(exampleBtn.getSelection()));
 		GridDataFactory.fillDefaults().applyTo(exampleBtn);
 
 		// Section 2: query filters
@@ -293,7 +312,6 @@ public class QueryEditor extends EditorPart {
 
 		queryNameTxt.addKeyListener(dirtyKeyAdapter);
 		queryDescriptionTxt.addKeyListener(dirtyKeyAdapter);
-		remarkTxt.addKeyListener(dirtyKeyAdapter);
 		resultTypeComboViewer.getTableCombo().addSelectionListener(dirtySelectionAdapter);
 		maxResultsBtn.addSelectionListener(dirtySelectionAdapter);
 		maxResultsTxt.addKeyListener(dirtyKeyAdapter);
@@ -385,12 +403,10 @@ public class QueryEditor extends EditorPart {
 	private void showStatistic(final int resultCount, final long queryExecutionTime, final long resultSetTime) {
 		Display.getDefault().asyncExec(() -> {
 			if (queryModel.isMaxResultsSet() && resultCount == QueryModel.getDefaultMaxResults()) {
-				String message = "Maximum number of results reached in " + queryExecutionTime + " ms, resultset built in " + resultSetTime + " ms";
-				EclipseLog.info(message, Activator.getDefault());
+				String message = String.format("Maximum number of results (%d) reached, queried in %d ms", queryModel.getMaxResults(), queryExecutionTime);
 				form.getMessageManager().addMessage("warningMessage", message, null, IMessageProvider.WARNING);
 			} else {
-				String message = "Queried " + resultCount + " results in " + queryExecutionTime + " ms, resultset built in " + resultSetTime + " ms";
-				EclipseLog.info(message, Activator.getDefault());
+				String message = String.format("Queried %d results in %d ms", resultCount, queryExecutionTime);
 				form.getMessageManager().addMessage("infoMessage", message, null, IMessageProvider.INFORMATION);
 			}
 		});
@@ -398,29 +414,6 @@ public class QueryEditor extends EditorPart {
 
 	private void showErrorMessage(final String errorMessage) {
 		Display.getDefault().asyncExec(() -> form.getMessageManager().addMessage("errorMessage", errorMessage, null, IMessageProvider.ERROR));
-	}
-
-	private void createNameText(Composite container) {
-		queryNameTxt = formToolkit.createText(container, queryModel.getName(), SWT.SINGLE | SWT.WRAP);
-		queryNameTxt.addModifyListener(e -> {
-			queryModel.setName(queryNameTxt.getText());
-			form.setText(queryModel.getName());
-			setPartName(queryModel.getName());
-		});
-	}
-
-	private void createQueryDescriptionText(Composite container) {
-		queryDescriptionTxt = formToolkit.createText(container, queryModel.getDescription(), SWT.SINGLE | SWT.WRAP);
-		queryDescriptionTxt.addModifyListener(e -> queryModel.setDescription(queryDescriptionTxt.getText()));
-	}
-
-	private void createRemarkText(Composite container) {
-		remarkTxt = formToolkit.createText(container, queryModel.getRemark(), SWT.SINGLE | SWT.WRAP);
-		remarkTxt.addModifyListener(e -> queryModel.setRemark(remarkTxt.getText()));
-	}
-
-	private void createOwnerText(Composite container) {
-		queryOwnerTxt = formToolkit.createText(container, queryModel.getOwner(), SWT.READ_ONLY);
 	}
 
 	private void createResultTypeComboViewer(TableCombo combo) {
@@ -440,7 +433,7 @@ public class QueryEditor extends EditorPart {
 			}
 		});
 		resultTypeComboViewer.setInput(SearchService.getInstance().getSupportedClasses());
-		resultTypeComboViewer.setSorter(new ViewerSorter());
+		resultTypeComboViewer.setComparator(new ViewerComparator());
 		resultTypeComboViewer.getTableCombo().setVisibleItemCount(resultTypeComboViewer.getTableCombo().getItemCount());
 		if (queryModel.getType() != null) {
 			resultTypeComboViewer.setSelection(new StructuredSelection(queryModel.getType()));
@@ -460,44 +453,8 @@ public class QueryEditor extends EditorPart {
 		});
 	}
 
-	private void createPublicButton(Composite container) {
-		publicBtn = formToolkit.createButton(container, "Public", SWT.CHECK);
-		publicBtn.setSelection(queryModel.isPublicQuery());
-		publicBtn.addListener(SWT.Selection, e -> queryModel.setPublicQuery(publicBtn.getSelection()));
-	}
-
-	private void createExampleButton(Composite container) {
-		exampleBtn = formToolkit.createButton(container, "Example", SWT.CHECK);
-		exampleBtn.setSelection(queryModel.isExample());
-		exampleBtn.addListener(SWT.Selection, e -> queryModel.setExample(exampleBtn.getSelection()));
-	}
-
 	protected List<QueryOrderingPanel> getOrderingPanels() {
 		return orderingPanels;
-	}
-
-	private void createMaximumResultsButton(Composite container) {
-		maxResultsBtn = formToolkit.createButton(container, "Max results:", SWT.CHECK);
-		maxResultsBtn.setSelection(queryModel.isMaxResultsSet());
-		maxResultsBtn.addListener(SWT.Selection, e -> {
-			queryModel.setMaxResultsSet(maxResultsBtn.getSelection());
-			maxResultsTxt.setEnabled(queryModel.isMaxResultsSet());
-		});
-	}
-
-	private void createMaxResultsText(Composite container) {
-		maxResultsTxt = formToolkit.createText(container, "" + queryModel.getMaxResults());
-		maxResultsTxt.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
-		maxResultsTxt.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				try {
-					queryModel.setMaxResults(Integer.parseInt(maxResultsTxt.getText()));
-				} catch (Exception ex) {
-				}
-			}
-		});
-		maxResultsTxt.addListener(SWT.FocusOut, e -> maxResultsTxt.setText("" + queryModel.getMaxResults()));
 	}
 
 	private void fillFilterToolbar(final Composite filterContainer, Composite toolbar) {

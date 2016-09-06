@@ -22,7 +22,6 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.ViewerComparator;
-import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.nebula.jface.tablecomboviewer.TableComboViewer;
 import org.eclipse.nebula.widgets.tablecombo.TableCombo;
 import org.eclipse.swt.SWT;
@@ -39,8 +38,8 @@ import com.google.common.collect.Iterables;
 
 import eu.openanalytics.phaedra.base.search.SearchService;
 import eu.openanalytics.phaedra.base.search.model.Operator;
-import eu.openanalytics.phaedra.base.search.model.QueryFilter;
 import eu.openanalytics.phaedra.base.search.model.Operator.OperatorType;
+import eu.openanalytics.phaedra.base.search.model.QueryFilter;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.search.IQueryValuePanelFactory;
 import eu.openanalytics.phaedra.base.ui.search.internal.QueryEditorSupportRegistry;
@@ -125,7 +124,7 @@ public class QueryFilterPanel extends Composite {
 		}
 		});
 		typesComboViewer.setInput(SearchService.getInstance().getSupportedClasses());
-		typesComboViewer.setSorter(new ViewerSorter());
+		typesComboViewer.setComparator(new ViewerComparator());
 		typesComboViewer.getTableCombo().setVisibleItemCount(typesComboViewer.getTableCombo().getItemCount());
 		typesComboViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@SuppressWarnings("unchecked")
@@ -210,7 +209,7 @@ public class QueryFilterPanel extends Composite {
 				return ((Operator) element).getName();
 			}
 		});
-		operatorComboViewer.setSorter(new ViewerSorter());
+		operatorComboViewer.setComparator(new ViewerComparator());
 		operatorComboViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {

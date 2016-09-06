@@ -3,16 +3,11 @@ package eu.openanalytics.phaedra.base.db.jpa;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
 
 import org.eclipse.persistence.indirection.IndirectList;
 
@@ -260,11 +255,5 @@ public abstract class BaseJPAService {
 	public static <E> List<E> streamableList(List<E> list) {
 		if (list instanceof IndirectList) return new ArrayList<>(list);
 		return list;
-	}
-	
-	public <T> Set<ConstraintViolation<T>> validate(T entity) {
-		ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
-		Validator validator = factory.getValidator();
-		return validator.validate(entity);
 	}
 }

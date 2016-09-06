@@ -158,12 +158,6 @@ public final class SearchService extends BaseJPAService {
 		return getEntity(QueryModel.class, id);
 	}
 	
-	@Override
-	protected void beforeSave(Object o) {
-		validate(o);		
-		super.beforeSave(o);
-	}
-	
 	/**
 	 * Saves a query to the database (insert or update).
 	 * @param queryModel
