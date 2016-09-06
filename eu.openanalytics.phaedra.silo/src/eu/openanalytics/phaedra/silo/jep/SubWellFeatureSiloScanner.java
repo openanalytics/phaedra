@@ -2,9 +2,9 @@ package eu.openanalytics.phaedra.silo.jep;
 
 import java.util.Arrays;
 
+import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.CalculationException;
-import eu.openanalytics.phaedra.calculation.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;

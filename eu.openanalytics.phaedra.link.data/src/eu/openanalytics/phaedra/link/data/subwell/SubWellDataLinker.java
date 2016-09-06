@@ -8,7 +8,7 @@ import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.util.misc.RetryingUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
+import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.link.data.DataLinkException;
 import eu.openanalytics.phaedra.link.data.IDataLinkerComponent;
@@ -64,7 +64,7 @@ public class SubWellDataLinker implements IDataLinkerComponent {
 		boolean triggerSubwellCalculation = false;
 		List<Feature> features = PlateUtils.getProtocolClass(plate).getFeatures();
 		for (Feature f: features) {
-			if (f.isCalculated() && f.getCalculationLanguage().equals(CalculationLanguage.JEP.name())) {
+			if (f.isCalculated() && CalculationTrigger.SubwellDataChange.toString().equals(f.getCalculationTrigger())) {
 				triggerSubwellCalculation = true;
 				break;
 			}

@@ -14,7 +14,7 @@
       </persistenceModel>
    </extension>
    <extension
-         point="eu.openanalytics.phaedra.calculation.jepScanner">
+         point="eu.openanalytics.phaedra.base.scripting.jep.jepScanner">
       <jepScanner
             class="eu.openanalytics.phaedra.silo.jep.SiloScanner"
             name="eu.openanalytics.phaedra.silo.jep.SiloAccessorScanner">

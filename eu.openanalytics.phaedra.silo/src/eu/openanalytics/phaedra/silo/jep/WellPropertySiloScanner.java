@@ -1,8 +1,8 @@
 package eu.openanalytics.phaedra.silo.jep;
 
+import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.CalculationException;
-import eu.openanalytics.phaedra.calculation.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;

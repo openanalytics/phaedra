@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.calculation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -11,6 +12,10 @@ import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
 
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Shell;
+
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -19,7 +24,8 @@ import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.hook.CalculationHookManager;
-import eu.openanalytics.phaedra.calculation.jep.JEPCalculationService;
+import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
+import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationException;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
@@ -249,21 +255,12 @@ public class CalculationService {
 		List<Well> wells = new ArrayList<Well>(p.getWells());
 		wells.stream().forEach(well -> well.getAdapter(ProtocolClass.class));
 		PlateDataAccessor accessor = getAccessor(p);
-		CalculationLanguage lang = CalculationLanguage.getFor(f.getCalculationLanguage());
+		CalculationLanguage lang = CalculationLanguage.get(f.getCalculationLanguage());
 
 		wells.parallelStream().forEach(well -> {
 			Double numericResult = null;
 			try {
-				String result = "";
-				if (lang == CalculationLanguage.JEP) {
-					result = "" + JEPCalculationService.getInstance().evaluate(formula, well);
-				} else {
-					Map<String, Object> javaObjects = new HashMap<String, Object>();
-					javaObjects.put("data", accessor);
-					javaObjects.put("well", well);
-					Object retVal = ScriptService.getInstance().executeScript(formula, javaObjects, lang.getEngine());
-					if (retVal != null) result = retVal.toString();
-				}
+				String result = lang.eval(formula, accessor, well, f);
 				numericResult = Double.parseDouble(result);
 			} catch (ScriptException | CalculationException | NumberFormatException e) {
 				numericResult = Double.NaN;
@@ -286,31 +283,70 @@ public class CalculationService {
 		return results;
 	}
 
-	public static enum CalculationLanguage {
-//		JavaScript("JavaScript", "javaScript"), Python("Python", "python"), JEP("JEP", "jep");
-		JavaScript("JavaScript", "javaScript"), JEP("JEP", "jep");
+	public static class CalculationLanguage {
 
+		private static CalculationLanguage[] languages;
+		static {
+			String[] ids = ScriptService.getInstance().getEngineIds();
+			languages = new CalculationLanguage[ids.length];
+			for (int i = 0; i < ids.length; i++) {
+				languages[i] = new CalculationLanguage(ids[i], ScriptService.getInstance().getEngineLabel(ids[i]));
+			}
+		}
+		
+		private String id;
 		private String label;
-		private String engine;
 
-		CalculationLanguage(String label, String engine) {
+		CalculationLanguage(String id, String label) {
+			this.id = id;
 			this.label = label;
-			this.engine = engine;
 		}
 
+		public String getId() {
+			return id;
+		}
+		
 		public String getLabel() {
 			return label;
 		}
-
-		public String getEngine() {
-			return engine;
+		
+		public String eval(String formula, PlateDataAccessor accessor, Well well, Feature feature) throws ScriptException {
+			String result = "";
+			Map<String, Object> context = new HashMap<String, Object>();
+			if ("jep".equals(id)) {
+				result = "" + JEPCalculation.evaluate(formula, well);
+			} else {
+				context.put("data", accessor);
+				context.put("well", well);
+				context.put("feature", feature);
+				Object retVal = ScriptService.getInstance().executeScript(formula, context, id);
+				if (retVal != null) result = retVal.toString();
+			}
+			return result;
 		}
 
-		public static CalculationLanguage getFor(String label) {
-			for (CalculationLanguage l: CalculationLanguage.values()) {
-				if (l.getLabel().equals(label)) return l;
+		public String openEditor(Shell shell, String formula, ProtocolClass pClass) {
+			String retVal = null;
+			if ("jep".equals(id)) {
+				JEPFormulaDialog editor = new JEPFormulaDialog(shell, pClass);
+				editor.setFormula(formula);
+				if (editor.open() == Window.OK) retVal = editor.getFormula();
+			} else {
+				StringBuilder newScript = new StringBuilder(formula);
+				Dialog editor = ScriptService.getInstance().createScriptEditor(newScript, id, shell);
+				if (editor != null && editor.open() == Window.OK) {
+					retVal = newScript.toString();
+				}
 			}
-			return null;
+			return retVal;
+		}
+
+		public static CalculationLanguage[] getLanguages() {
+			return languages;
+		}
+		
+		public static CalculationLanguage get(String id) {
+			return Arrays.stream(languages).filter(l -> l.getId().equals(id)).findAny().orElse(null);
 		}
 	}
 
@@ -333,7 +369,7 @@ public class CalculationService {
 		}
 	}
 
-	public static enum CalculationMode{
+	public static enum CalculationMode {
 		LIGHT("Light","Only reset cached values"),
 		NORMAL("Normal","Calculate well features, apply normalization and fit dose-response curves"),
 		FULL("Full","As Normal, but also calculate subwell-based well features");

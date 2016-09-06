@@ -14,7 +14,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationException;
-import eu.openanalytics.phaedra.calculation.jep.JEPCalculationService;
+import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
@@ -41,7 +41,7 @@ public class AddJEPColumn extends AbstractHandler {
 		String formula = dialog.getFormula();
 		
 		try {
-			Object evaluateArray = JEPCalculationService.getInstance().evaluateArray(formula, group);
+			Object evaluateArray = JEPCalculation.evaluateArray(formula, group);
 			
 			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(group.getSilo());
 			accessor.addColumn(group.getFullName(), newColumnName);

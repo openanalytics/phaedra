@@ -3,7 +3,6 @@
 <plugin>
    <extension-point id="statCalculator" name="StatCalculator" schema="schema/statCalculator.exsd"/>
    <extension-point id="normalizer" name="Normalizer" schema="schema/normalizer.exsd"/>
-   <extension-point id="jepScanner" name="JEPScanner" schema="schema/jepScanner.exsd"/>
    <extension-point id="annotationCreator" name="AnnotationCreator" schema="schema/annotationCreator.exsd"/>
    <extension
          point="eu.openanalytics.phaedra.calculation.statCalculator">
@@ -140,21 +139,6 @@
       </normalizer>
    </extension>
    <extension
-         point="eu.openanalytics.phaedra.calculation.jepScanner">
-      <jepScanner
-            class="eu.openanalytics.phaedra.calculation.jep.parse.impl.SubWellFeatureScanner"
-            name="eu.openanalytics.phaedra.calculation.jep.parse.impl.SubWellFeatureScanner">
-      </jepScanner>
-      <jepScanner
-            class="eu.openanalytics.phaedra.calculation.jep.parse.impl.WellFeatureScanner"
-            name="eu.openanalytics.phaedra.calculation.jep.parse.impl.WellFeatureScanner">
-      </jepScanner>
-      <jepScanner
-            class="eu.openanalytics.phaedra.calculation.jep.parse.impl.WellPropertyScanner"
-            name="eu.openanalytics.phaedra.calculation.jep.parse.impl.WellPropertyScanner">
-      </jepScanner>
-   </extension>
-   <extension
          point="eu.openanalytics.phaedra.calculation.annotationCreator">
       <annotationCreator
             class="eu.openanalytics.phaedra.calculation.annotation.DefaultAnnotationCreator">
@@ -177,6 +161,21 @@
       <apiProvider
             class="eu.openanalytics.phaedra.calculation.ScriptAPI">
       </apiProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.jep.jepScanner">
+      <jepScanner
+            class="eu.openanalytics.phaedra.calculation.jep.WellPropertyScanner"
+            name="eu.openanalytics.phaedra.calculation.jep.WellPropertyScanner">
+      </jepScanner>
+      <jepScanner
+            class="eu.openanalytics.phaedra.calculation.jep.SubWellFeatureScanner"
+            name="eu.openanalytics.phaedra.calculation.jep.SubWellFeatureScanner">
+      </jepScanner>
+      <jepScanner
+            class="eu.openanalytics.phaedra.calculation.jep.WellFeatureScanner"
+            name="eu.openanalytics.phaedra.calculation.jep.WellFeatureScanner">
+      </jepScanner>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

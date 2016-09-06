@@ -29,7 +29,7 @@ import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.CalculationException;
-import eu.openanalytics.phaedra.calculation.jep.JEPCalculationService;
+import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -474,7 +474,7 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 
 	@Override
 	protected float[] evaluateArray(String expression, Well well) throws CalculationException {
-		return JEPCalculationService.getInstance().evaluateArray(expression, well);
+		return JEPCalculation.evaluateArray(expression, well);
 	}
 
 	private float evaluatePlateStat(String expression, Plate plate, String stat) {
@@ -482,7 +482,7 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 		double[] values = new double[wells.size()];
 		for (int i = 0; i < wells.size(); i++) {
 			Well well = wells.get(i);
-			float[] wellValues = JEPCalculationService.getInstance().evaluateArray(expression, well);
+			float[] wellValues = JEPCalculation.evaluateArray(expression, well);
 			double[] wellValues2 = new double[wellValues.length];
 			for (int j = 0; j < wellValues2.length; j++) wellValues2[j] = wellValues[j];
 			values[i] = StatService.getInstance().calculate(stat, wellValues2);

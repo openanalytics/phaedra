@@ -15,14 +15,14 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog2;
+import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
 import eu.openanalytics.phaedra.silo.util.SiloStructure;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 
-public class AddJEPColumnDialog extends JEPFormulaDialog2 {
+public class AddJEPColumnDialog extends JEPFormulaDialog {
 
 	private Label errorMessage;
 	private Text columnText;

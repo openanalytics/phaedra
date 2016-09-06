@@ -1,11 +1,11 @@
 package eu.openanalytics.phaedra.silo.jep;
 
+import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.calculation.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.silo.Activator;
+import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
-import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
 import eu.openanalytics.phaedra.silo.util.SiloStructure;
 

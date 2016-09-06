@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: JEP Scripting
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.scripting.jep;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.base.scripting.jep.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.scripting;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.console;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
+ org.apache.commons.math,
+ edu.stanford.facs.logicle
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: lib/ext-1.1.1.jar,
+ lib/jep-2.4.1.jar,
+ .
+Export-Package: eu.openanalytics.phaedra.base.scripting.jep,
+ eu.openanalytics.phaedra.base.scripting.jep.parse

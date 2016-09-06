@@ -79,6 +79,15 @@ public class ScriptService {
 		return catalog;
 	}
 	
+	public String[] getEngineIds() {
+		return engines.stream().map(e -> e.getId()).toArray(i -> new String[i]);
+	}
+	
+	public String getEngineLabel(String id) {
+		IScriptEngine engine = getEngine(id);
+		return engine == null ? null : engine.getLabel();
+	}
+	
 	public String[] getSupportedFileTypes() {
 		String[] types = new String[engines.size()];
 		for (int i=0; i<types.length; i++) {

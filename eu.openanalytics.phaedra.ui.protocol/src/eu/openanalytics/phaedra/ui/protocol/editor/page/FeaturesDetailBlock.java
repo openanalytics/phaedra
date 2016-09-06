@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.ui.protocol.editor.page;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,8 +22,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -46,7 +45,6 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.Section;
 
-import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.ui.colormethod.ColorMethodRegistry;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
@@ -55,7 +53,6 @@ import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
-import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog2;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService.NormalizationScope;
 import eu.openanalytics.phaedra.model.curve.CurveService;
@@ -325,47 +322,28 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		editBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				JEPFormulaDialog2 dialog = new JEPFormulaDialog2(Display.getDefault().getActiveShell(), feature.getProtocolClass());
-				dialog.setFormula(textCalcFormula.getText());
-				int retCode = dialog.open();
-				if (retCode == Dialog.OK) {
-					textCalcFormula.setText(dialog.getFormula());
-					parentPage.markDirty();
-					master.refreshViewer();
-				}
+				CalculationLanguage lang = CalculationLanguage.getLanguages()[comboFormulaLanguage.getSelectionIndex()];
+				Shell shell = Display.getDefault().getActiveShell();
+				String newFormula = lang.openEditor(shell, textCalcFormula.getText(), feature.getProtocolClass());
+				if (newFormula != null) textCalcFormula.setText(newFormula);
+				master.refreshViewer();
 			}
 		});
 
 		toolkit.createLabel(compositeFormula, "Language:", SWT.NONE);
 
-		String[] languages = new String[CalculationLanguage.values().length];
-		for (CalculationLanguage language : CalculationLanguage.values()) {
-			languages[language.ordinal()] = language.getLabel();
-		}
+		String[] languageNames = Arrays.stream(CalculationLanguage.getLanguages()).map(l -> l.getLabel()).toArray(i -> new String[i]);
 		comboFormulaLanguage = new CCombo(compositeFormula, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
 		comboFormulaLanguage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		comboFormulaLanguage.setItems(languages);
+		comboFormulaLanguage.setItems(languageNames);
 		new Label(compositeFormula, SWT.NONE);
-		comboFormulaLanguage.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				if(comboFormulaLanguage.getText().equals(CalculationLanguage.JEP.getLabel())){
-					editBtn.setEnabled(true);
-				}else{
-					editBtn.setEnabled(false);
-				}
-			}
-		});
 
 		toolkit.createLabel(compositeFormula, "Calculation:", SWT.NONE);
 
-		String[] triggers = new String[CalculationTrigger.values().length];
-		for (CalculationTrigger trigger : CalculationTrigger.values()) {
-			triggers[trigger.ordinal()] = trigger.getLabel();
-		}
+		String[] triggerNames = Arrays.stream(CalculationTrigger.values()).map(t -> t.getLabel()).toArray(i -> new String[i]);
 		comboFormulaTrigger = new CCombo(compositeFormula, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
 		comboFormulaTrigger.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		comboFormulaTrigger.setItems(triggers);
+		comboFormulaTrigger.setItems(triggerNames);
 		new Label(compositeFormula, SWT.NONE);
 
 		Label sequenceLabel = toolkit.createLabel(compositeFormula, "Sequence:", SWT.NONE);
@@ -448,7 +426,10 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		editNormScriptBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				openNormScriptEditor();
+				CalculationLanguage lang = CalculationLanguage.getLanguages()[customNormLanguage.getSelectionIndex()];
+				Shell shell = Display.getDefault().getActiveShell();
+				String newFormula = lang.openEditor(shell, customNormTxt.getText(), feature.getProtocolClass());
+				if (newFormula != null) customNormTxt.setText(newFormula);
 			}
 		});
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(editNormScriptBtn);
@@ -457,7 +438,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		label = toolkit.createLabel(normalizationCmp, "Language:", SWT.NONE);
 		customNormLanguage = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
 		customNormLanguage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		customNormLanguage.setItems(languages);
+		customNormLanguage.setItems(languageNames);
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "Scope:", SWT.NONE);
@@ -977,31 +958,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 			comboNormalization.select(comboNormalization.indexOf(feature.getNormalization()));
 		}
 	}
-
-	private void openNormScriptEditor() {
-		Shell shell = Display.getDefault().getActiveShell();
-		CalculationLanguage lang = CalculationLanguage.getFor(customNormLanguage.getText());
-
-		if (lang == CalculationLanguage.JEP) {
-			JEPFormulaDialog2 editor = new JEPFormulaDialog2(shell, feature.getProtocolClass());
-			editor.setFormula(customNormTxt.getText());
-			int retVal = editor.open();
-			if (retVal == Window.OK) {
-				customNormTxt.setText(editor.getFormula());
-			}
-		} else {
-			StringBuilder newScript = new StringBuilder(customNormTxt.getText());
-			String engineId = lang.getEngine();
-			Dialog editor = ScriptService.getInstance().createScriptEditor(
-					newScript, engineId, shell);
-			if (editor == null) return;
-			int retVal = editor.open();
-			if (retVal == Window.OK) {
-				customNormTxt.setText(newScript.toString());
-			}
-		}
-	}
-
+	
 	private DataBindingContext initDataBindings() {
 
 		DataBindingContext ctx = new DataBindingContext();
@@ -1022,7 +979,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 		FormEditorUtils.bindSelection(comboNormalization, feature, "normalization", ctx);
 		FormEditorUtils.bindText(customNormTxt, feature, "normalizationFormula", ctx);
-		FormEditorUtils.bindSelection(customNormLanguage, feature, "normalizationLanguage", ctx);
+		FormEditorUtils.bindSelection(customNormLanguage, new NormalizationLanguageMapper(feature), "language", ctx);
 		FormEditorUtils.bindSelection(comboHighType, feature, "highWellTypeCode", ctx);
 		FormEditorUtils.bindSelection(comboLowType, feature, "lowWellTypeCode", ctx);
 
@@ -1036,9 +993,8 @@ public class FeaturesDetailBlock implements IDetailsPage {
 			NormalizationScopeMapper normalizationScope = new NormalizationScopeMapper(feature);
 			FormEditorUtils.bindSelection(normScopeCmb, normalizationScope, "normalizationScope", ctx);
 
-			CalculationSettingsMapper calculationSettings = new CalculationSettingsMapper(feature);
-			FormEditorUtils.bindSelection(comboFormulaLanguage, calculationSettings, "language", ctx);
-			FormEditorUtils.bindSelection(comboFormulaTrigger, calculationSettings, "trigger", ctx);
+			FormEditorUtils.bindSelection(comboFormulaLanguage, new CalculationLanguageMapper(feature), "language", ctx);
+			FormEditorUtils.bindSelection(comboFormulaTrigger, new CalculationTriggerMapper(feature), "trigger", ctx);
 
 			CurveSettingsMapper curveSettings = new CurveSettingsMapper(feature);
 			FormEditorUtils.bindSelection(comboCurveKind, curveSettings, "kind", ctx);
@@ -1191,46 +1147,61 @@ public class FeaturesDetailBlock implements IDetailsPage {
 			else feature.getCurveSettings().put(name, value);
 		}
 	}
-
-	public static class CalculationSettingsMapper{
+	
+	public static class NormalizationLanguageMapper {
 		private Feature feature;
 
-		public CalculationSettingsMapper(Feature feature) {
+		public NormalizationLanguageMapper(Feature feature) {
+			this.feature = feature;
+		}
+
+		public String getLanguage() {
+			CalculationLanguage lang = CalculationLanguage.get(feature.getNormalizationLanguage());
+			if (lang == null) return "";
+			return lang.getLabel();
+		}
+
+		public void setLanguage(String label) {
+			CalculationLanguage lang = Arrays.stream(CalculationLanguage.getLanguages()).filter(l -> l.getLabel().equals(label)).findAny().orElse(null);
+			if (lang != null) feature.setNormalizationLanguage(lang.getId());
+		}
+	}
+	
+	public static class CalculationLanguageMapper {
+		private Feature feature;
+
+		public CalculationLanguageMapper(Feature feature) {
+			this.feature = feature;
+		}
+
+		public String getLanguage() {
+			CalculationLanguage lang = CalculationLanguage.get(feature.getCalculationLanguage());
+			if (lang == null) return "";
+			return lang.getLabel();
+		}
+
+		public void setLanguage(String label) {
+			CalculationLanguage lang = Arrays.stream(CalculationLanguage.getLanguages()).filter(l -> l.getLabel().equals(label)).findAny().orElse(null);
+			if (lang != null) feature.setCalculationLanguage(lang.getId());
+		}
+	}
+	
+	public static class CalculationTriggerMapper {
+		private Feature feature;
+
+		public CalculationTriggerMapper(Feature feature) {
 			this.feature = feature;
 		}
 
 		public String getTrigger() {
-			String trigger = feature.getCalculationTrigger();
-			if(trigger != null && trigger != ""){
-				return CalculationTrigger.valueOf(trigger).getLabel();
-			}else{
-				return "";
-			}
+			String id = feature.getCalculationTrigger();
+			if (id == null || id.isEmpty()) return "";
+			return CalculationTrigger.valueOf(id).getLabel();
 		}
 
-		public void setTrigger(String label){
-			for (CalculationTrigger calculationTrigger : CalculationTrigger.values()) {
-				if(calculationTrigger.getLabel().equals(label)){
-					feature.setCalculationTrigger(calculationTrigger.name());
-				}
-			}
-		}
-
-		public String getLanguage() {
-			String language = feature.getCalculationLanguage();
-			if(language != null && !language.equals("")){
-				return CalculationLanguage.valueOf(language).getLabel();
-			}else{
-				return "";
-			}
-		}
-
-		public void setLanguage(String label){
-			for (CalculationLanguage calculationLanguage : CalculationLanguage.values()) {
-				if(calculationLanguage.getLabel().equals(label)){
-					feature.setCalculationLanguage(calculationLanguage.name());
-				}
-			}
+		public void setTrigger(String label) {
+			CalculationTrigger trigger = Arrays.stream(CalculationTrigger.values()).filter(t -> t.getLabel().equals(label)).findAny().orElse(null);
+			if (trigger != null) feature.setCalculationTrigger(trigger.name());
 		}
 	}
 }

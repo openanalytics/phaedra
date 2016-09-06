@@ -84,17 +84,17 @@
       </hook>
    </extension>
    <extension
-         point="eu.openanalytics.phaedra.calculation.jepScanner">
-      <jepScanner
-            class="eu.openanalytics.phaedra.model.curve.util.JEPCurvePropertyScanner"
-            name="eu.openanalytics.phaedra.model.curve.util.JEPCurvePropertyScanner">
-      </jepScanner>
-   </extension>
-   <extension
          point="eu.openanalytics.phaedra.base.scripting.apiProvider">
       <apiProvider
             class="eu.openanalytics.phaedra.model.curve.ScriptAPI">
       </apiProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.jep.jepScanner">
+      <jepScanner
+            class="eu.openanalytics.phaedra.model.curve.util.JEPCurvePropertyScanner"
+            name="eu.openanalytics.phaedra.model.curve.util.JEPCurvePropertyScanner">
+      </jepScanner>
    </extension>
 
 </plugin>

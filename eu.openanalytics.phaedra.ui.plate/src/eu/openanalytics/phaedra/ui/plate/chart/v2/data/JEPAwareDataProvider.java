@@ -26,7 +26,7 @@ import eu.openanalytics.phaedra.base.ui.charting.v2.data.IJEPAwareDataProvider;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.CalculationException;
-import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog2;
+import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.ui.plate.Activator;
@@ -103,7 +103,7 @@ public abstract class JEPAwareDataProvider<ENTITY, ITEM> extends BaseDataProvide
 	}
 
 	public void generateJEPExpression(int dimension) {
-		JEPFormulaDialog2 dialog = new JEPFormulaDialog2(null, PlateUtils.getProtocolClass(getPlate()));
+		JEPFormulaDialog dialog = new JEPFormulaDialog(null, PlateUtils.getProtocolClass(getPlate()));
 
 		if (hasJepExpression(dimension)) {
 			dialog.setFormula(getJepExpressions()[dimension]);

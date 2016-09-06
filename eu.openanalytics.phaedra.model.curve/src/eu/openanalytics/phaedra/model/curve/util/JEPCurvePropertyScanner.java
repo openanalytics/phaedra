@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.model.curve.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import eu.openanalytics.phaedra.calculation.jep.parse.BaseScanner;
+import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.model.curve.CurveProperty;
 import eu.openanalytics.phaedra.model.curve.CurveService;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;

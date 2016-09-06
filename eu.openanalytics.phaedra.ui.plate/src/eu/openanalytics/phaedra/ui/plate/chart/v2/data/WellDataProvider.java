@@ -22,7 +22,7 @@ import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
-import eu.openanalytics.phaedra.calculation.jep.JEPCalculationService;
+import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -278,7 +278,11 @@ public class WellDataProvider extends JEPAwareDataProvider<Plate, Well> {
 	@Override
 	protected float[] evaluateArray(String expression, Plate plate) throws CalculationException {
 		List<Well> wells = wellsByPlate.get(plate);
-		return JEPCalculationService.getInstance().evaluateArray(expression, wells);
+		float[] results = new float[wells.size()];
+		for (int i = 0; i < wells.size(); i++) {
+			results[i] = JEPCalculation.evaluate(expression, wells.get(i));
+		}
+		return results;
 	}
 
 }
