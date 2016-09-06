@@ -4,6 +4,7 @@ import java.util.Date;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
+import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
 import eu.openanalytics.phaedra.export.core.ExportSettings.Includes;
 import eu.openanalytics.phaedra.export.core.filter.LibraryFilter;
@@ -60,7 +61,10 @@ public class QueryBuilder {
 		sb.append("SELECT");
 
 		sb.append(" F.FEATURE_NAME, F.SHORT_NAME as FEATURE_ALIAS,");
-		appendIfIncludes(Includes.NormalizedValue, settings, sb, " FV.NORMALIZED_VALUE as NORMALIZED,", null, null);
+		String norm = feature.getNormalization();
+		if (norm != null && !norm.equals(NormalizationService.NORMALIZATION_NONE)) {
+			appendIfIncludes(Includes.NormalizedValue, settings, sb, " FV.NORMALIZED_VALUE as NORMALIZED,", null, null);
+		}
 
 		String rawVal = (feature.isNumeric()) ? " FV.RAW_NUMERIC_VALUE as RAW_VALUE," : " FV.RAW_STRING_VALUE as RAW_VALUE,";
 		appendIfIncludes(Includes.RawValue, settings, sb, rawVal, null, null);
