@@ -1,8 +1,7 @@
 package eu.openanalytics.phaedra.ui.curve.search;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jface.viewers.ISelection;
@@ -15,8 +14,11 @@ import eu.openanalytics.phaedra.base.ui.nattable.misc.IRichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.RichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.search.AbstractQueryEditorSupport;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.base.util.reflect.ReflectionUtils;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.CRCurve;
+import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
@@ -53,39 +55,53 @@ public class CRCurveQueryEditorSupport extends AbstractQueryEditorSupport {
 	private class CRCurveColumnAccessor extends RichColumnAccessor<CRCurve> {
 
 		private String[] columns;
-
+		
 		public CRCurveColumnAccessor() {
-			List<String> tempColumns = new ArrayList<>();
-			tempColumns.add("Protocol");
-			tempColumns.add("Experiment");
-			tempColumns.add("Plate");
-
-			List<String> methodNames = new ArrayList<>();
-			Method[] methods = CRCurve.class.getDeclaredMethods();
-			for (Method m: methods) {
-				String methodName = m.getName();
-				if (methodName.startsWith("get") && !methodName.equals("getParent")) {
-					methodNames.add(methodName);
-				}
-			}
-			Collections.sort(methodNames);
-
-			methodNames.forEach(methodName -> tempColumns.add(methodName.substring(3)));
-
-			columns = tempColumns.toArray(new String[methodNames.size()]);
+			List<String> colNames = new ArrayList<>();
+			colNames.add("Protocol");
+			colNames.add("Experiment");
+			colNames.add("Plate");
+			colNames.add("Feature");
+			colNames.add("Compounds");
+			colNames.add("Model");
+			colNames.add("Fit Version");
+			colNames.add("Fit Date");
+			colNames.add("Fit Error");
+			
+			Arrays.stream(CurveFitService.getInstance().getFitModels())
+					.flatMap(s -> Arrays.stream(CurveFitService.getInstance().getModel(s).getOutputParameters()))
+					.filter(d -> d.key)
+					.distinct()
+					.sorted((d1, d2) -> d1.name.compareTo(d2.name))
+					.forEach(def -> colNames.add(def.name));
+			columns = colNames.toArray(new String[colNames.size()]);
 		}
 
 		@Override
-		public Object getDataValue(CRCurve rowObject, int columnIndex) {
+		public Object getDataValue(CRCurve curve, int columnIndex) {
 			switch (columnIndex) {
 			case 0:
-				return ((Protocol) rowObject.getAdapter(Protocol.class)).getName();
+				return ((Protocol) curve.getAdapter(Protocol.class)).getName();
 			case 1:
-				return ((Experiment) rowObject.getAdapter(Experiment.class)).getName();
+				return ((Experiment) curve.getAdapter(Experiment.class)).getName();
 			case 2:
-				return ((Plate) rowObject.getAdapter(Plate.class)).getBarcode();
+				return ((Plate) curve.getAdapter(Plate.class)).getBarcode();
+			case 3:
+				return curve.getFeature();
+			case 4:
+				return curve.getCompounds();
+			case 5:
+				return curve.getModel();
+			case 6:
+				return curve.getFitVersion();
+			case 7:
+				return curve.getFitDate();
+			case 8:
+				return curve.getErrorCode();
 			default:
-				return ReflectionUtils.invoke("get" + columns[columnIndex], rowObject);
+				Curve c = CurveFitService.getInstance().getCurve(curve.getId());
+				Value v = CurveParameter.find(c.getOutputParameters(), columns[columnIndex]);
+				return CurveParameter.renderValue(v, c, null);
 			}
 		}
 

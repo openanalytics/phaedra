@@ -23,7 +23,6 @@ public class FeaturesPage extends FormPage {
 	private ProtocolClassEditor editor;
 
 	private boolean dirty;
-	private boolean curvesChanged;
 	
 	public FeaturesPage(FormEditor editor, String id, String title) {
 		super(editor, id, title);
@@ -68,13 +67,5 @@ public class FeaturesPage extends FormPage {
 	public void markDirty() {
 		dirty = true;
 		getEditor().markDirty();
-	}
-	
-	public boolean isCurvesChanged() {
-		return curvesChanged;
-	}
-	
-	public void setCurvesChanged(boolean curvesChanged) {
-		this.curvesChanged = curvesChanged;
 	}
 }

@@ -10,7 +10,7 @@ public class ScriptAPI implements IScriptAPIProvider {
 	@Override
 	public Map<String, Object> getServices() {
 		Map<String, Object> utils = new HashMap<>();
-		utils.put("CurveService", CurveService.getInstance());
+		utils.put("CurveFitService", CurveFitService.getInstance());
 		return utils;
 	}
 

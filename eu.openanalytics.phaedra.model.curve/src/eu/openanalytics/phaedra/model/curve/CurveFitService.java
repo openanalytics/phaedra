@@ -1,0 +1,534 @@
+package eu.openanalytics.phaedra.model.curve;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import javax.persistence.EntityManager;
+
+import org.eclipse.core.runtime.Assert;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.widgets.Display;
+
+import eu.openanalytics.phaedra.base.cache.CacheConfig;
+import eu.openanalytics.phaedra.base.cache.CacheKey;
+import eu.openanalytics.phaedra.base.cache.CacheService;
+import eu.openanalytics.phaedra.base.cache.ICache;
+import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
+import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.event.ModelEvent;
+import eu.openanalytics.phaedra.base.event.ModelEventService;
+import eu.openanalytics.phaedra.base.event.ModelEventType;
+import eu.openanalytics.phaedra.base.util.CollectionUtils;
+import eu.openanalytics.phaedra.base.util.convert.PDFToImageConverter;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
+import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
+import eu.openanalytics.phaedra.calculation.CalculationService;
+import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
+import eu.openanalytics.phaedra.model.curve.dao.CurveDAO;
+import eu.openanalytics.phaedra.model.curve.dao.CustomSettingsDAO;
+import eu.openanalytics.phaedra.model.curve.dao.CustomSettingsDAO.CustomCurveSettings;
+import eu.openanalytics.phaedra.model.curve.render.BaseCurveRenderer;
+import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer;
+import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
+import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
+import eu.openanalytics.phaedra.model.curve.vo.Curve;
+import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.vo.Compound;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
+import eu.openanalytics.phaedra.validation.ValidationService.PlateApprovalStatus;
+import eu.openanalytics.phaedra.validation.ValidationService.PlateCalcStatus;
+import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
+import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
+
+public class CurveFitService extends BaseJPAService {
+
+	private static final CurveGrouping NO_GROUPING = new CurveGrouping(null, null);
+	
+	private static CurveFitService instance = new CurveFitService();
+	
+	private CurveDAO curveDAO;
+	private CustomSettingsDAO customSettingsDAO;
+	
+	private ICache curveCache;
+	private ICache curveIdCache;
+	private ICache curveImageCache;
+	private ICache curveCustomSettingsCache;
+	
+	private CurveFitService() {
+		// Hidden constructor
+		curveDAO = new CurveDAO(getEntityManager());
+		customSettingsDAO = new CustomSettingsDAO(getEntityManager());
+		
+		curveCache = CacheService.getInstance().createCache(new CacheConfig("CurveCache", false));
+		curveIdCache = CacheService.getInstance().createCache("CurveIdCache");
+		curveImageCache = CacheService.getInstance().createCache("CurveImageCache");
+		curveCustomSettingsCache = CacheService.getInstance().createCache("CurveCustomSettingsCache");
+	}
+
+	public static CurveFitService getInstance() {
+		return instance;
+	}
+	
+	public Curve getCurve(long curveId) {
+		if (curveIdCache.contains(curveId)) {
+			CacheKey key = (CacheKey) curveIdCache.get(curveId);
+			if (key == null) return null;
+			return (Curve) curveCache.get(key);
+		} else {
+			Curve curve = curveDAO.getCurve(curveId);
+			if (curve != null) addToCache(curve);
+			else curveIdCache.put(curveId, null);
+			return curve;
+		}
+	}
+
+	public Curve getCurve(Well well, Feature feature) {
+		CurveGrouping grouping = getGrouping(well, feature);
+		return getCurve(well.getCompound(), feature, grouping, false);
+	}
+	
+	public Curve getCurve(Compound compound, Feature feature, CurveGrouping grouping, boolean batchMode) {
+		// If the feature is incompatible, abort now.
+		if (compound == null || feature == null || !PlateUtils.isSameProtocolClass(compound, feature)) {
+			return null;
+		}
+
+		// First look in the cache.
+		CacheKey key = getCacheKey(compound, feature, grouping);
+		if (curveCache.contains(key)) return (Curve) curveCache.get(key);
+		
+		synchronized (this) {
+			if (curveCache.contains(key)) return (Curve) curveCache.get(key);
+			
+			// Cache miss, then look in the database.
+			Curve curve = null;
+			if (batchMode) {
+				// Fill cache with nulls, to deal with single-dose compounds which are not returned by the batch query below.
+				List<Feature> curveFeatures = CollectionUtils.findAll(PlateUtils.getFeatures(compound), CurveUtils.FEATURES_WITH_CURVES);
+				Set<CurveGrouping> groupings = new HashSet<>();
+				for (Compound c: compound.getPlate().getCompounds()) {
+					for (Feature f: curveFeatures) {
+						for (CurveGrouping cg: getGroupings(c, f)) groupings.add(cg);
+					}
+				}
+				for (Compound c: compound.getPlate().getCompounds()) {
+					for (Feature f: curveFeatures) {
+						for (CurveGrouping cg: groupings) addToCache(c, f, cg, null);
+					}
+				}
+				// Batch mode: expect more getCurve calls, so load the entire plate in batch.
+				List<Curve> curves = curveDAO.getCurveBatch(compound.getPlate());
+				for (Curve c: curves) {
+					CurveGrouping cGrouping = getGrouping(c);
+					for (Compound comp: c.getCompounds()) addToCache(comp, c.getFeature(), cGrouping, c);
+					if (c.getFeature() == feature && c.getCompounds().contains(compound) && grouping.equals(cGrouping)) curve = c;
+				}
+			} else {
+				curve = curveDAO.getCurve(feature, compound, grouping);
+			}
+
+			addToCache(compound, feature, grouping, curve);
+			return curve;
+		}
+	}
+
+	public ImageData getCurveImage(long curveId, int w, int h) {
+		CacheKey key = getImageCacheKey(curveId, w, h);
+		if (curveImageCache.contains(key)) return (ImageData) curveImageCache.get(key);
+
+		Curve curve = getCurve(curveId);
+		if (curve == null) {
+			curveImageCache.put(key, null);
+			return null;
+		}
+		
+		ImageData image = null;
+		synchronized (curve) {
+			if (curveImageCache.contains(key)) return (ImageData) curveImageCache.get(key);
+			
+			if (curve != null && curve.getPlot() != null) {
+				Image img = null;
+				try {
+					img = PDFToImageConverter.convert(curve.getPlot(), w, h);
+					img = ImageUtils.addTransparency(img, 0xFFFFFF);
+					image = img.getImageData();
+				} catch (IOException e) {
+					EclipseLog.error("Failed to render curve: " + e.getMessage(), e, Activator.getDefault());
+				} finally {
+					if (img != null) img.dispose();
+				}
+			}
+			curveImageCache.put(key, image);
+		}
+		return image;
+	}
+	
+	public void fitCurves(Plate plate) {
+		List<Feature> features = CollectionUtils.findAll(ProtocolUtils.getFeatures(plate), CurveUtils.FEATURES_WITH_CURVES);
+		List<Compound> compounds = streamableList(plate.getCompounds());
+		if (features.isEmpty() || compounds.isEmpty()) return;
+		
+		EclipseLog.info("Fitting all curves for " + plate, Activator.getDefault());
+		
+		List<Object[]> curvesToFit = new ArrayList<>();
+		for (Feature feature: features) {
+			for (Compound compound: compounds) {
+				curvesToFit.add(new Object[] { compound, feature });
+			}
+		}
+		
+		Consumer<Object[]> fitter = o -> {
+			try {
+				Compound compound = (Compound) o[0];
+				Feature feature = (Feature) o[1];
+				CurveGrouping[] groupings = getGroupings(compound, feature);
+				for (CurveGrouping grouping: groupings) {
+					fitCurve(compound, feature, grouping);
+				}
+			} catch (CurveFitException e) {
+				EclipseLog.error("Curve fit failed for " + o[0] + " @ " + o[1] + ": " + e.getMessage(), null, Activator.getDefault());
+			}
+		};
+
+		// When launched from main thread, this can deadlock, because R nodes do a Display.syncExec when starting up.
+		if (Thread.currentThread() == Display.getDefault().getThread()) {
+			EclipseLog.warn("Batch curve fitting called from the main thread. Fitting single-threaded to avoid UI deadlock.", Activator.getDefault());
+			curvesToFit.stream().forEach(fitter);
+		} else {
+			curvesToFit.parallelStream().forEach(fitter);
+		}
+	}
+
+	public void fitCurves(Compound compound, Feature feature) throws CurveFitException {
+		Assert.isLegal(compound != null);
+		Assert.isLegal(feature != null);
+		
+		CurveGrouping[] groupings = getGroupings(compound, feature);
+		for (CurveGrouping grouping: groupings) {
+			fitCurve(compound, feature, grouping);
+		}
+	}
+	
+	public void fitCurve(Curve curve) throws CurveFitException {
+		fitCurve(curve.getCompounds().get(0), curve.getFeature(), getGrouping(curve));
+	}
+	
+	public Curve fitCurve(Compound compound, Feature feature, CurveGrouping grouping) throws CurveFitException {
+		Assert.isLegal(compound != null, "Compound cannot be null");
+		Assert.isLegal(feature != null, "Feature cannot be null");
+		
+		List<Compound> compounds = CalculationService.getInstance().getMultiploCompounds(compound);
+		if (compounds.isEmpty()) throw new CurveFitException("No compound(s) to fit");
+		for (Compound c: compounds) {
+			if (PlateValidationStatus.INVALIDATED.matches(c.getPlate())) continue;
+			if (!PlateCalcStatus.CALCULATION_OK.matches(c.getPlate())) throw new CurveFitException(c.getPlate() + ": plate calculation is not OK");
+			if (PlateApprovalStatus.APPROVED.matches(c.getPlate())) throw new CurveFitException(c.getPlate() + ": plate is approved");
+		}
+		
+		Curve curve = getCurve(compound, feature, grouping, false);
+		if (curve == null) curve = new Curve();
+		curve.setCompounds(compounds);
+		curve.setFeature(feature);
+		
+		CurveFitSettings settings = getSettings(curve);
+		if (settings == null) throw new CurveFitException("Cannot fit: no curve fit defined for feature " + feature);
+		ICurveFitModel model = getModel(settings.getModelId());
+		if (model == null) throw new CurveFitException("Cannot fit: unknown model: " + settings.getModelId());
+		
+		curve.setFitDate(new Date());
+		curve.setModelId(model.getId());
+		curve.setGroupingValues(Stream.iterate(0, i -> i+1).limit(grouping.getCount()).map(i -> grouping.get(i)).toArray(i -> new String[i]));
+
+		CurveFitInput input = createInput(compounds, feature, grouping);
+		input.setSettings(settings);
+		boolean validated = false;
+		try {
+			model.validateInput(input);
+			validated = true;
+			model.fit(input, curve);
+		} catch (CurveFitException e) {
+			triggerFitFailed(curve, validated, e);
+		}
+		
+		curveDAO.saveCurve(curve);
+		for (Compound comp: curve.getCompounds()) {
+			addToCache(comp, feature, grouping, curve);
+			curveImageCache.remove(getImageCacheKey(curve.getId(), null, null), true);	
+		}
+
+		// Send curve fit event.
+		ModelEvent event = new ModelEvent(curve, ModelEventType.CurveFit, 0);
+		ModelEventService.getInstance().fireEvent(event);
+
+		return curve;
+	}
+	
+	public CurveFitSettings getSettings(Feature feature) {
+		if (feature.getCurveSettings() == null) return null;
+		String modelId = feature.getCurveSettings().get(CurveFitSettings.MODEL);
+		if (modelId == null || modelId.isEmpty()) return null;
+		
+		CurveFitSettings settings = new CurveFitSettings();
+		settings.setModelId(modelId);
+		
+		if (feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_1) != null) {
+			settings.setGroupingFeatures(new String[] {
+					feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_1),
+					feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_2),
+					feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_3)
+			});
+		}
+		
+		ICurveFitModel model = getModel(modelId);
+		CurveParameter.Value[] extraParams = new CurveParameter.Value[model.getInputParameters().length];
+		for (int i = 0; i < extraParams.length; i++) {
+			extraParams[i] = CurveParameter.createValue(feature, model.getInputParameters()[i]);
+		}
+		settings.setExtraParameters(extraParams);
+		
+		return settings;
+	}
+	
+	public CurveFitSettings getSettings(Curve curve) {
+		if (curve == null) return null;
+		if (curve.getId() == 0) return getSettings(curve.getFeature());
+		
+		CacheKey key = new CacheKey(curve.getId());
+		if (!curveCustomSettingsCache.contains(key)) {
+			List<CustomCurveSettings> customSettings = customSettingsDAO.loadSettings(curve.getCompounds().get(0).getPlate());
+			for (CustomCurveSettings s: customSettings) {
+				curveCustomSettingsCache.put(new CacheKey(s.curveId), s.settings);
+			}
+		}
+		
+		CurveFitSettings settings = (CurveFitSettings) curveCustomSettingsCache.get(key);
+		return (settings == null) ? getSettings(curve.getFeature()) : settings;
+	}
+
+	public void updateCurveSettings(Curve curve, CurveFitSettings settings) {
+		for (Compound c: curve.getCompounds()) {
+			if (PlateApprovalStatus.APPROVED.matches(c.getPlate())) throw new IllegalStateException("Cannot change settings: plate is approved");
+		}
+		
+		if (settings != null) {
+			// If new settings are identical to the defaults, treat it as a reset.
+			CurveFitSettings defaults = getSettings(curve.getFeature());
+			if (defaults.equals(settings)) settings = null;
+		}
+		
+		customSettingsDAO.clearSettings(curve.getId());
+		CacheKey key = new CacheKey(curve.getId());
+		if (settings == null) {
+			curveCustomSettingsCache.remove(key);
+		} else {
+			customSettingsDAO.saveSettings(curve.getId(), settings);
+			curveCustomSettingsCache.put(key, settings);
+		}
+	}
+
+	public String[] getFitModels() {
+		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveFitModel.EXT_PT_ID);
+		return Arrays.stream(elements).map(e -> e.getAttribute(ICurveFitModel.ATTR_ID)).toArray(i -> new String[i]);
+	}
+	
+	public ICurveFitModel getModel(String modelId) {
+		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveFitModel.EXT_PT_ID);
+		IConfigurationElement match = Arrays.stream(elements)
+				.filter(e -> e.getAttribute(ICurveFitModel.ATTR_ID).equals(modelId))
+				.findAny().orElse(null);
+		try {
+			if (match != null) return (ICurveFitModel)(match.createExecutableExtension(ICurveFitModel.ATTR_CLASS));
+		} catch (CoreException e) {
+			EclipseLog.error("Failed to load curve fit model " + modelId, e, Activator.getDefault());
+		}
+		return null;
+	}
+
+	public ICurveRenderer getRenderer(String modelId) {
+		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveRenderer.EXT_PT_ID);
+		IConfigurationElement match = Arrays.stream(elements)
+				.filter(e -> e.getAttribute(ICurveRenderer.ATTR_MODEL_ID).equals(modelId))
+				.findAny().orElse(null);
+		try {
+			if (match != null) return (ICurveRenderer)(match.createExecutableExtension(ICurveRenderer.ATTR_CLASS));
+		} catch (CoreException e) {
+			EclipseLog.error("Failed to load curve renderer for " + modelId, e, Activator.getDefault());
+		}
+		return new BaseCurveRenderer();
+	}
+	
+	public CurveFitInput getInput(Curve curve) {
+		CurveFitInput input = createInput(curve.getCompounds(), curve.getFeature(), getGrouping(curve));
+		input.setSettings(getSettings(curve));
+		return input;
+	}
+	
+	/**
+	 * Non-public
+	 * **********
+	 */
+	
+	protected EntityManager getEntityManager() {
+		return Screening.getEnvironment().getEntityManager();
+	}
+
+	private void triggerFitFailed(Curve curve, boolean saveCurve, CurveFitException exception) throws CurveFitException {
+		if (saveCurve) curveDAO.saveCurve(curve);
+		else curveDAO.deleteCurve(curve);
+
+		// Send curve fit failed event.
+		ModelEvent event = new ModelEvent(curve, ModelEventType.CurveFitFailed, 0);
+		ModelEventService.getInstance().fireEvent(event);
+
+		throw exception;
+	}
+	
+	private CacheKey getCacheKey(Compound compound, Feature feature, CurveGrouping grouping) {
+		Object[] keyParts = new Object[2 + grouping.getCount()];
+		keyParts[0] = compound.getId();
+		keyParts[1] = feature.getId();
+		for (int i = 0; i < grouping.getCount(); i++) keyParts[2+i] = grouping.get(i);
+		return CacheKey.create(keyParts);
+	}
+	
+	private CacheKey getImageCacheKey(long curveId, Integer w, Integer h) {
+		Object[] keyParts = new Object[3];
+		keyParts[0] = curveId;
+		keyParts[1] = w;
+		keyParts[2] = h;
+		return CacheKey.create(keyParts);
+	}
+	
+	private void addToCache(Curve curve) {
+		Feature feature = curve.getFeature();
+		CurveGrouping grouping = getGrouping(curve);
+		for (Compound comp: curve.getCompounds()) addToCache(comp, feature, grouping, curve);
+	}
+	
+	private void addToCache(Compound compound, Feature feature, CurveGrouping grouping, Curve curve) {
+		CacheKey key = getCacheKey(compound, feature, grouping);
+		curveCache.put(key, curve);
+		if (curve != null) curveIdCache.put(curve.getId(), key);
+	}
+	
+	private CurveFitInput createInput(List<Compound> compounds, Feature feature, CurveGrouping grouping) {
+		Stream<Well> wellStream = streamableList(compounds).stream()
+				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
+				.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
+				.flatMap(c -> streamableList(c.getWells()).stream())
+				.filter(w -> isValidDataPoint(w));
+		
+		List<Well> wells = null;
+		if (grouping == NO_GROUPING) {
+			wells = wellStream.collect(Collectors.toList());
+		} else {
+			wells = wellStream
+					.filter(w -> getGrouping(w, feature).equals(grouping))
+					.collect(Collectors.toList());
+		}
+		
+		CurveFitInput input = new CurveFitInput();
+		input.setWells(wells);
+		
+		double[] values = new double[wells.size()];
+		double[] concs = new double[wells.size()];
+		boolean[] accepts = new boolean[wells.size()];
+
+		for (int i = 0; i < wells.size(); i++) {
+			Well well = wells.get(i);
+			
+			// Regardless of value, fill out conc and status.
+			double conc = well.getCompoundConcentration();
+			concs[i] = NumberUtils.roundUp(-Math.log10(conc), 3);
+			accepts[i] = well.getStatus() >= 0;
+
+			//TODO Special treatment for NaN/Inf?
+			PlateDataAccessor dataAccessor = CalculationService.getInstance().getAccessor(well.getPlate());
+			values[i] = dataAccessor.getNumericValue(well, feature, feature.getNormalization());
+		}
+		
+		input.setValues(values);
+		input.setConcs(concs);
+		input.setValid(accepts);
+		return input;
+	}
+	
+	private boolean isValidDataPoint(Well well) {
+		if (well.getCompoundConcentration() == 0.0) return false;
+		
+		int[] invalidCodes = {
+				WellStatus.REJECTED_OUTLIER_PHAEDRA.getCode(),
+				WellStatus.REJECTED_DATACAPTURE.getCode(),
+				WellStatus.REJECTED_PLATEPREP.getCode() };
+		if (CollectionUtils.find(invalidCodes, well.getStatus()) >= 0) return false;
+		
+		// Note: welltype is not checked here because in some rare cases,
+		// users may wish to fit curves on controls or empty wells.
+		return true;
+	}
+	
+	private CurveGrouping getGrouping(Curve curve) {
+		Feature feature = curve.getFeature();
+		String[] keys = {
+				feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_1),
+				feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_2),
+				feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_3)
+		};
+		String[] values = curve.getGroupingValues();
+		return new CurveGrouping(keys, values);
+	}
+	
+	private CurveGrouping getGrouping(Well well, Feature feature) {
+		String[] keys = {
+				feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_1),
+				feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_2),
+				feature.getCurveSettings().get(CurveFitSettings.GROUP_BY_3)
+		};
+		if (keys[0] == null && keys[1] == null && keys[2] == null) return NO_GROUPING;
+		
+		PlateDataAccessor accessor = CalculationService.getInstance().getAccessor(well.getPlate());
+		String[] values = new String[3];
+		for (int i = 0; i < values.length; i++) {
+			if (keys[i] == null) continue;
+			Feature groupFeature = ProtocolUtils.getFeatureByName(keys[i], feature.getProtocolClass());
+			if (groupFeature == null) continue;
+			if (groupFeature.isNumeric()) {
+				values[i] = "" + accessor.getNumericValue(well, groupFeature, null);
+			} else {
+				values[i] = accessor.getStringValue(well, groupFeature);
+			}
+		}
+		return new CurveGrouping(keys, values);
+	}
+	
+	public CurveGrouping[] getGroupings(Compound c, Feature f) {
+		String[] keys = {
+				f.getCurveSettings().get(CurveFitSettings.GROUP_BY_1),
+				f.getCurveSettings().get(CurveFitSettings.GROUP_BY_2),
+				f.getCurveSettings().get(CurveFitSettings.GROUP_BY_3)
+		};
+		if (keys[0] == null && keys[1] == null && keys[2] == null) return new CurveGrouping[] { NO_GROUPING };
+		
+		return streamableList(c.getWells()).stream()
+				.map(w -> getGrouping(w, f))
+				.distinct()
+				.toArray(i -> new CurveGrouping[i]);
+	}
+}

@@ -59,73 +59,28 @@ GRANT SELECT ON phaedra.hca_plate_wells 		to phaedra_role_read;
 -- Curve views
 -- ======================================================================= 
 
-CREATE OR REPLACE VIEW phaedra.hca_curves AS
-SELECT
-		c.curve_id AS curve_id,
-		c.feature_id AS feature_id,
-		c.curve_kind AS kind,
-		c.curve_method AS method,
-		c.curve_model AS model,
-		c.curve_type AS type,
-		c.fit_date AS fit_date,
-		c.fit_version AS fit_version,
-		c.fit_error AS fit_error,
-		c.emax AS emax,
-		c.emax_conc AS emax_conc,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'PIC50' AND curve_id = c.curve_id) AS pic50,
-		(SELECT string_value FROM phaedra.hca_curve_property WHERE property_name = 'PIC50_CENSOR' AND curve_id = c.curve_id) AS pic50_censor,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'PIC50_STDERR' AND curve_id = c.curve_id) AS pic50_stderr,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'R2' AND curve_id = c.curve_id) AS r2,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'HILL' AND curve_id = c.curve_id) AS hill,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'PLAC' AND curve_id = c.curve_id) AS plac,
-		(SELECT string_value FROM phaedra.hca_curve_property WHERE property_name = 'PLAC_CENSOR' AND curve_id = c.curve_id) AS plac_censor,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'PLAC_THRESHOLD' AND curve_id = c.curve_id) AS plac_threshold,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'NIC' AND curve_id = c.curve_id) AS nic,
-		(SELECT numeric_value FROM phaedra.hca_curve_property WHERE property_name = 'NAC' AND curve_id = c.curve_id) AS nac
-FROM
-		phaedra.hca_curve c;
-
--- -----------------------------------------------------------------------
-
-CREATE OR REPLACE VIEW phaedra.hca_curve_compounds AS
-SELECT
-		cc.platecompound_id AS platecompound_id,
-		c.feature_id AS feature_id,
-		c.curve_id AS curve_id
-FROM
-		phaedra.hca_curve c, phaedra.hca_curve_compound cc
-WHERE
-		c.curve_id = cc.curve_id;
-
--- -----------------------------------------------------------------------
-
 CREATE OR REPLACE VIEW phaedra.hca_well_curves AS
 SELECT
 		w.well_id AS well_id,
 		cc.platecompound_id AS platecompound_id,
 		c.feature_id AS feature_id,
 		c.curve_id AS curve_id,
-		cp1.string_value AS group1,
-		cp2.string_value AS group2,
-		cp3.string_value AS group3
+		c.group_by_1 AS group1,
+		c.group_by_2 AS group2,
+		c.group_by_3 AS group3
 FROM
 		phaedra.hca_plate_well w, phaedra.hca_curve_compound cc, phaedra.hca_curve c
-		LEFT OUTER JOIN phaedra.hca_curve_property cp1 on cp1.curve_id = c.curve_id AND cp1.property_name = 'GROUP_BY_1'
-		LEFT OUTER JOIN phaedra.hca_curve_property cp2 on cp2.curve_id = c.curve_id AND cp2.property_name = 'GROUP_BY_2'
-		LEFT OUTER JOIN phaedra.hca_curve_property cp3 on cp3.curve_id = c.curve_id AND cp3.property_name = 'GROUP_BY_3'
 WHERE
-		(cp1.string_value is null OR cp1.string_value = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
+		(c.group_by_1 is null OR c.group_by_1 = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
 			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_1'))
-		AND (cp2.string_value is null OR cp2.string_value = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
+		AND (c.group_by_2 is null OR c.group_by_2 = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
 			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_2'))
-		AND (cp3.string_value is null OR cp3.string_value = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
+		AND (c.group_by_3 is null OR c.group_by_3 = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
 			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_3'))
 		AND w.platecompound_id = cc.platecompound_id AND cc.curve_id = c.curve_id;
 
 -- -----------------------------------------------------------------------
 
-GRANT SELECT ON phaedra.hca_curves to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_curve_compounds to phaedra_role_read;
 GRANT SELECT ON phaedra.hca_well_curves to phaedra_role_read;
 
 -- ======================================================================= 

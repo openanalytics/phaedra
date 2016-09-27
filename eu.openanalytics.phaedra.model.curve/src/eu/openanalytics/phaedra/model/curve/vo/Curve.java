@@ -1,41 +1,37 @@
 package eu.openanalytics.phaedra.model.curve.vo;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import org.eclipse.core.runtime.PlatformObject;
 
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
-public abstract class Curve extends PlatformObject implements Serializable {
-
-	private static final long serialVersionUID = -8890045409137210115L;
+public class Curve extends PlatformObject {
 
 	private long id;
 	
-	private transient Feature feature;
-	private transient List<Compound> compounds;
-
-	private CurveSettings settings;
-
-	private int fitError;
-	private String fitMessage;
-	private String fitVersion;
+	private Feature feature;
+	private List<Compound> compounds;
+	
+	private String modelId;
+	
+	private String[] groupingValues;
+	
 	private Date fitDate;
-
+	private String fitVersion;
+	private int errorCode;
+	private CurveParameter.Value[] outputParameters;
+	
 	private byte[] plot;
-
-	private double eMax;
-	private double eMaxConc;
-
-	public long getId() {
-		return id;
+	
+	public Curve() {
+		compounds = new ArrayList<>();
 	}
-	public void setId(long id) {
-		this.id = id;
-	}
+	
 	public Feature getFeature() {
 		return feature;
 	}
@@ -48,29 +44,23 @@ public abstract class Curve extends PlatformObject implements Serializable {
 	public void setCompounds(List<Compound> compounds) {
 		this.compounds = compounds;
 	}
-	public CurveSettings getSettings() {
-		return settings;
+	public long getId() {
+		return id;
 	}
-	public void setSettings(CurveSettings settings) {
-		this.settings = settings;
+	public void setId(long id) {
+		this.id = id;
 	}
-	public int getFitError() {
-		return fitError;
+	public String getModelId() {
+		return modelId;
 	}
-	public void setFitError(int fitError) {
-		this.fitError = fitError;
+	public void setModelId(String modelId) {
+		this.modelId = modelId;
 	}
-	public String getFitMessage() {
-		return fitMessage;
+	public String[] getGroupingValues() {
+		return groupingValues;
 	}
-	public void setFitMessage(String fitMessage) {
-		this.fitMessage = fitMessage;
-	}
-	public String getFitVersion() {
-		return fitVersion;
-	}
-	public void setFitVersion(String fitVersion) {
-		this.fitVersion = fitVersion;
+	public void setGroupingValues(String[] groupingValues) {
+		this.groupingValues = groupingValues;
 	}
 	public Date getFitDate() {
 		return fitDate;
@@ -78,36 +68,35 @@ public abstract class Curve extends PlatformObject implements Serializable {
 	public void setFitDate(Date fitDate) {
 		this.fitDate = fitDate;
 	}
+	public String getFitVersion() {
+		return fitVersion;
+	}
+	public void setFitVersion(String fitVersion) {
+		this.fitVersion = fitVersion;
+	}
+	public int getErrorCode() {
+		return errorCode;
+	}
+	public void setErrorCode(int errorCode) {
+		this.errorCode = errorCode;
+	}
+	public CurveParameter.Value[] getOutputParameters() {
+		return outputParameters;
+	}
+	public void setOutputParameters(CurveParameter.Value[] outputParameters) {
+		this.outputParameters = outputParameters;
+	}
 	public byte[] getPlot() {
 		return plot;
 	}
 	public void setPlot(byte[] plot) {
 		this.plot = plot;
 	}
-	public double geteMax() {
-		return eMax;
-	}
-	public void seteMax(double eMax) {
-		this.eMax = eMax;
-	}
-	public double geteMaxConc() {
-		return eMaxConc;
-	}
-	public void seteMaxConc(double eMaxConc) {
-		this.eMaxConc = eMaxConc;
-	}
 	
 	@Override
 	public String toString() {
-		String kind = "";
-		if (getSettings() != null) kind = getSettings().getKind();
-		String cmp = "";
-		if (compounds != null) {
-			if (compounds.isEmpty()) cmp = "<no compound>";
-			cmp = compounds.get(0).toString();
-			if (compounds.size() > 1) cmp += " @ " + compounds.size() + " plates";
-		}
-		return kind + "Curve (" + id + "): " + feature + " @ " + cmp;
+		String cmp = (compounds.size() == 1) ? compounds.get(0).toString() : (compounds.size() + " compounds");
+		return String.format("Curve [%s] [%s] [model: %s] [id: %s]", feature, cmp, modelId, id);
 	}
 	
 	@Override

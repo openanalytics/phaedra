@@ -48,7 +48,7 @@ import eu.openanalytics.phaedra.base.ui.util.filter.FilterMatcher;
 import eu.openanalytics.phaedra.base.ui.util.table.FilteredTable;
 import eu.openanalytics.phaedra.base.ui.util.table.TableViewerSorter;
 import eu.openanalytics.phaedra.base.util.misc.SWTUtils;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
+import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
@@ -62,7 +62,7 @@ public class FeaturesMasterBlock extends MasterDetailsBlock {
 
 	private TableViewer tableViewer;
 
-	private WritableList inputList;
+	private WritableList<Feature> inputList;
 	private FeaturesPage parentPage;
 	private ProtocolClass protocolClass;
 
@@ -70,7 +70,7 @@ public class FeaturesMasterBlock extends MasterDetailsBlock {
 		List<Feature> features = protocolClass.getFeatures();
 		Collections.sort(features, ProtocolUtils.FEATURE_NAME_SORTER);
 
-		this.inputList = new WritableList(features, Feature.class);
+		this.inputList = new WritableList<>(features, Feature.class);
 		this.parentPage = page;
 		this.protocolClass = protocolClass;
 	}
@@ -211,17 +211,14 @@ public class FeaturesMasterBlock extends MasterDetailsBlock {
 			@Override
 			public Image getImage(Object element) {
 				Feature f = (Feature) element;
-				if (f.getCurveSettings().containsKey(CurveSettings.KIND)) {
-					return IconManager.getIconImage("curve.png");
-				}
-				return null;
+				return CurveUtils.hasCurve(f) ? IconManager.getIconImage("curve.png") : null;
 			}
 		});
 		new TableViewerSorter(tableViewer, tvc){
 			@Override
 			protected int doCompare(Viewer viewer, Object e1, Object e2) {
-				boolean b1 = ((Feature) e1).getCurveSettings().containsKey(CurveSettings.KIND);
-				boolean b2 = ((Feature) e2).getCurveSettings().containsKey(CurveSettings.KIND);
+				boolean b1 = CurveUtils.hasCurve((Feature) e1);
+				boolean b2 = CurveUtils.hasCurve((Feature) e2);
 				return (b1 ^ b2) ? b1 ? 1 : -1 : 0;
 			}
 		};

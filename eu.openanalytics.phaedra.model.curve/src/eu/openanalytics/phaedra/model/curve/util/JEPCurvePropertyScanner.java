@@ -1,18 +1,16 @@
 package eu.openanalytics.phaedra.model.curve.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
-import eu.openanalytics.phaedra.model.curve.CurveProperty;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
-import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
 
 /**
  * Enable the use of curve properties in JEP expressions of the form:
@@ -43,23 +41,21 @@ public class JEPCurvePropertyScanner extends BaseScanner<Well> {
 		String propName = fieldNames[1];
 		
 		Feature feature = ProtocolUtils.getFeatureByName(featureName, pClass);
-		Curve curve = CurveService.getInstance().getCurve(well, feature);
-		CurveProperty prop = CurveProperty.getByLabel(propName);
-		if (curve == null || prop == null) return Double.NaN;
-
-		Object value = prop.getValue(curve);
-		if (value instanceof double[]) {
-			double[] v = (double[]) value;
-			List<Well> wells = well.getCompound().getWells();
-			List<Well> filteredWells = new ArrayList<>();
-			for (int i=0; i<wells.size(); i++) {
-				if (wells.get(i).getStatus() != WellStatus.REJECTED_OUTLIER_PHAEDRA.getCode()) filteredWells.add(wells.get(i));
-			}
-			int index = filteredWells.indexOf(well);
-			if (index >= 0 && index < v.length) value = v[index];
-			else value = null;
-		}
+		Curve curve = CurveFitService.getInstance().getCurve(well, feature);
+		if (curve == null) return Double.NaN;
 		
+		Value prop = CurveParameter.find(curve.getOutputParameters(), propName);
+		if (prop == null) return Double.NaN;
+
+		Object value = null;
+		if (prop.definition.type == ParameterType.Binary) {
+			value = CurveParameter.getBinaryValue(prop);
+		} else if (prop.definition.type.isNumeric()) {
+			value = prop.numericValue;
+		} else {
+			value = prop.stringValue;
+		}
+
 		if (value == null) value = Double.NaN;
 		return value;
 	}

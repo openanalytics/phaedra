@@ -57,6 +57,7 @@ public enum ConcentrationFormat {
 		case MicroMolar:
 			return name + " (µM)";
 		case LogMolar:
+			//TODO Get rid of these hardcoded names.
 			if (name.equalsIgnoreCase("ic50") || name.equalsIgnoreCase("lac")) return "p" + name;
 		}
 		return name;

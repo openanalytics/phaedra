@@ -24,7 +24,6 @@ import org.eclipse.swt.widgets.Text;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
 import eu.openanalytics.phaedra.export.core.filter.CompoundFilter;
 import eu.openanalytics.phaedra.export.core.filter.CompoundFilter.CompoundNr;
-import eu.openanalytics.phaedra.export.core.filter.CurveFilter;
 import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -42,11 +41,6 @@ public class FilterWellsPage extends BaseExportWizardPage {
 	private Combo wellResultOperatorCombo;
 	private Text wellResultValueTxt;
 	
-	private Button filterCurveResultsChk;
-	private Combo curvePropertyCombo;
-	private Combo curveOperatorCombo;
-	private Text curveValueTxt;
-	
 	private Button filterCompoundsChk;
 	private Text compTypeTxt;
 	private Text compNrTxt;
@@ -58,12 +52,11 @@ public class FilterWellsPage extends BaseExportWizardPage {
 	private CheckboxTableViewer wellTypeTableViewer;
 	
 	private WellFeatureFilter wellFeatureFilter;
-	private CurveFilter curveFilter;
 	private CompoundFilter compoundFilter;
 	
 	public FilterWellsPage() {
-		super("Filter Wells, Compounds and Curves");
-		setDescription("Step 3/4:  Select the wells, compounds and curves you want to export.");
+		super("Filter Wells and Compounds");
+		setDescription("Step 3/4:  Select filters for the wells and compounds you want to export.");
 	}
 
 	@Override
@@ -118,39 +111,6 @@ public class FilterWellsPage extends BaseExportWizardPage {
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).hint(SWT.DEFAULT,15).applyTo(wellResultValueTxt);
 		
 		Label label = new Label(container, SWT.SEPARATOR | SWT.SHADOW_OUT | SWT.HORIZONTAL);
-		GridDataFactory.fillDefaults().span(2,1).applyTo(label);
-		
-		filterCurveResultsChk = new Button(container, SWT.CHECK);
-		filterCurveResultsChk.setText("Filter on Curve Results:");
-		GridDataFactory.fillDefaults().span(2,1).applyTo(filterCurveResultsChk);
-		
-		filterCurveResultsChk.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				boolean checked = filterCurveResultsChk.getSelection();
-				curvePropertyCombo.setEnabled(checked);
-				curveOperatorCombo.setEnabled(checked);
-				curveValueTxt.setEnabled(checked);
-			}
-		});
-		
-		subContainer = new Composite(container, SWT.NONE);
-		GridDataFactory.fillDefaults().span(2,1).grab(true,false).applyTo(subContainer);
-		GridLayoutFactory.fillDefaults().numColumns(3).applyTo(subContainer);
-		
-		curvePropertyCombo = new Combo(subContainer, SWT.NONE | SWT.READ_ONLY);
-		curvePropertyCombo.setEnabled(false);
-		GridDataFactory.fillDefaults().hint(200,SWT.DEFAULT).applyTo(curvePropertyCombo);
-		
-		curveOperatorCombo = new Combo(subContainer, SWT.NONE | SWT.READ_ONLY);
-		curveOperatorCombo.setEnabled(false);
-		GridDataFactory.fillDefaults().hint(20,SWT.DEFAULT).applyTo(curveOperatorCombo);
-		
-		curveValueTxt = new Text(subContainer, SWT.BORDER);
-		curveValueTxt.setEnabled(false);
-		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).hint(SWT.DEFAULT,15).applyTo(curveValueTxt);
-		
-		label = new Label(container, SWT.SEPARATOR | SWT.SHADOW_OUT | SWT.HORIZONTAL);
 		GridDataFactory.fillDefaults().span(2,1).applyTo(label);
 		
 		filterCompoundsChk = new Button(container, SWT.CHECK);
@@ -247,13 +207,6 @@ public class FilterWellsPage extends BaseExportWizardPage {
 		wellResultOperatorCombo.setItems(wellFeatureFilter.getOperators());
 		if (wellResultOperatorCombo.getItemCount() > 0) wellResultOperatorCombo.select(0);
 
-		curveFilter = new CurveFilter(allFeatures);
-		curvePropertyCombo.setItems(curveFilter.getFeatureCurves());
-		if (curvePropertyCombo.getItemCount() > 0) curvePropertyCombo.select(0);
-
-		curveOperatorCombo.setItems(curveFilter.getOperators());
-		if (curveOperatorCombo.getItemCount() > 0) curveOperatorCombo.select(0);
-		
 		compoundFilter = new CompoundFilter(settings.experiments);
 	}
 
@@ -268,15 +221,6 @@ public class FilterWellsPage extends BaseExportWizardPage {
 			index = wellResultOperatorCombo.getSelectionIndex();
 			if (index != -1) settings.wellResultOperator = wellResultOperatorCombo.getItem(index);
 			settings.wellResultValue = wellResultValueTxt.getText();
-		}
-		
-		settings.filterCurveResults = filterCurveResultsChk.getSelection();
-		if (settings.filterCurveResults) {
-			int index = curvePropertyCombo.getSelectionIndex();
-			if (index != -1) settings.curveFeature = curveFilter.getFeature(index);
-			index = curveOperatorCombo.getSelectionIndex();
-			if (index != -1) settings.curveOperator = curveOperatorCombo.getItem(index);
-			settings.curveValue = curveValueTxt.getText();
 		}
 		
 		settings.filterCompound = filterCompoundsChk.getSelection();

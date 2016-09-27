@@ -43,11 +43,6 @@ public class ExportSettings {
 	
 	public String[] wellTypes;
 	
-	public boolean filterCurveResults;
-	public Feature curveFeature;
-	public String curveOperator;
-	public String curveValue;
-	
 	public boolean filterCompound;
 	public String[] compoundTypes;
 	public String[] compoundNumbers;
@@ -59,17 +54,8 @@ public class ExportSettings {
 		NormalizedValue("Normalized Feature Values"),
 		Saltform("Saltform"),
 		PlateStatistics("Plate Statistics"),
-		DrcMethod("DRC Method"),
-		DrcModel("DRC Model"),
-		DrcType("DRC Type"),
-		Pic50Plac("pIC50/pLAC"),
-		Hill("Hill"),
-		R2("R2"),
-		Threshold("Threshold"),
-		Emax("EMAX"),
-		LbUb("Lb and Ub"),
-		LbUbStdErr("Lb and Ub Standard Errors");
-		
+		CurveProperties("Curve Properties");
+	
 		private String label;
 		
 		private Includes(String label) {

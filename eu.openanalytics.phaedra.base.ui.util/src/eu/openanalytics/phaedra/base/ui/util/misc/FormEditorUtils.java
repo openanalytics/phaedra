@@ -3,6 +3,8 @@ package eu.openanalytics.phaedra.base.ui.util.misc;
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.beans.PojoProperties;
+import org.eclipse.core.databinding.observable.Observables;
+import org.eclipse.core.databinding.observable.map.ObservableMap;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -146,6 +148,18 @@ public class FormEditorUtils {
 		IObservableValue target = WidgetProperties.selection().observe(ctrl);
 		IObservableValue model = PojoProperties.value(varName).observe(pojo);
 		ctx.bindValue(target, model);
+	}
+	
+	public static <K,V> void bindTextToMap(Control ctrl, ObservableMap<K,V> map, K key, DataBindingContext ctx) {
+		IObservableValue target = WidgetProperties.text(SWT.Modify).observe(ctrl);
+		IObservableValue model = Observables.observeMapEntry(map, key);
+		ctx.bindValue(target, model);	
+	}
+	
+	public static <K,V> void bindSelectionToMap(Control ctrl, ObservableMap<K,V> map, K key, DataBindingContext ctx) {
+		IObservableValue target = WidgetProperties.selection().observe(ctrl);
+		IObservableValue model = Observables.observeMapEntry(map, key);
+		ctx.bindValue(target, model);	
 	}
 	
 	public static void clearBindings(DataBindingContext ctx) {

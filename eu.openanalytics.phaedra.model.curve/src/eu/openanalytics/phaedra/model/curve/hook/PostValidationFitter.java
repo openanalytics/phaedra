@@ -9,8 +9,9 @@ import eu.openanalytics.phaedra.base.hook.PreHookException;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.curve.Activator;
-import eu.openanalytics.phaedra.model.curve.CurveService;
-import eu.openanalytics.phaedra.model.curve.fit.CurveFitException;
+import eu.openanalytics.phaedra.model.curve.CurveFitException;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -50,11 +51,11 @@ public class PostValidationFitter implements IHook {
 		}
 		if (compounds.isEmpty()) return;
 		
-		List<Feature> features = CollectionUtils.findAll(ProtocolUtils.getFeatures(compounds.get(0)), ProtocolUtils.FEATURES_WITH_CURVES);
+		List<Feature> features = CollectionUtils.findAll(ProtocolUtils.getFeatures(compounds.get(0)), CurveUtils.FEATURES_WITH_CURVES);
 		for (Compound compound: compounds) {
 			for (Feature feature: features) {
 				try {
-					CurveService.getInstance().fitAllCurves(compound, feature);
+					CurveFitService.getInstance().fitCurves(compound, feature);
 				} catch (CurveFitException e) {
 					EclipseLog.error("Fit failed: " + e.getMessage(), e, Activator.getDefault());
 				}

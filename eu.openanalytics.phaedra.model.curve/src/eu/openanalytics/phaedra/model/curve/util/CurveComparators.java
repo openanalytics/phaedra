@@ -7,7 +7,6 @@ import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 public class CurveComparators {
 
 	public static Comparator<String> CENSOR_COMPARATOR = new Comparator<String>() {
-
 		@Override
 		public int compare(String o1, String o2) {
 			if (o1 == null || o1.isEmpty()) return -1;
@@ -45,22 +44,18 @@ public class CurveComparators {
 			if (o1Numeric && o2Numeric) {
 				double d1 = Double.parseDouble(val1);
 				double d2 = Double.parseDouble(val2);
-				if (d1 < d2) return -1;
-				if (d1 > d2) return 1;
-				if (d1 == d2) {
-					return censorValue1 - censorValue2;
-				}
+				int outcome = Double.compare(d1, d2);
+				if (outcome == 0) return censorValue1 - censorValue2;
+				return outcome;
 			}
 
 			if (!o1Numeric) return -1;
 			if (!o2Numeric) return 1;
 			return o1.compareTo(o2);
 		}
-
 	};
 
 	public static Comparator<String> NUMERIC_STRING_COMPARATOR = new Comparator<String>() {
-
 		@Override
 		public int compare(String o1, String o2) {
 			boolean o1Numeric = NumberUtils.isDouble(o1);
@@ -68,14 +63,11 @@ public class CurveComparators {
 			if (o1Numeric && o2Numeric) {
 				double d1 = Double.parseDouble(o1);
 				double d2 = Double.parseDouble(o2);
-				if (d1 == d2) return 0;
-				if (d1 < d2) return -1;
-				if (d1 > d2) return 1;
+				return Double.compare(d1, d2);
 			}
 			if (!o1Numeric) return -1;
 			if (!o2Numeric) return 1;
 			return o1.compareTo(o2);
 		}
-
 	};
 }

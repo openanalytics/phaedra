@@ -8,7 +8,7 @@ import java.util.Set;
 import eu.openanalytics.phaedra.base.hook.BaseBatchedHook;
 import eu.openanalytics.phaedra.base.hook.IHookArguments;
 import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -84,7 +84,7 @@ public class PostValidationCalculator extends BaseBatchedHook {
 		for (Plate plate: platesToRecalc) CalculationService.getInstance().calculate(plate);
 		for (Plate plate: platesToRefit) {
 			if (platesToRecalc.contains(plate)) continue;
-			CurveService.getInstance().fitAllCurves(plate);
+			CurveFitService.getInstance().fitCurves(plate);
 		}
 	}
 	

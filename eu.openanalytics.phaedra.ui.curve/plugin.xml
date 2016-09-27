@@ -11,14 +11,6 @@
             name="Dose-Response Curve"
             restorable="true">
       </view>
-      <view
-            allowMultiple="true"
-            class="eu.openanalytics.phaedra.ui.curve.crcgrid.CrcGridView"
-            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/curve.png"
-            id="eu.openanalytics.phaedra.ui.curve.crcgrid.CrcGridView"
-            name="CRC Grid"
-            restorable="true">
-      </view>
    </extension>
    <extension
          point="org.eclipse.ui.editors">
@@ -439,10 +431,9 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="eu.openanalytics.phaedra.base.ui.charting.preferences.PreferencePage"
             class="eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage"
             id="eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage"
-            name="Dose-Response Curve">
+            name="Dose-Response Curves">
       </page>
    </extension>
    <extension
@@ -473,20 +464,8 @@
    <extension
          point="eu.openanalytics.phaedra.base.ui.search.queryValuePanelFactory">
       <queryValuePanelFactory
-            class="eu.openanalytics.phaedra.ui.curve.search.CurveKindQueryValuePanelFactory"
-            id="eu.openanalytics.phaedra.ui.curve.search.CurveKindQueryValuePanelFactory">
-      </queryValuePanelFactory>
-      <queryValuePanelFactory
-            class="eu.openanalytics.phaedra.ui.curve.search.CurveMethodQueryValuePanelFactory"
-            id="eu.openanalytics.phaedra.ui.curve.search.CurveMethodQueryValuePanelFactory">
-      </queryValuePanelFactory>
-      <queryValuePanelFactory
             class="eu.openanalytics.phaedra.ui.curve.search.CurveModelQueryValuePanelFactory"
             id="eu.openanalytics.phaedra.ui.curve.search.CurveModelQueryValuePanelFactory">
-      </queryValuePanelFactory>
-      <queryValuePanelFactory
-            class="eu.openanalytics.phaedra.ui.curve.search.CurveTypeQueryValuePanelFactory"
-            id="eu.openanalytics.phaedra.ui.curve.search.CurveTypeQueryValuePanelFactory">
       </queryValuePanelFactory>
    </extension>
    <extension

@@ -11,7 +11,11 @@ import eu.openanalytics.phaedra.export.core.filter.LibraryFilter;
 import eu.openanalytics.phaedra.export.core.filter.QualifierFilter;
 import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.export.core.util.SQLUtils;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
+import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
@@ -69,38 +73,26 @@ public class QueryBuilder {
 		String rawVal = (feature.isNumeric()) ? " FV.RAW_NUMERIC_VALUE as RAW_VALUE," : " FV.RAW_STRING_VALUE as RAW_VALUE,";
 		appendIfIncludes(Includes.RawValue, settings, sb, rawVal, null, null);
 
-		String baseCurveQuery = " (SELECT c.${propertyName} FROM PHAEDRA.HCA_CURVE C WHERE C.CURVE_ID = WC.CURVE_ID) AS ${columnAlias},";
-		String basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
-				+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
-		String baseCensoredPropertyQuery ="(SELECT CP.STRING_VALUE"
-				+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}_CENSOR')"
-				+ " || (SELECT " + JDBCUtils.getFormatNumberSQL("CP.NUMERIC_VALUE", 3)
-				+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
-		
-		String kind = feature.getCurveSettings().get(CurveSettings.KIND);
-		if ("OSB".equals(kind)) {
-			appendIfIncludes(Includes.DrcMethod, settings, sb, baseCurveQuery, "CURVE_METHOD", "DRC_METHOD");
-			appendIfIncludes(Includes.DrcModel, settings, sb, baseCurveQuery, "CURVE_MODEL", "DRC_MODEL");
-			appendIfIncludes(Includes.DrcType, settings, sb, baseCurveQuery, "CURVE_TYPE", "DRC_TYPE");
-			appendIfIncludes(Includes.Emax, settings, sb, baseCurveQuery, "EMAX_CONC", "EMAXCONC");
-			appendIfIncludes(Includes.Emax, settings, sb, baseCurveQuery, "EMAX", "EMAXEFFECT");
-			appendIfIncludes(Includes.Pic50Plac, settings, sb, baseCensoredPropertyQuery, "PIC50", "PIC50");
-			appendIfIncludes(Includes.Hill, settings, sb, basePropertyQuery, "HILL", "HILL");
-			appendIfIncludes(Includes.R2, settings, sb, basePropertyQuery, "R2", "R2");
-			appendIfIncludes(Includes.LbUb, settings, sb, basePropertyQuery, "PIC50_LB", "PIC50_LB");
-			appendIfIncludes(Includes.LbUb, settings, sb, basePropertyQuery, "PIC50_UB", "PIC50_UB");
-			appendIfIncludes(Includes.LbUbStdErr, settings, sb, basePropertyQuery, "PIC50_LB_STDERR", "PIC50_LB_STDERR");
-			appendIfIncludes(Includes.LbUbStdErr, settings, sb, basePropertyQuery, "PIC50_UB_STDERR", "PIC50_UB_STDERR");
-		} else if ("PLAC".equals(kind)) {
-			appendIfIncludes(Includes.DrcMethod, settings, sb, baseCurveQuery, "CURVE_METHOD", "DRC_METHOD");
-			appendIfIncludes(Includes.DrcModel, settings, sb, baseCurveQuery, "CURVE_MODEL", "DRC_MODEL");
-			appendIfIncludes(Includes.DrcType, settings, sb, baseCurveQuery, "CURVE_TYPE", "DRC_TYPE");
-			appendIfIncludes(Includes.Emax, settings, sb, baseCurveQuery, "EMAX_CONC", "EMAXCONC");
-			appendIfIncludes(Includes.Emax, settings, sb, baseCurveQuery, "EMAX", "EMAXEFFECT");
-			appendIfIncludes(Includes.Pic50Plac, settings, sb, baseCensoredPropertyQuery, "PLAC", "PLAC");
-			appendIfIncludes(Includes.Threshold, settings, sb, basePropertyQuery, "THRESHOLD", "THRESHOLD");
-			appendIfIncludes(Includes.LbUb, settings, sb, basePropertyQuery, "LC_MEAN", "LC_MEAN");
-			appendIfIncludes(Includes.LbUb, settings, sb, basePropertyQuery, "HC_MEAN", "HC_MEAN");
+		if (settings.includes.contains(Includes.CurveProperties)) {
+			CurveFitSettings fitSettings = CurveFitService.getInstance().getSettings(feature);
+			if (fitSettings != null) {
+				ICurveFitModel model = CurveFitService.getInstance().getModel(fitSettings.getModelId());
+				
+				String baseCurveQuery = " (SELECT c.${propertyName} FROM PHAEDRA.HCA_CURVE C WHERE C.CURVE_ID = WC.CURVE_ID) AS ${columnAlias},";
+				appendIfIncludes(Includes.CurveProperties, settings, sb, baseCurveQuery, "MODEL_ID", "MODEL");
+				
+				for (Definition def: model.getOutputParameters()) {
+					if (!def.key) continue;
+					String basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
+							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
+					String baseCensoredPropertyQuery ="(SELECT CP.STRING_VALUE"
+							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName} Censor')"
+							+ " || (SELECT " + JDBCUtils.getFormatNumberSQL("CP.NUMERIC_VALUE", 3)
+							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
+					appendIfIncludes(Includes.CurveProperties, settings, sb,
+							(CurveParameter.isCensored(def) ? baseCensoredPropertyQuery : basePropertyQuery), def.name, def.name);
+				}
+			}
 		}
 
 		if (sb.charAt(sb.length()-1) == ',') sb.deleteCharAt(sb.length()-1);
@@ -141,8 +133,8 @@ public class QueryBuilder {
 	private void appendIfIncludes(Includes inc, ExportSettings settings, StringBuilder sb, String baseString, String propName, String colAlias) {
 		if (settings.includes.contains(inc)) {
 			String string = baseString;
-			if (propName != null) string = string.replace("${propertyName}", propName);
-			if (colAlias != null) string = string.replace("${columnAlias}", colAlias);
+			if (propName != null) string = string.replace("${propertyName}", propName.replace(" ", "_"));
+			if (colAlias != null) string = string.replace("${columnAlias}", colAlias.replace(" ", "_"));
 			sb.append(string);
 		}
 	}
@@ -240,16 +232,6 @@ public class QueryBuilder {
 				sb.append(" AND NORMALIZED_VALUE ");
 			}
 			sb.append(settings.wellResultOperator + " " + settings.wellResultValue + ")");
-		}
-
-		if (settings.filterCurveResults) {
-			long id = settings.curveFeature.getId();
-			String kind = settings.curveFeature.getCurveSettings().get(CurveSettings.KIND);
-			sb.append(" AND EXISTS (SELECT cp.* FROM PHAEDRA.HCA_CURVE_PROPERTY cp, PHAEDRA.HCA_CURVE_COMPOUNDS ccmp");
-			sb.append(" WHERE cp.CURVE_ID = ccmp.CURVE_ID AND ccmp.FEATURE_ID = " + id + " AND ccmp.PLATECOMPOUND_ID = PC.PLATECOMPOUND_ID");
-			if ("OSB".equals(kind)) sb.append(" AND cp.property_name = 'PIC50'");
-			else sb.append(" AND cp.property_name = 'PLAC'");
-			sb.append(" AND cp.NUMERIC_VALUE " + settings.curveOperator + " " + settings.curveValue + ")");
 		}
 
 		if (settings.filterCompound) {

@@ -32,11 +32,6 @@ public class ProtocolUtils {
 	
 	public static Predicate<Feature> ANNOTATION_FEATURES = f -> f.isAnnotation();
 	
-	public static Predicate<Feature> FEATURES_WITH_CURVES = f -> {
-		String kind = f.getCurveSettings().get("KIND");
-		return (kind != null && !kind.isEmpty() && !kind.equals("NONE"));
-	};
-
 	public static Function<WellType, String> WELLTYPE_CODES = t -> t.getCode();
 
 	public static Comparator<IFeature> FEATURE_NAME_SORTER = (o1, o2) -> {

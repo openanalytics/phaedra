@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
@@ -28,6 +27,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -50,17 +50,11 @@ import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
-import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService.NormalizationScope;
-import eu.openanalytics.phaedra.model.curve.CurveService;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveKind;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveMethod;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveModel;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveType;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
+import eu.openanalytics.phaedra.model.curve.CurveUIFactory;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -110,25 +104,33 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	private CCombo comboHighType;
 
 	private TableViewer classificationTableViewer;
-	private WritableList classifications;
+	private WritableList<FeatureClass> classifications;
 	private Button checkClassificationRestricted;
 	
 	private CCombo colorMethods;
 
-	private CCombo comboCurveKind;
-	private CCombo comboCurveModel;
-	private CCombo comboCurveMethod;
-	private CCombo comboCurveType;
+	private Composite curveSettingsCmp;
 
-	private CCombo comboCurveGroupBy1;
-	private CCombo comboCurveGroupBy2;
-	private CCombo comboCurveGroupBy3;
+	private Listener dirtyListener = new Listener() {
+		@Override
+		public void handleEvent(Event event) {
+			parentPage.markDirty();
+			master.refreshViewer();
+		}
+	};
+	private KeyAdapter dirtyKeyListener = new KeyAdapter() {
+		@Override
+		public void keyPressed(KeyEvent e) {
+			dirtyListener.handleEvent(null);
+		}
+	};
+	private SelectionAdapter dirtySelectionListener = new SelectionAdapter() {
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			dirtyListener.handleEvent(null);
+		}
+	};
 	
-	private Text txtCurveThreshold;
-	private Text txtCurveManualLB;
-	private Text txtCurveManualUB;
-
-
 	public FeaturesDetailBlock(FeaturesPage page, FeaturesMasterBlock master) {
 		this.master = master;
 		this.parentPage = page;
@@ -145,39 +147,6 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		FormToolkit toolkit = managedform.getToolkit();
 		final GridLayout gridLayout = new GridLayout();
 		parent.setLayout(gridLayout);
-
-		/*
-		 * Dirty & change listeners
-		 * ************************
-		 */
-
-		final KeyAdapter dirtyAdapter = new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				parentPage.markDirty();
-				master.refreshViewer();
-			}
-		};
-		final SelectionAdapter selectionDirtyAdapter = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				parentPage.markDirty();
-				master.refreshViewer();
-			}
-		};
-		SelectionAdapter curveChangedAdapter = new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				parentPage.setCurvesChanged(true);
-
-			}
-		};
-		KeyAdapter curveChangedKeyAdapter = new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				parentPage.setCurvesChanged(true);
-			}
-		};
 
 		/*
 		 * Section: general
@@ -478,7 +447,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 				FeatureClass newClass = ProtocolService.getInstance().createFeatureClass();
 				classifications.add(newClass);
 				classificationTableViewer.refresh();
-				selectionDirtyAdapter.widgetSelected(null);
+				dirtySelectionListener.widgetSelected(null);
 			}
 		});
 		link.setEnabled(parentPage.getEditor().isSaveAsAllowed());
@@ -500,13 +469,13 @@ public class FeaturesDetailBlock implements IDetailsPage {
 						classifications.remove(classToRemove);
 					}
 					classificationTableViewer.refresh();
-					selectionDirtyAdapter.widgetSelected(null);
+					dirtySelectionListener.widgetSelected(null);
 				}
 			}
 		});
 		link.setEnabled(parentPage.getEditor().isSaveAsAllowed());
 
-		classificationTableViewer = ClassificationTableFactory.createTableViewer(compositeClassification, true, selectionDirtyAdapter);
+		classificationTableViewer = ClassificationTableFactory.createTableViewer(compositeClassification, true, dirtySelectionListener);
 		classificationTableViewer.setComparer(ClassificationTableFactory.createClassComparer());
 		GridDataFactory.fillDefaults().hint(SWT.DEFAULT,200).grab(true, false).indent(0, 5).span(4,1).applyTo(classificationTableViewer.getTable());
 
@@ -606,150 +575,40 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		sectionCurveSettings.setClient(compositeCurve);
 		toolkit.paintBordersFor(compositeCurve);
 
-		link = new Link(compositeCurve, SWT.NONE);
-		link.setText("<a>Clear settings</a>");
-		link.addListener(SWT.Selection, new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				clearCurveSettings();
-			}
-		});
-		link.setEnabled(parentPage.getEditor().isSaveAsAllowed());
-		GridDataFactory.fillDefaults().span(2,1).applyTo(link);
-
-		label = toolkit.createLabel(compositeCurve, "Curve Kind:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		comboCurveKind = new CCombo(compositeCurve, SWT.BORDER | SWT.READ_ONLY);
-		comboCurveKind.setLayoutData(new GridData(180, SWT.DEFAULT));
-		comboCurveKind.setItems(StringUtils.getEnumNames(CurveService.getInstance().getKinds()));
-		comboCurveKind.setVisibleItemCount(20);
-		toolkit.adapt(comboCurveKind, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Curve Model:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		comboCurveModel = new CCombo(compositeCurve, SWT.BORDER);
-		comboCurveModel.setLayoutData(new GridData(180, SWT.DEFAULT));
-		comboCurveModel.setVisibleItemCount(20);
-		toolkit.adapt(comboCurveModel, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Curve Method:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		comboCurveMethod = new CCombo(compositeCurve, SWT.BORDER);
-		comboCurveMethod.setLayoutData(new GridData(180, SWT.DEFAULT));
-		comboCurveMethod.setVisibleItemCount(20);
-		toolkit.adapt(comboCurveMethod, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Curve Type:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		comboCurveType = new CCombo(compositeCurve, SWT.BORDER);
-		comboCurveType.setLayoutData(new GridData(180, SWT.DEFAULT));
-		comboCurveType.setVisibleItemCount(20);
-		toolkit.adapt(comboCurveType, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Curve Threshold:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		txtCurveThreshold = new Text(compositeCurve, SWT.BORDER);
-		txtCurveThreshold.setLayoutData(new GridData(172, SWT.DEFAULT));
-		toolkit.adapt(txtCurveThreshold, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Manual LB:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		txtCurveManualLB = new Text(compositeCurve, SWT.BORDER);
-		txtCurveManualLB.setLayoutData(new GridData(172, SWT.DEFAULT));
-		toolkit.adapt(txtCurveManualLB, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Manual UB:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
-		txtCurveManualUB = new Text(compositeCurve, SWT.BORDER);
-		txtCurveManualUB.setLayoutData(new GridData(172, SWT.DEFAULT));
-		toolkit.adapt(txtCurveManualUB, true, true);
-
-		label = toolkit.createLabel(compositeCurve, "Group By:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
+		curveSettingsCmp = new Composite(compositeCurve, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(curveSettingsCmp);
+		GridLayoutFactory.fillDefaults().applyTo(curveSettingsCmp);
 		
-		Composite c = toolkit.createComposite(compositeCurve, SWT.NONE);
-		GridLayoutFactory.fillDefaults().spacing(0, 0).numColumns(5).applyTo(c);
-	
-		comboCurveGroupBy1 = new CCombo(c, SWT.BORDER | SWT.READ_ONLY);
-		comboCurveGroupBy1.setLayoutData(new GridData(100, SWT.DEFAULT));
-		toolkit.adapt(comboCurveGroupBy1, true, true);
-		
-		toolkit.createLabel(c, " > ", SWT.NONE);
-		
-		comboCurveGroupBy2 = new CCombo(c, SWT.BORDER | SWT.READ_ONLY);
-		comboCurveGroupBy2.setLayoutData(new GridData(100, SWT.DEFAULT));
-		toolkit.adapt(comboCurveGroupBy2, true, true);
-		
-		toolkit.createLabel(c, " > ", SWT.NONE);
-		
-		comboCurveGroupBy3 = new CCombo(c, SWT.BORDER | SWT.READ_ONLY);
-		comboCurveGroupBy3.setLayoutData(new GridData(100, SWT.DEFAULT));
-		toolkit.adapt(comboCurveGroupBy3, true, true);
-		
-		textName.addKeyListener(dirtyAdapter);
-		textAlias.addKeyListener(dirtyAdapter);
-		textDescription.addKeyListener(dirtyAdapter);
+		textName.addKeyListener(dirtyKeyListener);
+		textAlias.addKeyListener(dirtyKeyListener);
+		textDescription.addKeyListener(dirtyKeyListener);
 
-		checkAnnotation.addSelectionListener(selectionDirtyAdapter);
-		checkKeyfeature.addSelectionListener(selectionDirtyAdapter);
-		checkExport.addSelectionListener(selectionDirtyAdapter);
-		checkNumeric.addSelectionListener(selectionDirtyAdapter);
-		checkClassificationRestricted.addSelectionListener(selectionDirtyAdapter);
+		checkAnnotation.addSelectionListener(dirtySelectionListener);
+		checkKeyfeature.addSelectionListener(dirtySelectionListener);
+		checkExport.addSelectionListener(dirtySelectionListener);
+		checkNumeric.addSelectionListener(dirtySelectionListener);
+		checkClassificationRestricted.addSelectionListener(dirtySelectionListener);
 		
-		textCalcFormula.addKeyListener(dirtyAdapter);
-		comboFormulaLanguage.addSelectionListener(selectionDirtyAdapter);
-		comboFormulaTrigger.addSelectionListener(selectionDirtyAdapter);
-		spinnerSeq.addSelectionListener(selectionDirtyAdapter);
+		textCalcFormula.addKeyListener(dirtyKeyListener);
+		comboFormulaLanguage.addSelectionListener(dirtySelectionListener);
+		comboFormulaTrigger.addSelectionListener(dirtySelectionListener);
+		spinnerSeq.addSelectionListener(dirtySelectionListener);
 
-		comboCurveKind.addSelectionListener(selectionDirtyAdapter);
-		comboCurveKind.addSelectionListener(curveChangedAdapter);
-		comboCurveKind.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				filterCurveCombos();
-				if (comboCurveModel.getItemCount() > 0) comboCurveModel.select(0);
-				if (comboCurveMethod.getItemCount() > 0) comboCurveMethod.select(0);
-				if (comboCurveType.getItemCount() > 0) comboCurveType.select(0);
-				txtCurveThreshold.setText("");
-				txtCurveManualLB.setText("");
-				txtCurveManualUB.setText("");
-			}
-		});
+		comboFormatString.addSelectionListener(dirtySelectionListener);
+		comboNormalization.addSelectionListener(dirtySelectionListener);
+		customNormLanguage.addSelectionListener(dirtySelectionListener);
+		normScopeCmb.addSelectionListener(dirtySelectionListener);
+		comboGrouping.addSelectionListener(dirtySelectionListener);
+		colorMethods.addSelectionListener(dirtySelectionListener);
+		comboLowType.addSelectionListener(dirtySelectionListener);
+		comboHighType.addSelectionListener(dirtySelectionListener);
 
-		comboCurveModel.addSelectionListener(selectionDirtyAdapter);
-		comboCurveModel.addSelectionListener(curveChangedAdapter);
-		comboCurveMethod.addSelectionListener(selectionDirtyAdapter);
-		comboCurveMethod.addSelectionListener(curveChangedAdapter);
-		comboCurveType.addSelectionListener(selectionDirtyAdapter);
-		comboCurveType.addSelectionListener(curveChangedAdapter);
-		txtCurveThreshold.addKeyListener(dirtyAdapter);
-		txtCurveThreshold.addKeyListener(curveChangedKeyAdapter);
-		txtCurveManualLB.addKeyListener(dirtyAdapter);
-		txtCurveManualLB.addKeyListener(curveChangedKeyAdapter);
-		txtCurveManualUB.addKeyListener(dirtyAdapter);
-		txtCurveManualUB.addKeyListener(curveChangedKeyAdapter);
-		comboCurveGroupBy1.addSelectionListener(selectionDirtyAdapter);
-		comboCurveGroupBy1.addSelectionListener(curveChangedAdapter);
-		comboCurveGroupBy2.addSelectionListener(selectionDirtyAdapter);
-		comboCurveGroupBy2.addSelectionListener(curveChangedAdapter);
-		comboCurveGroupBy3.addSelectionListener(selectionDirtyAdapter);
-		comboCurveGroupBy3.addSelectionListener(curveChangedAdapter);
-		
-		comboFormatString.addSelectionListener(selectionDirtyAdapter);
-		comboNormalization.addSelectionListener(selectionDirtyAdapter);
-		customNormLanguage.addSelectionListener(selectionDirtyAdapter);
-		normScopeCmb.addSelectionListener(selectionDirtyAdapter);
-		comboGrouping.addSelectionListener(selectionDirtyAdapter);
-		colorMethods.addSelectionListener(selectionDirtyAdapter);
-		comboLowType.addSelectionListener(selectionDirtyAdapter);
-		comboHighType.addSelectionListener(selectionDirtyAdapter);
+		predefinedNormBtn.addSelectionListener(dirtySelectionListener);
+		customNormBtn.addSelectionListener(dirtySelectionListener);
+		editNormScriptBtn.addSelectionListener(dirtySelectionListener);
 
-		predefinedNormBtn.addSelectionListener(selectionDirtyAdapter);
-		customNormBtn.addSelectionListener(selectionDirtyAdapter);
-		editNormScriptBtn.addSelectionListener(selectionDirtyAdapter);
-
-		customNormTxt.addKeyListener(dirtyAdapter);
-		comboFormatString.addKeyListener(dirtyAdapter);
+		customNormTxt.addKeyListener(dirtyKeyListener);
+		comboFormatString.addKeyListener(dirtyKeyListener);
 
 		compositeGeneral.setEnabled(parentPage.getEditor().isSaveAsAllowed());
 		compositeFormula.setEnabled(parentPage.getEditor().isSaveAsAllowed());
@@ -770,7 +629,6 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	@Override
 	public void setFocus() {
 		textName.setFocus();
-		// Set focus
 	}
 
 	@Override
@@ -781,10 +639,8 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	@Override
 	public void selectionChanged(IFormPart part, ISelection selection) {
 		IStructuredSelection structuredSelection = (IStructuredSelection) selection;
-
-		if (structuredSelection.isEmpty()) {
-			return;
-		}
+		if (structuredSelection.isEmpty()) return;
+		
 		Feature feature = (Feature) structuredSelection.getFirstElement();
 
 		if (m_bindingContext != null) {
@@ -803,9 +659,8 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 		fillGroupingCombo();
 		fillClassificationTable();
+		fillCurveComposite();
 		setActiveColorMethod();
-		filterCurveCombos();
-		fillGroupByCombos();
 		
 		boolean isCustomNorm = NormalizationService.NORMALIZATION_CUSTOM.equals(feature.getNormalization());
 		toggleNormalizationButtons(isCustomNorm);
@@ -866,56 +721,17 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 	private void fillClassificationTable() {
 		if (feature.getFeatureClasses() == null) feature.setFeatureClasses(new ArrayList<FeatureClass>());
-		classifications = new WritableList(feature.getFeatureClasses(), FeatureClass.class);
+		classifications = new WritableList<>(feature.getFeatureClasses(), FeatureClass.class);
 		classificationTableViewer.setInput(classifications);
 	}
 
-	private void fillGroupByCombos() {
-		List<String> annotationList = ProtocolService.streamableList(feature.getProtocolClass().getFeatures()).stream()
-				.filter(f -> f.isAnnotation())
-				.map(f -> f.getName())
-				.sorted()
-				.collect(Collectors.toList());
-		annotationList.add(0, "");
-		String[] annotations = annotationList.toArray(new String[annotationList.size()]);
-		
-		String[] groupBy = {
-				feature.getCurveSettings().get(CurveSettings.GROUP_BY_1),
-				feature.getCurveSettings().get(CurveSettings.GROUP_BY_2),
-				feature.getCurveSettings().get(CurveSettings.GROUP_BY_3)	
-		};
-		comboCurveGroupBy1.setItems(annotations);
-		comboCurveGroupBy2.setItems(annotations);
-		comboCurveGroupBy3.setItems(annotations);
-		comboCurveGroupBy1.select(annotationList.indexOf(groupBy[0]));
-		comboCurveGroupBy2.select(annotationList.indexOf(groupBy[1]));
-		comboCurveGroupBy3.select(annotationList.indexOf(groupBy[2]));
+	private void fillCurveComposite() {
+		for (Control child: curveSettingsCmp.getChildren()) child.dispose();
+		Composite cmp = CurveUIFactory.createFields(curveSettingsCmp, feature, null, m_bindingContext, dirtyListener);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(cmp);
+		curveSettingsCmp.layout();
 	}
 	
-	private void filterCurveCombos() {
-		int kindIndex = comboCurveKind.getSelectionIndex();
-		if (kindIndex == -1) return;
-
-		CurveKind kind = CurveKind.valueOf(comboCurveKind.getItem(kindIndex));
-		CurveModel[] models = CurveService.getInstance().getCurveModels(kind);
-		comboCurveModel.setItems(StringUtils.getEnumNames(models));
-		CurveMethod[] methods = CurveService.getInstance().getCurveMethods(kind);
-		comboCurveMethod.setItems(StringUtils.getEnumNames(methods));
-		CurveType[] types = CurveService.getInstance().getCurveTypes();
-		comboCurveType.setItems(StringUtils.getEnumNames(types));
-	}
-	
-	private void clearCurveSettings() {
-		comboCurveKind.select(-1);
-		comboCurveModel.select(-1);
-		comboCurveMethod.select(-1);
-		comboCurveType.select(-1);
-		txtCurveThreshold.setText("");
-		txtCurveManualLB.setText("");
-		txtCurveManualUB.setText("");
-		parentPage.markDirty();
-	}
-
 	private void fillWellTypeCombos() {
 		List<WellType> types = ProtocolService.getInstance().getWellTypes();
 
@@ -995,18 +811,6 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 			FormEditorUtils.bindSelection(comboFormulaLanguage, new CalculationLanguageMapper(feature), "language", ctx);
 			FormEditorUtils.bindSelection(comboFormulaTrigger, new CalculationTriggerMapper(feature), "trigger", ctx);
-
-			CurveSettingsMapper curveSettings = new CurveSettingsMapper(feature);
-			FormEditorUtils.bindSelection(comboCurveKind, curveSettings, "kind", ctx);
-			FormEditorUtils.bindSelection(comboCurveMethod, curveSettings, "method", ctx);
-			FormEditorUtils.bindSelection(comboCurveModel, curveSettings, "model", ctx);
-			FormEditorUtils.bindSelection(comboCurveType, curveSettings, "type", ctx);
-			FormEditorUtils.bindText(txtCurveThreshold, curveSettings, "threshold", ctx);
-			FormEditorUtils.bindText(txtCurveManualLB, curveSettings, "lb", ctx);
-			FormEditorUtils.bindText(txtCurveManualUB, curveSettings, "ub", ctx);
-			FormEditorUtils.bindSelection(comboCurveGroupBy1, curveSettings, "groupBy1", ctx);
-			FormEditorUtils.bindSelection(comboCurveGroupBy2, curveSettings, "groupBy2", ctx);
-			FormEditorUtils.bindSelection(comboCurveGroupBy3, curveSettings, "groupBy3", ctx);
 		}
 
 		return ctx;
@@ -1060,91 +864,6 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		public void setNormalizationScope(String scopeName) {
 			NormalizationScope scope = NormalizationScope.getFor(scopeName);
 			feature.setNormalizationScope(scope.getId());
-		}
-	}
-
-	public static class CurveSettingsMapper {
-
-		private Feature feature;
-
-		public CurveSettingsMapper(Feature feature) {
-			this.feature = feature;
-		}
-
-		public String getKind() {
-			return feature.getCurveSettings().get(CurveSettings.KIND);
-		}
-		public void setKind(String kind) {
-			setValue(CurveSettings.KIND, kind);
-		}
-		public String getMethod() {
-			return feature.getCurveSettings().get(CurveSettings.METHOD);
-		}
-		public void setMethod(String method) {
-			setValue(CurveSettings.METHOD, method);
-		}
-		public String getModel() {
-			return feature.getCurveSettings().get(CurveSettings.MODEL);
-		}
-		public void setModel(String model) {
-			setValue(CurveSettings.MODEL, model);
-		}
-		public String getType() {
-			return feature.getCurveSettings().get(CurveSettings.TYPE);
-		}
-		public void setType(String type) {
-			setValue(CurveSettings.TYPE, type);
-		}
-		public String getThreshold() {
-			return feature.getCurveSettings().get(CurveSettings.THRESHOLD);
-		}
-		public void setThreshold(String threshold) {
-			setValue(CurveSettings.THRESHOLD, threshold);
-		}
-		public String getUb() {
-			return feature.getCurveSettings().get(CurveSettings.UB);
-		}
-		public void setUb(String ub) {
-			setValue(CurveSettings.UB, ub);
-		}
-		public String getLb() {
-			return feature.getCurveSettings().get(CurveSettings.LB);
-		}
-		public void setLb(String lb) {
-			setValue(CurveSettings.LB, lb);
-		}
-		public String getGroupBy1() {
-			return getGroupBy(CurveSettings.GROUP_BY_1);
-		}
-		public void setGroupBy1(String groupBy) {
-			setGroupBy(CurveSettings.GROUP_BY_1, groupBy);
-		}
-		public String getGroupBy2() {
-			return getGroupBy(CurveSettings.GROUP_BY_2);
-		}
-		public void setGroupBy2(String groupBy) {
-			setGroupBy(CurveSettings.GROUP_BY_2, groupBy);
-		}
-		public String getGroupBy3() {
-			return getGroupBy(CurveSettings.GROUP_BY_3);
-		}
-		public void setGroupBy3(String groupBy) {
-			setGroupBy(CurveSettings.GROUP_BY_3, groupBy);
-		}
-		
-		private String getGroupBy(String nr) {
-			String value = feature.getCurveSettings().get(nr);
-			if (value == null) return "";
-			return value;
-		}
-		private void setGroupBy(String nr, String value) {
-			if ("".equals(value)) value = null;
-			setValue(nr, value);
-		}
-		
-		private void setValue(String name, String value) {
-			if (value == null || value.isEmpty()) feature.getCurveSettings().remove(name);
-			else feature.getCurveSettings().put(name, value);
 		}
 	}
 	

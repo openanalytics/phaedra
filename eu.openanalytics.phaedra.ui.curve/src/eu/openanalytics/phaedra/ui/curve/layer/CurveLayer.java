@@ -15,7 +15,7 @@ import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.IGridCellRender
 import eu.openanalytics.phaedra.base.util.convert.PDFToImageConverter;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.base.util.threading.ConcurrentTask;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -110,7 +110,7 @@ public class CurveLayer extends PlatesLayer {
 			
 			if (well == null || currentFeature == null || well.getCompound() == null) return;
 
-			Curve curve = CurveService.getInstance().getCurve(well, currentFeature);
+			Curve curve = CurveFitService.getInstance().getCurve(well, currentFeature);
 			if (curve == null || curve.getPlot() == null) return;
 
 			Image img = null;

@@ -161,9 +161,9 @@ public class MultiSelectChart extends ChartComposite {
 				Rectangle2D shape = item.getArea().getBounds2D();
 				Point shapeCenter = new Point((int)shape.getCenterX(), (int)shape.getCenterY());
 				if (box.contains(shapeCenter)) {
-					//TODO: Check dataset & series index dynamically. See CrcChartFactory.
-					if (item.getDataset().getSeriesCount() > 2 && item.getSeriesIndex() < 2)
-						selectedItems.add(item);
+					//TODO Find a better way to identify well points.
+					Comparable<?> key = item.getDataset().getSeriesKey(item.getSeriesIndex());
+					if ("Accepted".equals(key) || "Rejected".equals(key)) selectedItems.add(item);
 				} else if (box.width == 0 && box.height == 0) {
 					// Single item click.
 					if (shape.contains(new java.awt.Point(box.x, box.y))) {

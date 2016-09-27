@@ -7,7 +7,7 @@ import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.hook.BaseBatchedHook;
 import eu.openanalytics.phaedra.base.hook.IHookArguments;
 import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.plate.hook.PlateActionHookArguments;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 
@@ -50,7 +50,7 @@ public class PostDeletePlateCalculator extends BaseBatchedHook {
 		for (Plate plate: platesToRecalc) CalculationService.getInstance().calculate(plate);
 		for (Plate plate: platesToRefit) {
 			if (platesToRecalc.contains(plate)) continue;
-			CurveService.getInstance().fitAllCurves(plate);
+			CurveFitService.getInstance().fitCurves(plate);
 		}
 	}
 	

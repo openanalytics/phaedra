@@ -7,6 +7,7 @@ Bundle-Activator: eu.openanalytics.phaedra.model.curve.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
+ org.eclipse.core.databinding,
  eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.search;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
@@ -18,12 +19,13 @@ Require-Bundle: org.eclipse.ui,
  eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.icons,
+ eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.scripting.jep;bundle-version="1.0.0",
  org.eclipse.persistence.jpa;bundle-version="2.3.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.model.curve,
- eu.openanalytics.phaedra.model.curve.fit,
+ eu.openanalytics.phaedra.model.curve.render,
  eu.openanalytics.phaedra.model.curve.search,
  eu.openanalytics.phaedra.model.curve.util,
  eu.openanalytics.phaedra.model.curve.vo

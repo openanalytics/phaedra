@@ -2,8 +2,12 @@ package eu.openanalytics.phaedra.model.curve.vo;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -11,6 +15,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -30,13 +35,13 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
  * For all other purposes, use {@link Curve}
  */
 @Entity
-@Table(name="hca_curves", schema="phaedra")
+@Table(name="hca_curve", schema="phaedra")
 @Cache(isolation = CacheIsolationType.ISOLATED)
 public class CRCurve extends PlatformObject implements IValueObject {
 
 	@Id
 	@Column(name="curve_id")
-	private long curveId;
+	private long id;
 
 	@JoinFetch(JoinFetchType.INNER)
 	@ManyToOne(fetch = FetchType.EAGER)
@@ -47,70 +52,46 @@ public class CRCurve extends PlatformObject implements IValueObject {
     @JoinTable(name="hca_curve_compound", schema="phaedra",
     	joinColumns=@JoinColumn(name="curve_id"), inverseJoinColumns=@JoinColumn(name="platecompound_id"))
 	private List<Compound> compounds;
-	
-	@Column(name="KIND")
-	private String kind;
 
-	@Column(name="METHOD")
-	private String method;
-
-	@Column(name="MODEL")
+	@Column(name="model_id")
 	private String model;
+	
+	@Column(name="group_by_1")
+	private String groupBy1;
+	@Column(name="group_by_2")
+	private String groupBy2;
+	@Column(name="group_by_3")
+	private String groupBy3;
 
-	@Column(name="TYPE")
-	private String type;
-
-	@Column(name="EMAX")
-	private double eMax;
-
-	@Column(name="EMAX_CONC")
-	private double eMaxConc;
-
-	@Column(name="FIT_DATE")
+	@Column(name="fit_date")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date fitDate;
 	
-	@Column(name="FIT_ERROR")
-	private double fitError;
-
-	@Column(name="FIT_VERSION")
+	@Column(name="fit_version")
 	private String fitVersion;
-
-	@Column(name="PIC50")
-	private double pic50;
-
-	@Column(name="PIC50_CENSOR")
-	private String pic50Censor;
-
-	@Column(name="PIC50_STDERR")
-	private double pic50StdErr;
-
-	@Column(name="R2")
-	private double r2;
-
-	@Column(name="HILL")
-	private double hill;
-
-	@Column(name="PLAC")
-	private double plac;
-
-	@Column(name="PLAC_CENSOR")
-	private String placCensor;
-
-	@Column(name="PLAC_THRESHOLD")
-	private double placThreshold;
-
-	@Column(name="NIC")
-	private double nic;
-
-	@Column(name="NAC")
-	private double nac;
-
+	
+	@Column(name="error_code")
+	private int errorCode;
+		
+	@ElementCollection(targetClass=PropertyValue.class)
+	@MapKeyColumn(name="property_name")
+	@Column(name="numeric_value")
+	@CollectionTable(name="hca_curve_property", schema="phaedra", joinColumns=@JoinColumn(name="curve_id"))
+	private Map<String,PropertyValue> properties;
 	
 	/*
 	 * Getters and setters
 	 * *******************
 	 */
+
+	@Override
+	public long getId() {
+		return id;
+	}
+	
+	public void setId(long id) {
+		this.id = id;
+	}
 
 	public Feature getFeature() {
 		return feature;
@@ -120,28 +101,12 @@ public class CRCurve extends PlatformObject implements IValueObject {
 		this.feature = feature;
 	}
 
-	public long getCurveId() {
-		return curveId;
-	}
-	
-	public void setCurveId(long curveId) {
-		this.curveId = curveId;
+	public List<Compound> getCompounds() {
+		return compounds;
 	}
 
-	public String getKind() {
-		return kind;
-	}
-
-	public void setKind(String kind) {
-		this.kind = kind;
-	}
-
-	public String getMethod() {
-		return method;
-	}
-
-	public void setMethod(String method) {
-		this.method = method;
+	public void setCompounds(List<Compound> compounds) {
+		this.compounds = compounds;
 	}
 
 	public String getModel() {
@@ -152,44 +117,36 @@ public class CRCurve extends PlatformObject implements IValueObject {
 		this.model = model;
 	}
 
-	public String getType() {
-		return type;
+	public String getGroupBy1() {
+		return groupBy1;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setGroupBy1(String groupBy1) {
+		this.groupBy1 = groupBy1;
 	}
 
-	public double geteMax() {
-		return eMax;
+	public String getGroupBy2() {
+		return groupBy2;
 	}
 
-	public void seteMax(double eMax) {
-		this.eMax = eMax;
+	public void setGroupBy2(String groupBy2) {
+		this.groupBy2 = groupBy2;
 	}
 
-	public double geteMaxConc() {
-		return eMaxConc;
+	public String getGroupBy3() {
+		return groupBy3;
 	}
 
-	public void seteMaxConc(double eMaxConc) {
-		this.eMaxConc = eMaxConc;
+	public void setGroupBy3(String groupBy3) {
+		this.groupBy3 = groupBy3;
 	}
 
 	public Date getFitDate() {
 		return fitDate;
 	}
-	
+
 	public void setFitDate(Date fitDate) {
 		this.fitDate = fitDate;
-	}
-	
-	public double getFitError() {
-		return fitError;
-	}
-
-	public void setFitError(double fitError) {
-		this.fitError = fitError;
 	}
 
 	public String getFitVersion() {
@@ -200,84 +157,20 @@ public class CRCurve extends PlatformObject implements IValueObject {
 		this.fitVersion = fitVersion;
 	}
 
-	public double getNic() {
-		return nic;
+	public int getErrorCode() {
+		return errorCode;
 	}
 
-	public void setNic(double nic) {
-		this.nic = nic;
+	public void setErrorCode(int errorCode) {
+		this.errorCode = errorCode;
 	}
 
-	public double getNac() {
-		return nac;
+	public Map<String, PropertyValue> getProperties() {
+		return properties;
 	}
 
-	public void setNac(double nac) {
-		this.nac = nac;
-	}
-
-	public double getPic50() {
-		return pic50;
-	}
-
-	public void setPic50(double pic50) {
-		this.pic50 = pic50;
-	}
-
-	public String getPic50Censor() {
-		return pic50Censor;
-	}
-
-	public void setPic50Censor(String pic50Censor) {
-		this.pic50Censor = pic50Censor;
-	}
-
-	public double getPic50StdErr() {
-		return pic50StdErr;
-	}
-
-	public void setPic50StdErr(double pic50StdErr) {
-		this.pic50StdErr = pic50StdErr;
-	}
-
-	public double getR2() {
-		return r2;
-	}
-
-	public void setR2(double r2) {
-		this.r2 = r2;
-	}
-
-	public double getHill() {
-		return hill;
-	}
-
-	public void setHill(double hill) {
-		this.hill = hill;
-	}
-
-	public double getPlac() {
-		return plac;
-	}
-
-	public void setPlac(double plac) {
-		this.plac = plac;
-	}
-
-	public String getPlacCensor() {
-		return placCensor;
-	}
-
-	public void setPlacCensor(String placCensor) {
-		this.placCensor = placCensor;
-	}
-
-	public double getPlacThreshold() {
-		return placThreshold;
-	}
-
-	public void setPlacThreshold(double placThreshold) {
-		this.placThreshold = placThreshold;
+	public void setProperties(Map<String, PropertyValue> properties) {
+		this.properties = properties;
 	}
 
 	/*
@@ -286,15 +179,10 @@ public class CRCurve extends PlatformObject implements IValueObject {
 	 */
 
 	@Override
-	public long getId() {
-		return curveId;
-	}
-
-	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + (int) (curveId ^ (curveId >>> 32));
+		result = prime * result + (int) (id ^ (id >>> 32));
 		return result;
 	}
 
@@ -307,7 +195,7 @@ public class CRCurve extends PlatformObject implements IValueObject {
 		if (getClass() != obj.getClass())
 			return false;
 		CRCurve other = (CRCurve) obj;
-		if (curveId != other.curveId)
+		if (id != other.id)
 			return false;
 		return true;
 	}
@@ -317,4 +205,32 @@ public class CRCurve extends PlatformObject implements IValueObject {
 		return null;
 	}
 
+	@Embeddable
+	public static class PropertyValue {
+		
+		@Column(name="string_value")
+		private String stringValue;
+		
+		@Column(name="numeric_value")
+		private double numericValue;
+		
+		public String getStringValue() {
+			return stringValue;
+		}
+		public void setStringValue(String stringValue) {
+			this.stringValue = stringValue;
+		}
+		public double getNumericValue() {
+			return numericValue;
+		}
+		public void setNumericValue(double numericValue) {
+			this.numericValue = numericValue;
+		}
+		
+		@Override
+		public String toString() {
+			if (stringValue == null) return String.valueOf(numericValue);
+			return stringValue;
+		}
+	}
 }

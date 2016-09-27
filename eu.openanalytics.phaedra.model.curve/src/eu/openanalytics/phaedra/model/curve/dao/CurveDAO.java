@@ -1,10 +1,6 @@
 package eu.openanalytics.phaedra.model.curve.dao;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,11 +20,12 @@ import javax.persistence.Query;
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
-import eu.openanalytics.phaedra.model.curve.CurveProperty;
-import eu.openanalytics.phaedra.model.curve.util.CurveFactory;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
+import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -36,10 +33,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 public class CurveDAO {
 
 	private static final String[] CURVE_COLUMNS = {
-		"CURVE_ID","FEATURE_ID",
-		"CURVE_KIND","CURVE_METHOD","CURVE_MODEL","CURVE_TYPE",
-		"FIT_DATE","FIT_VERSION","FIT_ERROR",
-		"EMAX","EMAX_CONC","PLOT"
+		"CURVE_ID","FEATURE_ID","MODEL_ID","FIT_DATE","FIT_VERSION","ERROR_CODE","GROUP_BY_1","GROUP_BY_2","GROUP_BY_3","PLOT"
 	};
 	
 	private static final String[] CURVE_PROPERTY_COLUMNS = {
@@ -54,7 +48,8 @@ public class CurveDAO {
 
 	public Curve getCurve(long curveId) {
 		String queryString = "select " + StringUtils.createSeparatedString(CURVE_COLUMNS, ",")
-				+ " from phaedra.hca_curve where curve_id = " + curveId;
+				+ " from phaedra.hca_curve"
+				+ " where curve_id = " + curveId;
 		List<?> resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
 		if (resultSet.isEmpty()) return null;
 		
@@ -73,11 +68,10 @@ public class CurveDAO {
 	public Curve getCurve(Feature f, Compound c, CurveGrouping grouping) {
 		String queryString = "select c." + StringUtils.createSeparatedString(CURVE_COLUMNS, ",c.", false)
 				+ " from phaedra.hca_curve c, phaedra.hca_curve_compound cc"
-				+ " where c.feature_id = " + f.getId() + " and c.curve_id = cc.curve_id and cc.platecompound_id = " + c.getId();
+				+ " where c.feature_id = " + f.getId()
+				+ " and c.curve_id = cc.curve_id and cc.platecompound_id = " + c.getId();
 		for (int i = 0; i < grouping.getCount(); i++) {
-			queryString += " and exists (select cp.string_value from phaedra.hca_curve_property cp where cp.curve_id = c.curve_id"
-					+ " and cp.property_name = 'GROUP_BY_" + (i+1) + "'"	
-					+ " and cp.string_value = '" + grouping.get(i) + "')";
+			queryString += " and c.group_by_" + (i+1) + " = " + grouping.get(i);
 		}
 		List<?> resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
 		if (resultSet.isEmpty()) return null;
@@ -149,15 +143,20 @@ public class CurveDAO {
 		}
 	}
 	
-	public void deleteIncompatibleCurves(Curve curve) {
+	/*
+	 * Non-public
+	 * **********
+	 */
+
+	private void deleteIncompatibleCurves(Curve curve) {
 		String compIds = StringUtils.createSeparatedString(curve.getCompounds(), c -> "" + c.getId(), ",");
 		String statement = "delete from phaedra.hca_curve c"
 				+ " where c.feature_id = " + curve.getFeature().getId()
 				+ " and c.curve_id != " + curve.getId()
 				+ " and c.curve_id in (select cc.curve_id from phaedra.hca_curve_compound cc where cc.platecompound_id in (" + compIds + "))";
-		if (curve.getSettings().getGroupBy1() != null) {
+		if (curve.getGroupingValues() != null) {
 			// If the curve has grouping, delete any ungrouped curves on the same compound(s).
-			statement += " and not exists (select cp.* from phaedra.hca_curve_property cp where c.curve_id = cp.curve_id and cp.property_name = 'GROUP_BY_1' and cp.string_value is not null)";
+			statement += " and c.group_by_1 is null";
 		}
 		
 		Statement stmt = null;
@@ -171,11 +170,6 @@ public class CurveDAO {
 			if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
 		}
 	}
-	
-	/*
-	 * Non-public
-	 * **********
-	 */
 	
 	private long getNewCurveId() {
 		return JDBCUtils.getSequenceNextVal(em, "phaedra.hca_curve_s");
@@ -249,22 +243,23 @@ public class CurveDAO {
 	
 	private void setStatementArgs(PreparedStatement ps, Curve curve) throws SQLException {
 		ps.setLong(1, curve.getFeature().getId());
-		ps.setString(2, curve.getSettings().getKind());
-		ps.setString(3, curve.getSettings().getMethod());
-		ps.setString(4, curve.getSettings().getModel());
-		ps.setString(5, curve.getSettings().getType());
-		
-		ps.setTimestamp(6, new Timestamp(curve.getFitDate().getTime()));
-		ps.setString(7, curve.getFitVersion());
-		ps.setBigDecimal(8, new BigDecimal(curve.getFitError()));
-		ps.setDouble(9, curve.geteMax());
-		ps.setBigDecimal(10, new BigDecimal(curve.geteMaxConc()));
-		
-		if (curve.getPlot() == null) ps.setNull(11, Types.BINARY);
-		else ps.setBinaryStream(11, new ByteArrayInputStream(curve.getPlot()), curve.getPlot().length);
+		ps.setString(2, curve.getModelId());
+		ps.setTimestamp(3, new Timestamp(curve.getFitDate().getTime()));
+		ps.setString(4, curve.getFitVersion());
+		ps.setBigDecimal(5, new BigDecimal(curve.getErrorCode()));
+		String[] groupingValues = curve.getGroupingValues();
+		if (groupingValues == null || groupingValues.length == 0) groupingValues = new String[] {null,null,null};
+		ps.setString(6, groupingValues[0]);
+		ps.setString(7, groupingValues[1]);
+		ps.setString(8, groupingValues[2]);
+		if (curve.getPlot() == null) ps.setNull(9, Types.BINARY);
+		else ps.setBinaryStream(9, new ByteArrayInputStream(curve.getPlot()), curve.getPlot().length);
 	}
 	
 	private void insertCurveProperties(Curve curve) {
+		Value[] properties = curve.getOutputParameters();
+		if (properties == null || properties.length == 0) return;
+		
 		PreparedStatement ps = null;
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
 			String[] arr = new String[CURVE_PROPERTY_COLUMNS.length];
@@ -273,31 +268,27 @@ public class CurveDAO {
 					+ " (" + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",") + " )"
 					+ " values (" + StringUtils.createSeparatedString(arr, ",") + ")");
 			
-			for (CurveProperty p: CurveProperty.values()) {
-				if (!p.sameKind(curve) && p != CurveProperty.GROUP_BY_1 && p != CurveProperty.GROUP_BY_2 && p != CurveProperty.GROUP_BY_3) continue;
+			
+			for (int i = 0; i < properties.length; i++) {
+				Value p = properties[i];
+				
 				ps.setLong(1, curve.getId());
-				ps.setString(2, p.name());
+				ps.setString(2, p.definition.name);
 				
-				Object value = p.getValue(curve);
-				Double numVal = (value instanceof Double) ? (Double) value : null;
-				String strVal = (value instanceof String) ? (String) value : null;
-				byte[] binVal = (value instanceof byte[]) ? (byte[]) value : null;
-				if (value instanceof Integer) numVal = ((Integer) value).doubleValue();
-				if (numVal == null && strVal == null && binVal == null && value != null) binVal = serialize(value);
+				if (p.definition.type.isNumeric()) ps.setDouble(3, p.numericValue);
+				else ps.setNull(3, Types.DOUBLE);
 
-				if (numVal == null) ps.setNull(3, Types.DOUBLE);
-				else ps.setDouble(3, numVal);
-				ps.setString(4, strVal);
-				if (binVal == null) ps.setNull(5, Types.BINARY);
-				else ps.setBinaryStream(5, new ByteArrayInputStream(binVal), binVal.length);
-				
+				ps.setString(4, p.stringValue);
+
+				if (p.binaryValue == null) ps.setNull(5, Types.BINARY);
+				else ps.setBinaryStream(5, new ByteArrayInputStream(p.binaryValue), p.binaryValue.length);
+
 				ps.addBatch();
 			}
 			
 			ps.executeBatch();
 			conn.commit();
 		} catch (SQLException e) {
-			e.getNextException().printStackTrace();
 			throw new PersistenceException(e);
 		} finally {
 			if (ps != null) try { ps.close(); } catch (SQLException e) {}
@@ -325,72 +316,56 @@ public class CurveDAO {
 	private Curve toCurve(Object[] record) {
 		long curveId = ((Number) record[0]).longValue();
 		long featureId = ((Number) record[1]).longValue();
-		
-		Curve curve = CurveFactory.newCurve((String) record[2]);
+		Curve curve = new Curve();
 		curve.setId(curveId);
 		curve.setFeature(em.find(Feature.class, featureId));
+		curve.setModelId((String) record[2]);
+		curve.setFitDate((Date) record[3]);
+		curve.setFitVersion((String) record[4]);
 		
-		CurveSettings settings = new CurveSettings();
-		curve.setSettings(settings);
-		settings.setKind((String) record[2]);
-		settings.setMethod((String) record[3]);
-		settings.setModel((String) record[4]);
-		settings.setType((String) record[5]);
-		
-		curve.setFitDate((Date) record[6]);
-		curve.setFitVersion((String) record[7]);
-		curve.setFitError(((Number) record[8]).intValue());
-		
-		curve.seteMax((Double) record[9]);
-		if (record[10] == null) curve.seteMaxConc(Double.NaN);
-		else curve.seteMaxConc(((Number) record[10]).doubleValue());
-		curve.setPlot((byte[]) record[11]);
-
+		curve.setErrorCode(((Number) record[5]).intValue());
+		String[] groupingValues = new String[] {
+				(String) record[6],
+				(String) record[7],
+				(String) record[8]
+		};
+		if (groupingValues[0] == null) groupingValues = null;
+		curve.setGroupingValues(groupingValues);
+		curve.setPlot((byte[]) record[9]);
 		return curve;
 	}
 	
 	private void applyProperties(Curve curve, List<?> resultSet) {
+		ICurveFitModel model = CurveFitService.getInstance().getModel(curve.getModelId());
+		
+		List<Value> properties = new ArrayList<>();
 		for (Object record: resultSet) {
 			Object[] row = (Object[]) record;
 			
 			long curveId = ((Number) row[0]).longValue();
 			if (curveId != curve.getId()) continue;
-			CurveProperty p = CurveProperty.getByName((String) row[1]);
-			if (!p.sameKind(curve) && p != CurveProperty.GROUP_BY_1 && p != CurveProperty.GROUP_BY_2 && p != CurveProperty.GROUP_BY_3) continue;
-			
-			Object value = row[2];
-			if (value == null) value = row[3];
-			if (value == null) value = row[4];
-			if (value == null) continue;
-			
-			if (p == CurveProperty.CI_GRID || p == CurveProperty.WEIGHTS) value = deserialize((byte[]) value);
-			if (p == CurveProperty.FIT_ERROR || p == CurveProperty.NIC || p == CurveProperty.NAC) value = ((Double) value).intValue();
-			if (value instanceof Number) value = ((Number) value).doubleValue();
-			
-			p.setValue(curve, value);
-		}
-	}
-	
-	private byte[] serialize(Object data) {
-		if (data == null) return null;
-		try {
-			ByteArrayOutputStream bos = new ByteArrayOutputStream();
-			ObjectOutputStream oos = new ObjectOutputStream(bos);
-			oos.writeObject(data);
-			return bos.toByteArray();
-		} catch (IOException e) {
-			return null;
-		}
-	}
 
-	private Object deserialize(byte[] data) {
-		if (data == null) return null;
-		try {
-			ByteArrayInputStream bis = new ByteArrayInputStream(data);
-			ObjectInputStream iis = new ObjectInputStream(bis);
-			return iis.readObject();
-		} catch (Exception e) {
-			return null;
+			String name = (String) row[1];
+			Definition def = Arrays.stream(model.getOutputParameters()).filter(p -> p.name.equals(name)).findAny().orElse(null);
+			if (def == null) continue;
+			
+			double numericValue = row[2] == null ? Double.NaN : (Double) row[2];
+			String stringValue = (String) row[3];
+			byte[] binaryValue = (byte[]) row[4];
+			
+			Value property = new Value(def, stringValue, numericValue, binaryValue);
+			properties.add(property);
 		}
+
+		// Sort the properties as they are defined in the model.
+		Value[] orderedValues = new Value[model.getOutputParameters().length];
+		for (int i = 0; i < orderedValues.length; i++) {
+			Definition def = model.getOutputParameters()[i];
+			orderedValues[i] = properties.stream()
+					.filter(v -> v.definition == def).findAny()
+					.orElse(new Value(def, null, Double.NaN, null));
+		}
+		
+		curve.setOutputParameters(orderedValues);
 	}
 }

@@ -39,8 +39,9 @@ import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
 import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
+import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
@@ -78,7 +79,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 
 		loadCompounds();
 		List<Feature> features = new ArrayList<>();
-		if (!compounds.isEmpty()) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(compounds.get(0)), ProtocolUtils.FEATURES_WITH_CURVES);
+		if (!compounds.isEmpty()) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(compounds.get(0)), CurveUtils.FEATURES_WITH_CURVES);
 
 		menuMgr = new MenuManager("#Popup");
 		menuMgr.setRemoveAllWhenShown(true);
@@ -235,7 +236,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 			Compound comp = (Compound) vo;
 			Compound compoundToAdd = null;
 			
-			if (features == null) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(comp), ProtocolUtils.FEATURES_WITH_CURVES);
+			if (features == null) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(comp), CurveUtils.FEATURES_WITH_CURVES);
 			
 			// First, translate compound to multiplo compound, if needed.
 			List<Compound> multiploCompounds = CalculationService.getInstance().getMultiploCompounds(comp);
@@ -257,7 +258,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 			// Then, look up the compound's groupings, if any.
 			Set<CurveGrouping> groupings = new HashSet<>();
 			for (Feature f: features) {
-				for (CurveGrouping cg: CurveService.getInstance().getGroupings(compoundToAdd, f)) groupings.add(cg);
+				for (CurveGrouping cg: CurveFitService.getInstance().getGroupings(compoundToAdd, f)) groupings.add(cg);
 			}
 			for (CurveGrouping grouping: groupings) {
 				compounds.add(new CompoundWithGrouping(compoundToAdd, grouping));

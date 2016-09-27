@@ -19,7 +19,7 @@ import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.FlagFil
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.FlagMapping;
 import eu.openanalytics.phaedra.base.ui.search.AbstractQueryEditorSupport;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
+import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.protocol.util.FeaturePropertyProvider;
@@ -88,7 +88,7 @@ public class FeatureQueryEditorSupport extends AbstractQueryEditorSupport {
 			case 6:
 				return rowObject.isCalculated();
 			case 7:
-				return rowObject.getCurveSettings().containsKey(CurveSettings.KIND);
+				return CurveUtils.hasCurve(rowObject);
 			case 8:
 				return FeaturePropertyProvider.getValue("Curve", rowObject);
 			case 9:

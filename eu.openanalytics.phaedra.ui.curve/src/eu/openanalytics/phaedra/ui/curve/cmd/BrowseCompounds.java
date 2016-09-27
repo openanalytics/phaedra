@@ -1,10 +1,10 @@
 package eu.openanalytics.phaedra.ui.curve.cmd;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -27,14 +27,11 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import eu.openanalytics.phaedra.base.ui.editor.EditorFactory;
 import eu.openanalytics.phaedra.base.ui.util.pinning.ConfigurableStructuredSelection;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.model.curve.CurveService;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
-import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class BrowseCompounds extends AbstractHandler implements IHandler {
 
@@ -74,66 +71,32 @@ public class BrowseCompounds extends AbstractHandler implements IHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				monitor.beginTask("Loading Compounds", IProgressMonitor.UNKNOWN);
 
-				Set<Compound> compounds = new HashSet<Compound>();
-
 				boolean noParent = false;
 				if (selection instanceof ConfigurableStructuredSelection) {
 					noParent = ((ConfigurableStructuredSelection) selection).hasConfig(ConfigurableStructuredSelection.NO_PARENT);
 				}
 
 				Object sample = selection.getFirstElement();
+				Stream<Compound> compoundStream = null;
 				if (sample instanceof Experiment) {
-					List<Experiment> experiments = SelectionUtils.getObjects(selection, Experiment.class);
-					final List<Plate> plates = new ArrayList<>();
-					// Optimization: leave out the single-dose plates.
-					plates.addAll(CurveService.getInstance().getPlatesWithCurves(experiments));
-					
-					for (Plate plate: plates) {
-						for (Compound c: plate.getCompounds()) add(c, compounds);
-						monitor.worked(1);
-					}
+					compoundStream = SelectionUtils.getObjects(selection, Experiment.class).stream()
+						.flatMap(e -> PlateService.streamableList(PlateService.getInstance().getPlates(e)).stream())
+						.flatMap(p -> PlateService.streamableList(p.getCompounds()).stream());
 				} else if (sample instanceof Plate) {
-					List<Plate> plates = SelectionUtils.getObjects(selection, Plate.class);
-					for (Plate plate: plates) {
-						for (Compound c: plate.getCompounds()) add(c, compounds);
-						monitor.worked(1);
-					}
+					compoundStream = SelectionUtils.getObjects(selection, Plate.class).stream()
+							.flatMap(p -> PlateService.streamableList(p.getCompounds()).stream());
+				} else if (sample instanceof Well && noParent) {
+					compoundStream = SelectionUtils.getObjects(selection, Well.class).stream()
+							.map(w -> w.getCompound());
+				} else if (sample instanceof Well) {
+					compoundStream = SelectionUtils.getObjects(selection, Well.class).stream()
+							.map(w -> w.getPlate())
+							.flatMap(p -> PlateService.streamableList(p.getCompounds()).stream());
 				} else {
-					// Attempt to use adapters
-					for (Iterator<?> it = selection.iterator(); it.hasNext();) {
-						Object o = it.next();
-						if (o instanceof Well) {
-							if (noParent) {
-								add(((Well)o).getCompound(), compounds);
-							} else {
-								Plate plate = ((Well) o).getPlate();
-								for (Compound c: plate.getCompounds()) add(c, compounds);
-							}
-						} else {
-							add(SelectionUtils.getAsClass(o, Compound.class), compounds);
-						}
-						monitor.worked(1);
-					}
+					compoundStream = SelectionUtils.getObjects(selection, Compound.class, true).stream();
 				}
-
-				// Pre-load the curves of the first few compounds to prevent UI block.
-				List<Compound> compoundList = new ArrayList<>(compounds);
-				if (!compoundList.isEmpty()) {
-					List<Feature> allFeatures = PlateUtils.getFeatures(compoundList.get(0).getPlate());
-					List<Feature> curveFeatures = new ArrayList<Feature>();
-					for (Feature f: allFeatures) {
-						String kind = f.getCurveSettings().get(CurveSettings.KIND);
-						if (f.isKey() && kind != null && !kind.isEmpty()) curveFeatures.add(f);
-					}
-					for (int i=0; i<10; i++) {
-						if (i>= compoundList.size()) break;
-						for (Feature f: curveFeatures) {
-							Compound c = compoundList.get(i);
-							for (Well w: c.getWells()) CurveService.getInstance().getCurve(w, f);
-						}
-					}
-				}
-
+				Set<Compound> compounds = compoundStream.collect(Collectors.toSet());
+				
 				if (compounds.isEmpty()) {
 					Display.getDefault().asyncExec(() -> {
 						String msg = "The selected plates do not contain any dose-response curves.";
@@ -141,17 +104,13 @@ public class BrowseCompounds extends AbstractHandler implements IHandler {
 					});
 				}
 
-				Display.getDefault().asyncExec(() -> EditorFactory.getInstance().openEditor(compoundList ));
+				Display.getDefault().asyncExec(() -> EditorFactory.getInstance().openEditor(new ArrayList<>(compounds)));
 				monitor.done();
 				return Status.OK_STATUS;
 			}
 		};
 		loadCompoundsJob.setUser(true);
 		loadCompoundsJob.schedule();
-	}
-
-	private void add(Compound c, Set<Compound> compounds) {
-		if (c != null && c.getWells().size() >= CurveService.MIN_SAMPLES_FOR_FIT) compounds.add(c);
 	}
 
 }

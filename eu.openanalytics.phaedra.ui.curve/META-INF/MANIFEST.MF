@@ -6,6 +6,7 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.ui.curve.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.databinding,
  org.eclipse.ui,
  eu.openanalytics.phaedra.model.curve;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",

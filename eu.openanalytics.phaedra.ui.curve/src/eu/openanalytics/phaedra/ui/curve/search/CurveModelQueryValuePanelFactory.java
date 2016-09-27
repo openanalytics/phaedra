@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Set;
 
 import eu.openanalytics.phaedra.base.search.model.Operator;
-import eu.openanalytics.phaedra.base.search.model.QueryFilter;
 import eu.openanalytics.phaedra.base.search.model.Operator.OperatorType;
+import eu.openanalytics.phaedra.base.search.model.QueryFilter;
 import eu.openanalytics.phaedra.base.ui.search.EnumeratedTextQueryValuePanelFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveModel;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.vo.CRCurve;
 
 
@@ -19,7 +19,7 @@ public class CurveModelQueryValuePanelFactory extends EnumeratedTextQueryValuePa
 	private static Set<QueryFilter> FILTERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
 			new QueryFilter(CRCurve.class, "model", OperatorType.STRING, Operator.STRING_EQUALS, null))));
 
-	private static List<String> CURVE_MODELS = CollectionUtils.transform(CurveModel.values(), c -> c.toString());
+	private static List<String> CURVE_MODELS = CollectionUtils.transform(CurveFitService.getInstance().getFitModels(), Object::toString);
 
 	@Override
 	public Set<QueryFilter> getFilters() {

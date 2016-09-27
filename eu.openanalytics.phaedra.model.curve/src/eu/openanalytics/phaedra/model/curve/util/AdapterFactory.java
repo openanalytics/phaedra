@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.model.curve.util;
 import org.eclipse.core.runtime.IAdapterFactory;
 
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.vo.CRCurve;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
@@ -35,7 +35,7 @@ public class AdapterFactory implements IAdapterFactory {
 
 		if (adaptableObject instanceof CRCurve) {
 			CRCurve crCurve = (CRCurve) adaptableObject;
-			Curve curve = CurveService.getInstance().getCurve(crCurve.getCurveId());
+			Curve curve = CurveFitService.getInstance().getCurve(crCurve.getId());
 			if (curve == null) return null;
 			return getAdapter(curve, adapterType);
 		}

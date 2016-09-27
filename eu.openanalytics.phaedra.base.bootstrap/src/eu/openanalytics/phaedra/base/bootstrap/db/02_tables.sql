@@ -565,15 +565,13 @@ GRANT SELECT ON phaedra. hca_curve_setting to phaedra_role_read;
 CREATE TABLE phaedra.hca_curve (
 	curve_id bigint not null,
 	feature_id bigint not null,
-	curve_kind varchar(10) not null,
-	curve_method varchar(10) not null,
-	curve_model varchar(20) not null,
-	curve_type varchar(10) not null,
+	model_id varchar(50) not null,
+	group_by_1 varchar(100),
+	group_by_2 varchar(100),
+	group_by_3 varchar(100),
 	fit_date timestamp not null,
-	fit_version varchar(50) not null,
-	fit_error bigint not null,
-	emax double precision,
-	emax_conc double precision,
+	fit_version varchar(100),
+	error_code bigint not null,
 	plot bytea
 );
 

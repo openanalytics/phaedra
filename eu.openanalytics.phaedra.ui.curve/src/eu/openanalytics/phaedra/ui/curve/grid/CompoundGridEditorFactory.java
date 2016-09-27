@@ -6,7 +6,7 @@ import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInputFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 
 public class CompoundGridEditorFactory extends VOEditorInputFactory {
@@ -17,7 +17,7 @@ public class CompoundGridEditorFactory extends VOEditorInputFactory {
 		
 		// Display the number of curves in the tooltip.
 		ProtocolClass pClass = SelectionUtils.getFirstAsClass(editorInput.getValueObjects(), ProtocolClass.class);
-		int featureCount = (pClass == null) ? 0 : CollectionUtils.findAll(pClass.getFeatures(), ProtocolUtils.FEATURES_WITH_CURVES).size();
+		int featureCount = (pClass == null) ? 0 : CollectionUtils.findAll(pClass.getFeatures(), CurveUtils.FEATURES_WITH_CURVES).size();
 		int curveCount = editorInput.getValueObjects().size() * featureCount;
 		
 		return new VOEditorInput(editorInput.getValueObjects()) {

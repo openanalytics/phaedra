@@ -6,25 +6,16 @@ import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
-import eu.openanalytics.phaedra.base.util.misc.StringUtils;
-import eu.openanalytics.phaedra.model.curve.CurveService;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveKind;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveMethod;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveModel;
-import eu.openanalytics.phaedra.model.curve.CurveService.CurveType;
-import eu.openanalytics.phaedra.model.curve.fit.CurveFitException;
+import eu.openanalytics.phaedra.model.curve.CurveFitException;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
+import eu.openanalytics.phaedra.model.curve.CurveUIFactory;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
-import eu.openanalytics.phaedra.model.curve.vo.OSBCurve;
 
 /**
  * <p>
@@ -39,15 +30,7 @@ import eu.openanalytics.phaedra.model.curve.vo.OSBCurve;
  */
 public class EditCurveDialog extends TitleAreaDialog {
 
-	private Combo methodCmb;
-	private Combo modelCmb;
-	private Combo typeCmb;
-	
-	private Text lbTxt;
-	private Text ubTxt;
-	
-	private Text thresholdTxt;
-	
+	private CurveFitSettings customizedSettings;
 	private Curve[] curves;
 	
 	public EditCurveDialog(Shell parentShell, Curve[] curves) {
@@ -64,49 +47,14 @@ public class EditCurveDialog extends TitleAreaDialog {
 	
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		
 		Composite area = new Composite((Composite)super.createDialogArea(parent), SWT.NONE);
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(area);
-		GridLayoutFactory.fillDefaults().numColumns(2).margins(15,15).applyTo(area);
+		GridLayoutFactory.fillDefaults().margins(5, 5).applyTo(area);
 		
-		Label lbl = new Label(area, SWT.NONE);
-		lbl.setText("Method:");
-		
-		methodCmb = new Combo(area, SWT.DROP_DOWN | SWT.READ_ONLY);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(methodCmb);
-		
-		lbl = new Label(area, SWT.NONE);
-		lbl.setText("Model:");
-		
-		modelCmb = new Combo(area, SWT.DROP_DOWN | SWT.READ_ONLY);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(modelCmb);
-		
-		lbl = new Label(area, SWT.NONE);
-		lbl.setText("Type:");
-		
-		typeCmb = new Combo(area, SWT.DROP_DOWN | SWT.READ_ONLY);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(typeCmb);
-		
-		lbl = new Label(area, SWT.SEPARATOR | SWT.HORIZONTAL);
-		GridDataFactory.fillDefaults().span(2,1).applyTo(lbl);
-		
-		lbl = new Label(area, SWT.NONE);
-		lbl.setText("Manual LB:");
-		
-		lbTxt = new Text(area, SWT.BORDER);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(lbTxt);
-		
-		lbl = new Label(area, SWT.NONE);
-		lbl.setText("Manual UB:");
-		
-		ubTxt = new Text(area, SWT.BORDER);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(ubTxt);
-		
-		lbl = new Label(area, SWT.NONE);
-		lbl.setText("Threshold:");
-		
-		thresholdTxt = new Text(area, SWT.BORDER);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(thresholdTxt);
+		if (curves.length > 0) {
+			customizedSettings = CurveFitService.getInstance().getSettings(curves[0]);
+			CurveUIFactory.createFields(area, curves[0].getFeature(), customizedSettings, null, null);
+		}
 		
 		String message = "You can change the settings for the selected curve(s) using the fields below.";
 		if (curves.length > 1) {
@@ -114,8 +62,6 @@ public class EditCurveDialog extends TitleAreaDialog {
 		}
 		setMessage(message);
 		setTitle("Edit Curve Fit Settings");
-			
-		initFields();
 		
 		return area;
 	}
@@ -143,79 +89,16 @@ public class EditCurveDialog extends TitleAreaDialog {
 	}
 	
 	private void fitCustomCurve() {
-		//TODO This will fail if curves with different kinds are selected.
-		
+		if (curves.length == 0 || customizedSettings == null) return;
 		for (Curve curve: curves) {
-			CurveSettings customSettings = new CurveSettings();
-			customSettings.setKind(curve.getFeature().getCurveSettings().get(CurveSettings.KIND));
-			customSettings.setMethod(methodCmb.getText());
-			customSettings.setModel(modelCmb.getText());
-			customSettings.setType(typeCmb.getText());
-			if (curve instanceof OSBCurve) {
-				String lb = lbTxt.getText();
-				if (lb != null && NumberUtils.isDouble(lb)) customSettings.setLb(Double.parseDouble(lb));
-				else customSettings.setLb(Double.NaN);
-				String ub = ubTxt.getText();
-				if (ub != null && NumberUtils.isDouble(ub)) customSettings.setUb(Double.parseDouble(ub));
-				else customSettings.setUb(Double.NaN);
-			} else {
-				String th = thresholdTxt.getText();
-				if (th != null && NumberUtils.isDouble(th)) customSettings.setThreshold(Double.parseDouble(th));
-				else customSettings.setThreshold(Double.NaN);
-			}
-			
 			try {
-				CurveService.getInstance().updateCurveSettings(curve, customSettings);
-				CurveService.getInstance().fitCurve(curve);
+				CurveFitService.getInstance().updateCurveSettings(curve, customizedSettings);
+				CurveFitService.getInstance().fitCurve(curve);
 			} catch (CurveFitException e) {
 				MessageDialog.openError(Display.getDefault().getActiveShell(),
 						"Fit Failed", "Fit error: " + e.getMessage());
 			}
 		}
 	}
-	
-	private void initFields() {
-		if (curves.length == 0) return;
-		
-		// Get the settings (default or custom) that were used to generate this curve.
-		// Note that these may be different from curve.getCurveSettings(), e.g. if LIN or CENS fallback was used instead of OLS.
-		CurveSettings settings = CurveService.getInstance().getCurveSettings(curves[0]);
-		String kind = settings.getKind();
-		String method = settings.getMethod();
-		String model = settings.getModel();
-		String type = settings.getType();
-		double lb = settings.getLb();
-		double ub = settings.getUb();
-		double th = settings.getThreshold();
-		
-		CurveKind curveKind = CurveKind.valueOf(kind);
-		CurveMethod[] methods = CurveService.getInstance().getCurveMethods(curveKind);
-		CurveModel[] models = CurveService.getInstance().getCurveModels(curveKind);
-		CurveType[] types = CurveService.getInstance().getCurveTypes();
-		
-		methodCmb.setItems(StringUtils.getEnumNames(methods));
-		select(methodCmb, method);
-		modelCmb.setItems(StringUtils.getEnumNames(models));
-		select(modelCmb, model);
-		typeCmb.setItems(StringUtils.getEnumNames(types));
-		select(typeCmb, type);
-		
-		lbTxt.setText(Double.isNaN(lb)?"":""+lb);
-		lbTxt.setEnabled(kind.equals(CurveKind.OSB.toString()));
-		ubTxt.setText(Double.isNaN(ub)?"":""+ub);
-		ubTxt.setEnabled(kind.equals(CurveKind.OSB.toString()));
-		thresholdTxt.setText(Double.isNaN(th)?"":""+th);
-		thresholdTxt.setEnabled(kind.equals(CurveKind.PLAC.toString()));
-	}
-	
-	private void select(Combo cmb, String value) {
-		if (value != null) {
-			for (int i=0; i<cmb.getItemCount(); i++) {
-				if (cmb.getItem(i).equals(value)) {
-					cmb.select(i);
-					break;
-				}
-			}
-		}
-	}
+
 }

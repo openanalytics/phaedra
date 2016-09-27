@@ -17,8 +17,8 @@ import com.google.common.collect.Lists;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.model.curve.CurveService;
-import eu.openanalytics.phaedra.model.curve.fit.CurveFitException;
+import eu.openanalytics.phaedra.model.curve.CurveFitException;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 
 public class ResetCurve extends AbstractHandler implements IHandler {
@@ -54,8 +54,8 @@ public class ResetCurve extends AbstractHandler implements IHandler {
 				for (Curve curve: curves) {
 					count++;
 					try {
-						CurveService.getInstance().updateCurveSettings(curve, null);
-						CurveService.getInstance().fitCurve(curve);
+						CurveFitService.getInstance().updateCurveSettings(curve, null);
+						CurveFitService.getInstance().fitCurve(curve);
 					} catch (CurveFitException e) {
 						fitException = e;
 						failCount++;

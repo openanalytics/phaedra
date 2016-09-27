@@ -58,9 +58,10 @@ import eu.openanalytics.phaedra.base.ui.util.split.SplitComposite;
 import eu.openanalytics.phaedra.base.ui.util.split.SplitCompositeFactory;
 import eu.openanalytics.phaedra.base.ui.util.view.DecoratedView;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.model.curve.CurveService;
-import eu.openanalytics.phaedra.model.curve.util.CurvePropertyProvider;
-import eu.openanalytics.phaedra.model.curve.util.ErrorCodeDescriptions;
+import eu.openanalytics.phaedra.model.curve.CurveFitErrorCode;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.util.CurveTextProvider;
+import eu.openanalytics.phaedra.model.curve.util.CurveTextProvider.CurveTextField;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -70,7 +71,6 @@ import eu.openanalytics.phaedra.ui.curve.cmd.CmdUtil;
 import eu.openanalytics.phaedra.ui.curve.cmd.EditCurve;
 import eu.openanalytics.phaedra.ui.curve.cmd.ResetCurve;
 import eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage;
-import eu.openanalytics.phaedra.ui.curve.prefs.Prefs;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
@@ -153,7 +153,7 @@ public class CrcDetailsView extends DecoratedView {
 		infoTable = new RichTableViewer(splitComp, SWT.BORDER);
 		infoTable.applyColumnConfig(createTableColumns());
 		infoTable.setContentProvider(new ArrayContentProvider());
-		infoTable.setInput(CurvePropertyProvider.getProperties(null));
+		infoTable.setInput(CurveTextProvider.getColumns(null));
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(infoTable.getTable());
 
 		tooltip = new DefaultToolTip(infoTable.getControl(), SWT.NONE, true);
@@ -167,11 +167,11 @@ public class CrcDetailsView extends DecoratedView {
 			Curve curve = SelectionUtils.getFirstObject(selection, Curve.class);
 			if (curve == null) {
 				Well well = SelectionUtils.getFirstObject(selection, Well.class);
-				if (well != null) curve = CurveService.getInstance().getCurve(well, feature);
+				if (well != null) curve = CurveFitService.getInstance().getCurve(well, feature);
 			}
 			if (curve == null) {
 				Compound compound = SelectionUtils.getFirstObject(selection, Compound.class);
-				if (compound != null) curve = CurveService.getInstance().getCurve(compound.getWells().get(0), feature);
+				if (compound != null) curve = CurveFitService.getInstance().getCurve(compound.getWells().get(0), feature);
 			}
 				
 			if (curve != null && !curve.equals(currentCurve)) {
@@ -212,7 +212,8 @@ public class CrcDetailsView extends DecoratedView {
 			if (event.type == EventType.FeatureSelectionChanged) {
 				if (currentCurve == null) return;
 				Feature feature = ProtocolUIService.getInstance().getCurrentFeature();
-				currentCurve = CurveService.getInstance().getCurve(currentCurve, feature);
+				Well well = currentCurve.getCompounds().get(0).getWells().get(0);
+				currentCurve = CurveFitService.getInstance().getCurve(well, feature);
 				update();
 			}
 		};
@@ -221,7 +222,6 @@ public class CrcDetailsView extends DecoratedView {
 		prefListener = (event) -> {
 			if (event.getProperty().startsWith("CRC_")) update();
 		};
-		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(prefListener);
 		
 		splitComp.setWeights(new int[] { 50, 50 });
 		if (getSite() != null) createToolBar(parent);
@@ -254,31 +254,7 @@ public class CrcDetailsView extends DecoratedView {
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		Action action = new Action("Show pIC20/80 markers", SWT.CHECK) {
-			@Override
-			public void run() {
-				boolean enabled = Activator.getDefault().getPreferenceStore().getBoolean(Prefs.CRC_SHOW_OTHER_IC_MARKERS);
-				Activator.getDefault().getPreferenceStore().setValue(Prefs.CRC_SHOW_OTHER_IC_MARKERS, !enabled);
-				CrcDetailsView.this.update();
-			}
-		};
-		action.setChecked(Activator.getDefault().getPreferenceStore().getBoolean(Prefs.CRC_SHOW_OTHER_IC_MARKERS));
-		manager.add(action);
-
-		action = new Action("Show pIC50 confidence band", SWT.CHECK) {
-			@Override
-			public void run() {
-				boolean enabled = Activator.getDefault().getPreferenceStore().getBoolean(Prefs.CRC_SHOW_CONF_AREA);
-				Activator.getDefault().getPreferenceStore().setValue(Prefs.CRC_SHOW_CONF_AREA, !enabled);
-				CrcDetailsView.this.update();
-			}
-		};
-		action.setChecked(Activator.getDefault().getPreferenceStore().getBoolean(Prefs.CRC_SHOW_CONF_AREA));
-		manager.add(action);
-
-		manager.add(new Separator());
-
-		action = new Action("Edit Curve", SWT.PUSH) {
+		Action action = new Action("Edit Curve", SWT.PUSH) {
 			@Override
 			public void run() {
 				CmdUtil.executeCmd(EditCurve.class.getName(), currentCurve);
@@ -314,7 +290,7 @@ public class CrcDetailsView extends DecoratedView {
 	 */
 	private void update() {
 		// SplitComposite uses visibility to hide components. Prevent setInput() from resetting visibility.
-		infoTable.setInput(CurvePropertyProvider.getProperties(currentCurve));
+		infoTable.setInput(CurveTextProvider.getColumns(currentCurve));
 		infoTable.getTable().setVisible(splitComp.isVisible(2));
 
 		// Refresh the chart.
@@ -359,8 +335,7 @@ public class CrcDetailsView extends DecoratedView {
 		config[0].setLabelProvider(new RichLabelProvider(config[0]){
 			@Override
 			public String getText(Object element) {
-				String prop = (String)element;
-				return prop;
+				return ((CurveTextField) element).getLabel();
 			}
 		});
 		config[1] = ColumnConfigFactory.create("Value", ColumnDataType.String, 250);
@@ -368,20 +343,19 @@ public class CrcDetailsView extends DecoratedView {
 			@Override
 			public String getText(Object element) {
 				if (currentCurve == null) return "";
-				String prop = (String)element;
-				if (prop.equals("Fit Error")) return CurvePropertyProvider.getValue(prop, currentCurve) + " (click for description)";
-				else return CurvePropertyProvider.getValue(prop, currentCurve);
+				return ((CurveTextField) element).renderValue(currentCurve);
 			}
 			@Override
 			protected void handleLinkClick(Object element) {
 				if (currentCurve == null) return;
-				tooltip.setText(ErrorCodeDescriptions.getErrorDescription(currentCurve));
+				String errDesc = CurveFitErrorCode.getDescription(currentCurve);
+				tooltip.setText(errDesc == null ? "No description" : errDesc);
 				tooltip.show(new Point(0, 0));
 			}
 			@Override
 			protected boolean isHyperlinkEnabled(Object element) {
-				String prop = (String)element;
-				return (prop.equals("Fit Error"));
+				String label = ((CurveTextField) element).getLabel();
+				return label.equals("Fit Error");
 			}
 		});
 		return config;
@@ -433,11 +407,11 @@ public class CrcDetailsView extends DecoratedView {
 	}
 
 	private static class WellSelectionProvider implements ISelectionProvider {
-		private ListenerList listenerMgr;
+		private ListenerList<ISelectionChangedListener> listenerMgr;
 		private List<Well> currentSelection;
 
 		public WellSelectionProvider() {
-			this.listenerMgr = new ListenerList();
+			this.listenerMgr = new ListenerList<>();
 		}
 
 		@Override

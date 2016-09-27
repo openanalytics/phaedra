@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.model.curve.fitModel">
+      <fitModel
+            class="eu.openanalytics.phaedra.model.curve.osb.OSBFitModel"
+            id="PL2">
+      </fitModel>
+      <fitModel
+            class="eu.openanalytics.phaedra.model.curve.osb.OSBFitModel"
+            id="PL4">
+      </fitModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.model.curve.curveRenderer">
+      <curveRenderer
+            class="eu.openanalytics.phaedra.model.curve.osb.OSBCurveRenderer"
+            modelId="PL2">
+      </curveRenderer>
+      <curveRenderer
+            class="eu.openanalytics.phaedra.model.curve.osb.OSBCurveRenderer"
+            modelId="PL4">
+      </curveRenderer>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
+      <preferenceProvider
+            class="eu.openanalytics.phaedra.model.curve.osb.prefs.PreferenceProvider">
+      </preferenceProvider>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="eu.openanalytics.phaedra.model.curve.osb.prefs.Prefs">
+      </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage"
+            class="eu.openanalytics.phaedra.model.curve.osb.prefs.PreferencePage"
+            id="eu.openanalytics.phaedra.model.curve.osb.prefs.PreferencePage"
+            name="OSB Curves">
+      </page>
+   </extension>
+
+</plugin>

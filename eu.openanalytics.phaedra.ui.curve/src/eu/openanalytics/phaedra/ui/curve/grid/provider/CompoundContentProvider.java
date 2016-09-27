@@ -1,7 +1,5 @@
 package eu.openanalytics.phaedra.ui.curve.grid.provider;
 
-import static eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat.LogMolar;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -14,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -46,7 +45,6 @@ import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.Flag;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.FlagFilter;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.FlagMapping;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.ISelectionDataColumnAccessor;
-import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.convert.AWTImageConverter;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
@@ -55,17 +53,19 @@ import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.base.util.threading.ThreadPool;
 import eu.openanalytics.phaedra.base.util.threading.ThreadUtils;
 import eu.openanalytics.phaedra.model.curve.Activator;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
+import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
 import eu.openanalytics.phaedra.model.curve.util.CurveComparators;
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
-import eu.openanalytics.phaedra.model.curve.vo.OSBCurve;
-import eu.openanalytics.phaedra.model.curve.vo.PLACCurve;
 import eu.openanalytics.phaedra.model.plate.compound.CompoundInfoService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
-import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 import eu.openanalytics.phaedra.ui.curve.MultiploCompound;
@@ -82,10 +82,9 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	private List<Compound> compounds;
 	private List<Feature> features;
 
-	private String[] columnNames;
-	private String[] columnTooltips;
+	private ColumnSpec[] columnSpecs;
 	private GridColumnGroup[] columnGroups;
-
+	
 	private int imageX = 100;
 	private int imageY = 100;
 
@@ -95,9 +94,8 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	private ConcentrationFormat concFormat;
 
 	private int baseColumnCount;
-	private int featureColumnCount;
 	private int structureColumnIndex;
-
+	
 	public CompoundContentProvider(List<Compound> compounds, List<Feature> features) {
 		this.compounds = compounds;
 		this.features = features;
@@ -105,54 +103,52 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		this.concFormat = ConcentrationFormat.LogMolar;
 		this.smilesImages = new HashMap<>();
 
-		baseColumnCount = 10;
-		featureColumnCount = 6;
-		structureColumnIndex = 9;
-
-		columnNames = new String[(features.size()*featureColumnCount)+baseColumnCount];
-		columnNames[0] = "Experiment";
-		columnNames[1] = "Plate";
-		columnNames[2] = "PV";
-		columnNames[3] = "CV";
-		columnNames[4] = "Comp.Type";
-		columnNames[5] = "Comp.Nr";
-		columnNames[6] = "Saltform";
-		columnNames[7] = "Grouping";
-		columnNames[8] = "Samples";
-		columnNames[9] = "Smiles";
-
-		for (int i=0; i<features.size(); i++) {
-			String kind = features.get(i).getCurveSettings().get(CurveSettings.KIND);
-			if (kind.equals("OSB")) columnNames[baseColumnCount+i*featureColumnCount] = "pIC50";
-			else columnNames[baseColumnCount+i*featureColumnCount] = "pLAC";
-			columnNames[baseColumnCount+1+i*featureColumnCount] = "EMax Conc";
-			columnNames[baseColumnCount+2+i*featureColumnCount] = "EMax Effect";
-			columnNames[baseColumnCount+3+i*featureColumnCount] = "R2";
-			columnNames[baseColumnCount+4+i*featureColumnCount] = "Hill";
-			columnNames[baseColumnCount+5+i*featureColumnCount] = "Curve";
+		List<ColumnSpec> columnSpecList = new ArrayList<>();
+		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, null, c -> c.getPlate().getExperiment().getName()));
+		columnSpecList.add(new ColumnSpec("Plate", null, 85, null, null, c -> (getMultiploCompound(c) == null) ? c.getPlate().getBarcode() : "<Multiplo>"));
+		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, null, c -> c.getPlate().getValidationStatus(),
+				c -> PlateValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString()));
+		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, null, c -> c.getValidationStatus(),
+				c -> CompoundValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString()));
+		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, null, c -> c.getType()));
+		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, null, c -> c.getNumber()));
+		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, null, c -> c.getSaltform()));
+		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, null, c -> (c instanceof CompoundWithGrouping) ? ((CompoundWithGrouping)c).getGrouping() : ""));
+		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, c -> (getMultiploCompound(c) == null) ? c.getWells().size() : getMultiploCompound(c).getSampleCount()));
+		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, null, c -> {
+			if (smilesImages.containsKey(c)) return smilesImages.get(c);
+			ImageData img = makeSmilesImage(c);
+			smilesImages.put(c, img);
+			return img;
+		}));
+		baseColumnCount = columnSpecList.size();
+		structureColumnIndex = baseColumnCount - 1;
+		
+		List<GridColumnGroup> columnGroupList = new ArrayList<>();
+		for (Feature feature: features) {
+			CurveFitSettings curveSettings = CurveFitService.getInstance().getSettings(feature);
+			if (curveSettings == null) continue;
+			ICurveFitModel model = CurveFitService.getInstance().getModel(curveSettings.getModelId());
+			if (model == null) continue;
+			
+			Definition[] params = Arrays.stream(model.getOutputParameters()).filter(d -> d.key).toArray(i -> new Definition[i]);
+			for (Definition param: params) {
+				columnSpecList.add(new ColumnSpec(param.name, param.description, 60, feature, param, c -> {
+					Curve curve = getCurve(c, feature);
+					Value value = CurveParameter.find(curve.getOutputParameters(), param.name);
+					return CurveParameter.renderValue(value, curve, concFormat);
+				}));
+			}
+			columnSpecList.add(new ColumnSpec("Curve", null, 100, feature, null, c -> {
+				return CurveFitService.getInstance().getCurveImage(getCurve(c, feature).getId(), imageX, imageY);
+			}));
+			
+			int indexStart = columnSpecList.size() - (params.length + 1);
+			columnGroupList.add(new GridColumnGroup(feature.getDisplayName(), IntStream.range(indexStart, columnSpecList.size()).toArray()));
 		}
-
-		columnTooltips = new String[columnNames.length];
-		for (int i=0; i<columnNames.length; i++) {
-			columnTooltips[i] = columnNames[i];
-		}
-		columnTooltips[2] = "Plate Validation Status";
-		columnTooltips[3] = "Compound Validation Status";
-
-		columnGroups = new GridColumnGroup[features.size()];
-		for (int i=0; i<columnGroups.length; i++) {
-			Feature f = features.get(i);
-			String name = f.getDisplayName();
-			int[] indices = new int[]{
-					baseColumnCount+(i*featureColumnCount),
-					baseColumnCount+1+(i*featureColumnCount),
-					baseColumnCount+2+(i*featureColumnCount),
-					baseColumnCount+3+(i*featureColumnCount),
-					baseColumnCount+4+(i*featureColumnCount),
-					baseColumnCount+5+(i*featureColumnCount)
-			};
-			columnGroups[i] = new GridColumnGroup(name, indices);
-		}
+		
+		columnSpecs = columnSpecList.toArray(new ColumnSpec[columnSpecList.size()]);
+		columnGroups = columnGroupList.toArray(new GridColumnGroup[columnGroupList.size()]);
 	}
 
 	public void preLoad(NatTable table) {
@@ -164,9 +160,11 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 	public void setConcFormat(ConcentrationFormat concFormat) {
 		this.concFormat = concFormat;
-		for (int i=baseColumnCount; i<columnNames.length; i++) {
-			int featureProp = (i - baseColumnCount) % featureColumnCount;
-			if (featureProp < 2) columnNames[i] = concFormat.decorateName(columnNames[i]);
+		for (int i = 0; i < columnSpecs.length; i++) {
+			Definition def = columnSpecs[i].paramDefinition;
+			if (def != null && def.type == ParameterType.Concentration) {
+				columnSpecs[i].name = concFormat.decorateName(columnSpecs[i].name);
+			}
 		}
 	}
 
@@ -188,12 +186,11 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	}
 
 	public int[] getCurveColumns() {
-		int curveColumnCount = (columnNames.length-baseColumnCount)/featureColumnCount;
-		int[] indices = new int[curveColumnCount];
-		for (int i=0; i<curveColumnCount; i++) {
-			indices[i] = baseColumnCount+(featureColumnCount-1)+(i*featureColumnCount);
+		List<Integer> indices = new ArrayList<>();
+		for (int i = 0; i < columnSpecs.length; i++) {
+			if (columnSpecs[i].name.equals("Curve")) indices.add(i);
 		}
-		return indices;
+		return indices.stream().mapToInt(i -> i).toArray();
 	}
 
 	public int getStructureColumn() {
@@ -202,128 +199,45 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 	@Override
 	public Object getDataValue(Compound c, int columnIndex) {
-		switch (columnIndex) {
-		case 0:
-			return c.getPlate().getExperiment().getName();
-		case 1:
-			if (getMultiploCompound(c) != null) return "<Multiplo>";
-			return c.getPlate().getBarcode();
-		case 2:
-			return c.getPlate().getValidationStatus();
-		case 3:
-			return c.getValidationStatus();
-		case 4:
-			return c.getType();
-		case 5:
-			return c.getNumber();
-		case 6:
-			return c.getSaltform();
-		case 7:
-			if (c instanceof CompoundWithGrouping) return ((CompoundWithGrouping)c).getGrouping();
-			return "";
-		case 8:
-			if (getMultiploCompound(c) != null) return getMultiploCompound(c).getSampleCount();
-			return c.getWells().size();
-		case 9:
-			if (smilesImages.containsKey(c)) return smilesImages.get(c);
-			ImageData img = makeSmilesImage(c);
-			smilesImages.put(c, img);
-			return img;
-		}
-
-		Feature f = features.get((columnIndex-baseColumnCount)/featureColumnCount);
-		Curve curve = getCurve(c, f);
-		if (curve == null) return null;
-
-		int mod = (columnIndex-baseColumnCount)%featureColumnCount;
-		switch (mod) {
-		case 0:
-			if (curve instanceof OSBCurve) {
-				OSBCurve osb = (OSBCurve)curve;
-				return ConcentrationFormat.format(LogMolar, concFormat, osb.getPic50Censor(), osb.getPic50());
-			} else if (curve instanceof PLACCurve) {
-				PLACCurve plac = (PLACCurve)curve;
-				return ConcentrationFormat.format(LogMolar, concFormat, plac.getPlacCensor(), plac.getPlac());
-			}
-		case 1:
-			return ConcentrationFormat.format(LogMolar, concFormat, null, curve.geteMaxConc());
-		case 2:
-			return Formatters.getInstance().format(curve.geteMax(), "#.##");
-		case 3:
-			if (curve instanceof OSBCurve) {
-				OSBCurve osb = (OSBCurve)curve;
-				return Formatters.getInstance().format(osb.getR2(), "#.##");
-			}
-			break;
-		case 4:
-			if (curve instanceof OSBCurve) {
-				OSBCurve osb = (OSBCurve)curve;
-				return Formatters.getInstance().format(osb.getHill(), "#.##");
-			}
-			break;
-		case 5:
-			return CurveService.getInstance().getCurveImage(curve, imageX, imageY);
-		}
+		ColumnSpec spec = columnSpecs[columnIndex];
+		if (spec.valueRenderer != null) return spec.valueRenderer.apply(c);
 		return null;
 	}
 
 	@Override
-	public Object getSelectionValue(Compound rowObject, int column) {
-		if (column < baseColumnCount) {
-			return rowObject;
-		} else {
-			Feature f = features.get((column-baseColumnCount)/featureColumnCount);
-			return getCurve(rowObject, f);
-		}
+	public Object getSelectionValue(Compound c, int column) {
+		if (column < baseColumnCount) return c;
+		else return getCurve(c, columnSpecs[column].feature);
 	}
 
 	@Override
 	public int getColumnCount() {
-		return baseColumnCount + (features.size()*featureColumnCount);
+		return columnSpecs.length;
 	}
 
 	@Override
 	public String getColumnProperty(int columnIndex) {
-		return columnNames[columnIndex];
+		return columnSpecs[columnIndex].name;
 	}
 
 	@Override
 	public int getColumnIndex(String propertyName) {
-		return CollectionUtils.find(columnNames, propertyName);
+		for (int i = 0; i < columnSpecs.length; i++) {
+			if (columnSpecs[i].name.equals(propertyName)) return i;
+		}
+		return -1;
 	}
 
 	@Override
 	public String getTooltipText(Compound rowObject, int colIndex) {
-		if (rowObject == null) return columnTooltips[colIndex];
-		if (colIndex == 2) return PlateValidationStatus.getByCode(rowObject.getPlate().getValidationStatus()).toString();
-		if (colIndex == 3) return CompoundValidationStatus.getByCode(rowObject.getValidationStatus()).toString();
+		if (rowObject == null) return columnSpecs[colIndex].tooltip;
+		if (columnSpecs[colIndex].tooltipRenderer != null) return columnSpecs[colIndex].tooltipRenderer.apply(rowObject);
 		return null;
 	}
 
 	@Override
 	public int[] getColumnWidths() {
-		int[] widths = new int[columnNames.length];
-		widths[0] = 110;
-		widths[1] = 85;
-		widths[2] = 35;
-		widths[3] = 35;
-		widths[4] = 65;
-		widths[5] = 60;
-		widths[6] = 90;
-		widths[7] = 70;
-		widths[8] = 60;
-		widths[9] = -1;
-		
-		int index = baseColumnCount;
-		while (index < widths.length) {
-			widths[index++] = 45;
-			widths[index++] = 60;
-			widths[index++] = 60;
-			widths[index++] = 40;
-			widths[index++] = 40;
-			widths[index++] = 100;
-		}
-		return widths;
+		return Arrays.stream(columnSpecs).mapToInt(s -> s.width).toArray();
 	}
 
 	@Override
@@ -348,25 +262,27 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		return new AbstractRegistryConfiguration() {
 			@Override
 			public void configureRegistry(IConfigRegistry configRegistry) {
-				Comparator<String> comp;
-				for (int i = baseColumnCount; i < columnNames.length; i++) {
-					int mod = (i - baseColumnCount) % featureColumnCount;
-					if (mod == 0) comp = CurveComparators.CENSOR_COMPARATOR;
-					else if (mod == 1 || mod == 2) comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
-					else continue;
-
-					configRegistry.registerConfigAttribute(
-							SortConfigAttributes.SORT_COMPARATOR
-							, comp
-							, DisplayMode.NORMAL
-							, columnNames[i]
-					);
-					configRegistry.registerConfigAttribute(
-							FilterRowConfigAttributes.FILTER_COMPARATOR
-							, comp
-							, DisplayMode.NORMAL
-							, FilterRowDataLayer.FILTER_ROW_COLUMN_LABEL_PREFIX + i
-					);
+				for (int i = 0; i < columnSpecs.length; i++) {
+					Comparator<String> comp = null;
+					Definition def = columnSpecs[i].paramDefinition;
+					if (def != null && def.type == ParameterType.Concentration) {
+						if (CurveParameter.isCensored(def)) comp = CurveComparators.CENSOR_COMPARATOR;
+						else if (def.type.isNumeric()) comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
+					}
+					
+					if (comp != null) {
+						configRegistry.registerConfigAttribute(
+								SortConfigAttributes.SORT_COMPARATOR
+								, comp
+								, DisplayMode.NORMAL
+								, columnSpecs[i].name);
+						configRegistry.registerConfigAttribute(
+								FilterRowConfigAttributes.FILTER_COMPARATOR
+								, comp
+								, DisplayMode.NORMAL
+								, FilterRowDataLayer.FILTER_ROW_COLUMN_LABEL_PREFIX + i
+						);
+					}
 				}
 
 				Function<Object, String> mapper = t -> {
@@ -416,14 +332,6 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 	public List<Integer> getDefaultHiddenColumns() {
 		List<Integer> indices = new ArrayList<Integer>();
-		for (int i=0; i<features.size(); i++) {
-			Feature f = features.get(i);
-			boolean osb = f.getCurveSettings().get(CurveSettings.KIND).equals("OSB");
-			if (!osb) {
-				indices.add(baseColumnCount + (i*featureColumnCount) + 3);
-				indices.add(baseColumnCount + (i*featureColumnCount) + 4);
-			}
-		}
 		indices.add(getStructureColumn());
 		return indices;
 	}
@@ -456,7 +364,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 	private Curve getCurve(Compound c, Feature f) {
 		CurveGrouping cg = (c instanceof CompoundWithGrouping) ? ((CompoundWithGrouping) c).getGrouping() : null;
-		return CurveService.getInstance().getCurve(c, f, cg, true);
+		return CurveFitService.getInstance().getCurve(c, f, cg, true);
 	}
 	
 	private MultiploCompound getMultiploCompound(Compound c) {
@@ -525,7 +433,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 							// Send the render task to another thread, so this thread can keep loading curves.
 							//FIX Ubuntu/Cairo: new Image() may cause deadlock when called from non-UI thread.
-							Runnable curveImageGetter = () -> CurveService.getInstance().getCurveImage(curve, imageX, imageY);
+							Runnable curveImageGetter = () -> CurveFitService.getInstance().getCurveImage(curve.getId(), imageX, imageY);
 							if (ProcessUtils.isWindows()) tp.schedule(curveImageGetter);
 							else Display.getDefault().asyncExec(curveImageGetter);
 
@@ -552,4 +460,29 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 	}
 
+	private static class ColumnSpec {
+		public String name;
+		public String tooltip;
+		public int width;
+		public Feature feature;
+		public Definition paramDefinition;
+		public Function<Compound, Object> valueRenderer;
+		public Function<Compound, String> tooltipRenderer;
+		
+		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition, Function<Compound, Object> valueRenderer) {
+			this(name, tooltip, width, feature, paramDefinition, valueRenderer, null);
+		}
+		
+		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition,
+				Function<Compound, Object> valueRenderer, Function<Compound, String> tooltipRenderer) {
+			super();
+			this.name = name;
+			this.tooltip = tooltip;
+			this.width = width;
+			this.feature = feature;
+			this.paramDefinition = paramDefinition;
+			this.valueRenderer = valueRenderer;
+			this.tooltipRenderer = tooltipRenderer;
+		}
+	}
 }

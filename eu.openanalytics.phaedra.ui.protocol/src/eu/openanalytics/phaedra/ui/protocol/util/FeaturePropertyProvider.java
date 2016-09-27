@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.ui.protocol.util;
 
-import eu.openanalytics.phaedra.model.curve.vo.CurveSettings;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class FeaturePropertyProvider {
@@ -17,12 +18,9 @@ public class FeaturePropertyProvider {
 		case "Key": return f.isKey() ? "Yes":"No";
 		case "Numeric": return f.isNumeric() ? "Yes":"No";
 		case "Curve": {
-			String kind = f.getCurveSettings().get(CurveSettings.KIND);
-			if (kind == null || kind.isEmpty()) return "None";
-			return kind 
-					+ " (" + f.getCurveSettings().get(CurveSettings.MODEL) + ")"
-					+ " (" + f.getCurveSettings().get(CurveSettings.METHOD) + ")"
-					+ " (" + f.getCurveSettings().get(CurveSettings.TYPE) + ")";
+			CurveFitSettings settings = CurveFitService.getInstance().getSettings(f);
+			if (settings == null) return "None";
+			return settings.getModelId();
 		}
 		default: return "";
 		}

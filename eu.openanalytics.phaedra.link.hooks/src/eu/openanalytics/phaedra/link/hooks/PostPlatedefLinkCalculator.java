@@ -8,7 +8,7 @@ import eu.openanalytics.phaedra.base.hook.IHookArguments;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.hooks.CalculationHookUtils;
 import eu.openanalytics.phaedra.link.platedef.hook.LinkPlateDefHookArguments;
-import eu.openanalytics.phaedra.model.curve.CurveService;
+import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 
 public class PostPlatedefLinkCalculator extends BaseBatchedHook {
@@ -38,7 +38,7 @@ public class PostPlatedefLinkCalculator extends BaseBatchedHook {
 		for (Plate plate: platesToRecalc) CalculationService.getInstance().calculate(plate);
 		for (Plate plate: platesToRefit) {
 			if (platesToRecalc.contains(plate)) continue;
-			CurveService.getInstance().fitAllCurves(plate);
+			CurveFitService.getInstance().fitCurves(plate);
 		}
 	}
 	
