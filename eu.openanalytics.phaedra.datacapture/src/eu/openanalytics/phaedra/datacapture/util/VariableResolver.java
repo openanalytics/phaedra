@@ -27,6 +27,7 @@ public class VariableResolver {
 
 		Object value = null;
 		
+		// 1. Resolve reading-prefixed parameters, e.g. "reading.barcode"
 		if (ctx.getActiveReading() != null) {
 			if (key.equals("barcode") || key.equals(READING_PREFIX + ".barcode")) return ctx.getActiveReading().getBarcode();
 			else if (key.startsWith(READING_PREFIX)) {
@@ -34,18 +35,18 @@ public class VariableResolver {
 				ParameterGroup params = ctx.getParameters(ctx.getActiveReading());
 				if (params != null) value = params.getParameter(key.substring(READING_PREFIX.length()));
 			}
-		} else {
-			// 1. Look in task parameters (i.e. "runtime" parameters)
-			value = ctx.getTask().getParameters().get(key);
+		}
+		
+		// 2. Look in task parameters, i.e. the "runtime" parameters that can be set programmatically.
+		if (value == null) value = ctx.getTask().getParameters().get(key);
+		
+		IModule activeModule = ctx.getActiveModule();
+		if (activeModule != null) {
+			// 3. Look in module parameters, i.e. defined in the module XML.
+			if (value == null) value = activeModule.getConfig().getParameters().getParameter(key);
 			
-			IModule activeModule = ctx.getActiveModule();
-			if (activeModule != null) {
-				// 2. Look in module parameters
-				if (value == null) value = activeModule.getConfig().getParameters().getParameter(key);
-				
-				// 3. Look in global parameters
-				if (value == null) value = activeModule.getConfig().getParentConfig().getParameters().getParameter(key);
-			}
+			// 4. Look in global parameters, i.e. defined in the datacapture XML global parameter section.
+			if (value == null) value = activeModule.getConfig().getParentConfig().getParameters().getParameter(key);
 		}
 		
 		return value;
