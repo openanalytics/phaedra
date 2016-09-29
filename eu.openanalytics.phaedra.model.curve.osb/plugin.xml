@@ -2,15 +2,10 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="eu.openanalytics.phaedra.model.curve.fitModel">
-      <fitModel
-            class="eu.openanalytics.phaedra.model.curve.osb.OSBFitModel"
-            id="PL2">
-      </fitModel>
-      <fitModel
-            class="eu.openanalytics.phaedra.model.curve.osb.OSBFitModel"
-            id="PL4">
-      </fitModel>
+         point="eu.openanalytics.phaedra.model.curve.fitModelFactory">
+      <fitModelFactory
+            class="eu.openanalytics.phaedra.model.curve.osb.OSBFitModelFactory">
+      </fitModelFactory>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.model.curve.curveRenderer">

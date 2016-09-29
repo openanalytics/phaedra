@@ -67,6 +67,22 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		new Definition("Weights", null, false, ParameterType.Binary, null, null)
 	};
 	
+	private String modelId;
+	
+	public OSBFitModel() {
+		// Default constructor
+	}
+	
+	public OSBFitModel(String modelId) {
+		this.modelId = modelId;
+	}
+	
+	@Override
+	public String getId() {
+		if (modelId == null) return super.getId();
+		return modelId;
+	}
+	
 	@Override
 	public String getDescription() {
 		return "This model performs One-Site-Binding curve fitting.";

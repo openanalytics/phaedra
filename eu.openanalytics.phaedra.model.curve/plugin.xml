@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="fitModel" name="Curve Fit Model" schema="schema/fitModel.exsd"/>
    <extension-point id="curveRenderer" name="CurveRenderer" schema="schema/curveRenderer.exsd"/>
+   <extension-point id="fitModelFactory" name="FitModelFactory" schema="schema/fitModelFactory.exsd"/>
    <extension
          point="org.eclipse.core.runtime.adapters">
       <factory

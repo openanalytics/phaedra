@@ -14,8 +14,6 @@ import java.util.stream.Stream;
 import javax.persistence.EntityManager;
 
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -33,6 +31,7 @@ import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.convert.PDFToImageConverter;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.base.util.misc.ExtensionUtils;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
@@ -71,6 +70,9 @@ public class CurveFitService extends BaseJPAService {
 	private ICache curveImageCache;
 	private ICache curveCustomSettingsCache;
 	
+	private String[] knownModelIds;
+	private List<ICurveFitModelFactory> modelFactories;
+	
 	private CurveFitService() {
 		// Hidden constructor
 		curveDAO = new CurveDAO(getEntityManager());
@@ -80,6 +82,16 @@ public class CurveFitService extends BaseJPAService {
 		curveIdCache = CacheService.getInstance().createCache("CurveIdCache");
 		curveImageCache = CacheService.getInstance().createCache("CurveImageCache");
 		curveCustomSettingsCache = CacheService.getInstance().createCache("CurveCustomSettingsCache");
+		
+		Set<String> knownIds = new HashSet<>();
+		Arrays.stream(Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveFitModel.EXT_PT_ID))
+			.map(e -> e.getAttribute(ICurveFitModel.ATTR_ID)).forEach(id -> knownIds.add(id));
+		
+		modelFactories = ExtensionUtils.createInstanceList(ICurveFitModelFactory.EXT_PT_ID, ICurveFitModelFactory.ATTR_CLASS, ICurveFitModelFactory.class);
+		modelFactories.stream().flatMap(f -> Arrays.stream(f.getSupportedModelIds())).forEach(id -> knownIds.add(id));
+		
+		knownModelIds = knownIds.toArray(new String[knownIds.size()]);
+		Arrays.sort(knownModelIds);
 	}
 
 	public static CurveFitService getInstance() {
@@ -297,6 +309,8 @@ public class CurveFitService extends BaseJPAService {
 		}
 		
 		ICurveFitModel model = getModel(modelId);
+		if (model == null) return null;
+		
 		CurveParameter.Value[] extraParams = new CurveParameter.Value[model.getInputParameters().length];
 		for (int i = 0; i < extraParams.length; i++) {
 			extraParams[i] = CurveParameter.createValue(feature, model.getInputParameters()[i]);
@@ -344,34 +358,19 @@ public class CurveFitService extends BaseJPAService {
 	}
 
 	public String[] getFitModels() {
-		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveFitModel.EXT_PT_ID);
-		return Arrays.stream(elements).map(e -> e.getAttribute(ICurveFitModel.ATTR_ID)).toArray(i -> new String[i]);
+		return knownModelIds;
 	}
 	
 	public ICurveFitModel getModel(String modelId) {
-		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveFitModel.EXT_PT_ID);
-		IConfigurationElement match = Arrays.stream(elements)
-				.filter(e -> e.getAttribute(ICurveFitModel.ATTR_ID).equals(modelId))
-				.findAny().orElse(null);
-		try {
-			if (match != null) return (ICurveFitModel)(match.createExecutableExtension(ICurveFitModel.ATTR_CLASS));
-		} catch (CoreException e) {
-			EclipseLog.error("Failed to load curve fit model " + modelId, e, Activator.getDefault());
-		}
-		return null;
+		return modelFactories.stream()
+				.filter(f -> CollectionUtils.contains(f.getSupportedModelIds(), modelId)).map(f -> f.createModel(modelId)).findAny()
+				.orElse(ExtensionUtils.createInstance(ICurveFitModel.EXT_PT_ID, ICurveFitModel.ATTR_ID, modelId, ICurveFitModel.ATTR_CLASS, ICurveFitModel.class));
 	}
 
 	public ICurveRenderer getRenderer(String modelId) {
-		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(ICurveRenderer.EXT_PT_ID);
-		IConfigurationElement match = Arrays.stream(elements)
-				.filter(e -> e.getAttribute(ICurveRenderer.ATTR_MODEL_ID).equals(modelId))
-				.findAny().orElse(null);
-		try {
-			if (match != null) return (ICurveRenderer)(match.createExecutableExtension(ICurveRenderer.ATTR_CLASS));
-		} catch (CoreException e) {
-			EclipseLog.error("Failed to load curve renderer for " + modelId, e, Activator.getDefault());
-		}
-		return new BaseCurveRenderer();
+		ICurveRenderer renderer = ExtensionUtils.createInstance(ICurveRenderer.EXT_PT_ID, ICurveRenderer.ATTR_MODEL_ID, modelId, ICurveRenderer.ATTR_CLASS, ICurveRenderer.class);
+		if (renderer == null) renderer = new BaseCurveRenderer();
+		return renderer;
 	}
 	
 	public CurveFitInput getInput(Curve curve) {
