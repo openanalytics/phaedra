@@ -20,15 +20,21 @@ import eu.openanalytics.phaedra.model.curve.vo.Curve;
 public class OSBCurveRenderer implements ICurveRenderer {
 
 	@Override
+	public String[] getSupportedModelIds() {
+		return OSBFitModelFactory.MODEL_IDS;
+	}
+	
+	@Override
 	public double[][] getCurveSamples(Curve curve, CurveFitInput input) {
 		double pIC50 = CurveParameter.find(curve.getOutputParameters(), "pIC50").numericValue;
 		String censor = CurveParameter.find(curve.getOutputParameters(), "pIC50 Censor").stringValue;
 		if ("<".equals(censor) || ">".equals(censor) || (Double.isNaN(pIC50))) {
 			return new double[2][0];
 		}
-		String method = CurveParameter.find(input.getSettings().getExtraParameters(), "Method").stringValue;
-		if (method.equals("OLS")) return getOLSPredictedValues(curve, input);
-		else if (method.equals("LIN")) return getLINPredictedValues(curve, input);
+		Value method = CurveParameter.find(curve.getOutputParameters(), "Method Fallback");
+		if (method == null || method.stringValue == null) method = CurveParameter.find(input.getSettings().getExtraParameters(), "Method");
+		if (method.stringValue.equals("OLS")) return getOLSPredictedValues(curve, input);
+		else if (method.stringValue.equals("LIN")) return getLINPredictedValues(curve, input);
 		else return new double[2][0];
 	}
 	

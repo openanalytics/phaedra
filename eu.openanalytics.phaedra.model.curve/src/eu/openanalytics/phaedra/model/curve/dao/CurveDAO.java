@@ -71,7 +71,7 @@ public class CurveDAO {
 				+ " where c.feature_id = " + f.getId()
 				+ " and c.curve_id = cc.curve_id and cc.platecompound_id = " + c.getId();
 		for (int i = 0; i < grouping.getCount(); i++) {
-			queryString += " and c.group_by_" + (i+1) + " = " + grouping.get(i);
+			queryString += " and c.group_by_" + (i+1) + " = '" + grouping.get(i) + "'";
 		}
 		List<?> resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
 		if (resultSet.isEmpty()) return null;
@@ -248,10 +248,10 @@ public class CurveDAO {
 		ps.setString(4, curve.getFitVersion());
 		ps.setBigDecimal(5, new BigDecimal(curve.getErrorCode()));
 		String[] groupingValues = curve.getGroupingValues();
-		if (groupingValues == null || groupingValues.length == 0) groupingValues = new String[] {null,null,null};
-		ps.setString(6, groupingValues[0]);
-		ps.setString(7, groupingValues[1]);
-		ps.setString(8, groupingValues[2]);
+		if (groupingValues == null) groupingValues = new String[] {null,null,null};
+		ps.setString(6, groupingValues.length <= 0 ? null : groupingValues[0]);
+		ps.setString(7, groupingValues.length <= 1 ? null : groupingValues[1]);
+		ps.setString(8, groupingValues.length <= 2 ? null : groupingValues[2]);
 		if (curve.getPlot() == null) ps.setNull(9, Types.BINARY);
 		else ps.setBinaryStream(9, new ByteArrayInputStream(curve.getPlot()), curve.getPlot().length);
 	}

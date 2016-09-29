@@ -135,12 +135,15 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 			for (Definition param: params) {
 				columnSpecList.add(new ColumnSpec(param.name, param.description, 60, feature, param, c -> {
 					Curve curve = getCurve(c, feature);
+					if (curve == null) return null;
 					Value value = CurveParameter.find(curve.getOutputParameters(), param.name);
 					return CurveParameter.renderValue(value, curve, concFormat);
 				}));
 			}
 			columnSpecList.add(new ColumnSpec("Curve", null, 100, feature, null, c -> {
-				return CurveFitService.getInstance().getCurveImage(getCurve(c, feature).getId(), imageX, imageY);
+				Curve curve = getCurve(c, feature);
+				if (curve == null) return null;
+				return CurveFitService.getInstance().getCurveImage(curve.getId(), imageX, imageY);
 			}));
 			
 			int indexStart = columnSpecList.size() - (params.length + 1);
@@ -430,7 +433,8 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 							if (f == null || c == null)	System.out.println("Feature " + f + ", Cruve " + c);
 							final Curve curve = getCurve(c, f);
 							curveLoadedCount.addAndGet(1);
-
+							if (curve == null) continue;
+							
 							// Send the render task to another thread, so this thread can keep loading curves.
 							//FIX Ubuntu/Cairo: new Image() may cause deadlock when called from non-UI thread.
 							Runnable curveImageGetter = () -> CurveFitService.getInstance().getCurveImage(curve.getId(), imageX, imageY);

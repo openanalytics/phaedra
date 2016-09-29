@@ -109,7 +109,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		for (int i = 0; i < input.getValid().length; i++) {
 			if (input.getValid()[i]) validCount++;
 		}
-		if (validCount < MIN_SAMPLES_FOR_FIT) throw new CurveFitException(MIN_SAMPLES_FOR_FIT + " samples are required for a Demo fit");
+		if (validCount < MIN_SAMPLES_FOR_FIT) throw new CurveFitException(MIN_SAMPLES_FOR_FIT + " samples are required for a " + getId() + " fit");
 	}
 
 	@Override

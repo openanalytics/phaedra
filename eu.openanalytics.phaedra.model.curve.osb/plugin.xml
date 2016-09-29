@@ -10,12 +10,7 @@
    <extension
          point="eu.openanalytics.phaedra.model.curve.curveRenderer">
       <curveRenderer
-            class="eu.openanalytics.phaedra.model.curve.osb.OSBCurveRenderer"
-            modelId="PL2">
-      </curveRenderer>
-      <curveRenderer
-            class="eu.openanalytics.phaedra.model.curve.osb.OSBCurveRenderer"
-            modelId="PL4">
+            class="eu.openanalytics.phaedra.model.curve.osb.OSBCurveRenderer">
       </curveRenderer>
    </extension>
    <extension

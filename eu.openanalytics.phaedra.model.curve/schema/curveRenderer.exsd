@@ -49,13 +49,6 @@
 
    <element name="curveRenderer">
       <complexType>
-         <attribute name="modelId" type="string" use="required">
-            <annotation>
-               <documentation>
-                  
-               </documentation>
-            </annotation>
-         </attribute>
          <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>

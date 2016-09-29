@@ -8,7 +8,8 @@ public interface ICurveRenderer {
 
 	public final static String EXT_PT_ID = Activator.PLUGIN_ID + ".curveRenderer";
 	public final static String ATTR_CLASS = "class";
-	public final static String ATTR_MODEL_ID = "modelId";
+	
+	public String[] getSupportedModelIds();
 	
 	public double[][] getCurveSamples(Curve curve, CurveFitInput input);
 	

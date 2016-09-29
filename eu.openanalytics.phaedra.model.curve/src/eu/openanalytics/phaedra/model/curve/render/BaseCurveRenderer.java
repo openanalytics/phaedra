@@ -6,6 +6,12 @@ import eu.openanalytics.phaedra.model.curve.vo.Curve;
 public class BaseCurveRenderer implements ICurveRenderer {
 
 	@Override
+	public String[] getSupportedModelIds() {
+		// Support nothing by default.
+		return null;
+	}
+	
+	@Override
 	public double[][] getCurveSamples(Curve curve, CurveFitInput input) {
 		// Curve samples cannot be calculated.
 		return null;

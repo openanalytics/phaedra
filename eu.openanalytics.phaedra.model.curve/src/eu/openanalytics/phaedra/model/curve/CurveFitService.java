@@ -72,6 +72,7 @@ public class CurveFitService extends BaseJPAService {
 	
 	private String[] knownModelIds;
 	private List<ICurveFitModelFactory> modelFactories;
+	private List<ICurveRenderer> curveRenderers;
 	
 	private CurveFitService() {
 		// Hidden constructor
@@ -92,6 +93,8 @@ public class CurveFitService extends BaseJPAService {
 		
 		knownModelIds = knownIds.toArray(new String[knownIds.size()]);
 		Arrays.sort(knownModelIds);
+		
+		curveRenderers = ExtensionUtils.createInstanceList(ICurveRenderer.EXT_PT_ID, ICurveRenderer.ATTR_CLASS, ICurveRenderer.class);
 	}
 
 	public static CurveFitService getInstance() {
@@ -368,9 +371,9 @@ public class CurveFitService extends BaseJPAService {
 	}
 
 	public ICurveRenderer getRenderer(String modelId) {
-		ICurveRenderer renderer = ExtensionUtils.createInstance(ICurveRenderer.EXT_PT_ID, ICurveRenderer.ATTR_MODEL_ID, modelId, ICurveRenderer.ATTR_CLASS, ICurveRenderer.class);
-		if (renderer == null) renderer = new BaseCurveRenderer();
-		return renderer;
+		return curveRenderers.stream()
+				.filter(r -> CollectionUtils.contains(r.getSupportedModelIds(), modelId)).findAny()
+				.orElse(new BaseCurveRenderer());
 	}
 	
 	public CurveFitInput getInput(Curve curve) {

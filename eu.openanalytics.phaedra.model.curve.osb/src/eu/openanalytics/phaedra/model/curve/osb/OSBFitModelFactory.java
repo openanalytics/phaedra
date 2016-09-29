@@ -6,7 +6,7 @@ import eu.openanalytics.phaedra.model.curve.ICurveFitModelFactory;
 
 public class OSBFitModelFactory implements ICurveFitModelFactory {
 
-	private static final String[] MODEL_IDS = {
+	public static final String[] MODEL_IDS = {
 			"PL2", "PL3L", "PL3U", "PL4",
 			"PL2_R", "PL3L_R", "PL3U_R", "PL4_R",
 			"PL2H1", "PL3LH1", "PL3UH1", "PL4H1",
