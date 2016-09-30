@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.model.protocol;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,6 +26,7 @@ import eu.openanalytics.phaedra.base.security.model.Roles;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.protocol.util.FeatureGroupManager;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
+import eu.openanalytics.phaedra.model.protocol.util.ObjectCopyFactory;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolClassSummary;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
@@ -170,6 +172,27 @@ public class ProtocolService extends BaseJPAService {
 		return pClass;
 	}
 
+	public ProtocolClass cloneProtocolClass(ProtocolClass protocolClass) {
+		SecurityService.getInstance().checkWithException(Permissions.PROTOCOLCLASS_CREATE, null);
+		ProtocolClass clone = createProtocolClass();
+		ObjectCopyFactory.copySettings(protocolClass, clone, false);
+		updateProtocolClass(clone);
+		
+		try {
+			//TODO This path is an implementation detail of the DC bundles, see eu.openanalytics.phaedra.datacapture.module.ModuleFactory
+			String path = "/data.capture.configurations/%s.xml";
+			String dcConfig = Screening.getEnvironment().getFileServer().getContentsAsString(String.format(path, protocolClass.getDefaultCaptureConfig()));
+			String newId = String.format("protocolclass-%d.capture", clone.getId());
+			Screening.getEnvironment().getFileServer().putContents(String.format(path, newId), dcConfig.getBytes());
+			clone.setDefaultCaptureConfig(newId);
+			updateProtocolClass(clone);
+		} catch (IOException e) {
+			EclipseLog.error("Failed to clone capture configuration", e, Activator.getDefault());
+		}
+		
+		return clone;
+	}
+	
 	public void updateProtocolClass(ProtocolClass protocolClass) {
 		checkCanEditProtocolClass(protocolClass);
 		validateProtocolClass(protocolClass);
@@ -235,7 +258,7 @@ public class ProtocolService extends BaseJPAService {
 		String sql = "select"
 				+ " (select count(protocol_id) from phaedra.hca_protocol where protocolclass_id = ?) protocols,"
 				+ " (select count(feature_id) from phaedra.hca_feature where protocolclass_id = ?) features,"
-				+ " (select count(cellfeature_id) from phaedra.hca_cellfeature where protocolclass_id = ?) swFeatures,"
+				+ " (select count(subwellfeature_id) from phaedra.hca_subwellfeature where protocolclass_id = ?) swFeatures,"
 				+ " (select count(image_channel_id) from phaedra.hca_image_channel where image_setting_id = "
 				+ " 	(select image_setting_id from phaedra.hca_protocolclass where protocolclass_id = ?)) imageChannels "
 				+ " from dual";
