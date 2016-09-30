@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -32,6 +33,7 @@ import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
+import eu.openanalytics.phaedra.base.ui.admin.fs.EditFSFileCmd;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
@@ -180,16 +182,12 @@ public class ProtocolClassPage extends FormPage {
 
 		toolkit.createLabel(compositeBase, "Default Well Feature:", SWT.NONE);
 
-		Composite composite_1 = toolkit.createComposite(compositeBase, SWT.NONE);
-		composite_1.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		GridLayout gridLayout_3 = new GridLayout();
-		gridLayout_3.numColumns = 2;
-		gridLayout_3.marginHeight = 1;
-		gridLayout_3.marginWidth = 1;
-		composite_1.setLayout(gridLayout_3);
-		toolkit.paintBordersFor(composite_1);
+		Composite subcomp = toolkit.createComposite(compositeBase, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(subcomp);
+		GridLayoutFactory.fillDefaults().numColumns(2).margins(1, 1).applyTo(subcomp);
+		toolkit.paintBordersFor(subcomp);
 
-		comboDefaultFeature = new CCombo(composite_1, SWT.BORDER | SWT.READ_ONLY);
+		comboDefaultFeature = new CCombo(subcomp, SWT.BORDER | SWT.READ_ONLY);
 		comboDefaultFeature.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e) {
@@ -201,13 +199,11 @@ public class ProtocolClassPage extends FormPage {
 				markDirty();
 			}
 		});
-		final GridData gd_comboDefaultFeature = new GridData(227, SWT.DEFAULT);
-		comboDefaultFeature.setLayoutData(gd_comboDefaultFeature);
-		comboDefaultFeature.setVisibleItemCount(20);
+		GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).applyTo(comboDefaultFeature);
 		fillComboDefaultFeature();
 
-		final Hyperlink hyperlinkRefresh = toolkit.createHyperlink(composite_1, "Refresh", SWT.NONE);
-		hyperlinkRefresh.addHyperlinkListener(new HyperlinkAdapter() {
+		Hyperlink refreshFeaturesLnk = toolkit.createHyperlink(subcomp, "Refresh", SWT.NONE);
+		refreshFeaturesLnk.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(final HyperlinkEvent e) {
 				fillComboDefaultFeature();
@@ -217,30 +213,40 @@ public class ProtocolClassPage extends FormPage {
 		toolkit.createLabel(compositeBase, "Default Link Source:", SWT.NONE);
 
 		comboDefaultLinkSource = new CCombo(compositeBase, SWT.BORDER | SWT.READ_ONLY);
-		final GridData gd_textLims = new GridData(228, SWT.DEFAULT);
-		comboDefaultLinkSource.setLayoutData(gd_textLims);
 		comboDefaultLinkSource.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				markDirty();
 			}
 		});
+		GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).align(SWT.BEGINNING, SWT.CENTER).applyTo(comboDefaultLinkSource);
 		fillComboLinkSource();
 		
 		toolkit.createLabel(compositeBase, "Default Capture Configuration:", SWT.NONE);
 
-		comboDefaultCaptureConfig = new CCombo(compositeBase, SWT.BORDER | SWT.READ_ONLY);
-		final GridData gd_defaultImporter = new GridData(228, SWT.DEFAULT);
-		comboDefaultCaptureConfig.setLayoutData(gd_defaultImporter);
-		comboDefaultCaptureConfig.setVisibleItemCount(10);
+		subcomp = toolkit.createComposite(compositeBase, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(subcomp);
+		GridLayoutFactory.fillDefaults().numColumns(2).margins(1, 1).applyTo(subcomp);
+		toolkit.paintBordersFor(subcomp);
+		
+		comboDefaultCaptureConfig = new CCombo(subcomp, SWT.BORDER | SWT.READ_ONLY);
 		comboDefaultCaptureConfig.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e) {
 				markDirty();
 			}
 		});
+		GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).applyTo(comboDefaultCaptureConfig);
 		fillComboDefaultCaptureConfig();
-
+		
+		Hyperlink editConfigLnk = toolkit.createHyperlink(subcomp, "Edit", SWT.NONE);
+		editConfigLnk.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(final HyperlinkEvent e) {
+				EditFSFileCmd.execute(ProtocolService.getInstance().getDCConfigFile(comboDefaultCaptureConfig.getText()));
+			}
+		});
+		
 		new Label(compositeBase, SWT.NONE);
 		new Label(compositeBase, SWT.NONE);
 

@@ -1,7 +1,5 @@
 package eu.openanalytics.phaedra.base.ui.admin.fs.browser;
 
-import java.io.File;
-
 import org.eclipse.jface.viewers.StyledCellLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Image;
@@ -15,13 +13,10 @@ public class FSLabelProvider extends StyledCellLabelProvider {
 	
 	@Override
 	public void update(ViewerCell cell) {
-		File file = (File)cell.getElement();
-		
-		if (file.isDirectory()) cell.setImage(folderIcon);
+		String path = cell.getElement().toString();
+		if (FSContentProvider.isDirectory(path)) cell.setImage(folderIcon);
 		else cell.setImage(fileIcon);
-		
-		cell.setText(file.getName());
-		
+		cell.setText(FSContentProvider.getName(path));
 		super.update(cell);
 	}
 }

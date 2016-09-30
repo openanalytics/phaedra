@@ -1,14 +1,8 @@
 package eu.openanalytics.phaedra.base.ui.admin.fs.editor;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -16,12 +10,12 @@ import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.text.Document;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.jface.text.source.IAnnotationModel;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IPathEditorInput;
 import org.eclipse.ui.texteditor.AbstractDocumentProvider;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.security.model.Roles;
 import eu.openanalytics.phaedra.base.ui.admin.Activator;
-import eu.openanalytics.phaedra.base.ui.admin.fs.AdminFileServer;
 
 public class FSDocumentProvider extends AbstractDocumentProvider {
 
@@ -30,71 +24,15 @@ public class FSDocumentProvider extends AbstractDocumentProvider {
 	 */
 	@Override
     protected IDocument createDocument(Object element) throws CoreException {
-		if (element instanceof IEditorInput) {
-			IDocument document= new Document();
-			if (setDocumentContent(document, (IEditorInput) element)) {
-				setupDocument(document);
-			}
+		String fsPath = getFSPath(element);
+		try {
+			String contents = Screening.getEnvironment().getFileServer().getContentsAsString(fsPath);
+			IDocument document = new Document();
+			document.set(contents);
+			setupDocument(document);
 			return document;
-		}
-	
-		return null;
-	}
-	
-	/**
-	 * Tries to read the file pointed at by <code>input</code> if it is an
-	 * <code>IPathEditorInput</code>. If the file does not exist, <code>true</code>
-	 * is returned.
-	 *  
-	 * @param document the document to fill with the contents of <code>input</code>
-	 * @param input the editor input
-	 * @return <code>true</code> if setting the content was successful or no file exists, <code>false</code> otherwise
-	 * @throws CoreException if reading the file fails
-	 */
-	private boolean setDocumentContent(IDocument document, IEditorInput input) throws CoreException {
-		// XXX handle encoding
-		Reader reader;
-		try {
-			if (input instanceof IPathEditorInput)
-				reader= new FileReader(((IPathEditorInput)input).getPath().toFile());
-			else
-				return false;
-		} catch (FileNotFoundException e) {
-			// return empty document and save later
-			return true;
-		}
-		
-		try {
-			setDocumentContent(document, reader);
-			return true;
 		} catch (IOException e) {
-			throw new CoreException(new Status(IStatus.ERROR, "org.eclipse.ui.examples.rcp.texteditor", IStatus.OK, "error reading file", e)); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-	}
-
-	/**
-	 * Reads in document content from a reader and fills <code>document</code>
-	 * 
-	 * @param document the document to fill
-	 * @param reader the source
-	 * @throws IOException if reading fails
-	 */
-	private void setDocumentContent(IDocument document, Reader reader) throws IOException {
-		Reader in= new BufferedReader(reader);
-		try {
-			
-			StringBuffer buffer= new StringBuffer(512);
-			char[] readBuffer= new char[512];
-			int n= in.read(readBuffer);
-			while (n > 0) {
-				buffer.append(readBuffer, 0, n);
-				n= in.read(readBuffer);
-			}
-			
-			document.set(buffer.toString());
-		
-		} finally {
-			in.close();
+			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to open file " + fsPath, e));
 		}
 	}
 
@@ -104,6 +42,7 @@ public class FSDocumentProvider extends AbstractDocumentProvider {
 	 * @param document the new document
 	 */
 	protected void setupDocument(IDocument document) {
+		// Do nothing.
 	}
 
 	/*
@@ -119,23 +58,13 @@ public class FSDocumentProvider extends AbstractDocumentProvider {
 	 */
 	@Override
     protected void doSaveDocument(IProgressMonitor monitor, Object element, IDocument document, boolean overwrite) throws CoreException {
-		if (element instanceof IPathEditorInput) {
-			IPathEditorInput pei= (IPathEditorInput) element;
-			IPath path= pei.getPath();
-			File file= path.toFile();
-			
-			try {
-				file.createNewFile();
-
-				if (file.exists()) {
-					AdminFileServer.getInstance().saveFile(file, document.get().getBytes());
-				} else {
-					throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, IStatus.OK, "Failed to save file: file not found", null)); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-			} catch (IOException e) {
-				throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, IStatus.OK, "Failed to save file", e)); //$NON-NLS-1$ //$NON-NLS-2$
-			}
-
+		//TODO Do a better security check: admins or protocol team members.
+		SecurityService.getInstance().checkWithException(Roles.USER, null);
+		String fsPath = getFSPath(element);
+		try {
+			Screening.getEnvironment().getFileServer().putContents(fsPath, document.get().getBytes());
+		} catch (IOException e) {
+			throw new CoreException(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to save file " + fsPath, e));
 		}
 	}
 
@@ -152,10 +81,11 @@ public class FSDocumentProvider extends AbstractDocumentProvider {
 	 */
 	@Override
     public boolean isModifiable(Object element) {
-		File file= getFile(element);
-		if (file == null)
-			return super.isModifiable(element);
-		return file.canWrite() || !file.exists();
+		try {
+			return Screening.getEnvironment().getFileServer().exists(getFSPath(element));
+		} catch (IOException e) {
+			return false;
+		}
 	}
 	
 	/*
@@ -179,10 +109,11 @@ public class FSDocumentProvider extends AbstractDocumentProvider {
 	 */
 	@Override
     public boolean isDeleted(Object element) {
-		File file= getFile(element);
-		if (file == null)
-			return super.isDeleted(element);
-		return !file.exists();
+		try {
+			return !Screening.getEnvironment().getFileServer().exists(getFSPath(element));
+		} catch (IOException e) {
+			return true;
+		}
 	}
 	
 	/*
@@ -190,24 +121,16 @@ public class FSDocumentProvider extends AbstractDocumentProvider {
 	 */
 	@Override
     public long getModificationStamp(Object element) {
-		File file= getFile(element);
-		if (file == null)
-			return super.getModificationStamp(element);
-		return file.lastModified();
+		try {
+			return Screening.getEnvironment().getFileServer().getLastModified(getFSPath(element));
+		} catch (IOException e) {
+			return 0;
+		}
 	}
-	
-	/**
-	 * Returns the file corresponding to the input element, <code>null</code> if
-	 * <code>element</code> is not an {@link IPathEditorInput}.
-	 * 
-	 * @param element the input element
-	 * @return the file corresponding to <code>element</code>
-	 */
-	protected final File getFile(Object element) {
-		if (element instanceof IPathEditorInput) {
-			IPathEditorInput pei= (IPathEditorInput) element;
-			File file= pei.getPath().toFile();
-			return file;
+
+	private String getFSPath(Object element) {
+		if (element instanceof FSPathEditorInput) {
+			return ((FSPathEditorInput) element).getPath().toString();
 		}
 		return null;
 	}

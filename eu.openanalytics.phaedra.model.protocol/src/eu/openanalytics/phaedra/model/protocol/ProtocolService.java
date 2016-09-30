@@ -179,11 +179,9 @@ public class ProtocolService extends BaseJPAService {
 		updateProtocolClass(clone);
 		
 		try {
-			//TODO This path is an implementation detail of the DC bundles, see eu.openanalytics.phaedra.datacapture.module.ModuleFactory
-			String path = "/data.capture.configurations/%s.xml";
-			String dcConfig = Screening.getEnvironment().getFileServer().getContentsAsString(String.format(path, protocolClass.getDefaultCaptureConfig()));
+			String dcConfig = Screening.getEnvironment().getFileServer().getContentsAsString(getDCConfigFile(protocolClass.getDefaultCaptureConfig()));
 			String newId = String.format("protocolclass-%d.capture", clone.getId());
-			Screening.getEnvironment().getFileServer().putContents(String.format(path, newId), dcConfig.getBytes());
+			Screening.getEnvironment().getFileServer().putContents(getDCConfigFile(newId), dcConfig.getBytes());
 			clone.setDefaultCaptureConfig(newId);
 			updateProtocolClass(clone);
 		} catch (IOException e) {
@@ -191,6 +189,12 @@ public class ProtocolService extends BaseJPAService {
 		}
 		
 		return clone;
+	}
+	
+	public String getDCConfigFile(String configId) {
+		//TODO This path is an implementation detail of the DC bundles, see eu.openanalytics.phaedra.datacapture.module.ModuleFactory
+		String path = "/data.capture.configurations/%s.xml";
+		return String.format(path, configId);
 	}
 	
 	public void updateProtocolClass(ProtocolClass protocolClass) {
