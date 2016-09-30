@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
@@ -202,19 +205,9 @@ public class CalculationService {
 	public List<Plate> getMultiploPlates(Plate plate) {
 		List<Plate> multiploPlates = new ArrayList<>();
 		if (plate == null) return multiploPlates;
+		else multiploPlates.add(plate);
 
-		multiploPlates.add(plate);
-		if (!isMultiplo(plate.getExperiment())) return multiploPlates;
-
-		String motherId = getMotherID(plate);
-		if (motherId == null || motherId.isEmpty()) return multiploPlates;
-
-		//TODO Optimize. This performs an excessive amount of queries in multiplo experiments.
-		List<Plate> plates = PlateService.getInstance().getPlates(plate.getExperiment());
-		for (Plate p: plates) {
-			if (p != plate && motherId.equals(getMotherID(p))) multiploPlates.add(p);
-		}
-
+		multiploPlates.addAll(MultiploMethod.get(plate.getExperiment()).getMultiploPlates(plate));
 		return multiploPlates;
 	}
 	
@@ -226,11 +219,7 @@ public class CalculationService {
 	}
 	
 	public boolean isMultiplo(Experiment exp) {
-		return exp.isMultiplo();
-	}
-	
-	private String getMotherID(Plate plate) {
-		return PlateService.getInstance().getPlateProperty(plate, "plate-mother-id");
+		return MultiploMethod.get(exp) != MultiploMethod.None;
 	}
 	
 	/* package */ List<FeatureValue> runCalculatedFeature(Feature f, Plate p) {
@@ -350,7 +339,7 @@ public class CalculationService {
 		}
 	}
 
-	public static enum CalculationTrigger {
+	public enum CalculationTrigger {
 		PlateRecalc("On every plate recalculation"),
 		SubwellDataChange("Only when sub-well data changes");
 
@@ -369,7 +358,7 @@ public class CalculationService {
 		}
 	}
 
-	public static enum CalculationMode {
+	public enum CalculationMode {
 		LIGHT("Light","Only reset cached values"),
 		NORMAL("Normal","Calculate well features, apply normalization and fit dose-response curves"),
 		FULL("Full","As Normal, but also calculate subwell-based well features");
@@ -388,6 +377,70 @@ public class CalculationService {
 
 		public String getDescription() {
 			return description;
+		}
+	}
+	
+	public enum MultiploMethod {
+		
+		None("This experiment does not contain any plates or compounds screened in multiplo.", plate -> Collections.emptyList()),
+		
+		Property("Multiplo plates are identified via a plate property, such as 'mother-id', that is"
+				+ " set on the plate during import or plate definition linking."
+				+ " The name of the property should be set as the multiplo parameter.",
+			plate -> {
+				String propName = plate.getExperiment().getMultiploParameter();
+				String propValue = PlateService.getInstance().getPlateProperty(plate, propName);
+				if (propValue == null || propValue.isEmpty()) return Collections.emptyList();
+	
+				return PlateService.streamableList(PlateService.getInstance().getPlates(plate.getExperiment())).stream()
+						.filter(p -> p != plate && propValue.equals(PlateService.getInstance().getPlateProperty(plate, propName)))
+						.collect(Collectors.toList());
+		}),
+		
+		BarcodePattern("Multiplo plates are identified via their barcode, or a portion of their barcode."
+				+ " A regular expression containing at least one group should be set as the multiplo parameter.",
+			plate -> {
+				String regex = plate.getExperiment().getMultiploParameter();
+				if (regex == null || regex.isEmpty()) return Collections.emptyList();
+				
+				Pattern pattern = Pattern.compile(regex);
+				Matcher m = pattern.matcher(plate.getBarcode());
+				if (!m.matches() || m.groupCount() == 0) return Collections.emptyList();
+				String matchValue = m.group(1);
+				
+				return PlateService.streamableList(PlateService.getInstance().getPlates(plate.getExperiment())).stream()
+						.filter(p -> {
+							Matcher matcher = pattern.matcher(p.getBarcode());
+							return (p != plate && matcher.matches() && matcher.group(1).equals(matchValue));
+						})
+						.collect(Collectors.toList());
+		});
+		
+		private String description;
+		private Function<Plate, List<Plate>> multiploPlateGetter;
+		
+		private MultiploMethod(String description, Function<Plate, List<Plate>> multiploPlateGetter) {
+			this.description = description;
+			this.multiploPlateGetter = multiploPlateGetter;
+		}
+		
+		public static MultiploMethod get(Experiment exp) {
+			return get(exp.getMultiploMethod());
+		}
+		
+		public static MultiploMethod get(String expMethod) {
+			for (MultiploMethod m: values()) {
+				if (m.toString().equals(expMethod)) return m;
+			}
+			return None;
+		}
+		
+		public String getDescription() {
+			return description;
+		}
+		
+		public List<Plate> getMultiploPlates(Plate plate) {
+			return multiploPlateGetter.apply(plate);
 		}
 	}
 }

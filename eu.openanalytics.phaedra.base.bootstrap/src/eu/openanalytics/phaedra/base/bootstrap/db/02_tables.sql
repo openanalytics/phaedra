@@ -163,7 +163,8 @@ CREATE TABLE phaedra.hca_experiment (
 	protocol_id			bigint, 
 	description			varchar(200),
 	comments			varchar(1600),
-	multiplo			boolean default false,
+	multiplo_method		varchar(100),
+	multiplo_parameter	varchar(100),
 	archive_status		bigint default 0, 
 	archive_user		varchar(25),
 	archive_dt			timestamp

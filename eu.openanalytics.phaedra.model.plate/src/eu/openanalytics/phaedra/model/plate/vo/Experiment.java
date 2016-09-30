@@ -44,9 +44,12 @@ public class Experiment extends PlatformObject implements IValueObject, Serializ
 
 	@Column(name="experiment_name")
 	private String name;
-
-	@Column(name="multiplo")
-	private boolean multiplo;
+	
+	@Column(name="multiplo_method")
+	private String multiploMethod;
+	
+	@Column(name="multiplo_parameter")
+	private String multiploParameter;
 	
 	@Column(name="description")
 	private String description;
@@ -101,13 +104,21 @@ public class Experiment extends PlatformObject implements IValueObject, Serializ
 	public void setName(String name) {
 		this.name = name;
 	}
-
-	public boolean isMultiplo() {
-		return multiplo;
+	
+	public String getMultiploMethod() {
+		return multiploMethod;
 	}
 	
-	public void setMultiplo(boolean multiplo) {
-		this.multiplo = multiplo;
+	public void setMultiploMethod(String multiploMethod) {
+		this.multiploMethod = multiploMethod;
+	}
+	
+	public String getMultiploParameter() {
+		return multiploParameter;
+	}
+	
+	public void setMultiploParameter(String multiploParameter) {
+		this.multiploParameter = multiploParameter;
 	}
 	
 	public String getDescription() {

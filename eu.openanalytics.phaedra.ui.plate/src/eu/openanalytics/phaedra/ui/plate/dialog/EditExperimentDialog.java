@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.ui.plate.dialog;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -8,7 +9,9 @@ import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
@@ -16,6 +19,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import eu.openanalytics.phaedra.base.util.CollectionUtils;
+import eu.openanalytics.phaedra.calculation.CalculationService.MultiploMethod;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 
@@ -24,7 +29,9 @@ public class EditExperimentDialog extends TitleAreaDialog {
 	private Text descriptionTxt;
 	private Text commentTxt;
 	private Text nameTxt;
-	private Button multiploBtn;
+	private Combo multiploMethodCmb;
+	private Label multiploDescriptionLbl;
+	private Text multiploParamTxt;
 	private Text creatorTxt;
 	private DateTime creationDateDt;
 	
@@ -44,7 +51,7 @@ public class EditExperimentDialog extends TitleAreaDialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("Edit Experiment");
-		newShell.setSize(500,400);
+		newShell.setSize(500,440);
 	}
 	
 	@Override
@@ -96,11 +103,27 @@ public class EditExperimentDialog extends TitleAreaDialog {
 		creatorTxt.setEnabled(false);
 		GridDataFactory.fillDefaults().grab(true,false).applyTo(creatorTxt);
 
-		new Label(main, SWT.NONE);
+		lbl = new Label(main, SWT.NONE);
+		lbl.setText("Multiplo method:");
 		
-		multiploBtn = new Button(main, SWT.CHECK);
-		multiploBtn.setText("This is a multiplo experiment");
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(multiploBtn);
+		multiploMethodCmb = new Combo(main, SWT.READ_ONLY);
+		multiploMethodCmb.setItems(Arrays.stream(MultiploMethod.values()).map(m -> m.toString()).toArray(i -> new String[i]));
+		multiploMethodCmb.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				multiploDescriptionLbl.setText(MultiploMethod.get(multiploMethodCmb.getText()).getDescription());
+			};
+		});
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(multiploMethodCmb);
+		
+		new Label(main, SWT.NONE);
+		multiploDescriptionLbl = new Label(main, SWT.WRAP | SWT.BORDER);
+		GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 100).applyTo(multiploDescriptionLbl);
+		
+		lbl = new Label(main, SWT.NONE);
+		lbl.setText("Multiplo parameter:");
+		
+		multiploParamTxt = new Text(main, SWT.BORDER);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(multiploParamTxt);
 		
 		setTitle("Edit Experiment");
 		setMessage("You can change the properties of the experiment below.");
@@ -115,7 +138,12 @@ public class EditExperimentDialog extends TitleAreaDialog {
 		descriptionTxt.setText((experiment.getDescription() != null ? experiment.getDescription() : ""));
 		commentTxt.setText(experiment.getComments() != null ? experiment.getComments() : "");
 		creatorTxt.setText(experiment.getCreator());
-		multiploBtn.setSelection(experiment.isMultiplo());
+		
+		if (experiment.getMultiploMethod() != null) multiploMethodCmb.select(CollectionUtils.find(MultiploMethod.values(), MultiploMethod.get(experiment)));
+		else multiploMethodCmb.select(0);
+		if (experiment.getMultiploParameter() != null) multiploParamTxt.setText(experiment.getMultiploParameter());
+		
+		multiploDescriptionLbl.setText(MultiploMethod.get(multiploMethodCmb.getText()).getDescription());
 		
 		Date date = experiment.getCreateDate();
 		Calendar cal = Calendar.getInstance();
@@ -143,7 +171,11 @@ public class EditExperimentDialog extends TitleAreaDialog {
 			experiment.setName(nameTxt.getText());
 			experiment.setDescription(descriptionTxt.getText());
 			experiment.setComments(commentTxt.getText());
-			experiment.setMultiplo(multiploBtn.getSelection());
+
+			String multiploMethod = multiploMethodCmb.getText();
+			if (multiploMethod.isEmpty() || multiploMethod.equals(MultiploMethod.None.toString())) multiploMethod = null;
+			experiment.setMultiploMethod(multiploMethod);
+			experiment.setMultiploParameter(multiploParamTxt.getText());
 			
 			PlateService.getInstance().updateExperiment(experiment);
 			close();
