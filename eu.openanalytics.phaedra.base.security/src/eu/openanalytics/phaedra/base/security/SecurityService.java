@@ -98,8 +98,8 @@ public class SecurityService {
 	}
 
 	public boolean isGlobalAdmin(String userName) {
-		Set<Group> groups = getMemberships(userName);
-		for (Group group : groups) {
+		if (ldapConfig == null) return true;
+		for (Group group : getMemberships(userName)) {
 			if (group.equals(Group.GLOBAL_ADMIN_GROUP)) return true;
 		}
 		return false;
