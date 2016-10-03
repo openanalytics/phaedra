@@ -21,14 +21,16 @@ public class Authentication {
 	
 		String username = configFile.getProperty("username");
 		String hexpw = configFile.getProperty("password");
-		byte[] password = new HexBinaryAdapter().unmarshal(hexpw);
-		password = AESEncryptor.decrypt(password).getBytes();
-
+		byte[] password = {};
+		
+		if (hexpw != null && !hexpw.isEmpty()) {
+			password = new HexBinaryAdapter().unmarshal(hexpw);
+			password = AESEncryptor.decrypt(password).getBytes();
+		}
+		
 		if (username != null && password != null) {
 			String envId = configFile.getProperty("environment");
-			EclipseLog.info("Logging in to " + envId + " as user " + username + "...", Activator.getDefault());
 			IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
-
 			try {
 				Screening.login(env, username, password);
 			} catch (AuthenticationException | IOException e) {

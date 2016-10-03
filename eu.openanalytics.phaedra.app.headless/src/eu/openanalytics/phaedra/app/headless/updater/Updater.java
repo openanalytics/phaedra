@@ -17,7 +17,10 @@ public class Updater implements IStartup{
 	@Override
 	public void earlyStartup() {
 		Properties configFile = Activator.getDefault().getHeadlessProperties();
-		int interval = Integer.parseInt(configFile.getProperty("interval"));
+		String intervalString = configFile.getProperty("interval");
+		if (intervalString == null || intervalString.isEmpty()) return;
+		
+		int interval = Integer.parseInt(intervalString);
 		if (interval == -1) return;
 		
 		IJobChangeListener provisionListener = new JobChangeAdapter(){
