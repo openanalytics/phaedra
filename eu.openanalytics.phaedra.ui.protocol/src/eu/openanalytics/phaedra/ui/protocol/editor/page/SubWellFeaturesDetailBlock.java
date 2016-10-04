@@ -404,7 +404,7 @@ public class SubWellFeaturesDetailBlock implements IDetailsPage {
 		DataBindingContext ctx = new DataBindingContext();
 		
 		FormEditorUtils.bindText(textName, feature, "name", ctx);
-		FormEditorUtils.bindText(textAlias, feature, "name", ctx);
+		FormEditorUtils.bindText(textAlias, feature, "shortName", ctx);
 		FormEditorUtils.bindSelection(checkKeyfeature, feature, "key", ctx);
 		FormEditorUtils.bindSelection(checkNumeric, feature, "numeric", ctx);
 		
