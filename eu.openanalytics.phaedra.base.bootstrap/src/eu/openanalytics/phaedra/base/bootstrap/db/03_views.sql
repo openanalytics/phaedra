@@ -56,34 +56,6 @@ GRANT SELECT ON phaedra.hca_plate_compounds 	to phaedra_role_read;
 GRANT SELECT ON phaedra.hca_plate_wells 		to phaedra_role_read;
 
 -- ======================================================================= 
--- Curve views
--- ======================================================================= 
-
-CREATE OR REPLACE VIEW phaedra.hca_well_curves AS
-SELECT
-		w.well_id AS well_id,
-		cc.platecompound_id AS platecompound_id,
-		c.feature_id AS feature_id,
-		c.curve_id AS curve_id,
-		c.group_by_1 AS group1,
-		c.group_by_2 AS group2,
-		c.group_by_3 AS group3
-FROM
-		phaedra.hca_plate_well w, phaedra.hca_curve_compound cc, phaedra.hca_curve c
-WHERE
-		(c.group_by_1 is null OR c.group_by_1 = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
-			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_1'))
-		AND (c.group_by_2 is null OR c.group_by_2 = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
-			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_2'))
-		AND (c.group_by_3 is null OR c.group_by_3 = (SELECT case when f.is_numeric then cast(fv.raw_numeric_value AS text) else fv.raw_string_value end FROM phaedra.hca_feature_value fv, phaedra.hca_feature f, phaedra.hca_curve_setting cs
-			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_3'))
-		AND w.platecompound_id = cc.platecompound_id AND cc.curve_id = c.curve_id;
-
--- -----------------------------------------------------------------------
-
-GRANT SELECT ON phaedra.hca_well_curves to phaedra_role_read;
-
--- ======================================================================= 
 -- Upload views
 -- =======================================================================
 
