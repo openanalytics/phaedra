@@ -52,14 +52,14 @@ public class OSBCurveRenderer implements ICurveRenderer {
 				CurveParameter.find(curve.getOutputParameters(), "pIC50 UB").numericValue
 		};
 		for (int i = 0; i < input.getValid().length; i++) {
-			if (input.getValid()[i]) {
+			if (input.getValid()[i] && !Double.isNaN(input.getValues()[i])) {
 				bounds[0] = Math.min(bounds[0], input.getValues()[i]);
 				bounds[1] = Math.max(bounds[1], input.getValues()[i]);
 			}
 		}
 		
 		double diff = bounds[1] - bounds[0];
-		if (diff > 1.0d) return bounds;
+//		if (diff > 1.0d) return bounds;
 		return new double[] {
 				bounds[0] - diff/10,
 				bounds[1] + diff/10
