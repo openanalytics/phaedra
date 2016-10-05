@@ -1259,7 +1259,7 @@ CREATE TABLE phaedra.HCA_PART_SETTINGS (
     NAME		   	varchar(100) NOT NULL,
 	IS_GLOBAL		bigint DEFAULT 0,
 	IS_TEMPLATE		bigint DEFAULT 0,
-    PROPERTIES 		bytea
+    PROPERTIES 		text
 );
 
 ALTER TABLE phaedra.HCA_PART_SETTINGS 
