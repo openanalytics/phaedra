@@ -233,9 +233,14 @@ public class LoginSplash extends BasicSplashHandler {
 			usernameTxt.setText(username);
 		}
 		
-		if (environmentCmb.getItems().length > 0) environmentCmb.select(0);
-		handleEnvironmentSelected();
-		passwordTxt.setFocus();
+		if (environmentCmb.getItems().length > 0) {
+			environmentCmb.select(0);
+			handleEnvironmentSelected();
+			passwordTxt.setFocus();
+		} else {
+			AccessDialog.openLoginFailedDialog(getSplash(), "Configuration Error", "No environments available. Please check the log file.");
+			handleButtonCancelWidgetSelected();
+		}
 	}
 
 	private void handleEnvironmentSelected() {
