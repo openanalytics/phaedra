@@ -7,7 +7,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import eu.openanalytics.phaedra.base.security.credentials.PasswordStore;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 
 public class Config {
