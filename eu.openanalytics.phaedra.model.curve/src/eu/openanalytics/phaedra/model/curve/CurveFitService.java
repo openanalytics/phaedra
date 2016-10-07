@@ -403,6 +403,7 @@ public class CurveFitService extends BaseJPAService {
 	}
 	
 	private CacheKey getCacheKey(Compound compound, Feature feature, CurveGrouping grouping) {
+		if (grouping == null) grouping = NO_GROUPING;
 		Object[] keyParts = new Object[2 + grouping.getCount()];
 		keyParts[0] = compound.getId();
 		keyParts[1] = feature.getId();
