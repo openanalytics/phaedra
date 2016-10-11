@@ -18,6 +18,7 @@ import javax.net.ssl.SSLContext;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SSL;
 import eu.openanalytics.phaedra.base.security.model.Group;
+import eu.openanalytics.phaedra.base.security.model.Roles;
 
 public class LDAPUtils {
 
@@ -29,8 +30,13 @@ public class LDAPUtils {
 	
 	public static DirContext bind(String userName, byte[] password, LDAPConfig cfg) {
 		// LDAP bind may need a qualified userName, including domain.
-		if (cfg.defaultDomain != null && !userName.contains("\\")) {
+		if (cfg.defaultDomain != null && !cfg.defaultDomain.isEmpty() && !userName.contains("\\")) {
 			userName = cfg.defaultDomain + "\\" + userName;
+		}
+		
+		String principal = userName;
+		if (cfg.principalMapping != null && !cfg.principalMapping.isEmpty()) {
+			principal = cfg.principalMapping.replace("${username}", userName);
 		}
 		
 		if (password.length == 0) {
@@ -44,7 +50,7 @@ public class LDAPUtils {
 			Hashtable<String, String> env = new Hashtable<>(11);
 			env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 			env.put(Context.PROVIDER_URL, cfg.ldapUrl);
-			env.put(Context.SECURITY_PRINCIPAL, userName);
+			env.put(Context.SECURITY_PRINCIPAL, principal);
 			env.put(Context.SECURITY_CREDENTIALS, new String(password));
 			
 			DirContext ctx = new InitialDirContext(env);
@@ -81,6 +87,14 @@ public class LDAPUtils {
 	
 	protected static Map<Group, List<String>> loadGroups(DirContext ctx, LDAPConfig cfg) {
 		Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
+		
+		if (cfg.groupPrefix == null || cfg.groupPrefix.isEmpty()) {
+			Group group = new Group(Group.GLOBAL_TEAM, Roles.ADMINISTRATOR);
+			List<String> members = new ArrayList<>();
+			members.add("*");
+			groups.put(group, members);
+			return groups;
+		}
 		
 		try {
 			SearchControls ctrl = new SearchControls();

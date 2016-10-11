@@ -46,6 +46,8 @@ public class EnvironmentImpl implements IEnvironment {
 			ldapConfig.defaultDomain = config.getValue(name, "auth", "default.domain");
 			ldapConfig.groupPrefix = config.getValue(name, "auth", "group.prefix");
 			ldapConfig.groupFilter = config.getValue(name, "auth", "group.filter");
+			ldapConfig.principalMapping = config.getValue(name, "auth", "principal.mapping");
+			
 		}
 		SecurityService.createInstance(ldapConfig);
 		

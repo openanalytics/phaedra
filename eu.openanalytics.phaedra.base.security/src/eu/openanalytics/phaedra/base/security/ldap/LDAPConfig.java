@@ -26,4 +26,9 @@ public class LDAPConfig {
 	 * The default domain for accounts who log in without a domain specified.
 	 */
 	public String defaultDomain;
+	
+	/**
+	 * The mapping from the user name to the principal string.
+	 */
+	public String principalMapping;
 }

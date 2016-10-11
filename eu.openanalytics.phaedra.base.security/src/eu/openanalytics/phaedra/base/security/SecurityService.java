@@ -302,7 +302,7 @@ public class SecurityService {
 		Set<Group> groups = new HashSet<Group>();
 		for (Group group : securityConfig.keySet()) {
 			List<String> members = securityConfig.get(group);
-			if (members.contains(userName)) {
+			if (members.contains(userName) || members.contains("*")) {
 				groups.add(group);
 			}
 		}
