@@ -1,0 +1,1 @@
+Scripts for the H2 database are embedded in the source folder eu.openanalytics.phaedra.base.bootstrap.db
