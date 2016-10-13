@@ -2,7 +2,7 @@
 -- Run the below script as PHAEDRA
 -- ===============================
 
--- psql.exe -f setup2.sql -U phaedra postgresql://hostname:5432
+-- psql -f setup2.sql -U phaedra postgresql://hostname:5432
 
 CREATE SCHEMA phaedra;
 

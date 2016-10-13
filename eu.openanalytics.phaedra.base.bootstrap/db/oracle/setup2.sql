@@ -2,7 +2,7 @@
 -- Run the below script as PHAEDRA
 -- ===============================
 
-@accounts/roles.sql
+@01_roles.sql
 
 @02_tables/hca_image_setting.sql
 @02_tables/hca_image_channel.sql

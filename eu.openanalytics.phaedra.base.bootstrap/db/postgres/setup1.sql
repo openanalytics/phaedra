@@ -2,7 +2,7 @@
 -- Run the below script as POSTGRES
 -- ================================
 -- To execute the script:
--- psql.exe -f setup1.sql -U postgres postgresql://hostname:5432
+-- psql -f setup1.sql -U postgres postgresql://hostname:5432
 
 create role phaedra login createrole password 'phaedra';
 create role phaedra_usr login password 'phaedra_usr';
