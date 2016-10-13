@@ -133,9 +133,6 @@ CREATE TABLE phaedra.hca_protocol (
 	description			varchar(200),
 	team_code			varchar(25) default 'NONE',
 	upload_system		varchar(25) default 'NONE',
-	archive_status		integer default 0, 
-	archive_user		varchar(25),
-	archive_dt			timestamp, 
 	image_setting_id	bigint
 )
 TABLESPACE phaedra_d;
@@ -182,7 +179,10 @@ CREATE TABLE phaedra.hca_experiment (
 	description			varchar(200),
 	comments			varchar(1600),
 	multiplo_method		varchar(100),
-	multiplo_parameter	varchar(100)
+	multiplo_parameter	varchar(100),
+	archive_status		bigint default 0, 
+	archive_user		varchar(25),
+	archive_dt			timestamp
 )
 TABLESPACE phaedra_d;
 
