@@ -362,9 +362,9 @@ public class ProtocolService extends BaseJPAService {
 		feature.setCurveSettings(new HashMap<>());
 		feature.setColorMethodSettings(new HashMap<>());
 		feature.setFeatureClasses(new ArrayList<>());
-		feature.setCalculationLanguage("JEP");
+		feature.setCalculationLanguage("jep");
 		feature.setCalculationTrigger("PlateRecalc");
-		feature.setNormalizationLanguage("JEP");
+		feature.setNormalizationLanguage("jep");
 		return feature;
 	}
 
