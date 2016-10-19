@@ -109,7 +109,7 @@ public class EditPlateDialog extends TitleAreaDialog {
 	private boolean updatePlate() {
 		int sequence = 0;
 		String barcode = barcodeTxt.getText();
-		String description = StringUtils.trim(descriptionTxt.getText(), 200);
+		String description = StringUtils.trim(descriptionTxt.getText(), 200).trim();
 		
 		try {
 			sequence = Integer.parseInt(sequenceTxt.getText());
