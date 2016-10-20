@@ -124,6 +124,7 @@ public class CurveFitService extends BaseJPAService {
 		if (compound == null || feature == null || !PlateUtils.isSameProtocolClass(compound, feature)) {
 			return null;
 		}
+		if (grouping == null) grouping = NO_GROUPING;
 
 		// First look in the cache.
 		CacheKey key = getCacheKey(compound, feature, grouping);
