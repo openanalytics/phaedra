@@ -3,7 +3,6 @@ package eu.openanalytics.phaedra.base.security;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 
-import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
@@ -18,17 +17,19 @@ public class SSL {
 		try {
 			defaultSSLContext = SSLContext.getDefault();
 			
-			KeyManagerFactory keyFac = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-			KeyStore keyStore = KeyStore.getInstance("WINDOWS-MY");
-			keyStore.load(null, null);
-			keyFac.init(keyStore, null);
+			// Note: personal certs are not needed here, only the trust store.
+//			KeyManagerFactory keyFac = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+//			KeyStore keyStore = KeyStore.getInstance("WINDOWS-MY");
+//			keyStore.load(null, null);
+//			keyFac.init(keyStore, null);
 			TrustManagerFactory trustFac = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
 			KeyStore trustStore = KeyStore.getInstance("WINDOWS-ROOT");
 			trustStore.load(null, null);
 			trustFac.init(trustStore);
 			
 			windowsSSLContext = SSLContext.getInstance("SSL");
-			windowsSSLContext.init(keyFac.getKeyManagers(), trustFac.getTrustManagers(), null);
+//			windowsSSLContext.init(keyFac.getKeyManagers(), trustFac.getTrustManagers(), null);
+			windowsSSLContext.init(null, trustFac.getTrustManagers(), null);
 		} catch (Exception e) {
 			EclipseLog.warn("Cannot initalize SSL context using Windows provider, using Default provider", e, Activator.getDefault());
 			try { windowsSSLContext = SSLContext.getDefault(); } catch (NoSuchAlgorithmException e2) {
