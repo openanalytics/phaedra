@@ -12,6 +12,7 @@ public class DefaultValueConverter implements IValueConverter {
 		// Replace line breaks by whitespace to prevent formatting issues.
 		if (value.contains("\r\n")) return value.replace("\r\n", " ");
 		if (value.contains("\n")) return value.replace("\n", " ");
+		if (value.contains("\t")) return value.replace("\t", " ");
 		
 		return value;
 	}

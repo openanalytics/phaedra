@@ -27,7 +27,7 @@ public class CSVWriter implements IExportWriter {
 	private List<QueryResult> featureResults;
 	
 	public CSVWriter() {
-		this(',', '"', '"');
+		this(',', au.com.bytecode.opencsv.CSVWriter.NO_QUOTE_CHARACTER, au.com.bytecode.opencsv.CSVWriter.NO_ESCAPE_CHARACTER);
 	}
 	
 	public CSVWriter(char columnSeparator, char quoteChar, char escapeChar) {
@@ -72,6 +72,10 @@ public class CSVWriter implements IExportWriter {
 	 * **********
 	 */
 	
+	protected boolean needQuoting() {
+		return true;
+	}
+
 	private void writeFiles() throws IOException {
 		String destination = settings.destinationPath;
 		try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(new FileWriter(destination), columnSeparator, quoteChar, escapeChar)) {
@@ -137,8 +141,10 @@ public class CSVWriter implements IExportWriter {
 	}
 	
 	private String formatValue(String value) {
-		if (value == null) return "";
-		if (valueConverter != null) value = valueConverter.convert(value);
-		return value;
+		String formattedValue = value;
+		if (value == null) formattedValue = "";
+		if (valueConverter != null) formattedValue = valueConverter.convert(value);
+		if (needQuoting()) formattedValue = "\"" + formattedValue + "\"";
+		return formattedValue;
 	}
 }
