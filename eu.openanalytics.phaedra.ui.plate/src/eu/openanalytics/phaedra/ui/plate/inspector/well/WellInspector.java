@@ -3,6 +3,8 @@ package eu.openanalytics.phaedra.ui.plate.inspector.well;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -15,10 +17,12 @@ import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeColumn;
 import org.eclipse.ui.ISelectionListener;
@@ -38,6 +42,7 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnViewerSorter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
+import eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyItems;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
 import eu.openanalytics.phaedra.base.ui.util.pinning.SelectionHandlingDecorator;
 import eu.openanalytics.phaedra.base.ui.util.pinning.SelectionHandlingMode;
@@ -75,26 +80,20 @@ public class WellInspector extends DecoratedView {
 
 	private FormToolkit formToolkit;
 
-	private Label barcodeLbl;
-	private Label statusLbl;
-	private Label positionLbl;
-	private Label wellTypeLbl;
-	private Label compoundLbl;
-	private Label concentrationLbl;
-	private Label descriptionLbl;
-
+	private Text barcodeTxt, statusTxt, positionTxt, wellTypeTxt, compoundTxt, concTxt, descriptionTxt;
+	
 	private TreeViewer treeViewer;
 	private RichTableViewer historyTableViewer;
 
 	private ISelectionListener selectionListener;
 	private IModelEventListener modelEventListener;
-
+	
 	private Well currentWell;
 
 	@Override
 	public void createPartControl(Composite parent) {
 		formToolkit = FormEditorUtils.createToolkit();
-
+		
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(parent);
 
 		breadcrumb = BreadcrumbFactory.createBreadcrumb(parent);
@@ -108,26 +107,27 @@ public class WellInspector extends DecoratedView {
 		Section section = FormEditorUtils.createSection("Properties", form.getBody(), formToolkit);
 		Composite sectionContainer = FormEditorUtils.createComposite(2, section, formToolkit);
 
-		barcodeLbl = FormEditorUtils.createLabelPair("Barcode", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(barcodeLbl);
+		FormEditorUtils.createLabel("Barcode", sectionContainer, formToolkit);
+		barcodeTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
+		
+		FormEditorUtils.createLabel("Status", sectionContainer, formToolkit);
+		statusTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
+		
+		FormEditorUtils.createLabel("Position", sectionContainer, formToolkit);
+		positionTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		statusLbl = FormEditorUtils.createLabelPair("Status", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(statusLbl);
+		FormEditorUtils.createLabel("Well Type", sectionContainer, formToolkit);
+		wellTypeTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		positionLbl = FormEditorUtils.createLabelPair("Position", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(positionLbl);
+		FormEditorUtils.createLabel("Compound", sectionContainer, formToolkit);
+		compoundTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		wellTypeLbl = FormEditorUtils.createLabelPair("Well Type", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(wellTypeLbl);
+		FormEditorUtils.createLabel("Concentration", sectionContainer, formToolkit);
+		concTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		compoundLbl = FormEditorUtils.createLabelPair("Compound", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(compoundLbl);
+		FormEditorUtils.createLabel("Description", sectionContainer, formToolkit);
+		descriptionTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		concentrationLbl = FormEditorUtils.createLabelPair("Concentration", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(concentrationLbl);
-
-		descriptionLbl = FormEditorUtils.createLabelPair("Description", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(descriptionLbl);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(sectionContainer);
 
 		// Section 2: Feature Values ------------------------------
@@ -143,7 +143,22 @@ public class WellInspector extends DecoratedView {
 		Tree tree = treeViewer.getTree();
 		tree.setHeaderVisible(true);
 		tree.setLinesVisible(true);
-
+		tree.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				if (e.stateMask == SWT.CTRL && e.keyCode == 'c') {
+					List<Feature> features = SelectionUtils.getObjects(treeViewer.getSelection(), Feature.class);
+					String value = features.stream().map(f -> {
+						return IntStream.range(0, 3)
+							.mapToObj(i -> getFeatureValue(i, currentWell, f))
+							.map(v -> { if (v == null) return ""; else return v; })
+							.collect(Collectors.joining("\t"));
+					}).collect(Collectors.joining("\n"));
+					CopyItems.execute(value);
+				}
+			}
+		});
+		
 		createFeatureTableColumns();
 		treeViewer.setContentProvider(new WellFeatureContentProvider());
 		treeViewer.setLabelProvider(new WellFeatureLabelProvider());
@@ -230,27 +245,27 @@ public class WellInspector extends DecoratedView {
 		breadcrumb.setInput(currentWell);
 		breadcrumb.getControl().getParent().layout();
 
-		barcodeLbl.setText(currentWell.getPlate().getBarcode());
+		barcodeTxt.setText(currentWell.getPlate().getBarcode());
 
 		WellStatus status = WellStatus.getByCode(currentWell.getStatus());
-		if (status == null) statusLbl.setText("" + currentWell.getStatus());
-		else statusLbl.setText(status.getLabel());
+		if (status == null) statusTxt.setText("" + currentWell.getStatus());
+		else statusTxt.setText(status.getLabel());
 
 		String position = NumberUtils.getWellCoordinate(currentWell.getRow(), currentWell.getColumn());
 		position += " (" + currentWell.getRow() + ", " + currentWell.getColumn() + ")";
-		positionLbl.setText(position);
+		positionTxt.setText(position);
 
-		wellTypeLbl.setText(currentWell.getWellType());
+		wellTypeTxt.setText(currentWell.getWellType());
 
 		Compound c = currentWell.getCompound();
 		if (c == null) {
-			compoundLbl.setText("<None>");
+			compoundTxt.setText("<None>");
 		} else {
-			compoundLbl.setText(c.toString());
+			compoundTxt.setText(c.toString());
 		}
-		concentrationLbl.setText(WellProperty.Concentration.getStringValue(currentWell));
+		concTxt.setText(WellProperty.Concentration.getStringValue(currentWell));
 
-		descriptionLbl.setText(currentWell.getDescription() == null ? "" : currentWell.getDescription());
+		descriptionTxt.setText(currentWell.getDescription() == null ? "" : currentWell.getDescription());
 
 		TreePath[] expandedTreePaths = treeViewer.getExpandedTreePaths();
 		treeViewer.setInput("Loading...");
@@ -271,6 +286,20 @@ public class WellInspector extends DecoratedView {
 		historyTableViewer.setInput(ObjectLogService.getInstance().getHistory(currentWell));
 	}
 
+	private static String getFeatureValue(int colIndex, Well well, Feature feature) {
+		String text = null;
+		if (colIndex == 0) {
+			text = feature.getName();
+		} else if (colIndex == 1) {
+			if (feature.isNumeric() && ProtocolUtils.isNormalized(feature)) {
+				String norm = feature.getNormalization();
+				text = getFormattedFeatureValue(well, feature, norm);
+			}
+		} else {
+			text = getFormattedFeatureValue(well, feature, null);
+		}
+		return text;
+	}
 	private static String getFormattedFeatureValue(Well well, Feature feature, String norm) {
 		PlateDataAccessor accessor = CalculationService.getInstance().getAccessor(well.getPlate());
 		if (feature.isNumeric()) {
@@ -287,16 +316,7 @@ public class WellInspector extends DecoratedView {
 			String text = "";
 			if (element instanceof Feature) {
 				Feature feature = (Feature) element;
-				if (cell.getColumnIndex() == 0) {
-					text = feature.getName();
-				} else if (cell.getColumnIndex() == 1) {
-					if (feature.isNumeric() && ProtocolUtils.isNormalized(feature)) {
-						String norm = feature.getNormalization();
-						text = getFormattedFeatureValue(currentWell, feature, norm);
-					}
-				} else {
-					text = getFormattedFeatureValue(currentWell, feature, null);
-				}
+				text = getFeatureValue(cell.getColumnIndex(), currentWell, feature);
 			}
 			if (element instanceof FeatureGroup) {
 				if (cell.getColumnIndex() == 0) {

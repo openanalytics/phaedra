@@ -30,7 +30,7 @@ import org.eclipse.ui.forms.widgets.Section;
 public class FormEditorUtils {
 
 	private static Font valueLabelFont = new Font(null, "Tahoma", 8, SWT.BOLD);
-
+	
 	public static FormToolkit createToolkit() {
 		return new FormToolkit(Display.getDefault());
 	}
@@ -119,6 +119,14 @@ public class FormEditorUtils {
 		return txt;
 	}
 
+	public static Text createReadOnlyText(String value, Composite parent, FormToolkit tk) {
+		Text txt = new Text(parent, SWT.READ_ONLY);
+		txt.setText(value);
+		txt.setFont(valueLabelFont);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true,  false).applyTo(txt);
+		return txt;
+	}
+	
 	public static Hyperlink createHyperlink(Composite parent, Runnable onClick) {
 		Hyperlink link = new Hyperlink(parent, SWT.NONE);
 		link.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_BLUE));

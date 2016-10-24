@@ -14,6 +14,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -52,16 +53,8 @@ public class ExperimentInspector extends DecoratedView {
 
 	private FormToolkit formToolkit;
 
-	private Label nameLbl;
-	private Label idLbl;
-	private Label creationDateLbl;
-	private Label creatorLbl;
-	private Label descriptionLbl;
-	private Label commentsLbl;
-	private Label protocolLbl;
-	private Label protocolClassLbl;
-	private Label sizeSubwellDataLbl;
-	private Label sizeImageData;
+	private Text nameTxt, idTxt, creationDateTxt, creatorTxt, descriptionTxt,
+		commentsTxt, protocolTxt, protocolClassTxt, sizeSubwellDataTxt, sizeImageDataTxt;
 
 	private Label[] validationLbls;
 	private Label[] approvalLbls;
@@ -100,35 +93,35 @@ public class ExperimentInspector extends DecoratedView {
 		Section section = FormEditorUtils.createSection("Properties", form.getBody(), formToolkit);
 		Composite sectionContainer = FormEditorUtils.createComposite(2, section, formToolkit);
 
-		nameLbl = FormEditorUtils.createLabelPair("Name", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(nameLbl);
+		FormEditorUtils.createLabel("Name", sectionContainer, formToolkit);
+		nameTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		idLbl = FormEditorUtils.createLabelPair("Id", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(idLbl);
+		FormEditorUtils.createLabel("Id", sectionContainer, formToolkit);
+		idTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		creationDateLbl = FormEditorUtils.createLabelPair("Creation date", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(creationDateLbl);
+		FormEditorUtils.createLabel("Creation date", sectionContainer, formToolkit);
+		creationDateTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		creatorLbl = FormEditorUtils.createLabelPair("Creator", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(creatorLbl);
+		FormEditorUtils.createLabel("Creator", sectionContainer, formToolkit);
+		creatorTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		descriptionLbl = FormEditorUtils.createLabelPair("Description", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(descriptionLbl);
+		FormEditorUtils.createLabel("Description", sectionContainer, formToolkit);
+		descriptionTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		commentsLbl = FormEditorUtils.createLabelPair("Comments", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(commentsLbl);
+		FormEditorUtils.createLabel("Comments", sectionContainer, formToolkit);
+		commentsTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		protocolLbl = FormEditorUtils.createLabelPair("Protocol", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(protocolLbl);
+		FormEditorUtils.createLabel("Protocol", sectionContainer, formToolkit);
+		protocolTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		protocolClassLbl = FormEditorUtils.createLabelPair("Protocol Class", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(protocolClassLbl);
+		FormEditorUtils.createLabel("Protocol Class", sectionContainer, formToolkit);
+		protocolClassTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		sizeSubwellDataLbl = FormEditorUtils.createLabelPair("Size of Subwell Data", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(sizeSubwellDataLbl);
+		FormEditorUtils.createLabel("Size of Subwell Data", sectionContainer, formToolkit);
+		sizeSubwellDataTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
-		sizeImageData = FormEditorUtils.createLabelPair("Size of Image Data", sectionContainer, formToolkit);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(sizeImageData);
+		FormEditorUtils.createLabel("Size of Image Data", sectionContainer, formToolkit);
+		sizeImageDataTxt = FormEditorUtils.createReadOnlyText("", sectionContainer, formToolkit);
 
 		// Section 2: Experiment Status ------------------------------
 
@@ -230,7 +223,7 @@ public class ExperimentInspector extends DecoratedView {
 
 	@Override
 	public void setFocus() {
-		nameLbl.getParent().setFocus();
+		nameTxt.getParent().setFocus();
 	}
 
 	@Override
@@ -246,23 +239,23 @@ public class ExperimentInspector extends DecoratedView {
 		breadcrumb.setInput(currentExperiment);
 		breadcrumb.getControl().getParent().layout();
 
-		nameLbl.setText(currentExperiment.getName());
-		idLbl.setText("" + currentExperiment.getId());
-		creationDateLbl.setText(currentExperiment.getCreateDate().toString());
-		creatorLbl.setText(currentExperiment.getCreator());
+		nameTxt.setText(currentExperiment.getName());
+		idTxt.setText("" + currentExperiment.getId());
+		creationDateTxt.setText(currentExperiment.getCreateDate().toString());
+		creatorTxt.setText(currentExperiment.getCreator());
 
 		String description = currentExperiment.getDescription();
 		if (description == null || description.isEmpty()) description = "<None>";
-		descriptionLbl.setText(description);
+		descriptionTxt.setText(description);
 		String comments = currentExperiment.getComments();
 		if (comments == null || comments.isEmpty()) comments = "<None>";
-		commentsLbl.setText(comments);
+		commentsTxt.setText(comments);
 
-		protocolLbl.setText(currentExperiment.getProtocol().toString());
-		protocolClassLbl.setText(currentExperiment.getProtocol().getProtocolClass().toString());
+		protocolTxt.setText(currentExperiment.getProtocol().toString());
+		protocolClassTxt.setText(currentExperiment.getProtocol().getProtocolClass().toString());
 
-		sizeImageData.setText(LOADING);
-		sizeSubwellDataLbl.setText(LOADING);
+		sizeImageDataTxt.setText(LOADING);
+		sizeSubwellDataTxt.setText(LOADING);
 
 		validationLbls[0].setText(" ...");
 		validationLbls[1].setText(" ...");
@@ -293,9 +286,9 @@ public class ExperimentInspector extends DecoratedView {
 			long imageSizeFinal = imageSize;
 			long hdf5SizeFinal = hdf5Size;
 			Display.getDefault().asyncExec(() -> {
-				if (sizeImageData.isDisposed()) return;
-				sizeImageData.setText(FileUtils.getHumanReadableByteCount(imageSizeFinal, false));
-				sizeSubwellDataLbl.setText(FileUtils.getHumanReadableByteCount(hdf5SizeFinal, false));
+				if (sizeImageDataTxt.isDisposed()) return;
+				sizeImageDataTxt.setText(FileUtils.getHumanReadableByteCount(imageSizeFinal, false));
+				sizeSubwellDataTxt.setText(FileUtils.getHumanReadableByteCount(hdf5SizeFinal, false));
 			});
 
 			// calc.calculate() is called in this method.
