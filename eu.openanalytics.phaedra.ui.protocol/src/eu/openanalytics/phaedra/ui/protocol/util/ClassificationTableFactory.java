@@ -289,7 +289,11 @@ public class ClassificationTableFactory {
 		protected void setValue(Object element, Object value) {
 			FeatureClass fc = (FeatureClass) element;
 			String valueToSet = String.valueOf(value);
-			if (PatternType.getType(fc) == PatternType.BitMask) {
+			if (valueToSet == null || valueToSet.isEmpty()) {
+				MessageDialog.openError(Display.getCurrent().getActiveShell(), "Invalid value", 
+						"Invalid value: pattern cannot be empty");
+				return;				
+			} else if (PatternType.getType(fc) == PatternType.BitMask) {
 				try {
 					Integer.parseInt(valueToSet.replace('.', '0'), 2);
 				} catch (NumberFormatException e) {
