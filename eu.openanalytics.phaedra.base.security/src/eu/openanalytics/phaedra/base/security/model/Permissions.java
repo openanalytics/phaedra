@@ -33,10 +33,6 @@ public class Permissions {
 	public static final String PLATE_CALCULATE = Roles.USER;
 	public static final String PLATE_CHANGE_VALIDATION = Roles.USER;
 	public static final String PLATE_CHANGE_APPROVAL = Roles.DATA_MANAGER;
-	
-	public static final String REPORT_TEMPLATE_CREATE = Roles.ADMINISTRATOR;
-	public static final String REPORT_TEMPLATE_EDIT = Roles.ADMINISTRATOR;
-	public static final String REPORT_TEMPLATE_DELETE = Roles.ADMINISTRATOR;
 
 	public static final String COMPOUND_CHANGE_VALIDATION = PLATE_CHANGE_VALIDATION;
 	public static final String WELL_CHANGE_STATUS = PLATE_EDIT;
