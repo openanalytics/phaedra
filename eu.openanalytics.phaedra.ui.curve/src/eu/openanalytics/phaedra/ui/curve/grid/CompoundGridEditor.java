@@ -238,24 +238,29 @@ public class CompoundGridEditor extends DecoratedEditor {
 			
 			if (features == null) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(comp), CurveUtils.FEATURES_WITH_CURVES);
 			
-			// First, translate compound to multiplo compound, if needed.
 			List<Compound> multiploCompounds = CalculationService.getInstance().getMultiploCompounds(comp);
 			if (multiploCompounds.size() > 1) {
+				// If this is a multiplo compound, skip it if there is already a multiplo variant in the list.
 				Compound firstCompound = multiploCompounds.stream()
 						.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
 						.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
 						.findFirst().orElse(multiploCompounds.get(0));
 				Compound match = compounds.stream()
+						.map(c -> {
+							if (c instanceof CompoundWithGrouping) return ((CompoundWithGrouping) c).getDelegate();
+							else return c;
+						})
 						.filter(c -> c instanceof MultiploCompound)
 						.map(c -> (MultiploCompound) c)
 						.filter(c -> c.getCompounds().contains(comp))
 						.findAny().orElse(null);
 				if (match == null) compoundToAdd = new MultiploCompound(firstCompound, multiploCompounds);
+				else continue;
 			} else {
 				compoundToAdd = comp;
 			}
 			
-			// Then, look up the compound's groupings, if any.
+			// If there is grouping, add the compound once for each grouping.
 			Set<CurveGrouping> groupings = new HashSet<>();
 			for (Feature f: features) {
 				for (CurveGrouping cg: CurveFitService.getInstance().getGroupings(compoundToAdd, f)) groupings.add(cg);

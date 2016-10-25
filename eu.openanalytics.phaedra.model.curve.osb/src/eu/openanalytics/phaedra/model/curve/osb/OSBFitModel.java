@@ -190,7 +190,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			output.setErrorCode(RUtils.getIntegerFromList(results, "ERROR"));
 			
 			String methodUsed = CurveParameter.find(inParams, "Method").stringValue;
-			if (methodUsed.equals("OLS") && !getId().equals("PLOTONLY") && output.getErrorCode() == 0) {
+			if (methodUsed != null && methodUsed.equals("OLS") && !getId().equals("PLOTONLY") && output.getErrorCode() == 0) {
 				RObject ci = rServi.evalData("generateCIgrid(VALUE)", null);
 				double[][] grid = RUtils.getDouble2DArrayFromRDataFrame((RDataFrame)ci);
 				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Confidence Band"), grid);
