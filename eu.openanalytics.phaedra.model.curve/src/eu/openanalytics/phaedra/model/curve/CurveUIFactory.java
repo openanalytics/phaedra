@@ -175,8 +175,7 @@ public class CurveUIFactory {
 						}
 					}
 				}
-				//TODO doesn't work well in sections
-				additionParamCmp.layout();				
+				additionParamCmp.layout();
 			};
 		};
 		modelCmb.addSelectionListener(onModelSelection);

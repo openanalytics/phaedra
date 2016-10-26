@@ -109,6 +109,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	
 	private CCombo colorMethods;
 
+	private Section sectionCurveSettings;
 	private Composite curveSettingsCmp;
 
 	private Listener dirtyListener = new Listener() {
@@ -553,7 +554,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		 * ***********************
 		 */
 
-		final Section sectionCurveSettings = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
+		sectionCurveSettings = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
 		sectionCurveSettings.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		sectionCurveSettings.setDescription("Set the properties below to perform curve fitting on this feature.");
 		sectionCurveSettings.setText("Curve Section");
@@ -730,6 +731,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		Composite cmp = CurveUIFactory.createFields(curveSettingsCmp, feature, null, m_bindingContext, dirtyListener);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(cmp);
 		curveSettingsCmp.layout();
+		sectionCurveSettings.pack(); // To prevent issue with curveSettingsCmp ending up too small.
 	}
 	
 	private void fillWellTypeCombos() {
