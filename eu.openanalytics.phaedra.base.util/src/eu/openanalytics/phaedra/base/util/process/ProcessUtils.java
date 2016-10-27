@@ -117,6 +117,10 @@ public class ProcessUtils {
 		return System.getProperty("os.name").toLowerCase().contains("win");
 	}
 
+	public static boolean isMac() {
+		return System.getProperty("os.name").toLowerCase().contains("mac");
+	}
+	
 	public static boolean isSystem64Bit() {
 		if (isSystem64bit == -1) {
 			String output = null;

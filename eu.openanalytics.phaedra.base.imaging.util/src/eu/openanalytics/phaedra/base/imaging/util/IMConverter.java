@@ -19,17 +19,29 @@ public class IMConverter {
 	private static void initialize() throws IOException {
 		if (ProcessUtils.isWindows()) {
 			String tempDir = FileUtils.generateTempFolder(true);
-			Bundle bundle = Activator.getContext().getBundle();
 			String[] requiredFiles = { "os/win32/x86_64/convert.exe", "os/win32/x86_64/vcomp100.dll" };
-			for (String file: requiredFiles) {
-				URL url = FileLocator.find(bundle, new Path(file), null);
-				String destination = tempDir + "/" + FileUtils.getName(file);
-				StreamUtils.copyAndClose(url.openStream(), new FileOutputStream(destination));
-			}
+			copyFiles(requiredFiles, tempDir);
 			executable = tempDir + "/convert.exe";
+		} else if (ProcessUtils.isMac()) {
+			String tempDir = FileUtils.generateTempFolder(true);
+			String[] requiredFiles = { "os/macosx/x86_64/im.tar.gz" };
+			copyFiles(requiredFiles, tempDir);
+			executable = tempDir + "/bin/convert";
+			try {
+				ProcessUtils.execute(new String[] { "tar", "-xzf", "im.tar.gz" }, tempDir);
+			} catch (InterruptedException e) {}
 		} else {
-			// Use pre-installed ImageMagick
+			// Linux: assume ImageMagick is pre-installed
 			executable = "convert";
+		}
+	}
+	
+	private static void copyFiles(String[] files, String destination) throws IOException {
+		Bundle bundle = Activator.getContext().getBundle();
+		for (String file: files) {
+			URL url = FileLocator.find(bundle, new Path(file), null);
+			String fullDestination = destination + "/" + FileUtils.getName(file);
+			StreamUtils.copyAndClose(url.openStream(), new FileOutputStream(fullDestination));
 		}
 	}
 	
