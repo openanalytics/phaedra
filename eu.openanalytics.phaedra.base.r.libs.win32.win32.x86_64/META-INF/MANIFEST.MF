@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: rj binaries for Windows 64bit
+Bundle-Name: R libraries for Windows 64bit
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.r.libs.win32.win32.x86_64
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: OpenAnalytics

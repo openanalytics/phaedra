@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: R libraries for Linux 64bit
-Bundle-SymbolicName: eu.openanalytics.phaedra.base.r.libs.linux.gtk.x86_64
+Bundle-Name: R libraries for MacOSX 64bit
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.r.libs.macosx.cocoa.x86_64
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: OpenAnalytics
 Fragment-Host: eu.openanalytics.phaedra.base.r.libs;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Eclipse-PlatformFilter: (&(osgi.os=linux)(osgi.ws=gtk)(osgi.arch=x86_64))
+Eclipse-PlatformFilter: (&(osgi.os=macosx)(osgi.ws=cocoa)(osgi.arch=x86_64))

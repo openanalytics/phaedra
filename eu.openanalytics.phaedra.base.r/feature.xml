@@ -78,4 +78,24 @@
          version="0.0.0"
          fragment="true"/>
 
+   <plugin
+         id="eu.openanalytics.phaedra.base.r.libs.macosx.cocoa.x86_64"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
+   <plugin
+         id="eu.openanalytics.phaedra.base.r.server.macosx.cocoa.x86_64"
+         os="macosx"
+         ws="cocoa"
+         arch="x86_64"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"/>
+
 </feature>
