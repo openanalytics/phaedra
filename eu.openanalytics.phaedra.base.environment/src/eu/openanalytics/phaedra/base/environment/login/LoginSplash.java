@@ -270,6 +270,7 @@ public class LoginSplash extends BasicSplashHandler {
 				passwordTxt.setText("");
 				loadingLbl.setText("");
 				passwordTxt.setFocus();
+				EclipseLog.warn("Authentication failure", e, Activator.getDefault());
 			} catch (IOException e) {
 				String message = "An error occured connecting to the " + environmentCmb.getText() + " environment.";
 				message += "\nPlease contact an administrator.";
