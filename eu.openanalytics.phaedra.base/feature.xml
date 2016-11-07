@@ -5,6 +5,14 @@
       version="1.0.0.qualifier"
       provider-name="OpenAnalytics">
 
+   <description>
+      The base infrastructure components of the Phaedra application.
+   </description>
+
+   <license url="">
+      Eclipse Public License version 1.0
+   </license>
+
    <plugin
          id="eu.openanalytics.phaedra.base.cache"
          download-size="0"
