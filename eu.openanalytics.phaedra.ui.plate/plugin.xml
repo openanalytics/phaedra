@@ -1452,7 +1452,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=plateMenu">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=plateMenu">
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/map.png"
@@ -1596,7 +1596,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=primaryAdditions">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=primaryAdditions">
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.BrowseExperiments"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/map.png"
@@ -1624,7 +1624,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=experimentMenu">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=experimentMenu">
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate.png"
@@ -1731,7 +1731,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=wellMenu">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=wellMenu">
          <separator
                name="wellMenu.browseAdditions"
                visible="false">
@@ -1846,7 +1846,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=compoundMenu">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=compoundMenu">
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/map.png"
@@ -1916,7 +1916,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=featureValueMenu">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=featureValueMenu">
          <separator
                name="featureValueMenu.browseAdditions"
                visible="false">
@@ -2021,7 +2021,7 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.search.editor.QueryEditor?after=cRCurveMenu">
+            locationURI="popup:eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor?after=cRCurveMenu">
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/map.png"
