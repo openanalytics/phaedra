@@ -1,16 +1,13 @@
 package eu.openanalytics.phaedra.datacapture.scanner.internal;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Optional;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.w3c.dom.Document;
@@ -30,7 +27,7 @@ public class FolderScannerType extends BaseScannerType {
 	@Override
 	public void run(ScanJob scanner, IProgressMonitor monitor) throws ScanException {
 		monitor.beginTask("Folder Scanner", IProgressMonitor.UNKNOWN);
-		
+
 		monitor.subTask("Reading config");
 		final FolderScannerConfig cfg;
 		try {
@@ -38,50 +35,54 @@ public class FolderScannerType extends BaseScannerType {
 		} catch (IOException e) {
 			throw new ScanException("Invalid scanner configuration", e);
 		}
-		
-		final Pattern pattern = Pattern.compile(cfg.pattern);
-		final Path startPath = Paths.get(cfg.path);
-		
+		if (cfg.path == null || cfg.path.isEmpty()) throw new ScanException("Invalid scanner configuration: no path specified");
+
 		monitor.subTask("Scanning " + cfg.path);
-		FileVisitor<Path> visitor = new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-				if (dir.equals(startPath)) return FileVisitResult.CONTINUE;
-				
-				String fileName = dir.toFile().getName();
-				Matcher matcher = pattern.matcher(fileName);
-				if (matcher.matches()) {
-					processItem(dir, cfg);
-				}
-				
-				return FileVisitResult.SKIP_SUBTREE;
-			}
-		};
-		
-        try {
-			Files.walkFileTree(startPath, visitor);
-		} catch (IOException e) {
+		Pattern expPattern = Pattern.compile(cfg.experimentPattern);
+		try {
+			streamContents(Paths.get(cfg.path))
+				.filter(p -> expPattern.matcher(p.getFileName().toString()).matches())
+				.forEach(p -> processExperimentFolder(p, cfg));
+		} catch (Exception e) {
 			throw new ScanException("Failed to scan directory", e);
 		}
-        
+
 		monitor.done();
 	}
 
-	private void processItem(Path folder, FolderScannerConfig cfg) {
-		String sourcePath = folder.toFile().getAbsolutePath();
-		String experimentName = folder.toFile().getName();
+	private void processExperimentFolder(Path expFolder, FolderScannerConfig cfg) {
+		Pattern platePattern = Pattern.compile(cfg.platePattern);
+		
+		String[] plateIds = streamContents(expFolder)
+			.filter(p -> platePattern.matcher(p.getFileName().toString()).matches())
+			.filter(p -> {
+				if (!Files.isDirectory(p) || cfg.plateInProgressFlag == null) return true;
+				return streamContents(p).noneMatch(child -> child.getFileName().toString().equalsIgnoreCase(cfg.plateInProgressFlag));
+			})
+			.filter(p -> {
+				if (cfg.forceDuplicateCapture) return true;
+				return !DataCaptureService.getInstance().isReadingAlreadyCaptured(p.toFile().getAbsolutePath());
+			})
+			.map(p -> p.toFile().getAbsolutePath())
+			.toArray(i -> new String[i]);
+		
+		if (plateIds.length == 0) {
+			EclipseLog.info("Skipping folder (already captured): " + expFolder, Activator.getDefault());
+			return;
+		}
+		
+		String sourcePath = expFolder.toFile().getAbsolutePath();
+		String experimentName = expFolder.toFile().getName();
 		
 		// Create a data capture task.
 		DataCaptureTask task = DataCaptureService.getInstance().createTask(sourcePath, cfg.protocolId);
 		if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
 		task.getParameters().put(DataCaptureTask.PARAM_EXPERIMENT_NAME, experimentName);
-		task.getParameters().put(DataCaptureTask.PARAM_ALLOW_AUTO_LINK, cfg.allowAutoLink);
-		
-		if (DataCaptureService.getInstance().isTaskSourceAlreadyCaptured(task)) {
-			// Path is already captured. Abort submission.
-			EclipseLog.info("Skipping path (already captured): " + sourcePath, Activator.getDefault());
-			return;
-		}
+		task.getParameters().put(DataCaptureTask.PARAM_ALLOW_AUTO_LINK, true);
+		task.getParameters().put(DataCaptureTask.PARAM_CREATE_NEW_EXP, false);
+		task.getParameters().put(DataCaptureTask.PARAM_CREATE_MISSING_WELL_FEATURES, cfg.createMissingWellFeatures);
+		task.getParameters().put(DataCaptureTask.PARAM_CREATE_MISSING_SUBWELL_FEATURES, cfg.createMissingSubWellFeatures);
+		task.getParameters().put("plateIds", plateIds);
 		
 		// Submit to the data capture service, and log an event.
 		EclipseLog.info("Submitting data capture job: " + task.getSource(), Activator.getDefault());
@@ -95,14 +96,26 @@ public class FolderScannerType extends BaseScannerType {
 		}
 	}
 	
+	private Stream<Path> streamContents(Path p) {
+		try {
+			return Files.list(p);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+	}
+	
 	private FolderScannerConfig parse(String config) throws IOException {
 		FolderScannerConfig cfg = new FolderScannerConfig();
 		Document doc = XmlUtils.parse(config);
 		cfg.path = getConfigValue(doc, "/config/path", null);
-		cfg.pattern = getConfigValue(doc, "/config/pattern", null);
+		cfg.experimentPattern = getConfigValue(doc, "/config/experimentPattern", ".*");
+		cfg.platePattern = getConfigValue(doc, "/config/platePattern", ".*");
+		cfg.plateInProgressFlag = getConfigValue(doc, "/config/plateInProgressFlag", null);
+		cfg.forceDuplicateCapture = Boolean.valueOf(getConfigValue(doc, "/config/forceDuplicateCapture", "false"));
+		cfg.createMissingWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingWellFeatures", "false"));
+		cfg.createMissingSubWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingSubWellFeatures", "false"));
 		cfg.captureConfig = getConfigValue(doc, "/config/captureConfig", null);
 		cfg.protocolId = Long.valueOf(getConfigValue(doc, "/config/protocolId", "0"));
-		cfg.allowAutoLink = Boolean.valueOf(getConfigValue(doc, "/config/allowAutoLink", "false"));
 		return cfg;
 	}
 	
@@ -112,9 +125,13 @@ public class FolderScannerType extends BaseScannerType {
 	
 	private static class FolderScannerConfig {
 		public String path;
-		public String pattern;
+		public String experimentPattern;
+		public String platePattern;
+		public String plateInProgressFlag;
+		public boolean forceDuplicateCapture;
+		public boolean createMissingWellFeatures;
+		public boolean createMissingSubWellFeatures;
 		public String captureConfig;
 		public long protocolId;
-		public boolean allowAutoLink;
 	}
 }
