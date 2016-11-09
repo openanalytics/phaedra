@@ -85,7 +85,7 @@ public class FolderScannerType extends BaseScannerType {
 		task.getParameters().put("plateIds", plateIds);
 		
 		// Submit to the data capture service, and log an event.
-		EclipseLog.info("Submitting data capture job: " + task.getSource(), Activator.getDefault());
+		EclipseLog.info(String.format("Submitting data capture job (%d readings): %s", plateIds.length, task.getSource()), Activator.getDefault());
 		boolean accepted = DataCaptureService.getInstance().queueTask(task);
 		int status = accepted ? 0 : -1;
 		String msg = "Data capture task submitted" + (accepted ? "" : " but rejected");

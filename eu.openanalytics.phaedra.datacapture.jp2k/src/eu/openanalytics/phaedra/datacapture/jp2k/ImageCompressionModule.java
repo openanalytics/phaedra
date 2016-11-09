@@ -228,7 +228,7 @@ public class ImageCompressionModule extends AbstractModule {
 			params.put("task", task);
 			
 			// Running a script inside a script is a bit silly, but it's the only way to access the ScriptCatalog.
-			ScriptService.getInstance().executeScript("scripts.run('dc/" + scriptName + "', args);", params);
+			ScriptService.getInstance().executeScript("API.get('ScriptService').getCatalog().run('dc/" + scriptName + "', args);", params);
 		} catch (Exception e) {
 			// Ignore exceptions. Validation exceptions are passed via the DataCaptureContext to the validator.
 			EclipseLog.error("Image validation failed", e, Activator.getDefault());
