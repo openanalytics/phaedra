@@ -23,7 +23,7 @@
          point="eu.openanalytics.phaedra.base.seda.stage">
       <stage
             eventHandler="eu.openanalytics.phaedra.link.data.DataLinkTaskQueue"
-            id="DataLinkTaskQueue">
+            id="datalink.DataLinkTaskQueue">
       </stage>
    </extension>
    <extension

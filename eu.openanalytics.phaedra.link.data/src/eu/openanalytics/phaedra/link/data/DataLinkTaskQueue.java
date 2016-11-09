@@ -7,7 +7,7 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
 public class DataLinkTaskQueue implements IStageEventHandler {
 
-	private final static String ID = "hca.link.DataLinkTaskQueue";
+	private final static String ID = "datalink.DataLinkTaskQueue";
 	
 	@Override
 	public void onStartup() {
