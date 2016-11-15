@@ -393,7 +393,7 @@ public class CalculationService {
 				if (propValue == null || propValue.isEmpty()) return Collections.emptyList();
 	
 				return PlateService.streamableList(PlateService.getInstance().getPlates(plate.getExperiment())).stream()
-						.filter(p -> p != plate && propValue.equals(PlateService.getInstance().getPlateProperty(plate, propName)))
+						.filter(p -> p != plate && propValue.equals(PlateService.getInstance().getPlateProperty(p, propName)))
 						.collect(Collectors.toList());
 		}),
 		

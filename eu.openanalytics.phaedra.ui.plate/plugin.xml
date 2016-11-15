@@ -183,6 +183,11 @@
              id="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
              name="Clone Plate">
        </command>
+       <command
+             defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.EditPlateProperty"
+             id="eu.openanalytics.phaedra.ui.plate.cmd.EditPlateProperty"
+             name="Edit Plate Property">
+       </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -732,6 +737,11 @@
                      definitionId="activeSelection.Plate">
                </reference>
             </visibleWhen>
+         </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.EditPlateProperty"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate_edit.png"
+               style="push">
          </command>
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
