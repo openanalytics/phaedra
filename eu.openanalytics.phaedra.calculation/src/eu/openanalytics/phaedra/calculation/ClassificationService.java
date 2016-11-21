@@ -325,7 +325,7 @@ public class ClassificationService {
 			} else {
 				if (NumberUtils.isDouble(pattern)) {
 					Double patternValue = Double.parseDouble(pattern);
-					patternValue.equals(value);
+					return patternValue.equals(value);
 				}
 				return false;
 			}
