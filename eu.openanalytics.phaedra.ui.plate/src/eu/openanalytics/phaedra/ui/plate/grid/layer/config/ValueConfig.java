@@ -20,11 +20,11 @@ public class ValueConfig implements Serializable {
 	public final static int FONT_COLOR_BLACK = 2;
 	public final static int FONT_COLOR_WHITE = 3;
 
-	private String[] valueKeyIds;
+	private String[] valueKeyIds = new String[] { "", "", "" };
 	private int fontColor;
 
 	// Note: this is just a transient cache, for performance.
-	private transient ValueKey[] valueKeys;
+	private transient ValueKey[] valueKeys = new ValueKey[3];
 	
 	public void loadDefaults(String layerId) {
 		valueKeys = new ValueKey[3];
