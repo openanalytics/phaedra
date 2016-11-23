@@ -89,20 +89,23 @@ public class ExperimentTrendView extends DecoratedView {
 		chart.setMenu(menu);
 		getSite().registerContextMenu(menuMgr, selectionProvider);
 
-		addDecorator(new SettingsDecorator(this::getProtocol, this::getProperties, this::setProperties));
-		addDecorator(new CopyableDecorator());
-		addDecorator(new SelectionHandlingDecorator(selectionListener));
-		initDecorators(parent);
-		
 		ContributionItem contributionItem = new ContributionItem() {
 			@Override
 			public void fill(ToolBar parent, int index) {
 				chart.createToolBarButtons(parent);
 			}
+			public boolean isDynamic() {
+				return true;
+			};
 		};
 		IToolBarManager tbm = getViewSite().getActionBars().getToolBarManager();
 		tbm.add(contributionItem);
 
+		addDecorator(new SettingsDecorator(this::getProtocol, this::getProperties, this::setProperties));
+		addDecorator(new CopyableDecorator());
+		addDecorator(new SelectionHandlingDecorator(selectionListener));
+		initDecorators(parent);
+		
 		// Try to get an initial selection from the page.
 		SelectionUtils.triggerActiveSelection(selectionListener);
 	}
