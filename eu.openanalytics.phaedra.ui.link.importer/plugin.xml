@@ -14,6 +14,11 @@
             id="eu.openanalytics.phaedra.ui.link.importer.wizard.StartTestImportWizardCmd"
             name="Test Import Wizard">
       </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.link.importer.cmd.DeleteReadings"
+            id="eu.openanalytics.phaedra.ui.link.importer.cmd.DeleteReadings"
+            name="Delete Readings">
+      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -88,6 +93,13 @@
       </perspective>
    </extension>
    <extension
+         point="org.eclipse.ui.dropActions">
+      <action
+            class="eu.openanalytics.phaedra.ui.link.importer.dnd.ReadingDropAction"
+            id="eu.openanalytics.phaedra.ui.link.importer.dnd.ReadingDropAction">
+      </action>
+   </extension>
+   <extension
          point="eu.openanalytics.phaedra.ui.link.importer.importWizard">
       <importWizard
             class="eu.openanalytics.phaedra.ui.link.importer.wizard.GenericImportWizard"
@@ -102,6 +114,18 @@
             hookPointId="eu.openanalytics.phaedra.link.data.dataHookPoint"
             priority="1">
       </hook>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.navigator.elementProvider">
+      <elementProvider
+            class="eu.openanalytics.phaedra.ui.link.importer.navigator.ReadingProvider">
+      </elementProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.navigator.elementHandler">
+      <elementHandler
+            class="eu.openanalytics.phaedra.ui.link.importer.navigator.ReadingHandler">
+      </elementHandler>
    </extension>
 
 </plugin>
