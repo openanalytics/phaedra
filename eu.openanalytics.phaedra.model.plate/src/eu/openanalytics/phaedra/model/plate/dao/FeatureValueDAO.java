@@ -202,11 +202,11 @@ public class FeatureValueDAO {
 		updateLock.lock();
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
 			if (valueCount == -1) {
-				String queryString = "select count(*)"
-						+ " from phaedra.hca_feature_value fv, phaedra.hca_plate_well w"
-						+ " where w.plate_id = " + p.getId()
-						+ " and fv.well_id = w.well_id"
-						+ " and fv.feature_id = " + f.getId();
+				String queryString = "select count(*) from phaedra.hca_feature_value fv"
+						+ " where fv.feature_id = " + f.getId()
+						+ " and fv.well_id in (select well_id 		from phaedra.hca_plate_well where plate_id = " + p.getId() + ")"
+						+ " and fv.well_id >= (select min(well_id)	from phaedra.hca_plate_well where plate_id = " + p.getId() + ")"
+						+ " and fv.well_id <= (select max(well_id)	from phaedra.hca_plate_well where plate_id = " + p.getId() + ")";
 				valueCount = getCount(queryString, conn);
 			}
 			
