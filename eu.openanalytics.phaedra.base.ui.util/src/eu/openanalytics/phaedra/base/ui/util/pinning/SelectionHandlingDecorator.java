@@ -106,6 +106,10 @@ public class SelectionHandlingDecorator extends PartDecorator {
 					}
 				});
 			}
+			@Override
+			public boolean isDynamic() {
+				return true;
+			}
 		};
 		manager.add(contributionItem);
 	}
