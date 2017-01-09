@@ -612,16 +612,26 @@ public class PlateService extends BaseJPAService {
 	}
 
 	public void updateWellDataRaw(Plate plate, Feature feature, double[] rawValues) {
+		updateWellDataRaw(plate, feature, rawValues, false);
+	}
+	
+	public void updateWellDataRaw(Plate plate, Feature feature, double[] rawValues, boolean newPlate) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		WellDataActionHookManager.preAction(plate, feature, rawValues, false, ModelEventType.ObjectChanged);
-		featureValueDAO.updateValues(plate, feature, rawValues, null, null);
+		if (newPlate) featureValueDAO.insertValues(plate, feature, rawValues, null, null);
+		else featureValueDAO.updateValues(plate, feature, rawValues, null, null);
 		WellDataActionHookManager.postAction(plate, feature, rawValues, false, ModelEventType.ObjectChanged);
 	}
 	
 	public void updateWellDataRaw(Plate plate, Feature feature, String[] stringValues) {
+		updateWellDataRaw(plate, feature, stringValues, false);
+	}
+	
+	public void updateWellDataRaw(Plate plate, Feature feature, String[] stringValues, boolean newPlate) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		WellDataActionHookManager.preAction(plate, feature, stringValues, false, ModelEventType.ObjectChanged);
-		featureValueDAO.updateValues(plate, feature, null, stringValues, null);
+		if (newPlate) featureValueDAO.insertValues(plate, feature, null, stringValues, null);
+		else featureValueDAO.updateValues(plate, feature, null, stringValues, null);
 		WellDataActionHookManager.postAction(plate, feature, stringValues, false, ModelEventType.ObjectChanged);
 	}
 	
