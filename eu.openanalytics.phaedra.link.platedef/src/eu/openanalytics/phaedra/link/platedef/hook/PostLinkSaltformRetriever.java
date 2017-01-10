@@ -23,8 +23,8 @@ public class PostLinkSaltformRetriever implements IHook {
 		for (Compound compound: plate.getCompounds()) {
 			CompoundInfo info = CompoundInfoService.getInstance().getInfo(compound);
 			compound.setSaltform(info.getSaltform());
-			PlateService.getInstance().updateCompound(compound);
 		}
+		PlateService.getInstance().saveCompounds(plate);
 	}
 
 }
