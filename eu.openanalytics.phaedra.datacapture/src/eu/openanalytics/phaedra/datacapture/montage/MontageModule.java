@@ -147,7 +147,7 @@ public class MontageModule extends AbstractModule {
 					String pattern = fileTag.getAttribute("pattern");
 					String patternIdGroups = fileTag.getAttribute("pattern-id-groups");
 					
-					String filePath = CaptureUtils.resolvePath(path, reading.getSourcePath());
+					String filePath = CaptureUtils.resolvePath(path, reading.getSourcePath(), context);
 					File dir = new File(filePath);
 					FilePatternInterpreter interpreter = new FilePatternInterpreter(pattern, patternIdGroups, null);
 					File[] files = dir.listFiles();

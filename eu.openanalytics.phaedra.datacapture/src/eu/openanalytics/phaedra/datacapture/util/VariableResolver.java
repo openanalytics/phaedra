@@ -21,8 +21,7 @@ public class VariableResolver {
 	 * @param key The parameter name to resolve.
 	 * @return The matching value, or null if no value was found.
 	 */
-	public static Object get(String key) {
-		DataCaptureContext ctx = DataCaptureContext.getCurrent();
+	public static Object get(String key, DataCaptureContext ctx) {
 		if (key == null || key.isEmpty() || ctx == null) return null;
 
 		Object value = null;

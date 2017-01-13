@@ -26,7 +26,7 @@ public class MeasFieldLayoutSource extends BaseFieldLayoutSource {
 
 	@Override
 	public FieldLayout getLayout(PlateReading reading, int fieldCount, MontageConfig montageConfig, DataCaptureContext context) {
-		String measFilePath = (String)VariableResolver.get("reading.measFilePath");
+		String measFilePath = (String)VariableResolver.get("reading.measFilePath", context);
 		FieldLayoutCalculator fieldCalc = new FieldLayoutCalculator(1);
 		
 		try (InputStream in = new FileInputStream(measFilePath)) {

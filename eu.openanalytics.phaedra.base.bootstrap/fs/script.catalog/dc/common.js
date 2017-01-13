@@ -20,8 +20,8 @@
  * @returns The path to the matching file, or null if no match was found.
  */
 function findFile(basePath, filePattern, optional) {
-	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
-	var filePath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, filePattern);
+	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
+	var filePath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, filePattern, ctx);		
 	var isOptional = (optional === true || (typeof optional === "string" && optional.toLowerCase().equals("true")));
 
 	// Verify the existence of the data file.
@@ -49,8 +49,8 @@ function findFile(basePath, filePattern, optional) {
  * @returns The path to the matching folder, or null if no match was found.
  */
 function findFolder(basePath, folderPattern) {
-	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
-	var folderPath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, folderPattern);
+	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
+	var folderPath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, folderPattern, ctx);	
 	if (new java.io.File(folderPath).isDirectory()) return folderPath;
 	else return null;
 }
@@ -64,8 +64,8 @@ function findFolder(basePath, folderPattern) {
  */
 function findFiles(basePath, filePattern) {
 	var resolvedPath = basePath;
-	if (typeof reading != "undefined") resolvedPath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
-	var files = API.get("CaptureUtils").getMatchingChildren(resolvedPath, filePattern);
+	if (typeof reading != "undefined") resolvedPath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
+	var files = API.get("CaptureUtils").getMatchingChildren(resolvedPath, filePattern, ctx);	
 	return files;
 }
 
@@ -341,6 +341,15 @@ function guessWellColumn(columnNames) {
 }
 
 /**
+ * Resolve the variables in a string.
+ * 
+ * @param string The string that may contain variables.
+ */
+function resolveVars(string) {
+	return API.get("CaptureUtils").resolveVars(string, false, ctx);
+}
+
+/**
  * Get a parameter value from the lookup order:
  * 1. Reading runtime parameters
  * 2. DataCaptureTask runtime parameters
@@ -353,9 +362,13 @@ function guessWellColumn(columnNames) {
  * @param defaultValue The default value to return if the parameter is missing.
  */
 function getParameter(name, defaultValue) {
-	var value = API.get("CaptureUtils").resolveVar(name);
+	var value = API.get("CaptureUtils").resolveVar(name, ctx);
 	if (value == null) return defaultValue;
 	else return value;
+}
+
+function getParameterAsObject(name) {
+	return Java.type("eu.openanalytics.phaedra.datacapture.util.VariableResolver").get(name, ctx);
 }
 
 /**
@@ -370,6 +383,16 @@ function setParameter(name, value) {
 		ctx.getParameters(reading).setParameter(name, value);
 	} else {
 		ctx.getTask().getParameters().put(name, value);
+	}
+}
+
+function doError(message, err) {
+	if (typeof reading == "undefined") {
+		ctx.getLogger().error(message, err);
+		API.get("CaptureUtils").doError(message);
+	} else {
+		ctx.getLogger().error(reading, message, err);
+		API.get("CaptureUtils").doError("Reading " + reading.getBarcode() + ": " + message);
 	}
 }
 

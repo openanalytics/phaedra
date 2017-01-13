@@ -46,6 +46,10 @@
       <stage
             eventHandler="eu.openanalytics.phaedra.datacapture.queue.DataCaptureJobQueue"
             id="datacapture.DataCaptureJobQueue">
+         <stageConfiguration
+               name="threads"
+               value="3">
+         </stageConfiguration>
       </stage>
    </extension>
    <extension

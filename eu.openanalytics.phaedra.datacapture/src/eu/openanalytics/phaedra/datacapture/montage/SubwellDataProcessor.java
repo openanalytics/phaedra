@@ -84,7 +84,7 @@ public class SubwellDataProcessor {
 		
 		// Locate the file(s) containing subwell data.
 		File[] files = new File[0];
-		String resolvedPath = CaptureUtils.resolvePath(montageConfig.subwellDataPath, reading.getSourcePath());
+		String resolvedPath = CaptureUtils.resolvePath(montageConfig.subwellDataPath, reading.getSourcePath(), context);
 		if (resolvedPath != null && new File(resolvedPath).isDirectory()) {
 			files = new File(resolvedPath).listFiles();
 		} else {
@@ -117,7 +117,7 @@ public class SubwellDataProcessor {
 			monitor.subTask("Processing well " + wellId);
 			
 			String outputFile = outputPath + "/" + CaptureUtils.resolveVars(
-					montageConfig.subwellDataOutput, false,
+					montageConfig.subwellDataOutput, false, context,
 					Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 			
 			modifySubwellData(wellId, inputFileMap, outputFile);
