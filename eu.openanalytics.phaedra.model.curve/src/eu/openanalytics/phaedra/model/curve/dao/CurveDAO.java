@@ -131,6 +131,7 @@ public class CurveDAO {
 	}
 	
 	public void deleteCurve(Curve curve) {
+		if (curve == null || curve.getId() == 0) return;
 		Statement stmt = null;
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
 			stmt = conn.createStatement();

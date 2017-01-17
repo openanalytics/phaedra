@@ -57,7 +57,7 @@ public class PostValidationFitter implements IHook {
 				try {
 					CurveFitService.getInstance().fitCurves(compound, feature);
 				} catch (CurveFitException e) {
-					EclipseLog.error("Fit failed: " + e.getMessage(), e, Activator.getDefault());
+					EclipseLog.error("Curve fit failed for " + compound + " @ " + feature + ": " + e.getMessage(), null, Activator.getDefault());
 				}
 			}
 		}
