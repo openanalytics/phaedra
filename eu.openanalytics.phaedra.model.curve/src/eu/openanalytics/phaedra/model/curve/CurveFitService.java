@@ -440,7 +440,7 @@ public class CurveFitService extends BaseJPAService {
 				.filter(w -> isValidDataPoint(w));
 		
 		List<Well> wells = null;
-		if (grouping == NO_GROUPING) {
+		if (grouping == null || grouping.equals(NO_GROUPING)) {
 			wells = wellStream.collect(Collectors.toList());
 		} else {
 			wells = wellStream
