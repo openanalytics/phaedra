@@ -104,12 +104,12 @@ public class ColumbusScannerType extends BaseScannerType {
 									String identifier = ColumbusService.getInstance().getUniqueResultId(client, latestResult.resultId);
 									boolean isNewResult = cfg.forceDuplicateCapture || !DataCaptureService.getInstance().isReadingAlreadyCaptured(identifier);
 									if (isNewResult) newResults.put(meas.measurementId, latestResult);
-									else EclipseLog.info("Skipping reading (already captured): " + plate.plateName, Activator.getDefault());
 								}
 							}
 						}
 						
 						if (!newResults.isEmpty()) submitTask(screen, newResults, user, cfg, instance);
+						else EclipseLog.info("Skipping screen (empty or already captured): " + screen.screenName, Activator.getDefault());
 					}
 				}
 			}

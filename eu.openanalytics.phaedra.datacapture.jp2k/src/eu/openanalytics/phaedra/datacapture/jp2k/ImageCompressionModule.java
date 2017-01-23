@@ -129,7 +129,7 @@ public class ImageCompressionModule extends AbstractModule {
 				return;
 			}
 			
-			String outputFormat = (String)VariableResolver.get(PARAM_CONTAINER_FORMAT);
+			String outputFormat = (String)VariableResolver.get(PARAM_CONTAINER_FORMAT, context);
 			if (outputFormat == null) outputFormat = CodecFactory.FORMAT_ZIP;
 			
 			// Create a compressed image file.
@@ -171,7 +171,7 @@ public class ImageCompressionModule extends AbstractModule {
 			Map<String, String> inputFileMap = new HashMap<String, String>();
 			
 			for (ComponentFileConfig fileCfg: component.files) {
-				String filePath = CaptureUtils.resolvePath(fileCfg.path, sourcePath);
+				String filePath = CaptureUtils.resolvePath(fileCfg.path, sourcePath, context);
 				File dir = new File(filePath);
 				if (!dir.exists()) {
 					context.getLogger().warn(reading, "Image path not found: " + filePath);

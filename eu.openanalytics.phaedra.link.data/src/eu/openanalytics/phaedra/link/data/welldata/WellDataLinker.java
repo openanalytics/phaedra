@@ -33,6 +33,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 public class WellDataLinker implements IDataLinkerComponent {
 
 	private List<FeatureValueGrid> gridsToImport;
+	private boolean plateHasWellData;
 	private Plate plate;
 	
 	@Override
@@ -81,8 +82,8 @@ public class WellDataLinker implements IDataLinkerComponent {
 		// Save data.
 		for (FeatureValueGrid grid: gridsToImport) {
 			Feature f = grid.getFeature();
-			if (f.isNumeric()) PlateService.getInstance().updateWellDataRaw(plate, f, grid.getNumericValues());
-			else PlateService.getInstance().updateWellDataRaw(plate, f, grid.getStringValues());
+			if (f.isNumeric()) PlateService.getInstance().updateWellDataRaw(plate, f, grid.getNumericValues(), !plateHasWellData);
+			else PlateService.getInstance().updateWellDataRaw(plate, f, grid.getStringValues(), !plateHasWellData);
 		}
 		
 		// Reset the data accessor for this plate, since the raw data just changed.
@@ -147,6 +148,7 @@ public class WellDataLinker implements IDataLinkerComponent {
 		
 		List<Feature> features = PlateUtils.getFeatures(plate);
 		List<FeatureValue> values = PlateService.getInstance().getWellData(plate);
+		plateHasWellData = !values.isEmpty();
 		for (Feature f: features) {
 			FeatureValueGrid grid = new FeatureValueGrid(plate, f, values);
 			grids.put(f, grid);

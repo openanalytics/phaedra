@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 
 import eu.openanalytics.phaedra.base.console.ConsoleManager;
@@ -28,20 +27,6 @@ public class ImportJob extends Job {
 	public ImportJob(ImportTask task) {
 		super("Import" + (task.sourcePath == null ? "" : ": " + task.sourcePath));
 		this.task = task;
-
-		// Make sure no two import jobs can run simultaneously.
-		ISchedulingRule rule = new ISchedulingRule() {
-			@Override
-			public boolean isConflicting(ISchedulingRule rule) {
-				return rule.getClass().equals(this.getClass());
-			}
-
-			@Override
-			public boolean contains(ISchedulingRule rule) {
-				return rule.getClass().equals(this.getClass());
-			}
-		};
-		setRule(rule);
 	}
 
 	@Override

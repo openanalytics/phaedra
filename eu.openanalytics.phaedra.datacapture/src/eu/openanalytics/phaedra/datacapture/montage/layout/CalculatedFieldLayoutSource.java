@@ -11,7 +11,7 @@ public class CalculatedFieldLayoutSource extends LiteralFieldLayoutSource {
 	
 	@Override
 	public FieldLayout getLayout(PlateReading reading, int fieldCount, MontageConfig montageConfig, DataCaptureContext context) {
-		Object fieldLayout = VariableResolver.get(PARAM_NAME);
+		Object fieldLayout = VariableResolver.get(PARAM_NAME, context);
 		if (fieldLayout instanceof FieldLayout) {
 			return (FieldLayout)fieldLayout;
 		} else if (fieldLayout instanceof String) {

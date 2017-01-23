@@ -29,8 +29,6 @@ public class DataCaptureContext {
 	private IModule activeModule;
 	private PlateReading activeReading;
 	
-	private static DataCaptureContext current;
-	
 	public DataCaptureContext(DataCaptureTask task) {
 		this.readings = new HashMap<>();
 		this.stores = new HashMap<>();
@@ -38,15 +36,6 @@ public class DataCaptureContext {
 		this.readingParameters = new HashMap<>();
 		this.task = task;
 		this.logger = new DataCaptureLogger(this);
-	}
-	
-	public static void setCurrent(DataCaptureContext current) {
-		DataCaptureContext.current = current;
-	}
-	
-	//TODO Refactor; this prevents concurrent execution of DC tasks
-	public static DataCaptureContext getCurrent() {
-		return current;
 	}
 	
 	public PlateReading getReading(int nr) {

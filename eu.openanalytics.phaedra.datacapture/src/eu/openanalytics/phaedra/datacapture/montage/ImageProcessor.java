@@ -65,13 +65,13 @@ public class ImageProcessor {
 			ImageComponent component = montageConfig.imageComponents[componentNr];
 			
 			File[] files = new File[0];
-			String resolvedPath = CaptureUtils.resolvePath(component.path, reading.getSourcePath());
+			String resolvedPath = CaptureUtils.resolvePath(component.path, reading.getSourcePath(), context);
 			if (resolvedPath != null && new File(resolvedPath).isDirectory()) {
 				files = new File(resolvedPath).listFiles();
 			} else {
 				context.getLogger().warn(reading, "Image path not found: " + resolvedPath);
 			}
-			String resolvedPattern = CaptureUtils.resolveVars(component.pattern);
+			String resolvedPattern = CaptureUtils.resolveVars(component.pattern, true, context);
 			FilePatternInterpreter interpreter = new FilePatternInterpreter(resolvedPattern, component.patternIdGroups, component.patternFieldGroup);
 			
 			Set<Integer> uniqueFields = new HashSet<>();
@@ -102,7 +102,7 @@ public class ImageProcessor {
 			
 			MTExecutor<String> threadPool = createThreadPool();
 			for (String wellId: idSet) {
-				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false,
+				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false, context,
 						Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 				MTCallable<String> task = new MTCallable<>();
 				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile));

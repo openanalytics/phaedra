@@ -19,6 +19,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import au.com.bytecode.opencsv.CSVReader;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
+import eu.openanalytics.phaedra.datacapture.DataCaptureContext;
 import eu.openanalytics.phaedra.datacapture.DataCaptureException;
 import eu.openanalytics.phaedra.datacapture.config.ModuleConfig;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
@@ -125,9 +126,9 @@ public class CaptureUtils {
 	 * @param config The configuration object holding parameters.
 	 * @return The matching child's path, or null if no match is found.
 	 */
-	public static String getMatchingChild(String parentPath, String regex) {
-		parentPath = resolveVars(parentPath, false);
-		regex = resolveVars(regex);
+	public static String getMatchingChild(String parentPath, String regex, DataCaptureContext ctx) {
+		parentPath = resolveVars(parentPath, false, ctx);
+		regex = resolveVars(regex, true, ctx);
 		
 		Pattern pattern = Pattern.compile(regex);
 		File parentFile = new File(parentPath);
@@ -150,9 +151,9 @@ public class CaptureUtils {
 	 * @param regex The regular expression to match.
 	 * @return The matching children paths.
 	 */
-	public static String[] getMatchingChildren(String parentPath, String regex) {
-		parentPath = resolveVars(parentPath, false);
-		regex = resolveVars(regex);
+	public static String[] getMatchingChildren(String parentPath, String regex, DataCaptureContext ctx) {
+		parentPath = resolveVars(parentPath, false, ctx);
+		regex = resolveVars(regex, true, ctx);
 		
 		Pattern pattern = Pattern.compile(regex);
 		File parentFile = new File(parentPath);
@@ -178,7 +179,7 @@ public class CaptureUtils {
 	 * @param currentPath The currentPath, used by relative paths.
 	 * @return The resolved path.
 	 */
-	public static String resolvePath(String path, String currentPath) {
+	public static String resolvePath(String path, String currentPath, DataCaptureContext ctx) {
 		if (path == null || path.isEmpty()) return null;
 		
 		// "." points to the current path.
@@ -188,7 +189,7 @@ public class CaptureUtils {
 		if (path.equals("..")) return new File(currentPath).getParentFile().getAbsolutePath();
 		
 		// First, resolve any variables in the path.
-		path = resolveVars(path, false);
+		path = resolveVars(path, false, ctx);
 		
 		// Get rid of backslash separators.
 		if (currentPath.startsWith("\\\\")) {
@@ -219,29 +220,23 @@ public class CaptureUtils {
 		return resolvedPath;
 	}
 	
-	public static String resolveVar(String varName) {
-		Object value = VariableResolver.get(varName);
+	/**
+	 * Resolve a variable in the given data capture context.
+	 * 
+	 * @param varName The  name of the variable to resolve.
+	 * @param ctx The data capture context to look in.
+	 * @return The resolved string value, or null if no match was found.
+	 */
+	public static String resolveVar(String varName, DataCaptureContext ctx) {
+		Object value = VariableResolver.get(varName, ctx);
 		return (value == null) ? null : value.toString();
 	}
 	
-	/**
-	 * Resolve any variables that occur in the unresolvedValue.
-	 * A variable is marked by the ${ characters in front and the } character behind it.
-	 * 
-	 * Note: variable values are escaped so they can be used in regular expressions.
-	 * 
-	 * @param unresolvedValue The value that needs resolving.
-	 * @return The resolved value.
-	 */
-	public static String resolveVars(String unresolvedValue) {
-		return resolveVars(unresolvedValue, true);
+	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex, DataCaptureContext ctx) {
+		return resolveVars(unresolvedValue, escapeValuesForRegex, ctx, null);
 	}
 	
-	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex) {
-		return resolveVars(unresolvedValue, escapeValuesForRegex, null);
-	}
-	
-	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex, Map<String,String> localVariables) {
+	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex, DataCaptureContext ctx, Map<String,String> localVariables) {
 		if (unresolvedValue == null || unresolvedValue.isEmpty()) return unresolvedValue;
 		
 		char varStart = '$';
@@ -282,7 +277,7 @@ public class CaptureUtils {
 						varValue = localVariables.get(varName);
 					}
 					if (varValue == null) {
-						Object varValueObject = VariableResolver.get(varName);
+						Object varValueObject = VariableResolver.get(varName, ctx);
 						if (varValueObject != null) varValue = varValueObject.toString();	
 					}
 					if (varValue == null) {
@@ -310,7 +305,7 @@ public class CaptureUtils {
 		String previousValue = unresolvedValue;
 		while (!resolvedString.equals(previousValue)) {
 			previousValue = resolvedString;
-			resolvedString = resolveVars(resolvedString, escapeValuesForRegex);
+			resolvedString = resolveVars(resolvedString, escapeValuesForRegex, ctx);
 		}
 		
 		return resolvedString;

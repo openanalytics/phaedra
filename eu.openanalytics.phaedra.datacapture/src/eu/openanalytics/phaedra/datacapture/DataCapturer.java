@@ -26,7 +26,6 @@ public class DataCapturer {
 		monitor.beginTask("Capturing data", 100);
 		
 		DataCaptureContext ctx = new DataCaptureContext(task);
-		DataCaptureContext.setCurrent(ctx);
 		ctx.getLogger().started(task);
 		
 		try {
@@ -125,8 +124,6 @@ public class DataCapturer {
 			ctx.getLogger().error(null, "Data capture stopped (due to error)", e);
 			if (e instanceof DataCaptureException) throw (DataCaptureException)e;
 			throw new DataCaptureException("Data capture failed: " + e.getMessage(), e);
-		} finally {
-			DataCaptureContext.setCurrent(null);
 		}
 	}
 	
