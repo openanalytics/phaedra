@@ -198,7 +198,7 @@ public class CurveFitService extends BaseJPAService {
 	
 	public void fitCurves(Plate plate) {
 		List<Feature> features = CollectionUtils.findAll(ProtocolUtils.getFeatures(plate), CurveUtils.FEATURES_WITH_CURVES);
-		List<Compound> compounds = streamableList(plate.getCompounds());
+		List<Compound> compounds = streamableList(plate.getCompounds()).stream().filter(c -> c.getWells().size() > 1).collect(Collectors.toList());
 		if (features.isEmpty() || compounds.isEmpty()) return;
 		
 		EclipseLog.info("Fitting all curves for " + plate, Activator.getDefault());

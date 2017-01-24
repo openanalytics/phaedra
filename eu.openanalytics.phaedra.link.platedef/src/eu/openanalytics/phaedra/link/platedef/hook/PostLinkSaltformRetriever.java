@@ -4,7 +4,6 @@ import eu.openanalytics.phaedra.base.hook.IHook;
 import eu.openanalytics.phaedra.base.hook.IHookArguments;
 import eu.openanalytics.phaedra.base.hook.PreHookException;
 import eu.openanalytics.phaedra.model.plate.PlateService;
-import eu.openanalytics.phaedra.model.plate.compound.CompoundInfo;
 import eu.openanalytics.phaedra.model.plate.compound.CompoundInfoService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -21,10 +20,9 @@ public class PostLinkSaltformRetriever implements IHook {
 		LinkPlateDefHookArguments linkArgs = (LinkPlateDefHookArguments)args;
 		Plate plate = linkArgs.settings.getPlate();
 		for (Compound compound: plate.getCompounds()) {
-			CompoundInfo info = CompoundInfoService.getInstance().getInfo(compound);
-			compound.setSaltform(info.getSaltform());
+			compound.setSaltform(CompoundInfoService.getInstance().getSaltform(compound));
 		}
-		PlateService.getInstance().saveCompounds(plate);
+		if (!plate.getCompounds().isEmpty()) PlateService.getInstance().saveCompounds(plate);
 	}
 
 }
