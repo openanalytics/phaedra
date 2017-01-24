@@ -8,7 +8,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizard;
-import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.datacapture.columbus.ColumbusService;
 import eu.openanalytics.phaedra.link.importer.ImportService;
 import eu.openanalytics.phaedra.link.importer.ImportTask;
@@ -62,10 +61,6 @@ public class ColumbusImportWizard extends BaseStatefulWizard {
 			}
 			task.targetExperiment = experiment;
 		}
-
-		// Make sure the parameter ${experimentName} refers to the original experiment name.
-		String originalExperimentName = FileUtils.getName(task.sourcePath);
-		if (originalExperimentName != null) task.getParameters().put(OperaImportHelper.PARAM_EXPERIMENT_NAME, originalExperimentName.trim());
 
 		// The results to download, see ColumbusDownloadModule.
 		Map<Long, Long> resultIds = new HashMap<>();
