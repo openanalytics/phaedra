@@ -66,6 +66,13 @@ public class ColumbusDownloadModule extends AbstractModule {
 		String userName = columbusPath[1];
 		String screenName = task.getSource().substring((columbusPath[0] + "/" + columbusPath[1] + "/").length());
 		
+		// Fix: if user provided a custom experiment name, make sure ${experimentName} still refers to the original screen name.
+		String targetExpName = (String) task.getParameters().get(DataCaptureTask.PARAM_EXPERIMENT_NAME);
+		if (targetExpName != null) {
+			task.getParameters().put(DataCaptureTask.PARAM_TARGET_EXPERIMENT_NAME, targetExpName);
+			task.getParameters().put(DataCaptureTask.PARAM_EXPERIMENT_NAME, screenName);
+		}
+		
 		monitor.beginTask("Downloading data from Columbus", 100);
 		context.getLogger().info("Downloading data from Columbus screen " + screenName);
 		

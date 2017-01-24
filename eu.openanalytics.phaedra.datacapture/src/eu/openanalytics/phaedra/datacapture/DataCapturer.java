@@ -101,10 +101,11 @@ public class DataCapturer {
 					ctx.getStore(reading).finish();
 					
 					// If target protocol and experiment are known, save them into the reading.
-					Object protocolName = task.getParameters().get(DataCaptureTask.PARAM_PROTOCOL_NAME);
-					Object experimentName = task.getParameters().get(DataCaptureTask.PARAM_EXPERIMENT_NAME);
-					if (protocolName != null) reading.setProtocol(protocolName.toString());
-					if (experimentName != null) reading.setExperiment(experimentName.toString());
+					String protocolName = (String) task.getParameters().get(DataCaptureTask.PARAM_PROTOCOL_NAME);
+					if (protocolName != null) reading.setProtocol(protocolName);
+					String experimentName = (String) task.getParameters().get(DataCaptureTask.PARAM_TARGET_EXPERIMENT_NAME);
+					if (experimentName == null) experimentName = (String) task.getParameters().get(DataCaptureTask.PARAM_EXPERIMENT_NAME);
+					if (experimentName != null) reading.setExperiment(experimentName);
 					
 					DataCaptureService.getInstance().updateReading(reading);
 					ctx.getLogger().completed(reading, ctx.getReadingSourceId(reading));

@@ -15,6 +15,7 @@ public class DataCaptureTask {
 	
 	// Parameters related to data capture:
 	public final static String PARAM_NR_THREADS = "nrOfThreads";
+	public final static String PARAM_TARGET_EXPERIMENT_NAME = "targetExperimentName"; // May be modified by user, do not use to resolve vars
 	public final static String PARAM_EXPERIMENT_NAME = "experimentName";
 	public final static String PARAM_PROTOCOL_NAME = "protocolName";
 	public final static String PARAM_TEST = "test";
