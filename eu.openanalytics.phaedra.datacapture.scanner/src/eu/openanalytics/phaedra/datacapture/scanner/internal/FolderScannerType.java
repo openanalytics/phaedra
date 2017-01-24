@@ -42,6 +42,7 @@ public class FolderScannerType extends BaseScannerType {
 		try {
 			streamContents(Paths.get(cfg.path))
 				.filter(p -> expPattern.matcher(p.getFileName().toString()).matches())
+				.filter(p -> Files.isDirectory(p))
 				.forEach(p -> processExperimentFolder(p, cfg));
 		} catch (Exception e) {
 			throw new ScanException("Failed to scan directory", e);
