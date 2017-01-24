@@ -4,11 +4,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
@@ -20,24 +20,23 @@ import eu.openanalytics.phaedra.link.platedef.Activator;
 
 public class TemplateManager {
 
-	public final static String TEMPLATE_REPO_PATH = "/plate.templates";
-
-	private Map<String, PlateTemplate> templateCache;
+	public static final String TEMPLATE_REPO_PATH = "/plate.templates";
+	
+	private static final PlateTemplate UNLOADED_TEMPLATE = new PlateTemplate();
+	
+	private Map<String, PlateTemplate> templateCache = new ConcurrentHashMap<String, PlateTemplate>();
 
 	public TemplateManager() {
-		templateCache = new ConcurrentHashMap<String, PlateTemplate>();
-		loadTemplates();
+		loadTemplateIds();
 	}
 
 	public String[] getIDs() {
-		List<String> ids = new ArrayList<String>(templateCache.keySet());
-		Collections.sort(ids);
-		return ids.toArray(new String[ids.size()]);
+		return templateCache.keySet().stream().sorted().toArray(i -> new String[i]);
 	}
 
 	public PlateTemplate getTemplate(String id) throws IOException {
 		PlateTemplate template = templateCache.get(id);
-		if (template == null) {
+		if (template == UNLOADED_TEMPLATE) {
 			template = loadTemplate(id);
 			templateCache.put(id, template);
 		}
@@ -45,12 +44,11 @@ public class TemplateManager {
 	}
 
 	public List<PlateTemplate> getTemplates(long protocolClassId) throws IOException {
-		List<PlateTemplate> filteredTemplates = new ArrayList<PlateTemplate>();
-		for (PlateTemplate t: templateCache.values()) {
-			if (t.getProtocolClassId() == protocolClassId) filteredTemplates.add(t);
-		}
-		Collections.sort(filteredTemplates, PlateTemplateSorter.ById);
-		return filteredTemplates;
+		loadTemplates();
+		return templateCache.values().stream()
+				.filter(t -> t.getProtocolClassId() == protocolClassId)
+				.sorted(PlateTemplateSorter.ById)
+				.collect(Collectors.toList());
 	}
 
 	public boolean exists(String id) {
@@ -134,20 +132,13 @@ public class TemplateManager {
 	 * **********
 	 */
 
-	private void loadTemplates() {
-		templateCache.clear();
+	private void loadTemplateIds() {
 		String path = TEMPLATE_REPO_PATH;
 		try {
 			if (!Screening.getEnvironment().getFileServer().isDirectory(path)) return;
 			List<String> items = Screening.getEnvironment().getFileServer().dir(path);
-			items.parallelStream().forEach(item -> {
-				try {
-					String id = item.substring(0,item.lastIndexOf('.'));
-					templateCache.put(id, loadTemplate(id));
-				} catch (Exception e) {
-					// Skip invalid templates.
-					EclipseLog.warn("Ignored invalid template: " + item, Activator.getDefault());
-				}
+			items.stream().forEach(item -> {
+				if (item.contains(".")) templateCache.put(item.substring(0,item.lastIndexOf('.')), UNLOADED_TEMPLATE);
 			});
 		} catch (IOException e) {
 			// Template dir unavailable.
@@ -155,6 +146,18 @@ public class TemplateManager {
 		}
 	}
 
+	private void loadTemplates() {
+		templateCache.keySet().parallelStream().forEach(id -> {
+			try {
+				if (templateCache.get(id) == UNLOADED_TEMPLATE) templateCache.put(id, loadTemplate(id));
+			} catch (IOException e) {
+				// Skip invalid templates.
+				EclipseLog.warn("Ignored invalid template: " + id, Activator.getDefault());
+				templateCache.remove(id);
+			}
+		});
+	}
+	
 	private PlateTemplate loadTemplate(String id) throws IOException {
 		String path = TEMPLATE_REPO_PATH + "/" + id + ".xml";
 		if (exists(id)) {
