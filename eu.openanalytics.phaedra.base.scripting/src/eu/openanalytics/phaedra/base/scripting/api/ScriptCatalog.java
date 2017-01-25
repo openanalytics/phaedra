@@ -2,8 +2,12 @@ package eu.openanalytics.phaedra.base.scripting.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
 
@@ -30,6 +34,13 @@ public class ScriptCatalog {
 		ScriptCatalogURLHandler urlHandler = new ScriptCatalogURLHandler();
 		BundleContext ctx = Activator.getDefault().getBundle().getBundleContext();
 		ctx.registerService(URLStreamHandlerService.class, urlHandler, urlHandler.getProperties());
+	}
+	
+	public List<String> getAvailableScripts(String map) throws IOException {
+		return Files.find(Paths.get(fsPath + FS_SUBPATH + "/" + map), 999, (p, bfa) -> bfa.isRegularFile())
+			.map(p -> p.toFile().getAbsolutePath().replaceAll("\\\\", "/"))
+			.map(s -> s.substring(1 + (fsPath + FS_SUBPATH).length()))
+			.collect(Collectors.toList());
 	}
 	
 	public String getScriptBody(String scriptName) throws IOException {
