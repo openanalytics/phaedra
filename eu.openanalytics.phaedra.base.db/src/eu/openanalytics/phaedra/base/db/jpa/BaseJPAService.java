@@ -57,8 +57,12 @@ public abstract class BaseJPAService {
 	 */
 	protected <E> E getEntity(Class<E> entityClass, Object id) {
 		EntityManager em = getEntityManager();
-		E entity = em.find(entityClass, id);
-		return entity;
+		JDBCUtils.lockEntityManager(em);
+		try {
+			return em.find(entityClass, id);
+		} finally {
+			JDBCUtils.unlockEntityManager(em);
+		}
 	}
 	
 	/**
@@ -76,10 +80,13 @@ public abstract class BaseJPAService {
 		for (int i=1; i<=params.length; i++) {
 			typedQuery.setParameter(i, params[i-1]);
 		}
+		JDBCUtils.lockEntityManager(em);
 		try {
 			return typedQuery.getSingleResult();
 		} catch (NoResultException e) {
 			return null;
+		} finally {
+			JDBCUtils.unlockEntityManager(em);
 		}
 	}
 	
