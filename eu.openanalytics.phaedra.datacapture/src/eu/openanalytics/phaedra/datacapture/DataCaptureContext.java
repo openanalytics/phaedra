@@ -53,6 +53,12 @@ public class DataCaptureContext {
 		return null;
 	}
 	
+	public void updateReadingSourceId(PlateReading reading, String sourceId) {
+		for (Integer i: readings.keySet()) {
+			if (readings.get(i) == reading) readingSourceIds.put(i, sourceId);
+		}
+	}
+	
 	public IDataCaptureStore getStore(PlateReading reading) {
 		for (Integer i: readings.keySet()) {
 			if (readings.get(i) == reading) return stores.get(i);
