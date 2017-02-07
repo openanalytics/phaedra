@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.datacapture.scripting;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,18 @@ public class ScriptedModule extends AbstractModule {
 		}
 	}
 
+	@Override
+	public void postCapture(DataCaptureContext context, IProgressMonitor monitor) {
+		//TODO See if this can be made more generic. Currently it works for JSObject, but not sure about Python etc.
+		Object postCapture = context.getTask().getParameters().get(getId() + ".postCapture");
+		if (postCapture == null) return;
+		Arrays.stream(postCapture.getClass().getMethods()).filter(m -> m.getName().equalsIgnoreCase("call")).findAny().ifPresent(m -> {
+			try { m.invoke(postCapture, this, new Object[] { context, monitor }); } catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		});
+	}
+	
 	private String[] loadScript(String id) throws IOException {
 		IEnvironment env = Screening.getEnvironment();
 		if (env == null) return null;
