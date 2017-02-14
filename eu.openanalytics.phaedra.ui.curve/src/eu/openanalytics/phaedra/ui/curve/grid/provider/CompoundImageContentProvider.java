@@ -54,6 +54,7 @@ import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
@@ -75,7 +76,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	private NatTable table;
 
 	private List<Compound> compounds;
-	private List<Double> concentrations;
+	private List<String> concentrations;
 
 	private String[] columnNames;
 	private String[] columnTooltips;
@@ -109,15 +110,15 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		for (Compound c: compounds) {
 			if (c.getWells() == null || c.getWells().isEmpty()) continue;
 			for (Well w: c.getWells()) {
-				String key = getCompConcKey(c, w.getCompoundConcentration());
-				CollectionUtils.addUnique(concentrations, Double.valueOf(w.getCompoundConcentration()));
+				String key = getCompConcKey(c, getDisplayConc(w.getCompoundConcentration()));
+				CollectionUtils.addUnique(concentrations, getDisplayConc(w.getCompoundConcentration()));
 				if (!wellsPerCompoundConc.containsKey(key)) {
 					wellsPerCompoundConc.put(key, new ArrayList<Well>());
 				}
 				wellsPerCompoundConc.get(key).add(w);
 			}
 		}
-		Collections.sort(concentrations);
+		Collections.sort(concentrations, (c1, c2) -> Double.valueOf(c1).compareTo(Double.valueOf(c2)));
 
 		baseColumnCount = 8;
 		imageColumnCount = concentrations.size();
@@ -132,7 +133,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		columnNames[6] = "Saltform";
 		columnNames[7] = "Samples";
 		for (int i = baseColumnCount; i<baseColumnCount+imageColumnCount; i++) {
-			columnNames[i] = String.valueOf(concentrations.get(i-baseColumnCount)) + " M";
+			columnNames[i] = concentrations.get(i-baseColumnCount) + " M";
 		}
 
 		columnTooltips = new String[columnNames.length];
@@ -193,8 +194,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		}
 
 		int imageIndex = columnIndex - baseColumnCount;
-		Double conc = concentrations.get(imageIndex);
-
+		String conc = concentrations.get(imageIndex);
 		Well well = getCurrentWell(c, conc);
 
 		if (well == null) return null;
@@ -205,12 +205,10 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	public Object getSelectionValue(Compound rowObject, int column) {
 		if (0 <= column - baseColumnCount) {
 			int imageIndex = column - baseColumnCount;
-			Double conc = concentrations.get(imageIndex);
-
+			String conc = concentrations.get(imageIndex);
 			Well well = getCurrentWell(rowObject, conc);
 			if (well != null) return well;
 		}
-
 		return rowObject;
 	}
 
@@ -319,7 +317,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	 * @return List of wells with the same concentration and compound
 	 */
 	public List<Well> getPossibleWells(Well w) {
-		String key = getCompConcKey(w.getCompound(), w.getCompoundConcentration());
+		String key = getCompConcKey(w.getCompound(), getDisplayConc(w.getCompoundConcentration()));
 		if (wellsPerCompoundConc.containsKey(key)) {
 			return wellsPerCompoundConc.get(key);
 		}
@@ -332,7 +330,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	 * @return
 	 */
 	public Well getCurrentWell(Well w) {
-		return getCurrentWell(w.getCompound(), w.getCompoundConcentration());
+		return getCurrentWell(w.getCompound(), getDisplayConc(w.getCompoundConcentration()));
 	}
 
 	/**
@@ -341,7 +339,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	 * @param conc Compound Concentration
 	 * @return Selected Well or Null
 	 */
-	private Well getCurrentWell(Compound c, Double conc) {
+	private Well getCurrentWell(Compound c, String conc) {
 		String key = getCompConcKey(c, conc);
 		return selectedWellPerCompoundConc.get(key);
 	}
@@ -350,7 +348,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	 * @param newWell, the well which image will be used
 	 */
 	public void replaceCurrentUsedWell(Well newWell) {
-		String key = getCompConcKey(newWell.getCompound(), newWell.getCompoundConcentration());
+		String key = getCompConcKey(newWell.getCompound(), getDisplayConc(newWell.getCompoundConcentration()));
 		selectedWellPerCompoundConc.put(key, newWell);
 		getWellImageData(newWell);
 		table.doCommand(new VisualRefreshCommand());
@@ -497,10 +495,14 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		loadAvailableImageJob.schedule();
 	}
 
-	private String getCompConcKey(Compound c, Double conc) {
-		return c.getPlate().getId() + "#" + c.toString() + "#" + conc.toString();
+	private String getCompConcKey(Compound c, String conc) {
+		return c.getPlate().getId() + "#" + c.toString() + "#" + conc;
 	}
 
+	private String getDisplayConc(double conc) {
+		return Formatters.getInstance().format(conc, "0.##E0");
+	}
+	
 	private class ImageLoader extends Job {
 
 		public ImageLoader() {
@@ -530,7 +532,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 						if (monitor.isCanceled()) return;
 						if (table != null && table.isDisposed());
 
-						Double conc = well.getCompoundConcentration();
+						String conc = getDisplayConc(well.getCompoundConcentration());
 						int index = concentrations.indexOf(conc);
 
 						if (index < 0) continue;
@@ -545,7 +547,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 							selectedWellPerCompoundConc.put(key, well);
 						}
 					}
-					Display.getDefault().asyncExec(() -> table.doCommand(new VisualRefreshCommand()));
+					Display.getDefault().asyncExec(() -> { if (table != null) { table.doCommand(new VisualRefreshCommand()); } });
 					monitor.worked(1);
 				}
 			});
@@ -559,7 +561,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	private ImageData getWellImageData(Well well) {
 		try {
 			ImageData imgData = ImageRenderService.getInstance().getWellImageData(well, imageW, imageH, channels);
-			String key = getCompConcKey(well.getCompound(), well.getCompoundConcentration());
+			String key = getCompConcKey(well.getCompound(), getDisplayConc(well.getCompoundConcentration()));
 			if (wellsPerCompoundConc.containsKey(key)) {
 				if (wellsPerCompoundConc.get(key).size() > 1) {
 					imgData = drawPlus(imgData);
