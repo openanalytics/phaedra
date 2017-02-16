@@ -16,7 +16,6 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
 import eu.openanalytics.phaedra.datacapture.DataCaptureTask;
-import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem;
 import eu.openanalytics.phaedra.datacapture.scanner.Activator;
 import eu.openanalytics.phaedra.datacapture.scanner.BaseScannerType;
 import eu.openanalytics.phaedra.datacapture.scanner.ScanException;
@@ -87,14 +86,7 @@ public class FolderScannerType extends BaseScannerType {
 		
 		// Submit to the data capture service, and log an event.
 		EclipseLog.info(String.format("Submitting data capture job (%d readings): %s", plateIds.length, task.getSource()), Activator.getDefault());
-		boolean accepted = DataCaptureService.getInstance().queueTask(task);
-		int status = accepted ? 0 : -1;
-		String msg = "Data capture task submitted" + (accepted ? "" : " but rejected");
-		DataCaptureService.getInstance().fireLogEvent(new DataCaptureLogItem("Scanner", status, task, msg, null));
-		
-		if (!accepted) {
-			EclipseLog.error("Data capture task for scanned folder refused: '" + sourcePath + "'", null, Activator.getDefault());
-		}
+		DataCaptureService.getInstance().queueTask(task, "Folder Scanner");
 	}
 	
 	private Stream<Path> streamContents(Path p) {

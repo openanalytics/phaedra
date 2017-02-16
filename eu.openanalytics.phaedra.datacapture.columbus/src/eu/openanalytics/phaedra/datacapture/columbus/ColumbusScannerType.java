@@ -25,7 +25,6 @@ import eu.openanalytics.phaedra.datacapture.columbus.ws.operation.GetResults.Res
 import eu.openanalytics.phaedra.datacapture.columbus.ws.operation.GetScreens;
 import eu.openanalytics.phaedra.datacapture.columbus.ws.operation.GetScreens.Screen;
 import eu.openanalytics.phaedra.datacapture.columbus.ws.operation.GetUsers.User;
-import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem;
 import eu.openanalytics.phaedra.datacapture.scanner.BaseScannerType;
 import eu.openanalytics.phaedra.datacapture.scanner.ScanException;
 import eu.openanalytics.phaedra.datacapture.scanner.model.ScanJob;
@@ -157,14 +156,7 @@ public class ColumbusScannerType extends BaseScannerType {
 		
 		// Submit to the data capture service, and log an event.
 		EclipseLog.info("Submitting data capture task: " + screen.screenName, Activator.getDefault());
-		boolean accepted = DataCaptureService.getInstance().queueTask(task);
-		int status = accepted ? 0 : -1;
-		String msg = "Data capture task submitted" + (accepted ? "" : " but rejected");
-		DataCaptureService.getInstance().fireLogEvent(new DataCaptureLogItem("Columbus Scanner", status, task, msg, null));
-		
-		if (!accepted) {
-			EclipseLog.error("Data capture task refused: " + screen.screenName, null, Activator.getDefault());
-		}
+		DataCaptureService.getInstance().queueTask(task, "Columbus Scanner");
 	}
 	
 	private static class ColumbusScannerConfig {

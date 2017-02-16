@@ -27,6 +27,7 @@ import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.imaging.jp2k.CodecFactory;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.datacapture.config.CaptureConfig;
 import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem;
@@ -48,12 +49,12 @@ public class DataCaptureService extends BaseJPAService {
 	private static DataCaptureService instance = new DataCaptureService();
 	
 	private boolean serverEnabled;
-	private ListenerList logListeners;
+	private ListenerList<IDataCaptureLogListener> logListeners;
 	private Map<String, RunningDataCaptureJob> runningJobs;
 	
 	private DataCaptureService() {
 		serverEnabled = Boolean.parseBoolean(System.getProperty(DC_SERVER_ENABLED, "false"));	
-		logListeners = new ListenerList();
+		logListeners = new ListenerList<>();
 		runningJobs = new ConcurrentHashMap<>();
 		
 		if (serverEnabled) checkUnfinishedJobs();
@@ -126,8 +127,18 @@ public class DataCaptureService extends BaseJPAService {
 		}
 	}
 	
-	public boolean queueTask(DataCaptureTask task) {
-		return DataCaptureJobQueue.submit(task);
+	public boolean queueTask(DataCaptureTask task, String submitter) {
+		if (isTaskAlreadyActive(task)) {
+			EclipseLog.error("Data capture task refused: a similar task is already queued or running", null, Activator.getDefault());
+			return false;
+		}
+		
+		boolean accepted = DataCaptureJobQueue.submit(task);
+		String msg = "Data capture task submitted" + (accepted ? "" : " but rejected");
+		fireLogEvent(new DataCaptureLogItem(submitter, (accepted ? 0 : -1), task, msg, null));
+		
+		if (!accepted) EclipseLog.error("Data capture task refused: '" + task.getSource() + "'", null, Activator.getDefault());
+		return accepted;
 	}
 	
 	public boolean cancelQueuedTask(String taskId) {
@@ -212,28 +223,41 @@ public class DataCaptureService extends BaseJPAService {
 		delete(reading);
 	}
 	
-	public boolean isTaskSourceAlreadyCaptured(DataCaptureTask task) {
-		// Find a "capture complete" event with the same source path.
-		String query = "select e from SavedLogEvent e where e.status = 1 and e.reading is null and e.sourcePath = ?1";
-		List<SavedLogEvent> events = getList(query, SavedLogEvent.class, task.getSource());
-		return !events.isEmpty();
-	}
-	
 	public boolean isReadingAlreadyCaptured(String readingSourceId) {
 		if (readingSourceId == null || readingSourceId.isEmpty()) return false;
-		
+
+		// Locate readings with the same source ID.
 		String query = "select e from SavedLogEvent e where e.status = 1 and e.reading is not null and e.sourceIdentifier = ?1";
 		List<SavedLogEvent> events = getList(query, SavedLogEvent.class, readingSourceId);
 		
-		// If no reading with this sourceID was previously captured, go ahead.
-		if (events.isEmpty()) return false;
-
 		List<String> taskIds = streamableList(events).stream().map(e -> e.getTaskId()).distinct().collect(Collectors.toList());
 		for (String taskId: taskIds) {
+			// If there is a status 1 message, the task was finished.
 			query = "select e from SavedLogEvent e where e.status = 1 and e.reading is null and e.taskId = ?1";
-			events = getList(query, SavedLogEvent.class, taskId);
-			// This reading is part of a successful capture job.
-			if (!events.isEmpty()) return true;
+			if (!getList(query, SavedLogEvent.class, taskId).isEmpty()) return true;
+		}
+
+		return false;
+	}
+	
+	/**
+	 * Return true if another task is already queued or running on the same source.
+	 * 
+	 * @param task The task to check.
+	 * @return True if such a task is already queued or running.
+	 */
+	public boolean isTaskAlreadyActive(DataCaptureTask task) {
+		if (task == null) return false;
+		
+		// Locate tasks with the same source path.
+		String query = "select e from SavedLogEvent e where e.status = 0 and e.reading is null and e.sourcePath = ?1";
+		List<SavedLogEvent> events = getList(query, SavedLogEvent.class, task.getSource());
+		
+		List<String> taskIds = streamableList(events).stream().map(e -> e.getTaskId()).distinct().collect(Collectors.toList());
+		for (String taskId: taskIds) {
+			// If there are only status 0 messages, the task is queued or running.
+			query = "select e from SavedLogEvent e where e.status != 0 and e.reading is null and e.taskId = ?1";
+			if (getList(query, SavedLogEvent.class, taskId).isEmpty()) return true;
 		}
 		
 		return false;
@@ -284,13 +308,8 @@ public class DataCaptureService extends BaseJPAService {
 	}
 	
 	public void fireLogEvent(DataCaptureLogItem item) {
-		for (Object l: logListeners.getListeners()) {
-			((IDataCaptureLogListener)l).logEvent(item);
-		}
-		
-		if (item.severity.isPersistent()) {
-			saveLogEvent(item);
-		}
+		for (IDataCaptureLogListener l: logListeners) l.logEvent(item);
+		if (item.severity.isPersistent()) saveLogEvent(item);
 	}
 	
 	private void saveLogEvent(DataCaptureLogItem item) {
