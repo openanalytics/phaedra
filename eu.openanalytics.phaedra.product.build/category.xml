@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/eu.openanalytics.phaedra_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.base_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.base" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.base.imaging_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.base.imaging" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.base.r_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.base.r" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.base.thirdparty_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.base.thirdparty" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.base.ui_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.base.ui" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.hcs_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.hcs" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <feature url="features/eu.openanalytics.phaedra.hcs.ui_1.0.0.qualifier.jar" id="eu.openanalytics.phaedra.hcs.ui" version="1.0.0.qualifier">
+      <category name="eu.openanalytics.phaedra"/>
+   </feature>
+   <category-def name="eu.openanalytics.phaedra" label="Phaedra"/>
+</site>
