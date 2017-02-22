@@ -8,10 +8,10 @@ forEachReading(function(reading) {
 	if (matcher.matches()) {
 		var newBC = matcher.group(1);
 		var store = ctx.getStore(reading);
-		if (API.get("CaptureUtils").resolveVars("${barcode.append.meas.id}", false) == "true") {
+		if (API.get("CaptureUtils").resolveVars("${barcode.append.meas.id}", false) == "true", ctx) {
 			newBC += " " + parseInt(store.getProperty("/", "MeasId"));
 		}
-		if (API.get("CaptureUtils").resolveVars("${barcode.append.meas.date}", false) == "true") {
+		if (API.get("CaptureUtils").resolveVars("${barcode.append.meas.date}", false) == "true", ctx) {
 			newBC += " " + store.getProperty("/", "MeasDate").toString();
 		}
 		reading.setBarcode(newBC);

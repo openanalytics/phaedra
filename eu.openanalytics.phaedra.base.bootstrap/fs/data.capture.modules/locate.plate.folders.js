@@ -31,7 +31,7 @@ if (ctx.getReadings().length == 0) {
 
 // If still no readings are found, assume the source folder IS the reading folder.
 if (ctx.getReadings().length == 0) {
-	var path = API.get("CaptureUtils").resolveVars(sourcePath, config);
+	var path = API.get("CaptureUtils").resolveVars(sourcePath, config, ctx);
 	createReading(path);
 }
 
