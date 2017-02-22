@@ -129,54 +129,21 @@ public class UserService extends BaseJPAService {
 		}
 	}
 
-	/**
-	 * Returns a list of emails for the given users that have one.
-	 * @param users
-	 * @return
-	 */
-	public Map<String, String> getMailAddresses(List<User> users) {
-		Map<String, String> userMailAdresses = new HashMap<>();
-		DirContext ctx = null;
-		try {
-			LDAPConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
-			// Get Phaedra Account.
-			String accountName = Screening.getEnvironment().getFileServer().getAccountName();
-			String password = Screening.getEnvironment().resolvePassword(accountName);
-			// Login to LDAP.
-			ctx = LDAPUtils.bind(accountName, password.getBytes(), ldapConfig);
-			for (User user : users) {
-				String userName = user.getUserName();
-				// Lookup email for user.
-				String email = LDAPUtils.lookupEmail(userName, ctx, ldapConfig);
-				if (StringUtils.isValidEmail(email)) {
-					userMailAdresses.put(userName.toLowerCase(), email.toLowerCase());
-				}
-			}
-		} catch (IOException e) {
-			Activator.getDefault().getLog().log(
-					new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed to retrieve email adresses. " + e.getMessage()));
-		} finally {
-			if (ctx != null) try { ctx.close(); } catch (Exception e) {}
-		}
-		return userMailAdresses;
-	}
-
 	public String getMailAddress(String userName) {
 		String email = "";
 		DirContext ctx = null;
 		try {
+			// Attempt to bind as the current user and then look up the target user's email address in LDAP.
+			// Note that this only works if the current user is a service account with its password stored.
 			LDAPConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
-			// Get Phaedra Account.
-			String accountName = Screening.getEnvironment().getFileServer().getAccountName();
-			String password = Screening.getEnvironment().resolvePassword(accountName);
-			// Login to LDAP.
-			ctx = LDAPUtils.bind(accountName, password.getBytes(), ldapConfig);
-			// Lookup email for user.
+			String currentUserName = SecurityService.getInstance().getCurrentUserName();
+			String password = Screening.getEnvironment().resolvePassword(currentUserName);
+			ctx = LDAPUtils.bind(currentUserName, password.getBytes(), ldapConfig);
 			email = LDAPUtils.lookupEmail(userName, ctx, ldapConfig);
 			email = StringUtils.isValidEmail(email)? email.toLowerCase() : "";
 		} catch (IOException e) {
 			Activator.getDefault().getLog().log(
-					new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed to retrieve email adresses. " + e.getMessage()));
+					new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed to retrieve email addresses. " + e.getMessage()));
 		} finally {
 			if (ctx != null) try { ctx.close(); } catch (Exception e) {}
 		}
