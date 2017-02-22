@@ -51,7 +51,7 @@
       <feature id="eu.openanalytics.phaedra.base.imaging" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base.r" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.base.ui" installMode="root"/>
-      <feature id="eu.openanalytics.phaedra.base.thirdparty" version="1.0.0.qualifier"/>
+      <feature id="eu.openanalytics.phaedra.base.thirdparty" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.hcs" installMode="root"/>
       <feature id="eu.openanalytics.phaedra.hcs.ui" installMode="root"/>
    </features>
