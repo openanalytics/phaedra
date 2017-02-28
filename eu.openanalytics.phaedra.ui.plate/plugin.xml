@@ -558,6 +558,21 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
+            locationURI="popup:eu.openanalytics.phaedra.ui.plate.scriptMenu">
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.RunScript"
+               label="Run Script from Catalog"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="activeSelection.Plate">
+               </reference>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
             locationURI="popup:eu.openanalytics.phaedra.ui.protocol.browser.ProtocolBrowser?after=browseAdditions">
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.BrowseExperiments"
@@ -803,17 +818,6 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.RunScript"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/sum.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Plate">
-               </reference>
-            </visibleWhen>
-         </command>
          <separator
                name="eu.openanalytics.phaedra.ui.plate.separator7"
                visible="true">
@@ -822,6 +826,11 @@
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
                id="eu.openanalytics.phaedra.ui.plate.chartMenu"
                label="Charts">
+         </menu>
+         <menu
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/sum.png"
+               id="eu.openanalytics.phaedra.ui.plate.scriptMenu"
+               label="Scripts">
          </menu>
          <separator
                name="primaryAdditions"
@@ -917,17 +926,6 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.RunScript"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/sum.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Well">
-               </reference>
-            </visibleWhen>
-         </command>
          <separator
                name="eu.openanalytics.phaedra.ui.plate.separator11"
                visible="true">
@@ -936,6 +934,11 @@
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
                id="eu.openanalytics.phaedra.ui.plate.chartMenu"
                label="Charts">
+         </menu>
+         <menu
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/sum.png"
+               id="eu.openanalytics.phaedra.ui.plate.scriptMenu"
+               label="Scripts">
          </menu>
          <separator
                name="primaryAdditions"
