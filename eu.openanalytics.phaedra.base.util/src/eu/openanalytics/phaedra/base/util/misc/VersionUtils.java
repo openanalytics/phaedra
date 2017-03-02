@@ -26,7 +26,7 @@ public class VersionUtils {
 	}
 
 	public static String getPhaedraVersion() {
-		return getVersion("eu.openanalytics.phaedra.product.platform");
+		return getVersion("eu.openanalytics.phaedra.feature.group");
 	}
 
 	public static String getVersion(String iuName) {
