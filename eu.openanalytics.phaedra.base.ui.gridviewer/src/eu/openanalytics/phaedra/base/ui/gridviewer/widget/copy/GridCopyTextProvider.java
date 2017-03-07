@@ -14,7 +14,7 @@ public class GridCopyTextProvider implements ICopyTextProvider {
 	}
 
 	@Override
-	public String getTextToCopy(Object widget) {
+	public Object getValueToCopy(Object widget) {
 		String output = "";
 		if (isValidWidget(widget)) {
 			Grid grid = (Grid) widget;

@@ -14,7 +14,7 @@ public class TableCopyTextProvider implements ICopyTextProvider {
 	}
 
 	@Override
-	public String getTextToCopy(Object widget) {
+	public Object getValueToCopy(Object widget) {
 		String output = "";
 		if (isValidWidget(widget)) {
 			Table table = (Table) widget;

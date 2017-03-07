@@ -9,6 +9,6 @@ public interface ICopyTextProvider {
 
 	public boolean isValidWidget(Object widget);
 
-	public abstract String getTextToCopy(Object widget);
+	public abstract Object getValueToCopy(Object widget);
 
 }

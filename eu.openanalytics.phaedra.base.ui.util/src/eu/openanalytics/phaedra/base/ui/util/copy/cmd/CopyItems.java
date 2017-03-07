@@ -14,9 +14,11 @@ import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.ImageTransfer;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.dnd.TransferData;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.ISources;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -92,27 +94,48 @@ public class CopyItems extends AbstractHandler {
 	private static void copyToClipboard(ISelection selection, ExecutionEvent event) {
 		if (selection == null || selection.isEmpty()) return;
 
-		LocalSelectionTransfer selectionTransfer = getLocalSelectionTransfer(selection);
-		TextTransfer textTransfer = TextTransfer.getInstance();
-
-		String text = getSelectionText(selection, event);
-
-		Object[] datas = { selection, text };
-		Transfer[] transfers = { selectionTransfer, textTransfer };
+		Object value = getSelectionValue(selection, event);
+		Transfer valueTransfer = null;
+		if (value instanceof String) valueTransfer = TextTransfer.getInstance();
+		else if (value instanceof ImageData) valueTransfer = ImageTransfer.getInstance();
+		
+		Object[] datas = null;
+		Transfer[] transfers = null;
+		if (valueTransfer == null) {
+			datas = new Object[] { selection };
+			transfers = new Transfer[] { getLocalSelectionTransfer(selection) };
+		} else {
+			datas = new Object[] { selection, value };
+			transfers = new Transfer[] { getLocalSelectionTransfer(selection), valueTransfer };
+		}
 
 		setClipboardContent(datas, transfers);
 	}
 
-	private static String getSelectionText(ISelection selection, ExecutionEvent event) {
-		String text = "";
+	private static Object getSelectionValue(ISelection selection, ExecutionEvent event) {
 		if (event != null) {
 			Object control = HandlerUtil.getVariable(event, ISources.ACTIVE_FOCUS_CONTROL_NAME);
-			text = getCopyText(control);
+			if (control != null) {
+				List<ICopyTextProvider> copyTextProviders = loadCopyTextProviders();
+				for (ICopyTextProvider ctp : copyTextProviders) {
+					if (ctp.isValidWidget(control)) {
+						return ctp.getValueToCopy(control);
+					}
+				}
+			}
 		}
-		if (text == null || text.isEmpty()) {
-			text = getSelectionAsString(selection);
+		
+		if (selection instanceof StructuredSelection) {
+			StringBuilder sb = new StringBuilder();
+			Iterator<?> it = ((StructuredSelection)selection).iterator();
+			String lineSep = System.getProperty("line.separator");
+			while (it.hasNext()) {
+				sb.append(it.next().toString() + lineSep);
+			}
+			return sb.toString();
 		}
-		return text;
+		
+		return selection.toString();
 	}
 
 	private static LocalSelectionTransfer getLocalSelectionTransfer(ISelection selection) {
@@ -120,35 +143,6 @@ public class CopyItems extends AbstractHandler {
 		selectionTransfer.setSelection(selection);
 		selectionTransfer.setSelectionSetTime(System.currentTimeMillis());
 		return selectionTransfer;
-	}
-
-	private static String getSelectionAsString(ISelection selection) {
-		if (selection instanceof StructuredSelection) {
-			return getStructuredSelectionAsString(selection);
-		}
-		return selection.toString();
-	}
-
-	private static String getStructuredSelectionAsString(ISelection selection) {
-		StringBuilder sb = new StringBuilder();
-		Iterator<?> it = ((StructuredSelection)selection).iterator();
-		String lineSep = System.getProperty("line.separator");
-		while (it.hasNext()) {
-			sb.append(it.next().toString() + lineSep);
-		}
-		return sb.toString();
-	}
-
-	private static String getCopyText(Object control) {
-		if (control != null) {
-			List<ICopyTextProvider> copyTextProviders = loadCopyTextProviders();
-			for (ICopyTextProvider ctp : copyTextProviders) {
-				if (ctp.isValidWidget(control)) {
-					return ctp.getTextToCopy(control);
-				}
-			}
-		}
-		return "";
 	}
 
 	private static List<ICopyTextProvider> loadCopyTextProviders() {
