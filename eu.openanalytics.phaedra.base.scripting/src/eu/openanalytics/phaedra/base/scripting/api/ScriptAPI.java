@@ -4,14 +4,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import eu.openanalytics.phaedra.base.scripting.engine.IScriptEngine;
+
 public class ScriptAPI {
 
+	private IScriptEngine engine;
 	private Map<String, Object> api;
 	private Map<String, String> apiHelp;
 	
-	public ScriptAPI() {
-		api = new HashMap<>();
-		apiHelp = new HashMap<>();
+	public ScriptAPI(IScriptEngine engine) {
+		this.engine = engine;
+		this.api = new HashMap<>();
+		this.apiHelp = new HashMap<>();
 	}
 	
 	public Object get(String name) {
@@ -24,10 +28,10 @@ public class ScriptAPI {
 		else return help;
 	}
 	
-	public String[] list() {
+	public void list() {
 		String[] names = api.keySet().toArray(new String[api.size()]);
 		Arrays.sort(names);
-		return names;
+		engine.getConsole().print(Arrays.toString(names));
 	}
 	
 	public void register(String name, Object service, String help) {

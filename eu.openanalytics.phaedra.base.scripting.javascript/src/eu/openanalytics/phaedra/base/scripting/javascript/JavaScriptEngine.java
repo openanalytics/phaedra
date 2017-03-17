@@ -34,7 +34,7 @@ public class JavaScriptEngine extends BaseScriptEngine {
 			}
 		};
 		rootObjects.put("console", console);
-		rootObjects.put("API", new ScriptAPI());
+		rootObjects.put("API", new ScriptAPI(this));
 		setConsole(console);
 		
 		// Note: this requires access to the ext classloader, e.g. by using -Dosgi.parentClassloader=ext
