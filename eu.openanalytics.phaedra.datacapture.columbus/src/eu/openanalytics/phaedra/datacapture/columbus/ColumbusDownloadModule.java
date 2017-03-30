@@ -169,6 +169,7 @@ public class ColumbusDownloadModule extends AbstractModule {
 						Document doc = createMeasDoc(plate, fields, wellCount);
 						String docString = XmlUtils.writeToString(doc);
 						FileUtils.write(docString.getBytes("UTF-8"), destination, false);
+						context.getParameters(reading).setParameter("measFilePath", destination);
 					}
 				}
 			}
