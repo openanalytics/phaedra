@@ -272,7 +272,8 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			index++;
 		}
 
-		boolean ascending = CurveParameter.find(input.getSettings().getExtraParameters(), "Type").stringValue.equals("A");
+		Value type = CurveParameter.find(input.getSettings().getExtraParameters(), "Type");
+		boolean ascending = (type == null) ? true : type.stringValue.equals("A");
 		if (ascending) {
 			for (int i = 0; i < avgConcs.length; i++) {
 				if ((avgValues[i] > emaxEffect) || (Double.isNaN(emaxEffect))) {
