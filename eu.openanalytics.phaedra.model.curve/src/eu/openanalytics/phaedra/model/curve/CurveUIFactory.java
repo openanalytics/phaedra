@@ -201,6 +201,8 @@ public class CurveUIFactory {
 		
 		@Override
 		public String put(String key, String value) {
+			// Fix issue with "" values becoming NULL values in DB
+			if (value == null || value.isEmpty()) return remove(key);
 			return wrappedMap.put(key, value);
 		}
 
