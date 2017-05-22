@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Widget;
 
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
+import eu.openanalytics.phaedra.base.ui.nattable.command.ExportExcelCommand;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.INatTableMenuContributor;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.PrePopupSelectAction;
 
@@ -162,6 +163,16 @@ public class ContextMenuBindingConfiguration extends AbstractUiBindingConfigurat
 			menuItem.setEnabled(true);
 			menuItem.addListener(SWT.Selection, (event) -> {
 				new UnFreezeGridAction().run(natTable, null);
+			});
+			
+			new MenuItem(bodyMenu, SWT.SEPARATOR);
+			
+			menuItem = new MenuItem(bodyMenu, SWT.PUSH);
+			menuItem.setText("Export");
+			menuItem.setImage(IconManager.getIconImage("page_excel.png"));
+			menuItem.setEnabled(true);
+			menuItem.addListener(SWT.Selection, (event) -> {
+				natTable.doCommand(new ExportExcelCommand(natTable));
 			});
 		}
 	}

@@ -25,7 +25,6 @@ import org.eclipse.nebula.widgets.nattable.data.ListDataProvider;
 import org.eclipse.nebula.widgets.nattable.data.validate.DefaultDataValidator;
 import org.eclipse.nebula.widgets.nattable.data.validate.IDataValidator;
 import org.eclipse.nebula.widgets.nattable.edit.EditConfigAttributes;
-import org.eclipse.nebula.widgets.nattable.export.config.DefaultExportBindings;
 import org.eclipse.nebula.widgets.nattable.extension.glazedlists.GlazedListsDataProvider;
 import org.eclipse.nebula.widgets.nattable.extension.glazedlists.GlazedListsEventLayer;
 import org.eclipse.nebula.widgets.nattable.extension.glazedlists.groupBy.GroupByConfigAttributes;
@@ -70,6 +69,7 @@ import ca.odell.glazedlists.SortedList;
 import ca.odell.glazedlists.event.ListEventListener;
 import eu.openanalytics.phaedra.base.ui.nattable.columnChooser.IColumnMatcher;
 import eu.openanalytics.phaedra.base.ui.nattable.columnChooser.command.DisplayColumnChooserCommandHandler;
+import eu.openanalytics.phaedra.base.ui.nattable.command.ExportExcelCommandHandler;
 import eu.openanalytics.phaedra.base.ui.nattable.command.FastMultiColumnResizeCommandHandler;
 import eu.openanalytics.phaedra.base.ui.nattable.command.FastMultiRowResizeCommandHandler;
 import eu.openanalytics.phaedra.base.ui.nattable.command.FixedFreezeCommandHandler;
@@ -89,15 +89,15 @@ import eu.openanalytics.phaedra.base.ui.nattable.extension.glazedlists.groupBy.E
 import eu.openanalytics.phaedra.base.ui.nattable.layer.ColumnGroupByBodyLayerStack;
 import eu.openanalytics.phaedra.base.ui.nattable.layer.FullFeaturedColumnHeaderLayerStack;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.LinkedResizeSupport;
-import eu.openanalytics.phaedra.base.ui.nattable.misc.NatTableToolTip;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.LinkedResizeSupport.ILinkedColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.LinkedResizeSupport.IResizeCallback;
+import eu.openanalytics.phaedra.base.ui.nattable.misc.NatTableToolTip;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.CustomBorderLineDecorator;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.CachedSelectionModel;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.ISelectionTransformer;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionManager;
-import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionProvider;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionManager.INatTableSelectionListener;
+import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionProvider;
 import eu.openanalytics.phaedra.base.ui.nattable.state.IStatePersister;
 import eu.openanalytics.phaedra.base.ui.nattable.state.PersistentStateSupport;
 import eu.openanalytics.phaedra.base.ui.nattable.summaryrow.AbstractStatsSummaryProvider;
@@ -369,7 +369,6 @@ public class NatTableBuilder<T> {
 		table.addConfiguration(new ContextMenuBindingConfiguration(table, menuMgr, editable));
 		table.addConfiguration(new SingleClickSortConfiguration(
 				new CustomBorderLineDecorator(new SortableHeaderTextPainter(new TextPainter()))));
-		table.addConfiguration(new DefaultExportBindings());
 
 		// Add all style configurations to NatTable
 		table.addConfiguration(new PhaedraNatTableStyleConfiguration());
@@ -430,6 +429,7 @@ public class NatTableBuilder<T> {
 		bodyDataLayer.unregisterCommandHandler(MultiColumnResizeCommand.class);
 		bodyDataLayer.registerCommandHandler(new FastMultiColumnResizeCommandHandler(bodyDataLayer));
 		bodyDataLayer.registerCommandHandler(new FastMultiRowResizeCommandHandler(bodyDataLayer));
+		bodyDataLayer.registerCommandHandler(new ExportExcelCommandHandler(selectionLayer, groupingModel, columnAccessor));
 		bodyLayer.unregisterCommandHandler(IFreezeCommand.class);
 		bodyLayer.registerCommandHandler(new FixedFreezeCommandHandler(bodyLayerStack.getFreezeLayer(), bodyLayerStack.getViewportLayer(), selectionLayer));
 
@@ -478,7 +478,6 @@ public class NatTableBuilder<T> {
 		CornerLayer cornerLayer = new CornerLayer(cornerDataLayer, rowHeaderLayer, columnHeaderLayer);
 
 		GridLayer gridLayer = new GridLayer(bodyLayer, columnHeaderLayer, rowHeaderLayer, cornerLayer, false);
-
 		bodyLayerStack.getColumnHideShowLayer().hideColumnPositions(hiddenColumnPositions);
 
 		for (int column = 0; column < columnWidths.length; column++) {

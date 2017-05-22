@@ -15,7 +15,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.nebula.widgets.nattable.core;visibility:=reexport,
  org.eclipse.nebula.widgets.nattable.extension.glazedlists;visibility:=reexport,
  ca.odell.glazedlists;visibility:=reexport,
- org.apache.commons.logging
+ org.apache.commons.logging,
+ org.apache.poi
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.ui.nattable,

@@ -1,12 +1,21 @@
 package eu.openanalytics.phaedra.base.ui.util.misc;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * Convenience class that opens message dialogs and waits for them to close
@@ -91,5 +100,73 @@ public class ThreadsafeDialogHelper {
 			}
 		});
 		return sb.toString();
+	}
+	
+	public static int openChoice(final String title, final String message, String[] choices) {
+		AtomicInteger retVal = new AtomicInteger();
+		Display.getDefault().syncExec(new Runnable() {
+			@Override
+			public void run() {
+				ChoiceDialog dialog = new ChoiceDialog(Display.getCurrent().getActiveShell(), title, message, choices);
+				dialog.open();
+				retVal.set(dialog.getSelectedChoice());
+			}
+		});
+		return retVal.get();
+	}
+	
+	private static class ChoiceDialog extends TitleAreaDialog {
+
+		private String title;
+		private String msg;
+		private String[] choices;
+		
+		private Button[] choiceButtons;
+		private int selectedChoice;
+		
+		public ChoiceDialog(Shell parentShell, String title, String msg, String[] choices) {
+			super(parentShell);
+			this.title = title;
+			this.msg = msg;
+			this.choices = choices;
+			this.selectedChoice = -1;
+		}
+		
+		@Override
+		protected void configureShell(Shell newShell) {
+			super.configureShell(newShell);
+			newShell.setText(title);
+		}
+
+		@Override
+		protected Control createDialogArea(Composite parent) {
+			Composite area = (Composite) super.createDialogArea(parent);
+			setTitle(title);
+			setMessage(msg);
+
+			Composite container = new Composite(area, SWT.NONE);
+			GridDataFactory.fillDefaults().grab(true, true).applyTo(container);
+			GridLayoutFactory.fillDefaults().numColumns(1).margins(5, 5).applyTo(container);
+
+			choiceButtons = new Button[choices.length];
+			for (int i = 0; i < choiceButtons.length; i++) {
+				choiceButtons[i] = new Button(container, SWT.RADIO);
+				choiceButtons[i].setText(choices[i]);
+			}
+
+			return area;
+		}
+		
+		@Override
+		protected void okPressed() {
+			for (int i = 0; i < choiceButtons.length; i++) {
+				if (choiceButtons[i].getSelection()) selectedChoice = i;
+			}
+			super.okPressed();
+		}
+		
+		public int getSelectedChoice() {
+			return selectedChoice;
+		}
 	}
 }
