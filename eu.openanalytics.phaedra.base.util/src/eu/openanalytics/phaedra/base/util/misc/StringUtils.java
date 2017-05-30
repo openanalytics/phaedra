@@ -95,6 +95,68 @@ public class StringUtils {
 		return stackTrace;
 	}
 
+	public static String resolveVariables(String unresolvedValue, Function<String,String> resolver) {
+		if (resolver == null || unresolvedValue == null || unresolvedValue.isEmpty()) return unresolvedValue;
+		
+		char varStart = '$';
+		char varStart2 = '{';
+		char varEnd = '}';
+		
+		StringBuilder resolvedValue = new StringBuilder();
+		int len = unresolvedValue.length();
+		int position = 0;
+		while (position < len) {
+			char currentChar = unresolvedValue.charAt(position);
+			
+			boolean isVarStart = false;
+			if (currentChar == varStart && position+1 < len) {
+				char nextChar = unresolvedValue.charAt(position+1);
+				if (nextChar == varStart2) {
+					isVarStart = true;
+				}
+			}
+			
+			if (isVarStart) {
+				// Consume & replace var
+				int varStartPosition = position + 2;
+				
+				boolean hasVarEnd = true;
+				int varEndPosition = varStartPosition;
+				while (unresolvedValue.charAt(varEndPosition) != varEnd) {
+					varEndPosition++;
+					if (varEndPosition == len) {
+						hasVarEnd = false;
+						break;
+					}
+				}
+				if (hasVarEnd) {
+					String varName = unresolvedValue.substring(varStartPosition, varEndPosition);
+					String varValue = resolver.apply(varName);
+					if (varValue == null) varValue = "" + varStart + varStart2 + varName + varEnd;
+					resolvedValue.append(varValue);
+					position = varEndPosition;
+				} else {
+					resolvedValue.append("" + varStart);
+				}
+			} else {
+				resolvedValue.append(currentChar);
+			}
+			
+			position++;
+		}
+		
+		// Keep resolving until there are no more variables to resolve.
+		// I.e. a variable might resolve into a String containing more variables.
+		String resolvedString = resolvedValue.toString();
+		String previousValue = unresolvedValue;
+		while (!resolvedString.equals(previousValue)) {
+			previousValue = resolvedString;
+			resolvedString = resolveVariables(resolvedString, resolver);
+		}
+		
+		return resolvedString;
+	}
+	
 	public static String nonNull(String s) {
 		return (s == null) ? "" : s;
 	}
