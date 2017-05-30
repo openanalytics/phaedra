@@ -28,7 +28,7 @@
       startupMessageRect="22,324,180,15"
       startupForegroundColor="FFFFFF" />
    <launcher name="phaedra">
-      <macosx icon="/eu.openanalytics.phaedra.product.build/phaedra.icns"/>
+      <macosx icon="phaedra.icns"/>
       <solaris/>
       <win useIco="true">
          <ico path="phaedraicons.ico"/>
