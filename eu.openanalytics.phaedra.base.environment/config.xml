@@ -7,8 +7,8 @@
 
 	<environments>
 		<environment name="Embedded">
-			<fs><path>./embedded.env</path></fs>
-			<db><url>jdbc:h2:./embedded.env/db</url></db>
+			<fs><path>${workspace}/embedded.env</path></fs>
+			<db><url>jdbc:h2:${workspace}/embedded.env/db</url></db>
 		</environment>
 		<!--
 		<environment name="Example distributed environment">

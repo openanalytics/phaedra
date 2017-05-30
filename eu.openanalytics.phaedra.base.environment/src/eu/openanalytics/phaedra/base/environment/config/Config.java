@@ -2,11 +2,15 @@ package eu.openanalytics.phaedra.base.environment.config;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import eu.openanalytics.phaedra.base.util.misc.StringUtils;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 
 public class Config {
@@ -39,11 +43,11 @@ public class Config {
 	}
 	
 	public String getValue(String setting) {
-		return XmlUtils.findString("/config/settings/setting[@name=\"" + setting + "\"]", doc);
+		return resolveVars(XmlUtils.findString("/config/settings/setting[@name=\"" + setting + "\"]", doc));
 	}
 	
 	public String getValue(String env, String category, String property) {
-		return XmlUtils.findString(createCategoryXPath(env, category) + "/" + property, doc);
+		return resolveVars(XmlUtils.findString(createCategoryXPath(env, category) + "/" + property, doc));
 	}
 	
 	public String resolvePassword(String env, String category) throws IOException {
@@ -64,5 +68,19 @@ public class Config {
 	
 	private String createCategoryXPath(String env, String category) {
 		return "/config/environments/environment[@name=\""+env+"\"]/" + category;
+	}
+	
+	private String resolveVars(String value) {
+		return StringUtils.resolveVariables(value, varName -> {
+			if (varName.equalsIgnoreCase("workspace")) {
+				try {
+					String workspace = new URL(System.getProperty("osgi.instance.area")).getFile();
+					if (workspace.endsWith("/")) workspace = workspace.substring(0, workspace.length() - 1);
+					if (ProcessUtils.isWindows() && workspace.startsWith("/")) workspace = workspace.substring(1);
+					return workspace;
+				} catch (MalformedURLException e) {}
+			}
+			return System.getProperty(varName);
+		});
 	}
 }
