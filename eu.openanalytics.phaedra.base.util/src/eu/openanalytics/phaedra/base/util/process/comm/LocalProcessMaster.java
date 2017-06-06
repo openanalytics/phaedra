@@ -158,11 +158,11 @@ public class LocalProcessMaster {
 		}
 
 		if (ProcessUtils.isMac()) {
+			//Workaround for Mac: bundle.getLocation() returns a path relative to the install area.
 			try {
 				String eclipsePath = new URL(System.getProperty("osgi.install.area")).getFile();
 				location = eclipsePath + location;
 			} catch (MalformedURLException e) {}
-			EclipseLog.info("Plugin path resolved to " + location, Activator.getDefault());
 		}
 		
 		if (location.endsWith(".jar")) {
