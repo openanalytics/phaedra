@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -155,6 +157,14 @@ public class LocalProcessMaster {
 			location = location.substring(0, location.length()-1);
 		}
 
+		if (ProcessUtils.isMac()) {
+			try {
+				String eclipsePath = new URL(System.getProperty("osgi.install.area")).getFile();
+				location = eclipsePath + location;
+			} catch (MalformedURLException e) {}
+			EclipseLog.info("Plugin path resolved to " + location, Activator.getDefault());
+		}
+		
 		if (location.endsWith(".jar")) {
 			// Workaround: Extract the jar to a temporary location.
 			// Otherwise, the process' class loader (which is not a BundleClassLoader)
