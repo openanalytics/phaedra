@@ -157,7 +157,7 @@ public class LocalProcessMaster {
 			location = location.substring(0, location.length()-1);
 		}
 
-		if (ProcessUtils.isMac()) {
+		if (ProcessUtils.isMac() && !(new File(location)).exists()) {
 			//Workaround for Mac: bundle.getLocation() returns a path relative to the install area.
 			try {
 				String eclipsePath = new URL(System.getProperty("osgi.install.area")).getFile();
