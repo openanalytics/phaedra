@@ -99,7 +99,7 @@ public class RUtils {
 	}
 	
 	static public double[][] getDouble2DArrayFromRDataFrame(RDataFrame rDataFrame) {
-		double[][] doubleArray2D = new double[rDataFrame.getColumnCount()][rDataFrame.getRowCount()];
+		double[][] doubleArray2D = new double[(int) rDataFrame.getColumnCount()][(int) rDataFrame.getRowCount()];
 		
 		for (int i = 0; i < rDataFrame.getColumnCount(); i++) {
 			RStore column = rDataFrame.getColumn(i);

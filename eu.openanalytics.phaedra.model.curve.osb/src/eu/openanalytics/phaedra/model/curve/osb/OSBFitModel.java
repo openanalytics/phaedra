@@ -172,7 +172,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			double[] weights = null;
 			RObject weight = results.get("weights");
 			if (weight != null) {
-				weights = new double[weight.getData().getLength()];
+				weights = new double[(int) weight.getData().getLength()];
 				for (int i=0; i<weights.length; i++) weights[i] = weight.getData().getNum(i);
 			}
 			CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Weights"), weights);

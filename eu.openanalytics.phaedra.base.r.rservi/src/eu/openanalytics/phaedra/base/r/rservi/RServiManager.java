@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.Status;
 
 import de.walware.ecommons.net.RMIRegistry;
 import de.walware.rj.RjException;
-import de.walware.rj.server.srvext.EServerUtil;
+import de.walware.rj.server.srvext.ERJContext;
 import de.walware.rj.server.srvext.ServerUtil;
 import de.walware.rj.servi.RServi;
 import de.walware.rj.servi.RServiUtil;
@@ -36,7 +36,6 @@ public class RServiManager {
 		this.initialPoolSize = initialPoolSize;
 	}
 
-	@SuppressWarnings("deprecation")
 	public void setEmbedded(final String rHome) throws CoreException {
 		try {
 //			if (System.getSecurityManager() == null) {
@@ -46,13 +45,14 @@ public class RServiManager {
 //				}
 //				System.setSecurityManager(new SecurityManager());
 //			}
-			final String[] libs = EServerUtil.searchRJLibsInPlatform(
-					new String[] { ServerUtil.RJ_SERVER_ID, RServiUtil.RJ_SERVI_ID, RServiUtil.RJ_CLIENT_ID }, false);
+			
+			ERJContext context = new ERJContext();
+			String[] libs = context.searchRJLibs(new String[] { ServerUtil.RJ_SERVER_ID, RServiUtil.RJ_SERVI_ID, RServiUtil.RJ_CLIENT_ID });
 			System.setProperty("java.rmi.server.codebase", ServerUtil.concatCodebase(libs));
 
 			PatchedRMIUtil.INSTANCE.setEmbeddedPrivateMode(true);
 			RMIRegistry registry = PatchedRMIUtil.INSTANCE.getEmbeddedPrivateRegistry(new NullProgressMonitor());
-			RServiNodeFactory nodeFactory = RServiImplE.createLocalhostNodeFactory(name, registry);
+			RServiNodeFactory nodeFactory = RServiImplE.createLocalNodeFactory(name, context);
 			RServiNodeConfig rConfig = new RServiNodeConfig();
 			rConfig.setRHome(rHome);
 			rConfig.setEnableVerbose(true);
@@ -63,6 +63,7 @@ public class RServiManager {
 				}
 			}
 			nodeFactory.setConfig(rConfig);
+			nodeFactory.setRegistry(registry);
 			
 			rPoolManager = new PoolManager(name, registry);
 			PoolConfig poolConfig = new PoolConfig();
