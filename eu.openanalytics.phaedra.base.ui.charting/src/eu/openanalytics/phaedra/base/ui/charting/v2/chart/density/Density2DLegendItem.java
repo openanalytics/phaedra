@@ -27,6 +27,7 @@ import eu.openanalytics.phaedra.base.ui.charting.v2.chart.ChartSettings;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.AbstractChartLayer;
 import eu.openanalytics.phaedra.base.ui.charting.v2.view.BaseLegendView;
 import eu.openanalytics.phaedra.base.util.convert.AWTImageConverter;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import uk.ac.starlink.ttools.plot.DensityLegend;
 import uk.ac.starlink.ttools.plot.DensityPlot;
 
@@ -64,19 +65,23 @@ public class Density2DLegendItem<ENTITY, ITEM> extends AbstractLegendItem<ENTITY
 
 		// Convert to image
 		final BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics g = img.createGraphics();
-		JFrame frame = new JFrame();
-		frame.setUndecorated(true);
-		frame.setPreferredSize(new Dimension(width, height));
-		frame.setBackground(Color.WHITE);
-		frame.add(auxLegend);
-		auxLegend.setBackground(Color.WHITE);
-		auxLegend.setOpaque(true);
-		frame.pack();
-		frame.setVisible(false);
-		auxLegend.paint(g);
-		g.dispose();
-		frame.dispose();
+		
+		// Avoid SWT-AWT deadlock in Mac caused by frame.dispose
+		if (!ProcessUtils.isMac()) {
+			Graphics g = img.createGraphics();
+			JFrame frame = new JFrame();
+			frame.setUndecorated(true);
+			frame.setPreferredSize(new Dimension(width, height));
+			frame.setBackground(Color.WHITE);
+			frame.add(auxLegend);
+			auxLegend.setBackground(Color.WHITE);
+			auxLegend.setOpaque(true);
+			frame.pack();
+			frame.setVisible(false);
+			auxLegend.paint(g);
+			g.dispose();
+			frame.dispose();
+		}
 
 		return AWTImageConverter.convert(Display.getCurrent(), img);
 	}

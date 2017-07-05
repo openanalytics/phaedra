@@ -49,6 +49,7 @@ import eu.openanalytics.phaedra.base.ui.icons.Activator;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.misc.ValueObservable;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.base.util.threading.JobUtils;
 import uk.ac.starlink.topcat.plot.SurfaceZoomRegionList;
 import uk.ac.starlink.topcat.plot.Zoomer;
@@ -93,15 +94,22 @@ public class InteractiveChartView<ENTITY, ITEM> extends BaseChartView<ENTITY, IT
 		root.getContentPane().add(chartArea);
 		root.getContentPane().setBackground(Color.WHITE);
 
-		try {
-			SwingUtilities.invokeAndWait(() -> {
-				// Order from high (top) -> low (bottom), therefore reverse them
-				for (int i = getChartLayers().size() - 1; i >= 0; i--) {
-					initializeLayer(getChartLayers().get(i));
-				}
-			});
-		} catch (InvocationTargetException | InterruptedException e) {
-			EclipseLog.error(e.getMessage(), e, eu.openanalytics.phaedra.base.ui.charting.Activator.getDefault());
+		// Order from high (top) -> low (bottom), therefore reverse them
+		if (ProcessUtils.isMac()) {
+			// Avoid SWT-AWT deadlock in Mac caused by SwingUtilities.invokeAndWait
+			for (int i = getChartLayers().size() - 1; i >= 0; i--) {
+				initializeLayer(getChartLayers().get(i));
+			}
+		} else {
+			try {
+				SwingUtilities.invokeAndWait(() -> {
+					for (int i = getChartLayers().size() - 1; i >= 0; i--) {
+						initializeLayer(getChartLayers().get(i));
+					}
+				});
+			} catch (InvocationTargetException | InterruptedException e) {
+				EclipseLog.error(e.getMessage(), e, eu.openanalytics.phaedra.base.ui.charting.Activator.getDefault());
+			}
 		}
 
 		chartFrame.add(root.getContentPane());
