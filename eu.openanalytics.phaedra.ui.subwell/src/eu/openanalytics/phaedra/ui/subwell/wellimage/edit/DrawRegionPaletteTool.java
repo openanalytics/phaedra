@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.ui.subwell.wellimage.edit;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -297,14 +298,15 @@ public class DrawRegionPaletteTool extends AbstractPaletteTool {
 
 		// Update the image file with the modified codestreams.
 		monitor.subTask("Updating plate label images");
-		String imagePath = PlateService.getInstance().getImagePath(plate);
+		String imagePath = PlateService.getInstance().getImageFSPath(plate);
 		String newImagePath = tempPath + "/updated." + FileUtils.getExtension(imagePath).toLowerCase();
 		
 		try (IEncodeAPI compressor = CodecFactory.getEncoder()) {
-			compressor.updateCodestreamFile(imagePath, codestreams, newImagePath, new SubProgressMonitor(monitor, 5));
+			InputStream input = Screening.getEnvironment().getFileServer().getContents(imagePath);
+			compressor.updateCodestreamFile(input, codestreams, newImagePath, new SubProgressMonitor(monitor, 5));
 		}
 			
-		String relativeImagePath = PlateService.getInstance().getImagePath(plate, false);
+		String relativeImagePath = PlateService.getInstance().getImageFSPath(plate);
 		Screening.getEnvironment().getFileServer().safeReplace(relativeImagePath, new File(newImagePath));
 		monitor.worked(5);
 

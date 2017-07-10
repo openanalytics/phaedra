@@ -34,12 +34,7 @@ public class SubWellModificationTransaction extends EntityModificationTransactio
 	}
 	
 	@Override
-	protected String getHDF5PathFull() {
-		return PlateService.getInstance().getPlateFSPath(plate,true) + "/" + plate.getId() + ".h5";
-	}
-
-	@Override
-	protected String getHDF5PathRelative() {
-		return PlateService.getInstance().getPlateFSPath(plate, false) + "/" + plate.getId() + ".h5";
+	protected String getHDF5Path() {
+		return PlateService.getInstance().getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
 	}
 }

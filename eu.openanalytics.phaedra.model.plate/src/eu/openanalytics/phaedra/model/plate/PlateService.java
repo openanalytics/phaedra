@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.model.plate;
 
-import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -362,9 +361,9 @@ public class PlateService extends BaseJPAService {
 		monitor.subTask("Copying images");
 		if (plate.isImageAvailable()) {
 			try {
-				String fromImagePath = getImagePath(plate);
-				String toImagePath = getPlateFSPath(copy, false) + "/" + copy.getId() + "." + FileUtils.getExtension(fromImagePath);
-				Screening.getEnvironment().getFileServer().putContents(toImagePath, new File(fromImagePath));
+				String fromImagePath = getImageFSPath(plate);
+				String toImagePath = getPlateFSPath(copy) + "/" + copy.getId() + "." + FileUtils.getExtension(fromImagePath);
+				Screening.getEnvironment().getFileServer().copy(fromImagePath, toImagePath);
 			} catch (IOException e) {
 				deletePlate(copy);
 				throw new RuntimeException("Failed to clone plate: error while copying image", e);
@@ -378,10 +377,10 @@ public class PlateService extends BaseJPAService {
 
 		monitor.subTask("Copying subwell data");
 		if (plate.isSubWellDataAvailable()) {
-			String fromHDF5Path = getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
-			String toHDF5Path = getPlateFSPath(copy, false) + "/" + copy.getId() + ".h5";
 			try {
-				Screening.getEnvironment().getFileServer().putContents(toHDF5Path, new File(fromHDF5Path));
+				String fromHDF5Path = getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
+				String toHDF5Path = getPlateFSPath(copy) + "/" + copy.getId() + ".h5";
+				Screening.getEnvironment().getFileServer().copy(fromHDF5Path, toHDF5Path);
 			} catch (IOException e) {
 				deletePlate(copy);
 				throw new RuntimeException("Failed to clone plate: error while copying subwell data", e);
@@ -420,10 +419,8 @@ public class PlateService extends BaseJPAService {
 		// Delete the plate files (image and subwell data)
 		String plateFSPath = null;
 		try {
-			plateFSPath = getPlateFSPath(plate, false);
-			if (Screening.getEnvironment().getFileServer().exists(plateFSPath)) {
-				Screening.getEnvironment().getFileServer().delete(plateFSPath + "/");
-			}
+			plateFSPath = getPlateFSPath(plate);
+			Screening.getEnvironment().getFileServer().delete(plateFSPath + "/");
 		} catch (IOException e) {
 			Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
 					"Failed to clean up plate files at " + plateFSPath, e));
@@ -465,34 +462,20 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Get the full path to a plate's image file, which should be accessible
-	 * to any authenticated Phaedra user.
-	 */
-	public String getImagePath(Plate plate) {
-		return getImagePath(plate, true);
-	}
-	
-	/**
 	 * Get a full or relative path to a plate's image file.
 	 * A relative path is only useful for the SecureFileServer, because the path is relative
 	 * to the file server root.
 	 */
-	public String getImagePath(Plate plate, boolean fullPath) {
+	public String getImageFSPath(Plate plate) {
 		if (!plate.isImageAvailable()) return null;
 		for (String fmt: CodecFactory.getSupportedFormats()) {
 			String fileName = plate.getId() + "." + fmt;
-			String fullImagePath = getPlateFSPath(plate, true) + "/" + fileName;
-			if (new File(fullImagePath).isFile()) return getPlateFSPath(plate, fullPath) + "/" + fileName;
+			String imagePath = getPlateFSPath(plate) + "/" + fileName;
+			try {
+				if (Screening.getEnvironment().getFileServer().exists(imagePath)) return imagePath;
+			} catch (IOException e) {}
 		}
 		return null;
-	}
-
-	/**
-	 * Get the full path to a plate's file server folder, which contains
-	 * the plate's image file, subwell data file and possibly other files.
-	 */
-	public String getPlateFSPath(Plate plate) {
-		return getPlateFSPath(plate, true);
 	}
 
 	/**
@@ -500,7 +483,7 @@ public class PlateService extends BaseJPAService {
 	 * A relative path is only useful for the SecureFileServer, because the path is relative
 	 * to the file server root.
 	 */
-	public String getPlateFSPath(Plate plate, boolean fullPath) {
+	public String getPlateFSPath(Plate plate) {
 		if (plate == null) return null;
 		if (plate.getImagePath() == null) {
 			String imagePath = PlateUtils.getProtocolClass(plate).getId() + "/" + FileUtils.createYearWeekString();
@@ -509,11 +492,7 @@ public class PlateService extends BaseJPAService {
 		}
 
 		StringBuilder sb = new StringBuilder();
-		String root = "";
-		if (fullPath) root = Screening.getEnvironment().getFileServer().getBasePath();
-		if (!root.endsWith("/")) root += "/";
-		sb.append(root);
-		sb.append("plate.data/");
+		sb.append("/plate.data/");
 		sb.append(plate.getImagePath());
 		if (!plate.getImagePath().endsWith("/")) sb.append("/");
 		sb.append(plate.getId());

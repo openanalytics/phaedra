@@ -46,7 +46,7 @@ public class SubWellDataLinker implements IDataLinkerComponent {
 	public void executeLink() throws DataLinkException {
 		if (dataAvailable) {
 			// Attempt to rename, retrying if the file is in use (by the HDF5 sync threads).
-			String destination = PlateService.getInstance().getPlateFSPath(plate, false) + "/" + plate.getId() + ".h5";
+			String destination = PlateService.getInstance().getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
 			try {
 				RetryingUtils.doRetrying(() -> {
 					dataFile.close();

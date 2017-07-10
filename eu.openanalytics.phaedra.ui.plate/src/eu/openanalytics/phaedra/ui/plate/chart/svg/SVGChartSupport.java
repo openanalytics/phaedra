@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.ui.plate.chart.svg;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -16,14 +15,17 @@ import org.eclipse.swt.graphics.Image;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.ui.plate.Activator;
 
 public class SVGChartSupport {
 
@@ -43,7 +45,11 @@ public class SVGChartSupport {
 		this.svgCache = new HashMap<>();
 		this.availableChartNames = new String[0];
 		
-		if (new File(hdf5Path).exists()) loadChartNames();
+		try {
+			if (Screening.getEnvironment().getFileServer().exists(hdf5Path)) loadChartNames();
+		} catch (IOException e) {
+			EclipseLog.error("Failed to access HDF5 file", e, Activator.getDefault());
+		}
 	}
 
 	public void setBgColor(Color bgColor) {
@@ -74,13 +80,9 @@ public class SVGChartSupport {
 		byte[] data = svgCache.get(key);
 		if (data == null) {
 			synchronized(hdf5Path) {
-				HDF5File dataFile = null;
-				try {
-					dataFile = new HDF5File(hdf5Path, true);
+				try (HDF5File dataFile = HDF5File.openForRead(hdf5Path)) {
 					InputStream newData = dataFile.getExtraData(name + "/" + wellNr + ".svg");
 					data = StreamUtils.readAll(newData);
-				} finally {
-					if (dataFile != null) try { dataFile.close(); } catch(Exception e) {}
 				}
 			}
 			svgCache.put(key, data);
@@ -97,9 +99,7 @@ public class SVGChartSupport {
 	 */
 
 	private void loadChartNames() {
-		HDF5File dataFile = null;
-		try {
-			dataFile = new HDF5File(hdf5Path, true);
+		try (HDF5File dataFile = HDF5File.openForRead(hdf5Path)) {
 			String[] extraData = dataFile.getChildren(HDF5File.getExtraDataPath());
 			
 			List<String> extraDataTemp = new ArrayList<>();
@@ -114,8 +114,6 @@ public class SVGChartSupport {
 		} catch (Exception e) {
 			availableChartNames = new String[0];
 			chartsAvailable = false;
-		} finally {
-			if (dataFile != null) try { dataFile.close(); } catch(Exception e) {}
 		}
 	}
 	

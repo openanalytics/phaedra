@@ -3,9 +3,11 @@ package eu.openanalytics.phaedra.base.fs;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.SeekableByteChannel;
 import java.util.List;
 
 import eu.openanalytics.phaedra.base.fs.nio.NIOInterface;
@@ -61,8 +63,19 @@ public class SecureFileServer {
 		return accountName;
 	}
 	
-	public String getBasePath() {
-		return basePath;
+	@Deprecated
+	public File getAsFile(String path) {
+		return new File(getFullPath(path));
+	}
+	
+	public long getFreeSpace() {
+		File fsRoot = new File(basePath);
+		return fsRoot.getFreeSpace();
+	}
+	
+	public long getTotalSpace() {
+		File fsRoot = new File(basePath);
+		return fsRoot.getTotalSpace();
 	}
 	
 	public synchronized boolean exists(String path) throws IOException {
@@ -94,7 +107,7 @@ public class SecureFileServer {
 	}
 
 	public synchronized void delete(String path) throws IOException {
-		fsInterface.delete(getFullPath(path));
+		if (exists(path)) fsInterface.delete(getFullPath(path));
 	}
 
 	public synchronized void renameTo(String from, String to) throws IOException {
@@ -105,6 +118,11 @@ public class SecureFileServer {
 		return fsInterface.getLength(getFullPath(path));
 	}
 
+	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
+		if (exists(path)) return fsInterface.getChannel(getFullPath(path), mode);
+		else return null;
+	}
+	
 	public InputStream getContents(String path) throws IOException {
 		return fsInterface.getInputStream(getFullPath(path));
 	}
@@ -115,7 +133,28 @@ public class SecureFileServer {
 		return new String(contents);
 	}
 
+	public void download(String path, String localDestination) throws IOException {
+		File target = new File(localDestination);
+		if (!target.exists()) target.mkdirs();
+		else if (!target.isDirectory()) throw new IOException("Target is not a directory: " + localDestination);
+		
+		if (isDirectory(path)) {
+			for (String item: dir(path)) {
+				download(path + "/" + item, localDestination + "/" + FileUtils.getName(path));
+			}
+		} else {
+			StreamUtils.copyAndClose(getContents(path), new FileOutputStream(localDestination + "/" + FileUtils.getName(path)));
+		}
+	}
+	
+	public void copy(String from, String to) throws IOException {
+		if (!exists(from)) return;
+		putContents(to, getContents(from));
+	}
+	
 	public OutputStream getOutputStream(String path) throws IOException {
+		String parentPath = FileUtils.getPath(path);
+		if (!fsInterface.exists(parentPath)) fsInterface.mkDirs(parentPath);
 		return fsInterface.getOutputStream(getFullPath(path));
 	}
 

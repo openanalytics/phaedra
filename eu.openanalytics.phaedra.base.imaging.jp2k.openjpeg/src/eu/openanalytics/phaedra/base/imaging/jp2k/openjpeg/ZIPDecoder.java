@@ -1,8 +1,8 @@
 package eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.file.Paths;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,16 +22,13 @@ import org.openjpeg.OpenJPEGDecoder;
 import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
 import eu.openanalytics.phaedra.base.util.misc.SWTUtils;
 import eu.openanalytics.phaedra.base.util.reflect.ReflectionUtils;
-import net.java.truevfs.access.TFile;
-import net.java.truevfs.access.TVFS;
 import net.java.truevfs.comp.zip.ZipEntry;
 import net.java.truevfs.comp.zip.ZipFile;
 
 //TODO Support additionalDiscardLevels
 public class ZIPDecoder implements IDecodeAPI {
 
-	private String filePath;
-	private RandomAccessFile raf;
+	private SeekableByteChannel channel;
 	private Lock lock = new ReentrantLock();
 	
 	private int bgColor = 0xCCCCCC;
@@ -42,8 +39,8 @@ public class ZIPDecoder implements IDecodeAPI {
 	private OpenJPEGDecoder decoder;
 	private JavaByteSource activeCodestream;
 	
-	public ZIPDecoder(String filePath, int nrCodestreamsPerImage) throws IOException {
-		this.filePath = filePath;
+	public ZIPDecoder(SeekableByteChannel channel, int nrCodestreamsPerImage) throws IOException {
+		this.channel = channel;
 		this.nrCodestreamsPerImage = nrCodestreamsPerImage;
 		scanZipEntries();
 	}
@@ -51,9 +48,8 @@ public class ZIPDecoder implements IDecodeAPI {
 	@Override
 	public void open() throws IOException {
 		lock.lock();
-		if (raf != null) return;
+		if (decoder != null) return;
 		try {
-			raf = new RandomAccessFile(filePath, "r");
 			decoder = new OpenJPEGDecoder();
 		} finally {
 			lock.unlock();
@@ -65,10 +61,7 @@ public class ZIPDecoder implements IDecodeAPI {
 		lock.lock();
 		try {
 			decoder = null;
-			if (raf != null) {
-				raf.close();
-				raf = null;
-			}
+			if (channel.isOpen()) channel.close();
 		} catch (IOException e) {
 			// Ignore
 		} finally {
@@ -188,38 +181,38 @@ public class ZIPDecoder implements IDecodeAPI {
 	 */
 	
 	private void scanZipEntries() throws IOException {
-		// Scan the ZIP file and calculate codestream offsets.
-		try (ZipFile zipFile = new ZipFile(Paths.get(filePath))) {
-			Map<Integer, Long> offsetMap = new HashMap<>();
-			Map<Integer, Long> sizeMap = new HashMap<>();
-			Pattern codestreamPattern = Pattern.compile("codestream_(\\d+)\\.j2c");
-			
-			int highestCodestreamNr = 0;
-			Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-			while (zipEntries.hasMoreElements()) {
-				ZipEntry entry = zipEntries.nextElement();
-				if (entry.isDirectory()) continue;
-				Matcher matcher = codestreamPattern.matcher(entry.getName());
-				if (matcher.matches()) {
-					if (entry.getMethod() != ZipEntry.STORED) throw new IOException("Only ZIP files with method STORED (no compression) are supported.");
-					int codestreamNr = Integer.parseInt(matcher.group(1));
-					if (codestreamNr > highestCodestreamNr) highestCodestreamNr = codestreamNr;
-					// getRawOffset: This is the reason we use TrueVFS instead of java.util.zip.
-					long offset = 30 + entry.getName().length() + ((long)ReflectionUtils.invoke("getRawOffset", entry));
-					offsetMap.put(codestreamNr, offset);
-					sizeMap.put(codestreamNr, entry.getSize());
-				}
+		@SuppressWarnings("resource") // No the channel is not closed, it's going to be reused later on!
+		ZipFile zipFile = new ZipFile(channel);
+		
+		Map<Integer, Long> offsetMap = new HashMap<>();
+		Map<Integer, Long> sizeMap = new HashMap<>();
+		Pattern codestreamPattern = Pattern.compile("codestream_(\\d+)\\.j2c");
+		
+		int highestCodestreamNr = 0;
+		Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
+		while (zipEntries.hasMoreElements()) {
+			ZipEntry entry = zipEntries.nextElement();
+			if (entry.isDirectory()) continue;
+			Matcher matcher = codestreamPattern.matcher(entry.getName());
+			if (matcher.matches()) {
+				if (entry.getMethod() != ZipEntry.STORED) throw new IOException("Only ZIP files with method STORED (no compression) are supported.");
+				int codestreamNr = Integer.parseInt(matcher.group(1));
+				if (codestreamNr > highestCodestreamNr) highestCodestreamNr = codestreamNr;
+				// getRawOffset: This is the reason we use TrueVFS instead of java.util.zip.
+				long offset = 30 + entry.getName().length() + ((long)ReflectionUtils.invoke("getRawOffset", entry));
+				offsetMap.put(codestreamNr, offset);
+				sizeMap.put(codestreamNr, entry.getSize());
 			}
-			
-			codestreamOffsets = new long[highestCodestreamNr+1];
-			codestreamSizes = new long[codestreamOffsets.length];
-			for (Integer index: offsetMap.keySet()) {
-				codestreamOffsets[index] = offsetMap.get(index);
-				codestreamSizes[index] = sizeMap.get(index);
-			}
-		} finally {
-			TVFS.umount(new TFile(filePath));
 		}
+		
+		codestreamOffsets = new long[highestCodestreamNr+1];
+		codestreamSizes = new long[codestreamOffsets.length];
+		for (Integer index: offsetMap.keySet()) {
+			codestreamOffsets[index] = offsetMap.get(index);
+			codestreamSizes[index] = sizeMap.get(index);
+		}
+		
+		channel.position(0);
 	}
 	
 	private int calculateDiscardLevels(int[] fullSize, float scale) {
@@ -304,14 +297,14 @@ public class ZIPDecoder implements IDecodeAPI {
 			super(SRC_TYPE_J2K);
 			this.csOffset = offset;
 			this.csSize = size;
-			raf.seek(csOffset);
+			channel.position(csOffset);
 		}
 		
 		@Override
 		public boolean seek(long pos) {
 			if (pos >= (csOffset + csSize)) return false;
 			try {
-				raf.seek(csOffset + pos);
+				channel.position(csOffset + pos);
 			} catch (IOException e) {
 				return false;
 			}
@@ -325,7 +318,7 @@ public class ZIPDecoder implements IDecodeAPI {
 			long newPos = currentPos + canSkip;
 			
 			if (newPos == csOffset + csSize) {
-				try { raf.seek(csOffset + csSize); } catch (IOException e) {}
+				try { channel.position(csOffset + csSize); } catch (IOException e) {}
 				return -1;
 			}
 			else seek(newPos);
@@ -335,7 +328,7 @@ public class ZIPDecoder implements IDecodeAPI {
 		@Override
 		public long getPos() {
 			try {
-				return (raf.getFilePointer() - csOffset);
+				return (channel.position() - csOffset);
 			} catch (IOException e) {
 				return -1;
 			}
@@ -348,10 +341,10 @@ public class ZIPDecoder implements IDecodeAPI {
 		
 		@Override
 		public int read(int len) {
-			byte[] buf = new byte[len];
+			ByteBuffer dst = ByteBuffer.allocate(len);
 			try {
-				int bytesRead = raf.read(buf);
-				addBytesRead(buf, 0, bytesRead);
+				int bytesRead = channel.read(dst);
+				addBytesRead(dst.array(), 0, bytesRead);
 				return bytesRead;
 			} catch (IOException e) {
 				return 0;

@@ -21,8 +21,8 @@ public class ScriptAPI implements IScriptAPIProvider {
 	}
 
 	public static class HDF5Utils {
-		public static HDF5File open(String path, boolean readonly) {
-			return new HDF5File(path, readonly);
+		public static HDF5File open(String path) {
+			return HDF5File.openForRead(path);
 		}
 	}
 }

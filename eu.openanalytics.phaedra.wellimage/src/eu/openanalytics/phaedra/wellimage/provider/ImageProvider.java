@@ -1,7 +1,7 @@
 package eu.openanalytics.phaedra.wellimage.provider;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,6 +9,7 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.imaging.jp2k.CodecFactory;
 import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
@@ -55,14 +56,16 @@ public class ImageProvider implements AutoCloseable {
 		}
 
 		if (hasJPEG2000Channel) {
-			String imagePath = PlateService.getInstance().getImagePath(plate);
-			if (imagePath != null) imageFile = CodecFactory.getDecoder(imagePath, PlateUtils.getWellCount(plate), channels.size());
+			String imagePath = PlateService.getInstance().getImageFSPath(plate);
+			SeekableByteChannel channel = Screening.getEnvironment().getFileServer().getChannel(imagePath, "r");
+			
+			if (channel != null) imageFile = CodecFactory.getDecoder(channel, PlateUtils.getWellCount(plate), channels.size());
 			if (imageFile != null) imageFile.open();
 		}
 
 		String hdf5Path = PlateService.getInstance().getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
-		if (hasHDF5Channel && new File(hdf5Path).exists()) {
-			hdf5File = new HDF5File(hdf5Path, true);
+		if (hasHDF5Channel && Screening.getEnvironment().getFileServer().exists(hdf5Path)) {
+			hdf5File = HDF5File.openForRead(hdf5Path);
 		}
 	}
 
@@ -70,6 +73,10 @@ public class ImageProvider implements AutoCloseable {
 		return PlateUtils.getProtocolClass(plate);
 	}
 
+	public IDecodeAPI getDecoder() {
+		return imageFile;
+	}
+	
 	@Override
 	public void close() {
 		if (imageFile != null) imageFile.close();

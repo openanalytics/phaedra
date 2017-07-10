@@ -1,11 +1,12 @@
 package eu.openanalytics.phaedra.model.plate.util;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -62,13 +63,13 @@ public class PlatePropertyProvider {
 		case PROTOCOL: return p.getExperiment().getProtocol().toString();
 		case PROTOCOL_CLASS: return PlateUtils.getProtocolClass(p).toString();
 		case SIZE_SUBWELL_DATA:
-			String hdf5Path = PlateService.getInstance().getPlateFSPath(p, true);
+			String hdf5Path = PlateService.getInstance().getPlateFSPath(p);
 			return getFileSize(hdf5Path + "/" + p.getId() + ".h5");
 		case SIZE_IMAGE_DATA:
-			String imgPath = PlateService.getInstance().getImagePath(p);
+			String imgPath = PlateService.getInstance().getImageFSPath(p);
 			return getFileSize(imgPath);
 		case SUBWELL_DATA_FILE:
-			String path = PlateService.getInstance().getPlateFSPath(p, true) + "/" + p.getId() + ".h5";
+			String path = PlateService.getInstance().getPlateFSPath(p) + "/" + p.getId() + ".h5";
 			return path.replace('/', '\\');
 		default:
 			Map<String,String> props = PlateService.getInstance().getPlateProperties(p);
@@ -78,8 +79,10 @@ public class PlatePropertyProvider {
 
 	private static String getFileSize(String fileName) {
 		if (fileName != null) {
-			File f = new File(fileName);
-			return FileUtils.getHumanReadableByteCount(f.length(), false);
+			try {
+				long length = Screening.getEnvironment().getFileServer().getLength(fileName);
+				return FileUtils.getHumanReadableByteCount(length, false);
+			} catch (IOException e) {}
 		}
 		return "";
 	}

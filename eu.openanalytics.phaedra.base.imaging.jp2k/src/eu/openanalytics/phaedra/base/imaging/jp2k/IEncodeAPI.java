@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.base.imaging.jp2k;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -53,4 +54,5 @@ public interface IEncodeAPI extends AutoCloseable {
 	 * @throws IOException If the composition fails.
 	 */
 	public void updateCodestreamFile(String inputFile, Map<Integer,String> codestreamFiles, String outputFile, IProgressMonitor monitor) throws IOException;
+	public void updateCodestreamFile(InputStream input, Map<Integer,String> codestreamFiles, String outputFile, IProgressMonitor monitor) throws IOException;
 }

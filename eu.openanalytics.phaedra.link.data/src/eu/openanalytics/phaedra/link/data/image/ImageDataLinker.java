@@ -40,7 +40,7 @@ public class ImageDataLinker implements IDataLinkerComponent {
 	public void executeLink() throws DataLinkException {
 		if (imgDataAvailable) {
 			String ext = FileUtils.getExtension(imageFile);
-			String destination = PlateService.getInstance().getPlateFSPath(plate, false) + "/" + plate.getId() + "." + ext;
+			String destination = PlateService.getInstance().getPlateFSPath(plate) + "/" + plate.getId() + "." + ext;
 			try {
 				Screening.getEnvironment().getFileServer().renameAndReplace(imageFile, destination);
 			} catch (IOException e) {

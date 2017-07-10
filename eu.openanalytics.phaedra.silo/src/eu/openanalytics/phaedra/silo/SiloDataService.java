@@ -2,7 +2,6 @@ package eu.openanalytics.phaedra.silo;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,6 +79,15 @@ public class SiloDataService {
 	 * Read data API
 	 */
 
+	public String getSiloFSPath(Silo silo) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("/silo.data/");
+		sb.append(silo.getProtocolClass().getId());
+		sb.append("/");
+		sb.append(silo.getId() + ".h5");
+		return sb.toString();
+	}
+	
 	public float[] readFloatData(Silo silo, String path, String dataset) throws SiloException {
 		return (float[]) getEntryData(silo, path, dataset);
 	}
@@ -213,31 +221,12 @@ public class SiloDataService {
 	 * ********************
 	 */
 
-	public String getSiloFSPath(Silo silo, boolean full) {
-		StringBuilder sb = new StringBuilder();
-		String root = "";
-		if (full) root = Screening.getEnvironment().getFileServer().getBasePath();
-		if (!root.endsWith("/")) root += "/";
-		sb.append(root);
-		sb.append("silo.data/");
-		sb.append(silo.getProtocolClass().getId());
-		sb.append("/");
-		sb.append(silo.getId() + ".h5");
-		return sb.toString();
-	}
-
 	public void createDataFile(Silo silo) throws IOException {
 		SecurityService.getInstance().checkPersonalObjectWithException(Action.UPDATE, silo);
 
 		// If file exists, do nothing.
-		String hdf5Path = SiloDataService.getInstance().getSiloFSPath(silo, false);
+		String hdf5Path = getSiloFSPath(silo);
 		if (Screening.getEnvironment().getFileServer().exists(hdf5Path)) return;
-
-		String parent = FileUtils.getPath(hdf5Path);
-		// Create the parent directory if it didn't exist yet.
-		if (!Screening.getEnvironment().getFileServer().exists(parent)) {
-			Screening.getEnvironment().getFileServer().mkDirs(parent);
-		}
 
 		// Create an HDF5 File for this silo.
 		String tempFile = FileUtils.generateTempFolder(true) + "/" + silo.getId() + ".h5";
@@ -257,22 +246,15 @@ public class SiloDataService {
 		// Check for read access for the Silo we would like to copy and write access for the Silo to which we want to copy.
 		SecurityService.getInstance().checkPersonalObjectWithException(Action.READ, silo);
 		SecurityService.getInstance().checkPersonalObjectWithException(Action.UPDATE, siloCopy);
-
-		String hdf5Path = SiloDataService.getInstance().getSiloFSPath(silo, false);
-		String hdf5PathCopy = SiloDataService.getInstance().getSiloFSPath(siloCopy, false);
-
-		InputStream contents = Screening.getEnvironment().getFileServer().getContents(hdf5Path);
-		Screening.getEnvironment().getFileServer().putContents(hdf5PathCopy, contents);
+		String hdf5Path = SiloDataService.getInstance().getSiloFSPath(silo);
+		String hdf5PathCopy = SiloDataService.getInstance().getSiloFSPath(siloCopy);
+		Screening.getEnvironment().getFileServer().copy(hdf5Path, hdf5PathCopy);
 	}
 
 	public void deleteDataFile(Silo silo) throws IOException {
 		SecurityService.getInstance().checkPersonalObjectWithException(Action.DELETE, silo);
-
-		String hdf5Path = SiloDataService.getInstance().getSiloFSPath(silo, false);
-		// No need to remove it if it does't exist.
-		if (Screening.getEnvironment().getFileServer().exists(hdf5Path)) {
-			Screening.getEnvironment().getFileServer().delete(hdf5Path);
-		}
+		String hdf5Path = SiloDataService.getInstance().getSiloFSPath(silo);
+		Screening.getEnvironment().getFileServer().delete(hdf5Path);
 	}
 
 	/*
@@ -479,9 +461,7 @@ public class SiloDataService {
 
 	private HDF5File getDataFile(Silo silo) {
 		SecurityService.getInstance().checkPersonalObjectWithException(Action.READ, silo);
-		String hdf5Path = getSiloFSPath(silo, true);
-		HDF5File dataFile = new HDF5File(hdf5Path, true);
-		return dataFile;
+		return HDF5File.openForRead(getSiloFSPath(silo));
 	}
 
 	private static String escape(String string) {

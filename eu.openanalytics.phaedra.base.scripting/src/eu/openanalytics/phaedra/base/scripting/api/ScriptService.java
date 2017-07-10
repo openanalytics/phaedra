@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import eu.openanalytics.phaedra.base.console.ConsoleManager;
 import eu.openanalytics.phaedra.base.console.InteractiveConsole;
+import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.scripting.engine.IScriptEngine;
 import eu.openanalytics.phaedra.base.scripting.engine.ScriptEngineFactory;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
@@ -26,7 +27,7 @@ public class ScriptService {
 	private IScriptEngine defaultEngine;
 	private ScriptCatalog catalog;
 
-	private ScriptService(String fsPath) {
+	private ScriptService(SecureFileServer fs) {
 		// Hidden constructor
 		engines = new ArrayList<>();
 
@@ -54,11 +55,11 @@ public class ScriptService {
 			}
 		}
 
-		catalog = new ScriptCatalog(fsPath);
+		catalog = new ScriptCatalog(fs);
 	}
 
-	public static synchronized ScriptService createInstance(String fsPath) {
-		instance = new ScriptService(fsPath);
+	public static synchronized ScriptService createInstance(SecureFileServer fs) {
+		instance = new ScriptService(fs);
 		for (IScriptEngine engine: instance.engines) {
 			ScriptEngineFactory.loadEngineServices(engine);
 		}

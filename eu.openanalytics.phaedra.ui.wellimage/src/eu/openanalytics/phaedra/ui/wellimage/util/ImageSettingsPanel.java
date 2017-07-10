@@ -24,8 +24,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Scale;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.imaging.jp2k.CodecFactory;
-import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
 import eu.openanalytics.phaedra.base.imaging.jp2k.comp.IComponentType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.split.SplitComposite;
@@ -33,14 +31,12 @@ import eu.openanalytics.phaedra.base.ui.util.split.SplitCompositeFactory;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.threading.JobUtils;
-import eu.openanalytics.phaedra.model.plate.PlateService;
-import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
-import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
 import eu.openanalytics.phaedra.ui.protocol.ImageSettingsService;
 import eu.openanalytics.phaedra.wellimage.component.ComponentTypeFactory;
+import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
 
 public class ImageSettingsPanel extends Composite {
 
@@ -336,30 +332,28 @@ public class ImageSettingsPanel extends Composite {
 	}
 
 	private void loadHistogram() {
-		IDecodeAPI imageFile = null;
-		try {
 			if (currentWell != null && currentWell.getPlate().isImageAvailable() && currentChannel != null) {
-
-				histogramInfoLbl.setText(currentChannel.getName()
-						+ " @ Well " + NumberUtils.getWellCoordinate(currentWell.getRow(), currentWell.getColumn()));
-
-				// Open the new JP2K file.
-				Plate plate = currentWell.getPlate();
-				String filePath = PlateService.getInstance().getImagePath(plate);
-				imageFile = CodecFactory.getDecoder(filePath, PlateUtils.getWellCount(plate), currentSettings.getImageChannels().size());
-				imageFile.open();
-
-				// -4 is to make up for the Canvas border.
-				int w = histogramCanvas.getSize().x - 4;
-				int h = histogramCanvas.getSize().y - 4;
-
-				int nr = NumberUtils.getWellNr(currentWell.getRow(), currentWell.getColumn(), currentWell.getPlate().getColumns());
-				ImageData wellImage = imageFile.renderImage(400, 400, nr-1, currentChannel.getSequence());
-				Image histogram = ColorHistogramFactory.createHistogram(w, h, wellImage, currentChannel,
-						((float)currentSettings.getGamma())/10, histogramLogBtn.getSelection());
-				if (currentHistogram != null) currentHistogram.dispose();
-				currentHistogram = histogram;
-				histogramCanvas.redraw();
+				try (ImageProvider ip = new ImageProvider(currentWell.getPlate())) {
+					ip.open();
+					
+					histogramInfoLbl.setText(currentChannel.getName()
+							+ " @ Well " + NumberUtils.getWellCoordinate(currentWell.getRow(), currentWell.getColumn()));
+	
+					// -4 is to make up for the Canvas border.
+					int w = histogramCanvas.getSize().x - 4;
+					int h = histogramCanvas.getSize().y - 4;
+	
+					int nr = NumberUtils.getWellNr(currentWell.getRow(), currentWell.getColumn(), currentWell.getPlate().getColumns());
+					ImageData wellImage = ip.getDecoder().renderImage(400, 400, nr-1, currentChannel.getSequence());
+					Image histogram = ColorHistogramFactory.createHistogram(w, h, wellImage, currentChannel,
+							((float)currentSettings.getGamma())/10, histogramLogBtn.getSelection());
+					if (currentHistogram != null) currentHistogram.dispose();
+					currentHistogram = histogram;
+					histogramCanvas.redraw();
+				} catch (IOException e) {
+					MessageDialog.openError(Display.getDefault().getActiveShell(),
+							"Image Error", "The JP2K file could not be opened: " + e.getMessage());
+				}
 			} else {
 				// Blank out the histogram.
 				histogramInfoLbl.setText("No image data available");
@@ -367,12 +361,6 @@ public class ImageSettingsPanel extends Composite {
 				currentHistogram = null;
 				histogramCanvas.redraw();
 			}
-		} catch (IOException e) {
-			MessageDialog.openError(Display.getDefault().getActiveShell(),
-					"Image Error", "The JP2K file could not be opened: " + e.getMessage());
-		} finally {
-			if (imageFile != null) imageFile.close();
-		}
 	}
 
 	private void drawHistogram(GC gc) {

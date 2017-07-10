@@ -1,6 +1,6 @@
 package eu.openanalytics.phaedra.ui.plate.inspector.experiment;
 
-import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +22,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
@@ -277,10 +278,10 @@ public class ExperimentInspector extends DecoratedView {
 			long imageSize = 0l;
 			long hdf5Size = 0l;
 			for (Plate p : plates) {
-				String imgPath = PlateService.getInstance().getImagePath(p);
+				String imgPath = PlateService.getInstance().getImageFSPath(p);
 				imageSize += getFileSize(imgPath);
 
-				String hdf5Path = PlateService.getInstance().getPlateFSPath(p, true);
+				String hdf5Path = PlateService.getInstance().getPlateFSPath(p);
 				hdf5Size += getFileSize(hdf5Path + "/" + p.getId() + ".h5");
 			}
 			long imageSizeFinal = imageSize;
@@ -298,8 +299,9 @@ public class ExperimentInspector extends DecoratedView {
 
 	private long getFileSize(String filePath) {
 		if (filePath != null) {
-			File f = new File(filePath);
-			return f.length();
+			try {
+				return Screening.getEnvironment().getFileServer().getLength(filePath);
+			} catch (IOException e) {}
 		}
 		return 0;
 	}

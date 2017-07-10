@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 import java.util.List;
 
@@ -121,6 +122,11 @@ public class SMBInterface implements FSInterface {
 	public OutputStream getOutputStream(String path) throws IOException {
 		SmbFile sFile = getFile(path, true);
 		return sFile.getOutputStream();
+	}
+	
+	@Override
+	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
+		return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
 	}
 	
 	/*

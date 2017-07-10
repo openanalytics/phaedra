@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.base.imaging.jp2k;
 
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
 
 public interface ICodec {
 
@@ -12,5 +13,5 @@ public interface ICodec {
 	
 	public IEncodeAPI getEncoder();
 	
-	public IDecodeAPI getDecoder(String filePath, int imageCount, int componentCount) throws IOException;
+	public IDecodeAPI getDecoder(SeekableByteChannel channel, int imageCount, int componentCount) throws IOException;
 }

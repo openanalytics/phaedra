@@ -8,8 +8,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
-import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
@@ -107,10 +105,6 @@ public class DataLinker {
 	
 	private Plate doLinkData(PlateReading reading, int sequence, IProgressMonitor monitor) throws DataLinkException {
 		
-		// Locate the HDF-5 file and image file
-		SecureFileServer fs = Screening.getEnvironment().getFileServer();
-		HDF5File hdf5File = new HDF5File(fs.getBasePath() + reading.getCapturePath(), true);
-		
 		Plate plate = null;
 		if (task.createNewPlates) {
 			plate = prepareNewPlate(reading, sequence);
@@ -125,7 +119,7 @@ public class DataLinker {
 		if (task.linkSubWellData) components.add(new SubWellDataLinker());
 		if (task.linkImageData) components.add(new ImageDataLinker());
 		
-		try {
+		try (HDF5File hdf5File = HDF5File.openForRead(reading.getCapturePath())) {
 			for (IDataLinkerComponent comp: components) {
 				comp.prepareLink(reading, hdf5File, plate, monitor);
 			}
@@ -141,8 +135,6 @@ public class DataLinker {
 			reading.setLinkStatus(-1);
 			throw e;
 		} finally {
-			hdf5File.close();
-			
 			reading.setLinkDate(new Date());
 			reading.setLinkUser(SecurityService.getInstance().getCurrentUserName());
 			DataCaptureService.getInstance().updateReading(reading);

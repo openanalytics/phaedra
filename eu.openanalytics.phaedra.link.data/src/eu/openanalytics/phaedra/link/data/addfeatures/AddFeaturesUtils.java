@@ -10,8 +10,6 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
-import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.datacapture.util.FeatureDefinition;
@@ -32,11 +30,7 @@ public class AddFeaturesUtils {
 		List<FeatureDefinition> featureDefinitions = new ArrayList<FeatureDefinition>();
 
 		for (PlateReading reading : readings) {
-			// Locate the HDF-5 file
-			SecureFileServer fs = Screening.getEnvironment().getFileServer();
-			String hdf5Path = fs.getBasePath() + reading.getCapturePath();
-			
-			try (HDF5File hdf5File = new HDF5File(hdf5Path, true)) {
+			try (HDF5File hdf5File = HDF5File.openForRead(reading.getCapturePath())) {
 				// Collect all unique well feature names found in the files to be imported
 				FeatureDefinition def;
 				List<String> featureNames = null;
@@ -54,7 +48,7 @@ public class AddFeaturesUtils {
 					if (index >= 0) {
 						FeatureDefinition wfdInList = featureDefinitions.get(index);
 						if (def.isNumeric != wfdInList.isNumeric) 
-							throw new RuntimeException("Feature '" + def.name + "' occurs with different properties (isNumeric) in '" + hdf5Path + "'.");
+							throw new RuntimeException("Feature '" + def.name + "' occurs with different properties (isNumeric) in '" + reading.getCapturePath() + "'.");
 					} else {
 						featureDefinitions.add(def);
 					}

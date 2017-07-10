@@ -11,6 +11,8 @@ import java.util.Set;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
+import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 
 /**
@@ -31,6 +33,11 @@ public class HDF5File extends BaseHDF5File implements AutoCloseable {
 		super(path, readonly);
 	}
 
+	public static HDF5File openForRead(String fsPath) {
+		SecureFileServer fs = Screening.getEnvironment().getFileServer();
+		return new HDF5File(fs.getAsFile(fsPath).getAbsolutePath(), true);
+	}
+	
 	/*
 	 * *********
 	 * Well data

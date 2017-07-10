@@ -5,15 +5,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import eu.openanalytics.phaedra.base.fs.FSInterface;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
@@ -113,6 +118,14 @@ public class NIOInterface implements FSInterface {
 	@Override
 	public OutputStream getOutputStream(String path) throws IOException {
 		return new FileOutputStream(getNIOPath(path).toFile());
+	}
+	
+	@Override
+	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
+		Set<OpenOption> opts = new HashSet<>();
+		if (mode.toLowerCase().contains("r")) opts.add(StandardOpenOption.READ);
+		if (mode.toLowerCase().contains("w")) opts.add(StandardOpenOption.WRITE);
+		return Files.newByteChannel(getNIOPath(path), opts);
 	}
 	
 	/*

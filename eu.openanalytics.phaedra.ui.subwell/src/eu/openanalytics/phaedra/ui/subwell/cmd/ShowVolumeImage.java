@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.ui.subwell.cmd;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +20,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.handlers.HandlerUtil;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.ui.volumerenderer.VolumeDataItem;
 import eu.openanalytics.phaedra.base.ui.volumerenderer.VolumeDataModel;
@@ -28,10 +28,12 @@ import eu.openanalytics.phaedra.base.ui.volumerenderer.VolumeViewEditor;
 import eu.openanalytics.phaedra.base.ui.volumerenderer.VolumeViewEditorInput;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.ui.subwell.Activator;
 
 public class ShowVolumeImage extends AbstractHandler implements IHandler {
 
@@ -47,23 +49,24 @@ public class ShowVolumeImage extends AbstractHandler implements IHandler {
 		// Obtain the volume image for this well, or ask the user to select one.
 		String imgPath = null;
 		if (well != null) {
-			String hdf5Path = PlateService.getInstance().getPlateFSPath(well.getPlate()) + "/" + well.getPlate().getId() + ".h5";
-			if (new File(hdf5Path).exists()) {
-				HDF5File dataFile = new HDF5File(hdf5Path, true);
-				try {
-					DecimalFormat wellNrFormat = new DecimalFormat("0000");
-					String wellNr = wellNrFormat.format(PlateUtils.getWellNr(well));
-					String dataPath = "/ExtraFiles/Well_" + wellNr + ".ics";
-					if (dataFile.exists(dataPath)) {
-						InputStream input = dataFile.getBinaryData(dataPath);
-						imgPath = FileUtils.generateTempFolder(true) + "/volimage.ics";
-						StreamUtils.copyAndClose(input, new FileOutputStream(imgPath));
+			try {
+				String hdf5Path = PlateService.getInstance().getPlateFSPath(well.getPlate()) + "/" + well.getPlate().getId() + ".h5";
+				if (Screening.getEnvironment().getFileServer().exists(hdf5Path)) {
+					try (HDF5File dataFile = HDF5File.openForRead(hdf5Path)) {
+						DecimalFormat wellNrFormat = new DecimalFormat("0000");
+						String wellNr = wellNrFormat.format(PlateUtils.getWellNr(well));
+						String dataPath = "/ExtraFiles/Well_" + wellNr + ".ics";
+						if (dataFile.exists(dataPath)) {
+							InputStream input = dataFile.getBinaryData(dataPath);
+							imgPath = FileUtils.generateTempFolder(true) + "/volimage.ics";
+							StreamUtils.copyAndClose(input, new FileOutputStream(imgPath));
+						}
+					} catch (IOException e) {
+						throw new ExecutionException("Failed to open HDF5 file", e);
 					}
-				} catch (IOException e) {
-					throw new ExecutionException("Failed to open HDF5 file", e);
-				} finally {
-					dataFile.close();
 				}
+			} catch (IOException e) {
+				EclipseLog.error("Failed to access HDF5 file", e, Activator.getDefault());
 			}
 		}
 		if (imgPath == null) {

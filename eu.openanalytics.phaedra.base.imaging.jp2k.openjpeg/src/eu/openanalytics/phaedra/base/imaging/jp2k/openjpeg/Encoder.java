@@ -80,8 +80,13 @@ public class Encoder implements IEncodeAPI {
 
 	@Override
 	public void updateCodestreamFile(String inputFile, Map<Integer, String> codestreamFiles, String outputFile, IProgressMonitor monitor) throws IOException {
+		updateCodestreamFile(new FileInputStream(inputFile), codestreamFiles, outputFile, monitor);
+	}
+	
+	@Override
+	public void updateCodestreamFile(InputStream input, Map<Integer, String> codestreamFiles, String outputFile, IProgressMonitor monitor) throws IOException {
 		checkOutputFormat(outputFile);
-		FileUtils.copy(inputFile, outputFile);
+		StreamUtils.copyAndClose(input, new FileOutputStream(outputFile));
 		try {
 			TConfig config = TConfig.current();
 			config.setAccessPreference(FsAccessOption.GROW, true);

@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.base.environment.statuscheck;
 
-import java.io.File;
 import java.io.IOException;
 
 import eu.openanalytics.phaedra.base.environment.Screening;
@@ -40,9 +39,8 @@ public class FileServerChecker extends AbstractStatusChecker {
 			return new TrafficStatus(TrafficStatus.DOWN, "Cannot access: " + e.getMessage());
 		}
 
-		File fsRoot = new File(fs.getBasePath());
-		double free = (double)fsRoot.getFreeSpace() / (1024*1024*1024);
-		double total = (double)fsRoot.getTotalSpace() / (1024*1024*1024);
+		double free = (double)fs.getFreeSpace() / (1024*1024*1024);
+		double total = (double)fs.getTotalSpace() / (1024*1024*1024);
 		String gbFree = NumberUtils.round(free, 0);
 		String gbTotal = NumberUtils.round(total, 0);
 		String pctFree = NumberUtils.round(100*(free/total), 2);

@@ -53,13 +53,8 @@ public class SiloModificationTransaction extends EntityModificationTransaction {
 	}
 
 	@Override
-	protected String getHDF5PathFull() {
-		return SiloDataService.getInstance().getSiloFSPath(silo, true);
-	}
-
-	@Override
-	protected String getHDF5PathRelative() {
-		return SiloDataService.getInstance().getSiloFSPath(silo, false);
+	protected String getHDF5Path() {
+		return SiloDataService.getInstance().getSiloFSPath(silo);
 	}
 
 }

@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.ui.subwell.chart.v2.data;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -19,6 +18,7 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.density.Density2DChart;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.DataProviderSettings;
@@ -331,9 +331,13 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 		// TODO: What with charts spanning multiple plates? This doesn't seem to be correct.
 		Plate plate = getPlate();
 		String hdf5Path = PlateService.getInstance().getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
-		if (!new File(hdf5Path).exists()) return new String[0];
+		try {
+			if (!Screening.getEnvironment().getFileServer().exists(hdf5Path)) return new String[0];
+		} catch (IOException e) {
+			return new String[0];
+		}
 
-		try (HDF5File file = new HDF5File(hdf5Path, true)) {
+		try (HDF5File file = HDF5File.openForRead(hdf5Path)) {
 			String[] gateData = new String[0];
 			if (file.exists(HDF5File.getExtraDataPath() + HDF5File.getGatesPath())) {
 				gateData = file.getChildren(HDF5File.getExtraDataPath() + HDF5File.getGatesPath());

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.environment.prefs.PrefUtils;
 import eu.openanalytics.phaedra.base.environment.prefs.Prefs;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
@@ -425,7 +426,7 @@ public class SubWellService  {
 		Map<Plate, String> hdf5Files = new HashMap<>();
 		for (Well well: wells) {
 			if (hdf5Files.containsKey(well.getPlate())) continue;
-			String hdf5Path = getDataPath(well.getPlate());
+			String hdf5Path = Screening.getEnvironment().getFileServer().getAsFile(getDataPath(well.getPlate())).getAbsolutePath();
 			if (new File(hdf5Path).exists()) hdf5Files.put(well.getPlate(), hdf5Path);
 		}
 		monitorToUse.worked(5);
@@ -552,9 +553,10 @@ public class SubWellService  {
 
 	private HDF5File getDataFile(Plate plate) {
 		String hdf5Path = getDataPath(plate);
-		if (!new File(hdf5Path).exists()) return null;
-		HDF5File dataFile = new HDF5File(hdf5Path, true);
-		return dataFile;
+		try {
+			if (!Screening.getEnvironment().getFileServer().exists(hdf5Path)) return null;
+		} catch (IOException e) { return null; }
+		return HDF5File.openForRead(hdf5Path);
 	}
 
 	private float[] loadNumericData(HDF5File hdf5File, SubWellFeature feature, int wellNr, int timepoint) throws IOException {

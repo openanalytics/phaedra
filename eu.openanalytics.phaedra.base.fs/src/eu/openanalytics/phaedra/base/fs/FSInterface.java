@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.fs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.SeekableByteChannel;
 import java.util.List;
 
 public interface FSInterface {
@@ -34,4 +35,6 @@ public interface FSInterface {
 	public InputStream getInputStream(String path) throws IOException;
 
 	public OutputStream getOutputStream(String path) throws IOException;
+	
+	public SeekableByteChannel getChannel(String path, String mode) throws IOException;
 }

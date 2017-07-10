@@ -15,14 +15,12 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Transform;
 
-import eu.openanalytics.phaedra.base.imaging.jp2k.CodecFactory;
-import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
 import eu.openanalytics.phaedra.base.util.misc.ColorStore;
 import eu.openanalytics.phaedra.calculation.ClassificationService;
-import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
+import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
 
 public class LabelImageFactory {
 
@@ -34,10 +32,12 @@ public class LabelImageFactory {
 		// Open the existing image to find the image size.
 		int imageNr = PlateUtils.getWellNr(well) - 1;
 		int channelCount = PlateUtils.getProtocolClass(well).getImageSettings().getImageChannels().size();
-		IDecodeAPI currentImage = CodecFactory.getDecoder(PlateService.getInstance().getImagePath(well.getPlate()), PlateUtils.getWellCount(well.getPlate()), channelCount);
-		currentImage.open();
-		Point size = currentImage.getSize(imageNr);
-		int depth = currentImage.getBitDepth(imageNr, channelNr);
+		
+		ImageProvider ip = new ImageProvider(well.getPlate());
+		ip.open();
+		
+		Point size = ip.getImageSize(imageNr);
+		int depth = ip.getDecoder().getBitDepth(imageNr, channelNr);
 
 		monitor.subTask("Drawing labels");
 
@@ -108,9 +108,9 @@ public class LabelImageFactory {
 		
 		// Obtain the current label image, which will be merged with the new one.
 		monitor.subTask("Merging label image with existing image");
-		ImageData currentLabelImage = currentImage.renderImage(drawSize.x, drawSize.y, imageNr, channelNr);
+		ImageData currentLabelImage = ip.getDecoder().renderImage(drawSize.x, drawSize.y, imageNr, channelNr);
 		currentLabelImage = currentLabelImage.scaledTo(size.x, size.y);
-		currentImage.close();
+		ip.close();
 		
 		monitor.worked(2);
 		

@@ -52,7 +52,7 @@ public class Screening {
 		activeEnvironment = env;
 		
 		// Run all post-login actions (that may require an active environment set).
-		ScriptService.createInstance(env.getFileServer().getBasePath());
+		ScriptService.createInstance(env.getFileServer());
 		HookService.getInstance().runPost(HOOK_POINT_ID, args);
 		EclipseLog.info("User " + userName + " logged in to " + env.getName(), Activator.getDefault());
 	}
