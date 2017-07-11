@@ -33,6 +33,7 @@ import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.SimplePlotData;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.AbstractChartLayer;
 import eu.openanalytics.phaedra.base.ui.charting.v2.view.BaseChartView;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import uk.ac.starlink.table.StarTable;
 import uk.ac.starlink.topcat.plot.Points;
 import uk.ac.starlink.ttools.plot.PlotData;
@@ -263,7 +264,8 @@ public abstract class AbstractChart<ENTITY, ITEM> extends ComponentAdapter {
 
 			plot.paint(g);
 		} finally {
-			if (frame != null) frame.dispose();
+			// Avoid SWT-AWT deadlock in Mac caused by frame.dispose
+			if (frame != null && !ProcessUtils.isMac()) frame.dispose();
 		}
 	}
 
