@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.fs.nio;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,6 +36,11 @@ public class NIOInterface implements FSInterface {
 	
 	@Override
 	public void initialize(String fsPath, String userName, String pw, String wins) throws IOException {
+		// Nothing to do.
+	}
+	
+	@Override
+	public void close() throws IOException {
 		// Nothing to do.
 	}
 	
@@ -126,6 +132,11 @@ public class NIOInterface implements FSInterface {
 		if (mode.toLowerCase().contains("r")) opts.add(StandardOpenOption.READ);
 		if (mode.toLowerCase().contains("w")) opts.add(StandardOpenOption.WRITE);
 		return Files.newByteChannel(getNIOPath(path), opts);
+	}
+	
+	@Override
+	public File getAsFile(String path) {
+		return new File(path);
 	}
 	
 	/*

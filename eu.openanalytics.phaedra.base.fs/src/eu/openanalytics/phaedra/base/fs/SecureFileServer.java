@@ -15,6 +15,7 @@ import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
 import eu.openanalytics.phaedra.base.fs.smb.SMBInterface;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.RetryingUtils;
 import eu.openanalytics.phaedra.base.util.misc.RetryingUtils.RetryingBlock;
 import eu.openanalytics.phaedra.base.util.misc.RetryingUtils.RetryingInputAccessor;
@@ -49,6 +50,14 @@ public class SecureFileServer {
 		}
 	}
 
+	public void close() {
+		try {
+			fsInterface.close();
+		} catch (IOException e) {
+			EclipseLog.error("Failed to disconnect file server", e, Activator.getDefault());
+		}
+	}
+	
 	private String getFullPath(String path) {
 		path = path.replace('\\', '/');
 		if (!path.startsWith("/")) path = "/" + path;
@@ -65,7 +74,7 @@ public class SecureFileServer {
 	
 	@Deprecated
 	public File getAsFile(String path) {
-		return new File(getFullPath(path));
+		return fsInterface.getAsFile(getFullPath(path));
 	}
 	
 	public long getFreeSpace() {

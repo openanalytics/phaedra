@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.fs;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,6 +13,8 @@ public interface FSInterface {
 	
 	public void initialize(String fsPath, String userName, String pw, String wins) throws IOException;
 
+	public void close() throws IOException;
+	
 	public boolean exists(String path) throws IOException;
 	
 	public boolean isDirectory(String path) throws IOException;
@@ -37,4 +40,7 @@ public interface FSInterface {
 	public OutputStream getOutputStream(String path) throws IOException;
 	
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException;
+	
+	@Deprecated
+	public File getAsFile(String path);
 }

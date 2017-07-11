@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.fs.smb;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -7,11 +8,14 @@ import java.net.MalformedURLException;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
 import eu.openanalytics.phaedra.base.fs.FSInterface;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
+import eu.openanalytics.phaedra.base.util.io.FileUtils;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import jcifs.UniAddress;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
@@ -23,6 +27,9 @@ public class SMBInterface implements FSInterface {
 	
 	private UniAddress domain;
 	private NtlmPasswordAuthentication auth;
+	
+	private String basePath;
+	private String privateMount;
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
@@ -49,7 +56,14 @@ public class SMBInterface implements FSInterface {
 		fsPath = fsPath.substring(SecureFileServer.UNC_PREFIX.length()).replace('\\', '/');
 		String serverName = fsPath.split("/")[0];
 		
+		basePath = SecureFileServer.UNC_PREFIX + fsPath;
+		
 		login(serverName, userName, pw);
+	}
+	
+	@Override
+	public void close() throws IOException {
+		if (privateMount != null) unmount();
 	}
 	
 	public void login(String address, String userName, String pw) throws IOException {
@@ -129,6 +143,16 @@ public class SMBInterface implements FSInterface {
 		return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
 	}
 	
+	@Override
+	public File getAsFile(String path) {
+		if (path.startsWith(SecureFileServer.UNC_PREFIX) && !ProcessUtils.isWindows()) {
+			if (privateMount == null) mount();
+			return new File(privateMount + path.substring(basePath.length()));
+		} else {
+			return new File(path);
+		}
+	}
+	
 	/*
 	 * Non-public
 	 * **********
@@ -146,5 +170,26 @@ public class SMBInterface implements FSInterface {
 		
 		SmbFile sFile = new SmbFile(smbPath, auth, sharing);
 		return sFile;
+	}
+	
+	private void mount() {
+		privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
+		new File(privateMount).mkdirs();
+		
+		String smbPath = "//"+ auth.getDomain() + ";"+ auth.getUsername() + ":"+ auth.getPassword() + "@"+ basePath.substring(2);
+		
+		String[] cmd = { "mount", "-t", "smbfs", smbPath, privateMount };
+		try {
+			ProcessUtils.execute(cmd, null, null, true, true);
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	private void unmount() {
+		try {
+			int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
+			if (retCode == 0) FileUtils.deleteRecursive(privateMount);
+		} catch (InterruptedException e) {}
 	}
 }

@@ -71,6 +71,7 @@ public class EnvironmentImpl implements IEnvironment {
 	@Override
 	public void disconnect() {
 		database.close();
+		fileServer.close();
 	}
 
 	@Override
