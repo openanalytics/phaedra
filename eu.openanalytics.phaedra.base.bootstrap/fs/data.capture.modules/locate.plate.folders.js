@@ -15,6 +15,7 @@ monitor.beginTask("Locating plate folders", 100);
 var pattern = getParameter("plate.folder.pattern", ".*");
 var barcodeGroup = getParameter("plate.folder.barcode.group", 1);
 var sequenceGroup = getParameter("plate.folder.sequence.group");
+var plateIds = getParameterAsObject("plateIds");
 var sourcePath = task.getSource();
 var readingNr = 1;
 
@@ -31,7 +32,7 @@ if (ctx.getReadings().length == 0) {
 
 // If still no readings are found, assume the source folder IS the reading folder.
 if (ctx.getReadings().length == 0) {
-	var path = API.get("CaptureUtils").resolveVars(sourcePath, config, ctx);
+	var path = resolveVars(sourcePath);
 	createReading(path);
 }
 
@@ -47,10 +48,19 @@ function scanFolder(path) {
 }
 
 function createReading(path) {
+	if (plateIds != null) {
+		var validId = false;
+		for (var p in plateIds) {
+			if (path.toLowerCase().startsWith(plateIds[p].toLowerCase())) validId = true;
+		}
+		if (!validId) return;
+	}
+	//if (plateIds != null && findString(plateIds, path, false) == -1) return;
+	
 	var file = new java.io.File(path);
 	if (file.isDirectory()) {
 		var fileName = file.getName();
-		var reading = ctx.createNewReading(readingNr++);
+		var reading = ctx.createNewReading(readingNr++, file.getAbsolutePath());
 		reading.setSourcePath(path);
 
 		var barcode = matchPattern(fileName, pattern, barcodeGroup);

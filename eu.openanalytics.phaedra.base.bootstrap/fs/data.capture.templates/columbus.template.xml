@@ -1,6 +1,8 @@
 <data-capture-config>
-<!-- TODO support subwelldata montage -->
-<!-- TODO support literal montage layout -->
+
+<!-- TODO support for multi-mask PNGs -->
+<!-- TODO montage subwelldata: which features ??? -->
+<!-- TODO support for literal montage layouts -->
 
 <#assign nrMontageChannels = 0>
 <#assign nrColumbusChannels = 0>
@@ -20,16 +22,12 @@
 	<module id="gather.measdata" name="Gather plate data" type="ScriptedModule">
 		<parameters>
 			<parameter key="script.id">capture.columbus.measdata</parameter>
-			<parameter key="meas.file.path">.</parameter>
-			<parameter key="meas.file.pattern">Meas_(\d+)\.xml</parameter>
 		</parameters>
 	</module>
 
 	<module id="gather.welldata" name="Gather well data" type="ScriptedModule">
 		<parameters>
 			<parameter key="script.id">capture.columbus.welldata</parameter>
-			<parameter key="welldata.file.path">.</parameter>
-			<parameter key="welldata.file.pattern">Results_Analysis\.xml</parameter>
 			<parameter key="optional">true</parameter>
 		</parameters>
 	</module>
@@ -41,13 +39,12 @@
 			<parameter key="parser.id">txt.subwelldata.parser</parameter>
 			<parameter key="file.path">${r'${image.path}\${experimentName}\${barcode}'}</parameter>
 			<parameter key="file.pattern">${subwelldata.filepattern}</parameter>
-			<parameter key="file.pattern.wellid.group">1</parameter>
 		</parameters>
 	</module>
 </#if>
 
 <#if nrMontageChannels gt 0>
-	<module id="montage" name="Montage fields" type="MontageModule">
+	<module id="gather.imagedata.montage" name="Montage fields" type="MontageModule">
 		<parameters>
 			<parameter key="config">
 				<montage layoutSource="<#if nrColumbusChannels gt 0>meas<#else>square</#if>" padding="0" />

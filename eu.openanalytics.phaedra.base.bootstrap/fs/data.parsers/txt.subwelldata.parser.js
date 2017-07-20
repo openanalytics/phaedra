@@ -22,6 +22,7 @@ for (var i in lines) {
 	
 	var cells = lines[i].split(colSep);
 	if (cells.length == 0) continue;
+	if (cells.length == 2) continue; // Support old files containing key-value pairs at the beginning
 	
 	// The first non-comment line contains the headers
 	if (headers == null) {

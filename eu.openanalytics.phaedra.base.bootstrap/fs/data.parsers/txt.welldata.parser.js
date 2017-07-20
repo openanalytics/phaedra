@@ -64,6 +64,7 @@ for (var i in dataLines) {
 		pos = [ API.get("NumberUtils").convertToRowNumber(wellId), API.get("NumberUtils").convertToColumnNumber(wellId) ];
 	}
 	var well = plate.getWell(pos[0], pos[1]);
+	if (well == null) continue;
 	
 	for (var j in headers) {
 		if (headers[j].isEmpty()) continue;
