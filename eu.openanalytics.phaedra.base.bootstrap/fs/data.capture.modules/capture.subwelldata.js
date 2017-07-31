@@ -39,9 +39,7 @@ forEachReading(function (reading) {
 			saveModel(model);
 			delete model;
 		} catch (err) {
-			var msg = "Failed to parse subwell data file " + f;
-			ctx.getLogger().error(reading, msg, err);
-			API.get("CaptureUtils").doError("Reading " + reading.getBarcode() + ": " + msg);
+			doError("Failed to parse subwell data file " + f, err);
 		}
 	});
 });

@@ -78,20 +78,20 @@ public class StreamingXLSXWriter implements IExportWriter {
 		}
 		
 		// Other rows: data values
-		for (int rowNr = 1; rowNr < baseResult.getRowCount(); rowNr++) {
-			row = sh.createRow(rowNr);
+		for (int rowNr = 0; rowNr < baseResult.getRowCount(); rowNr++) {
+			row = sh.createRow(rowNr + 1);
 			for (colNr = 0; colNr < baseResult.getColumns().length; colNr++) {
 				boolean numeric = baseResult.isColumnNumeric(colNr);
-				if (numeric) writeCell(row, colNr, baseResult.getNumericValue(rowNr-1, colNr));
-				else writeCell(row, colNr, baseResult.getStringValue(rowNr-1, colNr));
+				if (numeric) writeCell(row, colNr, baseResult.getNumericValue(rowNr, colNr));
+				else writeCell(row, colNr, baseResult.getStringValue(rowNr, colNr));
 			}
 			
 			int colOffset = colNr;
 			for (QueryResult res: featureResults) {
 				for (colNr = 0; colNr < res.getColumns().length; colNr++) {
 					boolean numeric = res.isColumnNumeric(colNr);
-					if (numeric) writeCell(row, colOffset+colNr, res.getNumericValue(rowNr-1, colNr));
-					else writeCell(row, colOffset+colNr, res.getStringValue(rowNr-1, colNr));
+					if (numeric) writeCell(row, colOffset+colNr, res.getNumericValue(rowNr, colNr));
+					else writeCell(row, colOffset+colNr, res.getStringValue(rowNr, colNr));
 				}
 				colOffset += colNr;
 			}

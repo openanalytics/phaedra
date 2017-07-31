@@ -9,6 +9,7 @@ var plateColsXPath = "/Measurement/PlateLayout/PlateDescription/@Columns";
 forEachReading(function(reading) {
 	// Locate the measurement file
 	var measFilePath = findFile(basePath, filePattern, false);
+	setParameter("reading.measFilePath", measFilePath);
 
 	// Parse the plate dimensions from the meas file
 	var doc = parseXMLFile(measFilePath);
@@ -23,6 +24,6 @@ forEachReading(function(reading) {
 // Take the InstanceFileShare parameter and set it as a parameter "image.path"
 var imagePath = getParameter("InstanceFileShare");
 if (imagePath === undefined) {
-	imagePath = eu.openanalytics.phaedra.datacapture.columbus.prefs.Prefs.getDefaultLogin().fileShare;
+	imagePath = Java.type("eu.openanalytics.phaedra.datacapture.columbus.prefs.Prefs").getDefaultLogin().fileShare;
 }
 setParameter("image.path", imagePath);
