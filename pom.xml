@@ -17,7 +17,6 @@
 		<module>eu.openanalytics.phaedra.jre</module>
 		<module>eu.openanalytics.phaedra.targetdef</module>
 		<module>eu.openanalytics.phaedra.product.build</module>
-		<module>eu.openanalytics.phaedra.installer</module>
 		
 		<module>eu.openanalytics.phaedra</module>
 		<module>eu.openanalytics.phaedra.app</module>
