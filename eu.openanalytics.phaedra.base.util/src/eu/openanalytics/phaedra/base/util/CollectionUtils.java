@@ -363,4 +363,17 @@ public class CollectionUtils {
 		}
 		return output;
 	}
+	
+	public static int length(Object array) {
+		if (array == null || array.getClass().getComponentType() == null) return 0;
+		else if (array instanceof byte[]) return ((byte[]) array).length;
+		else if (array instanceof char[]) return ((char[]) array).length;
+		else if (array instanceof short[]) return ((short[]) array).length;
+		else if (array instanceof int[]) return ((int[]) array).length;
+		else if (array instanceof long[]) return ((long[]) array).length;
+		else if (array instanceof float[]) return ((float[]) array).length;
+		else if (array instanceof double[]) return ((double[]) array).length;
+		else if (array instanceof Object[]) return ((Object[]) array).length;
+		else return 0;
+	}
 }
