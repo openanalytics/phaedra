@@ -123,7 +123,7 @@ public class ClassificationFilter {
 		SubWellFeature feature = getSelectedFeature();
 		if (feature == null) feature = SubWellService.getInstance().getSampleFeature(currentWell);
 
-		Object data = SubWellService.getInstance().getAnyData(well, feature);
+		Object data = SubWellService.getInstance().getData(well, feature);
 		if (data == null) return (showSelectedClasses && currentSelection != null) ? currentSelection : entityList;
 
 		int entityCount = (data instanceof float[]) ? ((float[])data).length : ((String[])data).length;

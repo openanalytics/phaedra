@@ -88,8 +88,8 @@ import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
 import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
-import eu.openanalytics.phaedra.ui.wellimage.util.ImageSettingsDialog;
 import eu.openanalytics.phaedra.ui.wellimage.util.ImageControlPanel.ImageControlListener;
+import eu.openanalytics.phaedra.ui.wellimage.util.ImageSettingsDialog;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class SubWellDataView extends DecoratedView {
@@ -414,8 +414,10 @@ public class SubWellDataView extends DecoratedView {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				imageBoundsJob.cancel();
-
 				if (monitor.isCanceled()) return Status.CANCEL_STATUS;
+				
+				SubWellService.getInstance().preloadData(currentWell, monitor);
+				
 				int size = SubWellService.getInstance().getNumberOfCells(currentWell);
 				if (monitor.isCanceled()) return Status.CANCEL_STATUS;
 				try {

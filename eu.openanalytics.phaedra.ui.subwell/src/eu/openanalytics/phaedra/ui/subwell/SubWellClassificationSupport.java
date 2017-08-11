@@ -149,7 +149,9 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 		
 		// Then update the subwell data (in one transaction per plate).
 		for (Plate plate: dataMap.keySet()) {
-			SubWellService.getInstance().updateData(dataMap.get(plate), feature);
+			Map<SubWellFeature, Map<Well, Object>> data = new HashMap<>();
+			data.put(feature, dataMap.get(plate));
+			SubWellService.getInstance().updateData(data);
 			monitor.worked(1);
 			CalculationService.getInstance().triggerSubWellCalculation(plate);
 			monitor.worked(1);
@@ -216,7 +218,7 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 		int entityCount = SubWellService.getInstance().getNumberOfCells(well);
 		if (entityCount == 0) {
 			SubWellFeature sampleFeature = SubWellService.getInstance().getSampleFeature(well);
-			Object sampleData = SubWellService.getInstance().getAnyData(well, sampleFeature);
+			Object sampleData = SubWellService.getInstance().getData(well, sampleFeature);
 			entityCount = (sampleData instanceof float[]) ? ((float[])sampleData).length : ((String[])sampleData).length;
 		}
 		if (entityCount == 0) {

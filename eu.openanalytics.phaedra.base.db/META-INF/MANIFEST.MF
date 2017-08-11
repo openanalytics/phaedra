@@ -25,4 +25,10 @@ Export-Package: eu.openanalytics.phaedra.base.db,
  eu.openanalytics.phaedra.base.db.jpa,
  eu.openanalytics.phaedra.base.db.jpa.converter,
  eu.openanalytics.phaedra.base.db.pool,
- eu.openanalytics.phaedra.base.db.prefs
+ eu.openanalytics.phaedra.base.db.prefs,
+ nl.cwi.monetdb.jdbc,
+ nl.cwi.monetdb.jdbc.types,
+ nl.cwi.monetdb.mcl.io,
+ nl.cwi.monetdb.mcl.net
+Bundle-ClassPath: lib/monetdb-jdbc-2.26.jar,
+ .

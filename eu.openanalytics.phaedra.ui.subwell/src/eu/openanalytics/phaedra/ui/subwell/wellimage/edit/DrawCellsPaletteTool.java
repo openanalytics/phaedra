@@ -418,11 +418,7 @@ public class DrawCellsPaletteTool extends AbstractPaletteTool {
 		}
 
 		monitor.subTask("Uploading data to server");
-		try {
-			SubWellService.getInstance().updateData(modifiedData);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
+		SubWellService.getInstance().updateData(modifiedData);
 		monitor.worked(modifiedWells.size());
 
 		monitor.subTask("Recalculating plate");

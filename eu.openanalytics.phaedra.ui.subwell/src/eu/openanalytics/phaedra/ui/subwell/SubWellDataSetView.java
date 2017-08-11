@@ -461,7 +461,7 @@ public class SubWellDataSetView extends DecoratedView {
 				if (tempItems.isEmpty()) {
 					subMon.beginTask("Loading Subwell data from " + tempWells.size() + " wells", tempWells.size());
 					for (Well w : tempWells) {
-						int size = SubWellService.getInstance().getFastNumberOfCells(w);
+						int size = SubWellService.getInstance().getNumberOfCells(w);
 						for (int i = 0; i < size; i++) tempItems.add(new SubWellItem(w, i));
 						subMon.worked(1);
 						if (monitor.isCanceled()) return Status.CANCEL_STATUS;
