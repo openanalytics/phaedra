@@ -11,9 +11,6 @@
  * 
  *****************************************************************************************/
 
- var compatibilityMode = false;
- try { API.get("CaptureUtils").resolveVar("abc", null); } catch (err) { compatibilityMode = true; }
-  
 /**
  * Find the first file matching a pattern.
  * 
@@ -23,13 +20,8 @@
  * @returns The path to the matching file, or null if no match was found.
  */
 function findFile(basePath, filePattern, optional) {
-	if (compatibilityMode) {
-		var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
-		var filePath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, filePattern);
-	} else {
-		var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
-		var filePath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, filePattern, ctx);		
-	}
+	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
+	var filePath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, filePattern, ctx);		
 	var isOptional = (optional === true || (typeof optional === "string" && optional.toLowerCase().equals("true")));
 
 	// Verify the existence of the data file.
@@ -57,13 +49,8 @@ function findFile(basePath, filePattern, optional) {
  * @returns The path to the matching folder, or null if no match was found.
  */
 function findFolder(basePath, folderPattern) {
-	if (compatibilityMode) {
-		var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
-		var folderPath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, folderPattern);
-	} else {
-		var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
-		var folderPath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, folderPattern, ctx);	
-	}
+	var resolvedBasePath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
+	var folderPath = API.get("CaptureUtils").getMatchingChild(resolvedBasePath, folderPattern, ctx);	
 	if (new java.io.File(folderPath).isDirectory()) return folderPath;
 	else return null;
 }
@@ -77,13 +64,8 @@ function findFolder(basePath, folderPattern) {
  */
 function findFiles(basePath, filePattern) {
 	var resolvedPath = basePath;
-	if (compatibilityMode) {
-		if (typeof reading != "undefined") resolvedPath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath());
-		var files = API.get("CaptureUtils").getMatchingChildren(resolvedPath, filePattern);		
-	} else {
-		if (typeof reading != "undefined") resolvedPath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
-		var files = API.get("CaptureUtils").getMatchingChildren(resolvedPath, filePattern, ctx);	
-	}
+	if (typeof reading != "undefined") resolvedPath = API.get("CaptureUtils").resolvePath(basePath, reading.getSourcePath(), ctx);
+	var files = API.get("CaptureUtils").getMatchingChildren(resolvedPath, filePattern, ctx);	
 	return files;
 }
 
@@ -364,11 +346,7 @@ function guessWellColumn(columnNames) {
  * @param string The string that may contain variables.
  */
 function resolveVars(string) {
-	if (compatibilityMode) {
-		return API.get("CaptureUtils").resolveVars(string, false);
-	} else {
-		return API.get("CaptureUtils").resolveVars(string, false, ctx);
-	}
+	return API.get("CaptureUtils").resolveVars(string, false, ctx);
 }
 
 /**
@@ -384,21 +362,13 @@ function resolveVars(string) {
  * @param defaultValue The default value to return if the parameter is missing.
  */
 function getParameter(name, defaultValue) {
-	if (compatibilityMode) {
-		var value = API.get("CaptureUtils").resolveVar(name);
-	} else {
-		var value = API.get("CaptureUtils").resolveVar(name, ctx);
-	}
+	var value = API.get("CaptureUtils").resolveVar(name, ctx);
 	if (value == null) return defaultValue;
 	else return value;
 }
 
 function getParameterAsObject(name) {
-	if (compatibilityMode) {
-		return Java.type("eu.openanalytics.phaedra.datacapture.util.VariableResolver").get(name);	
-	} else {
-		return Java.type("eu.openanalytics.phaedra.datacapture.util.VariableResolver").get(name, ctx);
-	}
+	return Java.type("eu.openanalytics.phaedra.datacapture.util.VariableResolver").get(name, ctx);
 }
 
 /**
