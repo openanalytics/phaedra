@@ -93,7 +93,10 @@ public class CSVWriter implements IExportWriter {
 				colIndex = 0;
 				for (int c = 0; c < baseResult.getColumns().length; c++) {
 					boolean numeric = baseResult.isColumnNumeric(c);
-					if (numeric) rowData[colIndex++] = formatValue(baseResult.getNumericValue(r, c));
+					if (numeric) {
+						if (baseResult.getColumns()[c].endsWith("_ID")) rowData[colIndex++] = "" + Double.valueOf(baseResult.getNumericValue(r, c)).longValue();
+						else rowData[colIndex++] = formatValue(baseResult.getNumericValue(r, c));
+					}
 					else rowData[colIndex++] = formatValue(baseResult.getStringValue(r, c));
 				}
 				for (QueryResult res: featureResults) {
