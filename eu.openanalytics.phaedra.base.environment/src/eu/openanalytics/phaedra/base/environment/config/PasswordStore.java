@@ -9,13 +9,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 
+import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.util.encrypt.AESEncryptor;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 
 /**
- * Class used to load and store passwords (encrypted) on the file server.
- * 
- * Also has a commandline interface to manage the password store.
+ * Used to load and store encrypted passwords on the file server.
  */
 public class PasswordStore {
 
@@ -34,9 +33,14 @@ public class PasswordStore {
 	 * @throws GeneralSecurityException
 	 */
 	public String getPassword(String entry) throws IOException {
-		if (pwdPath == null) throw new IOException("Password retrieval is disabled for this store");
+		if (pwdPath == null) throw new IOException("Remote password retrieval is disabled for this environment");
+		
 		String filePath = pwdPath + File.separator + entry + ".aes";
-		InputStream in = new FileInputStream(filePath);
+		
+		InputStream in = null;
+		if (SMBHelper.isSMBPath(filePath)) in = SMBHelper.open(filePath);
+		else in = new FileInputStream(filePath);
+		
 		if (in != null) {
 			byte[] encrypted = StreamUtils.readAll(in);
 			if (encrypted != null) {
@@ -47,11 +51,13 @@ public class PasswordStore {
 				}
 			}
 		}
+		
 		return null;
 	}
 	
 	/**
 	 * Save the password to the file server.
+	 * Note: does not support SMB paths.
 	 * 
 	 * @param entry the name of the password file (without .AES)
 	 * @param password the password that must be encrypted and saved in the password file.

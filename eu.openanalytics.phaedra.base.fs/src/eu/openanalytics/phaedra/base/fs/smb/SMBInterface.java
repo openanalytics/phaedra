@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
 import eu.openanalytics.phaedra.base.fs.FSInterface;
+import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
@@ -23,8 +24,6 @@ import jcifs.smb.SmbSession;
 
 public class SMBInterface implements FSInterface {
 
-	private static final String SMB_PROTOCOL_PREFIX = "smb://";
-	
 	private UniAddress domain;
 	private NtlmPasswordAuthentication auth;
 	
@@ -33,8 +32,7 @@ public class SMBInterface implements FSInterface {
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
-		// Only supports UNC locations.
-		return (fsPath.startsWith(SecureFileServer.UNC_PREFIX));
+		return SMBHelper.isSMBPath(fsPath);
 	}
 	
 	@Override
@@ -159,17 +157,7 @@ public class SMBInterface implements FSInterface {
 	 */
 	
 	private SmbFile getFile(String path, boolean lock) throws MalformedURLException {
-		int sharing = SmbFile.FILE_SHARE_READ;
-		if (!lock) sharing = sharing | SmbFile.FILE_SHARE_WRITE | SmbFile.FILE_SHARE_DELETE;
-		
-		if (path.startsWith(SecureFileServer.UNC_PREFIX)) {
-			path = path.substring(SecureFileServer.UNC_PREFIX.length());
-		}
-		path = path.replace('\\', '/');
-		String smbPath = SMB_PROTOCOL_PREFIX + path;
-		
-		SmbFile sFile = new SmbFile(smbPath, auth, sharing);
-		return sFile;
+		return SMBHelper.getFile(path, auth, lock);
 	}
 	
 	private void mount() {
