@@ -6,8 +6,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
@@ -138,7 +144,14 @@ public class SMBInterface implements FSInterface {
 	
 	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
-		return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
+		//TODO On Windows, stick with UNC access: SeekableSMBFile seems to have performance issues
+		if (ProcessUtils.isWindows() && !mode.toLowerCase().contains("w")) {
+			Set<OpenOption> opts = new HashSet<>();
+			opts.add(StandardOpenOption.READ);
+			return Files.newByteChannel(Paths.get(path), opts);
+		} else {
+			return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
+		}
 	}
 	
 	@Override
