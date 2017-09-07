@@ -37,6 +37,7 @@ public class ParserService {
 	
 	public ParsedModel parse(String inputFilePath, String parserId, Map<String,String> params) throws ParseException {
 		try (InputStream input = new FileInputStream(inputFilePath)) {
+			if (params != null) params.put("inputFilePath", inputFilePath);
 			return parse(input, parserId, params);
 		} catch (IOException e) {
 			throw new ParseException("Failed to access file " + inputFilePath);
