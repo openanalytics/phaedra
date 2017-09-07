@@ -1,9 +1,11 @@
 package eu.openanalytics.phaedra.base.fs;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
 
@@ -15,15 +17,36 @@ public class SMBHelper {
 		return path != null && (path.startsWith(SMB_PROTOCOL_PREFIX) || path.startsWith(SecureFileServer.UNC_PREFIX));
 	}
 	
-	public static InputStream open(String smbPath) throws IOException {
-		SmbFile file = getFile(smbPath, null, false);
-		return file.getInputStream();
+	public static InputStream open(String path) throws IOException {
+		// Access the file without authentication: on Windows, let the OS attempt instead of jcifs.
+		if (ProcessUtils.isWindows()) {
+			return new FileInputStream(toUNCNotation(path));
+		} else {
+			SmbFile file = getFile(path, null, false);
+			return file.getInputStream();
+		}
 	}
 	
-	public static SmbFile getFile(String smbPath, NtlmPasswordAuthentication auth, boolean lock) throws MalformedURLException {
+	public static SmbFile getFile(String path, NtlmPasswordAuthentication auth, boolean lock) throws MalformedURLException {
 		int sharing = SmbFile.FILE_SHARE_READ;
 		if (!lock) sharing = sharing | SmbFile.FILE_SHARE_WRITE | SmbFile.FILE_SHARE_DELETE;
 		
+		return new SmbFile(toSMBNotation(path), auth, sharing);
+	}
+	
+	private static String toUNCNotation(String smbPath) {
+		if (smbPath.startsWith(SMB_PROTOCOL_PREFIX)) {
+			smbPath = smbPath.substring(SMB_PROTOCOL_PREFIX.length());
+		}
+		
+		if (!smbPath.startsWith(SecureFileServer.UNC_PREFIX)) {
+			smbPath = SecureFileServer.UNC_PREFIX + smbPath;
+		}
+		
+		return smbPath;
+	}
+	
+	private static String toSMBNotation(String smbPath) {
 		if (smbPath.startsWith(SecureFileServer.UNC_PREFIX)) {
 			smbPath = smbPath.substring(SecureFileServer.UNC_PREFIX.length());
 		}
@@ -33,8 +56,6 @@ public class SMBHelper {
 		}
 		
 		smbPath = smbPath.replace('\\', '/');
-		
-		SmbFile sFile = new SmbFile(smbPath, auth, sharing);
-		return sFile;
+		return smbPath;
 	}
 }
