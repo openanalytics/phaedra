@@ -5,12 +5,15 @@ import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
 
 import loci.common.services.ServiceFactory;
 import loci.formats.CoreMetadata;
 import loci.formats.FormatException;
 import loci.formats.FormatTools;
+import loci.formats.IFormatReader;
+import loci.formats.ImageReader;
 import loci.formats.MetadataTools;
 import loci.formats.in.TiffReader;
 import loci.formats.meta.IMetadata;
@@ -26,11 +29,35 @@ import loci.formats.tiff.IFD;
  * <li>Multipage TIFF images</li>
  * </ul>
  * This codec uses Bioformats.
+ * 
+ * TODO Rename this codec: it can read many more formats than TIFF
  */
 public class TIFFCodec {
 
 	public static ImageData[] read(String inputFile) throws IOException {
-		TiffReader reader = new TiffReader();
+		// Generic reader
+		IFormatReader reader = new ImageReader();
+		
+		// TIFF reader
+		String[] tiffExtensions = { ".tif", ".tiff", ".flex" };
+		for (String ext: tiffExtensions) {
+			if (inputFile.toLowerCase().endsWith(ext)) reader = new TiffReader();
+		}
+		
+		// SWT reader (faster than Bioformats)
+		String[] swtExtensions = { ".bmp", ".gif", ".png", ".jpg", ".jpeg" };
+		for (String ext: swtExtensions) {
+			if (inputFile.toLowerCase().endsWith(ext)) reader = null;
+		}
+		
+		if (reader == null) {
+			return new ImageLoader().load(inputFile);
+		} else {
+			return tryRead(inputFile, reader);
+		}
+	}
+	
+	private static ImageData[] tryRead(String inputFile, IFormatReader reader) throws IOException {
 		try {
 			reader.setGroupFiles(false);
 			reader.setId(inputFile);

@@ -6,12 +6,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
 import eu.openanalytics.phaedra.base.fs.FSInterface;
+import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
@@ -23,8 +30,6 @@ import jcifs.smb.SmbSession;
 
 public class SMBInterface implements FSInterface {
 
-	private static final String SMB_PROTOCOL_PREFIX = "smb://";
-	
 	private UniAddress domain;
 	private NtlmPasswordAuthentication auth;
 	
@@ -33,8 +38,7 @@ public class SMBInterface implements FSInterface {
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
-		// Only supports UNC locations.
-		return (fsPath.startsWith(SecureFileServer.UNC_PREFIX));
+		return SMBHelper.isSMBPath(fsPath);
 	}
 	
 	@Override
@@ -140,7 +144,14 @@ public class SMBInterface implements FSInterface {
 	
 	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
-		return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
+		//TODO On Windows, stick with UNC access: SeekableSMBFile seems to have performance issues
+		if (ProcessUtils.isWindows() && !mode.toLowerCase().contains("w")) {
+			Set<OpenOption> opts = new HashSet<>();
+			opts.add(StandardOpenOption.READ);
+			return Files.newByteChannel(Paths.get(path), opts);
+		} else {
+			return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
+		}
 	}
 	
 	@Override
@@ -159,17 +170,7 @@ public class SMBInterface implements FSInterface {
 	 */
 	
 	private SmbFile getFile(String path, boolean lock) throws MalformedURLException {
-		int sharing = SmbFile.FILE_SHARE_READ;
-		if (!lock) sharing = sharing | SmbFile.FILE_SHARE_WRITE | SmbFile.FILE_SHARE_DELETE;
-		
-		if (path.startsWith(SecureFileServer.UNC_PREFIX)) {
-			path = path.substring(SecureFileServer.UNC_PREFIX.length());
-		}
-		path = path.replace('\\', '/');
-		String smbPath = SMB_PROTOCOL_PREFIX + path;
-		
-		SmbFile sFile = new SmbFile(smbPath, auth, sharing);
-		return sFile;
+		return SMBHelper.getFile(path, auth, lock);
 	}
 	
 	private void mount() {

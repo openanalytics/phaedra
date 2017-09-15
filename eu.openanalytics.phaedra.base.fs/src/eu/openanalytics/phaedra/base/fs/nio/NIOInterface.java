@@ -22,16 +22,17 @@ import java.util.List;
 import java.util.Set;
 
 import eu.openanalytics.phaedra.base.fs.FSInterface;
-import eu.openanalytics.phaedra.base.fs.SecureFileServer;
+import eu.openanalytics.phaedra.base.fs.SMBHelper;
+import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 
 public class NIOInterface implements FSInterface {
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
 		// Works with local paths, or UNC paths if they require no alternate credentials.
-		if (userName.contains("\\")) userName = userName.substring(userName.indexOf("\\") + 1);
-		if (userName.equalsIgnoreCase(System.getProperty("user.name"))) return true;
-		return (!fsPath.startsWith(SecureFileServer.UNC_PREFIX));
+		boolean isSystemUser = (ProcessUtils.isWindows() && userName.substring(userName.indexOf("\\") + 1).equalsIgnoreCase(System.getProperty("user.name")));
+		boolean isSMB = SMBHelper.isSMBPath(fsPath); 
+		return (isSystemUser || !isSMB);
 	}
 	
 	@Override

@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 
 import eu.openanalytics.phaedra.base.environment.Activator;
+import eu.openanalytics.phaedra.base.fs.SMBHelper;
 
 public class ConfigLoader {
 
@@ -20,11 +21,13 @@ public class ConfigLoader {
 			if (configURL == null) {
 				// Read the default config file.
 				configInput = FileLocator.openStream(Activator.getDefault().getBundle(), new Path("config.xml"), false);
+			} else if (SMBHelper.isSMBPath(configURL)) {
+				// Read the config file from the smb URL.
+				configInput = SMBHelper.open(configURL);
 			} else {
-				// Read the config file from the given URL.
+				// Read the config file from the file/http URL.
 				configInput = new URL(configURL).openStream();
 			}
-			// Parse the config.
 			return new Config(configInput);
 		} finally {
 			if (configInput != null) {

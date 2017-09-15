@@ -35,8 +35,9 @@ public class SecureFileServer {
 	public SecureFileServer(String fsPath, String userName, String password, String wins) {
 		this.accountName = userName;
 		
-		if (fsPath.startsWith(UNC_PREFIX)) this.basePath = UNC_PREFIX + fsPath.substring(UNC_PREFIX.length()).replace('\\', '/');
-		else this.basePath = fsPath.replace('\\', '/');
+		fsPath = fsPath.replace(SMBHelper.SMB_PROTOCOL_PREFIX, UNC_PREFIX);
+		if (fsPath.startsWith(UNC_PREFIX)) basePath = UNC_PREFIX + fsPath.substring(UNC_PREFIX.length()).replace('\\', '/');
+		else basePath = fsPath.replace('\\', '/');
 		
 		// Use an appropriate FS interface. Prefer NIO over SMB.
 		fsInterface = new NIOInterface();

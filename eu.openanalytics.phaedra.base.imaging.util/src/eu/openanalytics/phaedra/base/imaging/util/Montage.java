@@ -5,7 +5,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.swt.graphics.ImageData;
-import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
 
 public class Montage {
@@ -96,12 +95,7 @@ public class Montage {
 				if (frameNr == -1) frameNr = 0;
 				fileName = removeFrameNr(fileName);
 				
-				ImageData[] image = null;
-				String[] tiffExtensions = { ".tif", ".tiff", ".flex" };
-				for (String ext: tiffExtensions) {
-					if (image == null && fileName.toLowerCase().endsWith(ext)) image = TIFFCodec.read(fileName);
-				}
-				if (image == null) image = new ImageLoader().load(fileName);
+				ImageData[] image = TIFFCodec.read(fileName);
 				if (image.length <= frameNr) continue;
 				ImageData imageToAdd = image[frameNr];
 				
