@@ -1,15 +1,19 @@
 package eu.openanalytics.phaedra.model.subwell.data;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
@@ -25,13 +29,13 @@ import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
 public class DBDataSource implements ISubWellDataSource {
 
 	private ConnectionPoolManager connectionPoolManager;
-	
+
 	public DBDataSource() {
 		//TODO configure
 		String username = "monetdb";
 		String password = "monetdb";
 		String baseURL = "jdbc:monetdb://localhost/phaedra";
-		
+
 		connectionPoolManager = new ConnectionPoolManager(baseURL, username, password);
 		try {
 			connectionPoolManager.startup();
@@ -39,12 +43,12 @@ public class DBDataSource implements ISubWellDataSource {
 			throw new RuntimeException("Failed to open database connection", e);
 		}
 	}
-	
+
 	@Override
 	public void close() {
 		try { connectionPoolManager.close(); } catch (Exception e) {}
 	}
-	
+
 	@Override
 	public int getNrCells(Well well) {
 		String sql = String.format("select count(*) from phaedra.hca_cell where wellId = %d", well.getId());
@@ -79,7 +83,7 @@ public class DBDataSource implements ISubWellDataSource {
 	@Override
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache, IProgressMonitor monitor) {
 		String wellIds = wells.stream().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
-		
+
 		// First, retrieve the cell count of each well.
 		Map<Well, Integer> cellCounts = new HashMap<>();
 		String sql = String.format("select wellId, count(*) as cellCount from phaedra.hca_cell where wellId in (%s) group by wellId", wellIds);
@@ -92,9 +96,7 @@ public class DBDataSource implements ISubWellDataSource {
 		});
 
 		String colNames = "*";
-		if (features.size() < 200) colNames = "wellId,cellId," + features.stream()
-				.map(f -> String.format(f.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(f)))
-				.collect(Collectors.joining(","));
+		if (features.size() < 200) colNames = getColNames(features);
 
 		// Mark the whole set as cached, so empty wells are not queried again later.
 		for (Well well: wells) {
@@ -103,32 +105,32 @@ public class DBDataSource implements ISubWellDataSource {
 				else cache.putData(well, feature, (String[]) null);
 			}
 		}
-		
+
 		// The, retrieve the actual data for each well.
 		sql = String.format("select %s from phaedra.hca_cell where wellId in (%s) order by wellId asc", colNames, wellIds);
 		select(sql, rs -> processResultSet(rs, cellCounts, wells, features, cache));
 	}
-	
+
 	private Object processResultSet(ResultSet rs, Map<Well, Integer> cellCounts, List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache) throws SQLException {
 		Well currentWell = null;
 		Map<SubWellFeature, Object> currentWellData = new HashMap<>();
-		
+
 		Map<SubWellFeature, Integer> featureIndices = new HashMap<>();
 		for (SubWellFeature feature: features) {
 			int index = getFeatureIndex(feature);
 			featureIndices.put(feature, index);
 		}
-		
+
 		while (rs.next()) {
 			long wellId = rs.getLong("wellId");
 			int cellId = rs.getInt("cellId");
-			
+
 			if (currentWell == null || wellId != currentWell.getId()) {
 				addToCache(currentWell, currentWellData, cache);
 				currentWell = getWell(wells, wellId);
 				currentWellData.clear();
 			}
-			
+
 			int cellCount = cellCounts.get(currentWell);
 			for (SubWellFeature feature: features) {
 				int index = featureIndices.get(feature);
@@ -144,13 +146,13 @@ public class DBDataSource implements ISubWellDataSource {
 					values[cellId] = value;
 				}
 			}
-			
+
 		}
-		
+
 		addToCache(currentWell, currentWellData, cache);
 		return null;
 	}
-	
+
 	private void addToCache(Well well, Map<SubWellFeature, Object> data, SubWellDataCache cache) {
 		if (well == null || data.isEmpty()) return;
 		for (SubWellFeature feature: data.keySet()) {
@@ -158,24 +160,69 @@ public class DBDataSource implements ISubWellDataSource {
 			else cache.putData(well, feature, (String[]) data.get(feature));
 		}
 	}
-	
+
 	@Override
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
-		//TODO Implement data update
-		throw new UnsupportedOperationException("updateData not implemented for " + this.getClass().getName());
+		long start = System.currentTimeMillis();
+		long itemCount = 0;
+		
+		for (SubWellFeature feature: data.keySet()) {
+			String colNames = "wellId,cellId," + String.format(feature.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(feature));
+			String queryString = "insert into phaedra.hca_cell (" + colNames + ") values(?,?,?)";
+
+			Map<Well, Object> featureData = data.get(feature);
+
+			PreparedStatement ps = null;
+			try (Connection conn = connectionPoolManager.getConnection()) {
+				ps = conn.prepareStatement(queryString);
+
+				if (feature.isNumeric()) {
+					for (Well well: featureData.keySet()) {
+						float[] numVal = (float[]) featureData.get(well);
+						for (int cellId = 0; cellId < numVal.length; cellId++) {
+							ps.setLong(1, well.getId());
+							ps.setLong(2, cellId);
+							ps.setFloat(3, numVal[cellId]);
+							ps.addBatch();
+							itemCount++;
+						}
+					}
+				} else {
+					for (Well well: featureData.keySet()) {
+						String[] strVal = (String[]) featureData.get(well);
+						for (int cellId = 0; cellId < strVal.length; cellId++) {
+							ps.setLong(1, well.getId());
+							ps.setLong(2, cellId);
+							ps.setString(3, strVal[cellId]);
+							ps.addBatch();
+							itemCount++;
+						}
+					}
+				}
+
+				ps.executeBatch();
+				conn.commit();
+			} catch (SQLException e) {
+				throw new PersistenceException(e);
+			} finally {
+				if (ps != null) try { ps.close(); } catch (SQLException e) {}
+			}
+		}
+		long duration = System.currentTimeMillis() - start;
+		EclipseLog.info(String.format("%d subwelldata items updated in %d ms", itemCount, duration), Platform.getBundle(Activator.class.getPackage().getName()));
 	}
 
 	private Well getWell(List<Well> wells, long wellId) {
 		return wells.stream().filter(w -> w.getId() == wellId).findAny().orElse(null);
 	}
-	
+
 	private int getFeatureIndex(SubWellFeature feature) {
 		//TODO Implement proper feature index mapping. This will break when features are added/removed/renamed in the protocolclass.
 		List<SubWellFeature> features = ProtocolUtils.getSubWellFeatures(feature.getProtocolClass());
 		Collections.sort(features, ProtocolUtils.FEATURE_NAME_SORTER);
 		return features.indexOf(feature);
 	}
-	
+
 	private <T> T select(String sql, ResultProcessor<T> resultProcessor) {
 		long start = System.currentTimeMillis();
 		try (Connection conn = connectionPoolManager.getConnection()) {
@@ -191,7 +238,13 @@ public class DBDataSource implements ISubWellDataSource {
 			EclipseLog.info(String.format("Query took %d ms: %s", duration, sql), Platform.getBundle(Activator.class.getPackage().getName()));
 		}
 	}
-	
+
+	private String getColNames(Collection<SubWellFeature> features) {
+		return  "wellId,cellId," + features.stream()
+		.map(f -> String.format(f.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(f)))
+		.collect(Collectors.joining(","));	
+	}
+
 	private interface ResultProcessor<T> {
 		public T process(ResultSet rs) throws SQLException;
 	}
