@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.model.subwell;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,6 +10,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -113,7 +113,10 @@ public class SubWellService  {
 	}
 
 	public void preloadData(Well well, IProgressMonitor monitor) {
+		long start = System.currentTimeMillis();
 		preloadData(Collections.singletonList(well), ProtocolUtils.getSubWellFeatures(well), monitor);
+		long duration = System.currentTimeMillis() - start;
+		EclipseLog.info(String.format("Data retrieval for %s: %d ms", well, duration), Activator.getContext().getBundle());
 	}
 	
 	public void preloadData(Plate plate, IProgressMonitor monitor) {

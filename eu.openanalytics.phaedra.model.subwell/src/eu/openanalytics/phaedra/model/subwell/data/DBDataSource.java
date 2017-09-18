@@ -30,7 +30,7 @@ public class DBDataSource implements ISubWellDataSource {
 		//TODO configure
 		String username = "monetdb";
 		String password = "monetdb";
-		String baseURL = "jdbc:monetdb://localhost/db";
+		String baseURL = "jdbc:monetdb://localhost/phaedra";
 		
 		connectionPoolManager = new ConnectionPoolManager(baseURL, username, password);
 		try {
@@ -92,8 +92,9 @@ public class DBDataSource implements ISubWellDataSource {
 		});
 
 		String colNames = "*";
-		if (features.size() < 200) colNames = "wellId,cellId,"
-				+ features.stream().mapToInt(f -> getFeatureIndex(f)).mapToObj(i -> String.format("f%dStrVal,f%dNumVal", i, i)).collect(Collectors.joining(","));
+		if (features.size() < 200) colNames = "wellId,cellId," + features.stream()
+				.map(f -> String.format(f.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(f)))
+				.collect(Collectors.joining(","));
 
 		// Mark the whole set as cached, so empty wells are not queried again later.
 		for (Well well: wells) {
@@ -104,7 +105,7 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 		
 		// The, retrieve the actual data for each well.
-		sql = String.format("select %s from phaedra.hca_cell where wellId in (%s) order by wellId asc, cellId asc", colNames, wellIds);
+		sql = String.format("select %s from phaedra.hca_cell where wellId in (%s) order by wellId asc", colNames, wellIds);
 		select(sql, rs -> processResultSet(rs, cellCounts, wells, features, cache));
 	}
 	
@@ -112,8 +113,13 @@ public class DBDataSource implements ISubWellDataSource {
 		Well currentWell = null;
 		Map<SubWellFeature, Object> currentWellData = new HashMap<>();
 		
+		Map<SubWellFeature, Integer> featureIndices = new HashMap<>();
+		for (SubWellFeature feature: features) {
+			int index = getFeatureIndex(feature);
+			featureIndices.put(feature, index);
+		}
+		
 		while (rs.next()) {
-			// Note: resultset is ordered by wellId > cellId
 			long wellId = rs.getLong("wellId");
 			int cellId = rs.getInt("cellId");
 			
@@ -125,7 +131,7 @@ public class DBDataSource implements ISubWellDataSource {
 			
 			int cellCount = cellCounts.get(currentWell);
 			for (SubWellFeature feature: features) {
-				int index = getFeatureIndex(feature);
+				int index = featureIndices.get(feature);
 				if (feature.isNumeric()) {
 					float value = rs.getFloat(String.format("f%dNumVal", index));
 					if (!currentWellData.containsKey(feature)) currentWellData.put(feature, new float[cellCount]); 

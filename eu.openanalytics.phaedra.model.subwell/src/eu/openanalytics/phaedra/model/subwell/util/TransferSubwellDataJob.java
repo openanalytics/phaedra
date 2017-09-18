@@ -28,6 +28,8 @@ import nl.cwi.monetdb.mcl.io.BufferedMCLReader;
 import nl.cwi.monetdb.mcl.io.BufferedMCLWriter;
 import nl.cwi.monetdb.mcl.net.MapiSocket;
 
+//Java.type("eu.openanalytics.phaedra.model.subwell.util.TransferSubwellDataJob").execute(1,"jdbc:monetdb://localhost/phaedra","monetdb","monetdb")
+
 public class TransferSubwellDataJob extends Job {
 
 	private int featureCount;
@@ -44,8 +46,6 @@ public class TransferSubwellDataJob extends Job {
 		this.dbUser = dbUser;
 		this.dbPassword = dbPassword;
 	}
-
-	// Java.type("eu.openanalytics.phaedra.model.subwell.util.TransferSubwellDataJob").execute(10,"jdbc:monetdb://localhost/db","monetdb","monetdb")
 	
 	public static void execute(long protocolId, String dbURL, String dbUser, String dbPassword) {
 		Job job = new TransferSubwellDataJob(protocolId, dbURL, dbUser, dbPassword);
@@ -92,7 +92,7 @@ public class TransferSubwellDataJob extends Job {
 		// Code taken from https://github.com/snaga/monetdb/blob/master/java/example/SQLcopyinto.java
 		MapiSocket socket = new MapiSocket();
 		try {
-			socket.setDatabase("db");
+			socket.setDatabase("phaedra");
 			socket.setLanguage("sql");
 			socket.connect("localhost", 50000, "monetdb", "monetdb");
 			
