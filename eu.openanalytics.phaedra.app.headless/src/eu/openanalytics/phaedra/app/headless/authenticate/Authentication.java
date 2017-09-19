@@ -30,8 +30,9 @@ public class Authentication {
 		
 		if (username != null && password != null) {
 			String envId = configFile.getProperty("environment");
-			IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
 			try {
+				EnvironmentRegistry.getInstance().initialize();
+				IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
 				Screening.login(env, username, password);
 			} catch (AuthenticationException | IOException e) {
 				// Login failed. Set up for a retry.

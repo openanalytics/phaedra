@@ -5,8 +5,10 @@ import java.util.Date;
 
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.resource.StringConverter;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.SWTException;
 import org.eclipse.swt.events.KeyAdapter;
@@ -32,6 +34,7 @@ import eu.openanalytics.phaedra.base.environment.Activator;
 import eu.openanalytics.phaedra.base.environment.EnvironmentRegistry;
 import eu.openanalytics.phaedra.base.environment.IEnvironment;
 import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.config.ConfigLoader;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.ui.AccessDialog;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
@@ -173,7 +176,6 @@ public class LoginSplash extends BasicSplashHandler {
 		label.setLayoutData(data);
 
 		environmentCmb = new Combo(loginCmp, SWT.DROP_DOWN | SWT.READ_ONLY);
-		environmentCmb.setItems(EnvironmentRegistry.getInstance().getEnvironmentNames());
 		data = new GridData(SWT.NONE, SWT.NONE, false, false);
 		data.widthHint = F_TEXT_WIDTH_HINT - 16;
 		data.horizontalSpan = 2;
@@ -233,13 +235,32 @@ public class LoginSplash extends BasicSplashHandler {
 			usernameTxt.setText(username);
 		}
 		
-		if (environmentCmb.getItems().length > 0) {
+		// Load environment configuration
+		boolean retry = true;
+		while (retry) {
+			try {
+				EnvironmentRegistry.getInstance().initialize();
+				retry = false;
+			} catch (Exception e) {
+				EclipseLog.error("Failed to initialize environments", e, Activator.PLUGIN_ID);
+				String cfg = ConfigLoader.getPreferredConfig();
+				InputDialog dialog = new InputDialog(getSplash(), "Configuration",
+					"No environment configuration was found. Please enter a valid configuration file path:", cfg, null);
+				if (dialog.open() == Window.OK) ConfigLoader.setPreferredConfig(dialog.getValue());
+				else retry = false;
+			}
+		}
+		
+		String[] env = EnvironmentRegistry.getInstance().getEnvironmentNames();
+		if (env.length == 0) {
+			AccessDialog.openLoginFailedDialog(getSplash(), "Configuration Error", "No environments are available."
+					+ "\nPlease contact an administrator to adjust your environment configuration.");
+			handleButtonCancelWidgetSelected();
+		} else {
+			environmentCmb.setItems(env);
 			environmentCmb.select(0);
 			handleEnvironmentSelected();
 			passwordTxt.setFocus();
-		} else {
-			AccessDialog.openLoginFailedDialog(getSplash(), "Configuration Error", "No environments available. Please check the log file.");
-			handleButtonCancelWidgetSelected();
 		}
 	}
 
