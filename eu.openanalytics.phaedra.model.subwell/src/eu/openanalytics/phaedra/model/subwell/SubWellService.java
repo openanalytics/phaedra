@@ -113,10 +113,7 @@ public class SubWellService  {
 	}
 
 	public void preloadData(Well well, IProgressMonitor monitor) {
-		long start = System.currentTimeMillis();
 		preloadData(Collections.singletonList(well), ProtocolUtils.getSubWellFeatures(well), monitor);
-		long duration = System.currentTimeMillis() - start;
-		EclipseLog.info(String.format("Data retrieval for %s: %d ms", well, duration), Activator.getContext().getBundle());
 	}
 	
 	public void preloadData(Plate plate, IProgressMonitor monitor) {
@@ -124,6 +121,8 @@ public class SubWellService  {
 	}
 	
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, IProgressMonitor monitor) {
+		long start = System.currentTimeMillis();
+		
 		Set<Well> wellsToLoad = new HashSet<>();
 		for (Well well: wells) {
 			for (SubWellFeature feature: features) {
@@ -131,10 +130,16 @@ public class SubWellService  {
 			}
 		}
 		if (!wellsToLoad.isEmpty()) dataSource.preloadData(new ArrayList<>(wellsToLoad), features, cache, monitor);
+
+		long duration = System.currentTimeMillis() - start;
+		EclipseLog.info(String.format("Data preload (%d wells, %d features): %d ms", wellsToLoad.size(), features.size(), duration), Activator.getContext().getBundle());
 	}
 
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
+		long start = System.currentTimeMillis();
 		dataSource.updateData(data);
+		long duration = System.currentTimeMillis() - start;
+		EclipseLog.info(String.format("Data update (%d wells): %d ms", data.values().iterator().next().size(), duration), Activator.getContext().getBundle());
 	}
 
 	public void removeFromCache(Plate plate, SubWellFeature feature) {

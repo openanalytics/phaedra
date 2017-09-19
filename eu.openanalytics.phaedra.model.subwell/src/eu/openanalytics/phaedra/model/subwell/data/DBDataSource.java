@@ -163,12 +163,9 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
-		long start = System.currentTimeMillis();
-		long itemCount = 0;
-		
 		for (SubWellFeature feature: data.keySet()) {
-			String colNames = "wellId,cellId," + String.format(feature.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(feature));
-			String queryString = "insert into phaedra.hca_cell (" + colNames + ") values(?,?,?)";
+			String colName = String.format(feature.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(feature));
+			String queryString = String.format("update phaedra.hca_cell set %s = ? where wellId = ? and cellId = ?", colName);
 
 			Map<Well, Object> featureData = data.get(feature);
 
@@ -180,22 +177,20 @@ public class DBDataSource implements ISubWellDataSource {
 					for (Well well: featureData.keySet()) {
 						float[] numVal = (float[]) featureData.get(well);
 						for (int cellId = 0; cellId < numVal.length; cellId++) {
-							ps.setLong(1, well.getId());
-							ps.setLong(2, cellId);
-							ps.setFloat(3, numVal[cellId]);
+							ps.setFloat(1, numVal[cellId]);
+							ps.setLong(2, well.getId());
+							ps.setLong(3, cellId);
 							ps.addBatch();
-							itemCount++;
 						}
 					}
 				} else {
 					for (Well well: featureData.keySet()) {
 						String[] strVal = (String[]) featureData.get(well);
 						for (int cellId = 0; cellId < strVal.length; cellId++) {
-							ps.setLong(1, well.getId());
-							ps.setLong(2, cellId);
-							ps.setString(3, strVal[cellId]);
+							ps.setString(1, strVal[cellId]);
+							ps.setLong(2, well.getId());
+							ps.setLong(3, cellId);
 							ps.addBatch();
-							itemCount++;
 						}
 					}
 				}
@@ -208,8 +203,6 @@ public class DBDataSource implements ISubWellDataSource {
 				if (ps != null) try { ps.close(); } catch (SQLException e) {}
 			}
 		}
-		long duration = System.currentTimeMillis() - start;
-		EclipseLog.info(String.format("%d subwelldata items updated in %d ms", itemCount, duration), Platform.getBundle(Activator.class.getPackage().getName()));
 	}
 
 	private Well getWell(List<Well> wells, long wellId) {
@@ -241,8 +234,8 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private String getColNames(Collection<SubWellFeature> features) {
 		return  "wellId,cellId," + features.stream()
-		.map(f -> String.format(f.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(f)))
-		.collect(Collectors.joining(","));	
+			.map(f -> String.format(f.isNumeric() ? "f%dNumVal" : "f%dStrVal", getFeatureIndex(f)))
+			.collect(Collectors.joining(","));	
 	}
 
 	private interface ResultProcessor<T> {
