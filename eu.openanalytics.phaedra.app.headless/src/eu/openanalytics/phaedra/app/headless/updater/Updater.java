@@ -14,10 +14,13 @@ import eu.openanalytics.phaedra.app.headless.Application;
 
 public class Updater implements IStartup{
 
+	private static final String PROP_UPDATE_INTERVAL = "phaedra.update.interval";
+	private static final String PROP_UPDATE_UNIT = "phaedra.update.unit";
+	
 	@Override
 	public void earlyStartup() {
 		Properties configFile = Activator.getDefault().getHeadlessProperties();
-		String intervalString = configFile.getProperty("interval");
+		String intervalString = configFile.getProperty(PROP_UPDATE_INTERVAL);
 		if (intervalString == null || intervalString.isEmpty()) return;
 		
 		int interval = Integer.parseInt(intervalString);
@@ -39,7 +42,7 @@ public class Updater implements IStartup{
 				new P2UpdateRun(provisionListener)
 				, 0
 				, interval
-				, TimeUnit.valueOf(configFile.getProperty("unit"))
+				, TimeUnit.valueOf(configFile.getProperty(PROP_UPDATE_UNIT))
 		);
 	}
 }
