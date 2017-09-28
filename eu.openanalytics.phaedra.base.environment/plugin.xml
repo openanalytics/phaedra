@@ -79,5 +79,17 @@
             splashId="eu.openanalytics.phaedra.base.environment.login.LoginSplash">
       </splashHandlerProductBinding>
    </extension>
+   <extension
+         id="passwordutil"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="eu.openanalytics.phaedra.base.environment.config.PasswordUtil">
+         </run>
+      </application>
+   </extension>
 
 </plugin>
