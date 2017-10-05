@@ -41,12 +41,21 @@ public class CmdUtil {
 		
 		Set<Compound> compounds = new HashSet<>();
 		for (Compound c: SelectionUtils.getObjects(selection, Compound.class)) {
-			if (c instanceof MultiploCompound) compounds.addAll(((MultiploCompound) c).getCompounds());
-			else if (c instanceof CompoundWithGrouping) compounds.add(((CompoundWithGrouping) c).getDelegate());
-			else compounds.add(c);
+			addCompound(c, compounds);
 		}
 		
 		return new ArrayList<>(compounds);
 	}
 	
+	private static void addCompound(Compound compound, Set<Compound> compounds) {
+		if (compound instanceof MultiploCompound) {
+			for (Compound c: ((MultiploCompound) compound).getCompounds()) {
+				addCompound(c, compounds);
+			}
+		} else if (compound instanceof CompoundWithGrouping) {
+			addCompound(((CompoundWithGrouping) compound).getDelegate(), compounds);
+		} else {
+			compounds.add(compound);
+		}
+	}
 }
