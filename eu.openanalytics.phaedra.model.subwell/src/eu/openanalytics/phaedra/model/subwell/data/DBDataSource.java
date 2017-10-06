@@ -35,10 +35,14 @@ public class DBDataSource implements ISubWellDataSource {
 //		String username = "monetdb";
 //		String password = "monetdb";
 //		String baseURL = "jdbc:monetdb://localhost/phaedra";
+		
 		try { Class.forName("org.postgresql.Driver"); } catch (ClassNotFoundException e) {}
-		String username = "phaedra_admin";
-		String password = "pahedra$582";
-		String baseURL = "jdbc:postgresql://phaedra.c4rbrvxxyoqu.eu-west-1.rds.amazonaws.com:5432/phaedra";
+//		String username = "phaedra_admin";
+//		String password = "pahedra$582";
+//		String baseURL = "jdbc:postgresql://phaedra.c4rbrvxxyoqu.eu-west-1.rds.amazonaws.com:5432/phaedra";
+		String baseURL = "jdbc:postgresql://localhost:5432/phaedra";
+		String username = "phaedra";
+		String password = "phaedra";
 		
 		connectionPoolManager = new ConnectionPoolManager(baseURL, username, password);
 		try {

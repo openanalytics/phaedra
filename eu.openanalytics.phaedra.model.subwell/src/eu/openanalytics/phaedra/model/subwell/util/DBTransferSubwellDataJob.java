@@ -40,9 +40,12 @@ public class DBTransferSubwellDataJob extends Job {
 		super("Transfer Subwell Data");
 		this.featureCount = 700;
 		this.protocolId = protocolId;
-		this.dbURL = "jdbc:postgresql://phaedra.c4rbrvxxyoqu.eu-west-1.rds.amazonaws.com:5432/phaedra";
-		this.dbUser = "phaedra_admin";
-		this.dbPassword = "pahedra$582";
+//		this.dbURL = "jdbc:postgresql://phaedra.c4rbrvxxyoqu.eu-west-1.rds.amazonaws.com:5432/phaedra";
+//		this.dbUser = "phaedra_admin";
+//		this.dbPassword = "pahedra$582";
+		this.dbURL = "jdbc:postgresql://localhost:5432/phaedra";
+		this.dbUser = "phaedra";
+		this.dbPassword = "phaedra";
 	}
 	
 	public static void execute(long protocolId) {
@@ -134,7 +137,10 @@ public class DBTransferSubwellDataJob extends Job {
 					for (int j = 0; j < features.size(); j++) {
 						SubWellFeature feature = features.get(j);
 						Object data = dataMap.get(feature);
-						if (data != null) {
+						if (data == null) {
+							if (feature.isNumeric()) pstmt.setFloat(j+3, Float.NaN);
+							else pstmt.setString(j+3, null);
+						} else {
 							if (feature.isNumeric()) {
 								float[] numData = (float[]) data;
 								pstmt.setFloat(j+3, numData[i]);
