@@ -13,7 +13,6 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-import javax.net.ssl.SSLContext;
 
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SSL;
@@ -44,8 +43,7 @@ public class LDAPUtils {
 		}
 		
 		try {
-			// Make sure Windows SSL is set up (containing certificate chains to validate the LDAP server).
-			SSLContext.setDefault(SSL.getWindowsSSLContext());
+			SSL.activatePlatformSSL();
 			
 			Hashtable<String, String> env = new Hashtable<>(11);
 			env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -59,7 +57,7 @@ public class LDAPUtils {
 		} catch (Throwable t) {
 			throw new AuthenticationException("Authentication failed. Please check the username and password.", t);
 		} finally {
-			SSLContext.setDefault(SSL.getDefaultSSLContext());
+			SSL.activateDefaultSSL();
 		}
 	}
 	
