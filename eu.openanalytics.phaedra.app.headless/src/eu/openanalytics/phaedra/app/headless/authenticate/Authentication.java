@@ -30,8 +30,9 @@ public class Authentication {
 		String envId = config.getProperty(PROP_ENV);
 		if (envId == null) throw new IllegalArgumentException(String.format("Cannot start: property %s not set", PROP_ENV));
 		
-		IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
 		try {
+			EnvironmentRegistry.getInstance().initialize();
+			IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
 			Screening.login(env, username, password.getBytes());
 		} catch (AuthenticationException | IOException e) {
 			// Login failed. Set up for a retry.
