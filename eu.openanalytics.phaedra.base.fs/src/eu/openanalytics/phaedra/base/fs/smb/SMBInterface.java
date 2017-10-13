@@ -174,23 +174,31 @@ public class SMBInterface implements FSInterface {
 	}
 	
 	private void mount() {
-		privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
-		new File(privateMount).mkdirs();
-		
-		String smbPath = "//"+ auth.getDomain() + ";"+ auth.getUsername() + ":"+ auth.getPassword() + "@"+ basePath.substring(2);
-		
-		String[] cmd = { "mount", "-t", "smbfs", smbPath, privateMount };
-		try {
-			ProcessUtils.execute(cmd, null, null, true, true);
-		} catch (InterruptedException e) {
-			throw new RuntimeException(e);
+		if (ProcessUtils.isMac()) {
+			// On Mac, make a private non-sudo mount
+			privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
+			new File(privateMount).mkdirs();
+			
+			String smbPath = "//"+ auth.getDomain() + ";"+ auth.getUsername() + ":"+ auth.getPassword() + "@"+ basePath.substring(2);
+			
+			String[] cmd = { "mount", "-t", "smbfs", smbPath, privateMount };
+			try {
+				ProcessUtils.execute(cmd, null, null, true, true);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			// On Linux, depend on the system property pointing to a local path or dedicated sudo mount
+			privateMount = System.getProperty("phaedra.fs.path");
 		}
 	}
 	
 	private void unmount() {
-		try {
-			int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
-			if (retCode == 0) FileUtils.deleteRecursive(privateMount);
-		} catch (InterruptedException e) {}
+		if (ProcessUtils.isMac()) {
+			try {
+				int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
+				if (retCode == 0) FileUtils.deleteRecursive(privateMount);
+			} catch (InterruptedException e) {}
+		}
 	}
 }
