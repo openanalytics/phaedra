@@ -38,8 +38,8 @@ public class FolderScannerType extends BaseScannerType {
 
 		monitor.subTask("Scanning " + cfg.path);
 		Pattern expPattern = Pattern.compile(cfg.experimentPattern);
-		try {
-			streamContents(Paths.get(cfg.path))
+		try (Stream<Path> contents = streamContents(Paths.get(cfg.path))) {
+			contents
 				.filter(p -> expPattern.matcher(p.getFileName().toString()).matches())
 				.filter(p -> Files.isDirectory(p))
 				.forEach(p -> processExperimentFolder(p, cfg));
@@ -53,19 +53,24 @@ public class FolderScannerType extends BaseScannerType {
 	private void processExperimentFolder(Path expFolder, FolderScannerConfig cfg) {
 		Pattern platePattern = Pattern.compile(cfg.platePattern);
 		
-		String[] plateIds = streamContents(expFolder)
-			.filter(p -> platePattern.matcher(p.getFileName().toString()).matches())
-			.filter(p -> {
-				if (!Files.isDirectory(p) || cfg.plateInProgressFlag == null) return true;
-				return streamContents(p).noneMatch(child -> child.getFileName().toString().equalsIgnoreCase(cfg.plateInProgressFlag));
-			})
-			.filter(p -> {
-				if (cfg.forceDuplicateCapture) return true;
-				return !DataCaptureService.getInstance().isReadingAlreadyCaptured(p.toFile().getAbsolutePath());
-			})
-			.map(p -> p.toFile().getAbsolutePath())
-			.toArray(i -> new String[i]);
-		
+		String[] plateIds = {};
+		try (Stream<Path> contents = streamContents(expFolder)) {
+			plateIds = contents
+					.filter(p -> platePattern.matcher(p.getFileName().toString()).matches())
+					.filter(p -> {
+						if (!Files.isDirectory(p) || cfg.plateInProgressFlag == null) return true;
+						try (Stream<Path> subContents = streamContents(p)) {
+							return subContents.noneMatch(child -> child.getFileName().toString().equalsIgnoreCase(cfg.plateInProgressFlag));
+						}
+					})
+					.filter(p -> {
+						if (cfg.forceDuplicateCapture) return true;
+						return !DataCaptureService.getInstance().isReadingAlreadyCaptured(p.toFile().getAbsolutePath());
+					})
+					.map(p -> p.toFile().getAbsolutePath())
+					.toArray(i -> new String[i]);
+		}
+
 		if (plateIds.length == 0) {
 			EclipseLog.info("Skipping folder (already captured): " + expFolder, Activator.getDefault());
 			return;
