@@ -51,7 +51,6 @@
 @02_tables/hca_psp_part_ref.sql
 
 @03_views/hca_info_views.sql
-@03_views/hca_curves.sql
 @03_views/hca_upload_views.sql
 
 @04_packages/hca_utils_pack.pck

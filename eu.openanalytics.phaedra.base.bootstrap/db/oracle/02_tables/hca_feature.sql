@@ -4,29 +4,29 @@
 -- ======================================================================= 
 
 create table hca_feature (
-	feature_id				number not null,
-	feature_name			varchar2(100)  not null,
-	short_name				varchar2(36),
-	protocolclass_id		number, 
-	is_numeric				number default 0,
-	is_logarithmic			number default 0, 
-	is_required				number default 1,
-	is_key					number default 1,
-	is_uploaded 			number default 0,
-	is_annotation 			number default 0,
-	is_classification_restricted number default 0
-	calc_formula			varchar2(1000),
-	curve_normalization		varchar2(25) default 'NONE',
-	normalization_language	varchar2(30),
-	normalization_formula	varchar2(1000),
-	normalization_scope		number,
-	description 			varchar2(250), 
-	format_string			varchar2(25),
-	low_welltype			varchar2(10), 
-	high_welltype			varchar2(10),
-	calc_language			varchar2(30),
-	calc_trigger			varchar2(30),
-	calc_sequence			number
+	feature_id						number not null,
+	feature_name					varchar2(100)  not null,
+	short_name						varchar2(36),
+	protocolclass_id				number, 
+	is_numeric						number default 0,
+	is_logarithmic					number default 0, 
+	is_required						number default 1,
+	is_key							number default 1,
+	is_uploaded 					number default 0,
+	is_annotation 					number default 0,
+	is_classification_restricted	number default 0,
+	calc_formula					varchar2(1000),
+	curve_normalization				varchar2(25) default 'NONE',
+	normalization_language			varchar2(30),
+	normalization_formula			varchar2(1000),
+	normalization_scope				number,
+	description 					varchar2(250), 
+	format_string					varchar2(25),
+	low_welltype					varchar2(10), 
+	high_welltype					varchar2(10),
+	calc_language					varchar2(30),
+	calc_trigger					varchar2(30),
+	calc_sequence					number
 )
 tablespace phaedra_d;
 

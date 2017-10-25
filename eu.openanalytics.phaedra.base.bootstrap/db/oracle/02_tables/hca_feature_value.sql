@@ -4,20 +4,15 @@
 
 CREATE TABLE hca_feature_value
 (
-  WELL_ID,
-  FEATURE_ID,
-  RAW_NUMERIC_VALUE,
-  RAW_STRING_VALUE,
-  NORMALIZED_VALUE,
+  WELL_ID				number not null,
+  FEATURE_ID			number not null,
+  RAW_NUMERIC_VALUE		binary_double,
+  RAW_STRING_VALUE		varchar2(400),
+  NORMALIZED_VALUE		binary_double,
   CONSTRAINT hca_feature_value_iot_pk PRIMARY KEY ( WELL_ID, FEATURE_ID )
 )
 ORGANIZATION INDEX
 PARTITION BY RANGE(WELL_ID) (
-  PARTITION historic_part VALUES LESS THAN (6221369),
-  PARTITION part_q1_2014 VALUES LESS THAN (6661021),
-  PARTITION part_q2_2014 VALUES LESS THAN (7561983),
-  PARTITION part_q3_2014 VALUES LESS THAN (8617223),
-  PARTITION part_q4_2014 VALUES LESS THAN (9451921),
   PARTITION current_part VALUES LESS THAN (MAXVALUE)
 )
 TABLESPACE PHAEDRA_D;
@@ -51,6 +46,7 @@ GRANT SELECT ON hca_feature_value to phaedra_role_read;
 -- Maintaining the partitioning
 -------------------------------------------------------------
 
--- Each quarter, do this:
---ALTER TABLE hca_feature_value_part SPLIT PARTITION current_part AT ( lastWellIdOfQuarter+1 )
---INTO (PARTITION part_qx_2015, PARTITION current_part);
+-- To split the current partition (e.g. every year or every quarter):
+
+-- ALTER TABLE hca_feature_value_part SPLIT PARTITION current_part AT ( wellIdToSplitAt )
+-- INTO (PARTITION name_for_old_part, PARTITION current_part);
