@@ -12,7 +12,10 @@ forEachReading(function(reading) {
 	
 	// Parse the file.
 	var model = parseFile(dataFile, parserId);
-
+	if (model.getPlate(0).getWells().length == 0) {
+		model = parseFile(dataFile, "acapella.v1.welldata.parser");
+	}
+	
 	// Save the parsed model.
 	// Use the plate dimensions given by the meas file, not the res file.
 	model.getPlate(0).setRows(reading.getRows());
