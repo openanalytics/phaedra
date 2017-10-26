@@ -34,7 +34,7 @@ ALTER TABLE hca_feature
 	ADD (group_id number);
 		
 		
-ALTER TABLE hca_cellfeature
+ALTER TABLE hca_subwellfeature
  	ADD (group_id number);
 		
 		
@@ -45,8 +45,8 @@ ALTER TABLE hca_feature
 		ON DELETE SET NULL;
 
 
-ALTER TABLE hca_cellfeature
-	ADD CONSTRAINT hca_cellfeature_fk_fg
+ALTER TABLE hca_subwellfeature
+	ADD CONSTRAINT hca_subwellfeature_fk_fg
 		FOREIGN KEY (group_id)
 		REFERENCES hca_feature_group(group_id)
 		ON DELETE SET NULL;

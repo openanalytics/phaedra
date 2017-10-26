@@ -22,18 +22,18 @@ TABLESPACE PHAEDRA_D;
 -- -----------------------------------------------------------------------
 
 ALTER TABLE hca_feature_value
-	ADD CONSTRAINT hca_feature_value_iot_well_fk
+	ADD CONSTRAINT hca_fv_well_fk
 		FOREIGN KEY (well_id)
 		REFERENCES hca_plate_well(well_id)
 		ON DELETE CASCADE;
 
 ALTER TABLE hca_feature_value
-	ADD CONSTRAINT hca_feature_value_iot_feature_fk
+	ADD CONSTRAINT hca_fv_feature_fk
 		FOREIGN KEY (feature_id)
 		REFERENCES hca_feature(feature_id)
 		ON DELETE CASCADE;
 
-CREATE INDEX hca_feature_value_iot_ix1 ON hca_feature_value(feature_id) ONLINE NOLOGGING LOCAL TABLESPACE phaedra_i;
+CREATE INDEX hca_fv_ix1 ON hca_feature_value(feature_id) ONLINE NOLOGGING LOCAL TABLESPACE phaedra_i;
 		
 -- -----------------------------------------------------------------------
 -- Grants

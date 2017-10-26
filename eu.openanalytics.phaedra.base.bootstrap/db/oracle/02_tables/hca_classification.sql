@@ -10,7 +10,7 @@ create table hca_classification (
 	rgb_color number,
 	label varchar2(100),
 	symbol varchar2(50),
-	cellfeature_id number,
+	subwellfeature_id number,
 	wellfeature_id number
 )
 tablespace phaedra_d;
@@ -26,8 +26,8 @@ ALTER TABLE hca_classification
     
 ALTER TABLE hca_classification
 	ADD CONSTRAINT hca_cf_fk_cell_feature
-		FOREIGN KEY (cellfeature_id)
-		REFERENCES hca_cellfeature(cellfeature_id)
+		FOREIGN KEY (subwellfeature_id)
+		REFERENCES hca_subwellfeature(subwellfeature_id)
 		ON DELETE CASCADE;
 
 -- -----------------------------------------------------------------------

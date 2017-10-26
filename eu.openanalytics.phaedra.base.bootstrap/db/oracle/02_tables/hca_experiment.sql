@@ -19,7 +19,7 @@ create table hca_experiment (
 	multiplo_parameter		varchar2(100),
 	archive_status			number default 0, 
 	archive_user			varchar2(25),
-	archive_dt				date,
+	archive_dt				date
 )
 tablespace phaedra_d;
 

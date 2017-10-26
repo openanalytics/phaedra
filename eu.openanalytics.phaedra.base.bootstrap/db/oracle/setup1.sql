@@ -13,6 +13,8 @@ grant connect to phaedra;
 grant connect to phaedra_usr;
 grant connect to phaedra_readonly;
 
+grant resource to phaedra;
+
 grant create table to phaedra;
 grant create view to phaedra;
 grant create role to phaedra;
