@@ -9,11 +9,6 @@
             name="Browse Subwell Data">
       </command>
       <command
-            defaultHandler="eu.openanalytics.phaedra.ui.subwell.cmd.DownloadHDF5File"
-            id="eu.openanalytics.phaedra.ui.subwell.cmd.DownloadHDF5File"
-            name="Download Subwell Data">
-      </command>
-      <command
             defaultHandler="eu.openanalytics.phaedra.ui.subwell.cmd.ShowVolumeImage"
             id="eu.openanalytics.phaedra.ui.subwell.cmd.ShowVolumeImage"
             name="Show Volume Image">
