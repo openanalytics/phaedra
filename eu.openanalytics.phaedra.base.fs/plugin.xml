@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension-point id="fileServerType" name="FileServerType" schema="schema/fileServerType.exsd"/>
    <extension
          point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
       <preferenceProvider
@@ -21,6 +22,17 @@
             id="eu.openanalytics.phaedra.base.fs.preferences.PreferencePage"
             name="File Server">
       </page>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.fs.fileServerType">
+      <fileServerType
+            class="eu.openanalytics.phaedra.base.fs.nio.NIOInterface"
+            priority="100">
+      </fileServerType>
+      <fileServerType
+            class="eu.openanalytics.phaedra.base.fs.smb.SMBInterface"
+            priority="1">
+      </fileServerType>
    </extension>
 
 </plugin>

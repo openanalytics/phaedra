@@ -3,7 +3,6 @@ package eu.openanalytics.phaedra.base.fs.smb;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -17,18 +16,18 @@ import java.util.Set;
 import java.util.UUID;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
-import eu.openanalytics.phaedra.base.fs.FSInterface;
+import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.fs.SMBHelper;
-import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
+import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import jcifs.UniAddress;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
 import jcifs.smb.SmbSession;
 
-public class SMBInterface implements FSInterface {
+public class SMBInterface extends BaseFileServer {
 
 	private UniAddress domain;
 	private NtlmPasswordAuthentication auth;
@@ -42,7 +41,10 @@ public class SMBInterface implements FSInterface {
 	}
 	
 	@Override
-	public void initialize(String fsPath, String userName, String pw, String wins) throws IOException {
+	public void initialize(String fsPath, String userName, String pw) throws IOException {
+		basePath = SMBHelper.toSMBNotation(fsPath);
+		String serverName = basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()).split("/")[0];
+		
 		// Set timeouts based on user preferences.
 		int smbSocketTimeout = Activator.getDefault().getPreferenceStore().getInt(Prefs.SMB_SOCKET_TIMEOUT);
 		int smbResponseTimeout = Activator.getDefault().getPreferenceStore().getInt(Prefs.SMB_RESPONSE_TIMEOUT);
@@ -55,12 +57,7 @@ public class SMBInterface implements FSInterface {
 		jcifs.Config.setProperty("jcifs.smb.client.transaction_buf_size", "1048576");
 		
 		// Use WINS servers if the file server is in a different subnet.
-		if (wins != null && !wins.isEmpty()) jcifs.Config.setProperty("jcifs.netbios.wins", wins);
-		
-		fsPath = fsPath.substring(SecureFileServer.UNC_PREFIX.length()).replace('\\', '/');
-		String serverName = fsPath.split("/")[0];
-		
-		basePath = SecureFileServer.UNC_PREFIX + fsPath;
+//		if (wins != null && !wins.isEmpty()) jcifs.Config.setProperty("jcifs.netbios.wins", wins);
 		
 		login(serverName, userName, pw);
 	}
@@ -69,34 +66,45 @@ public class SMBInterface implements FSInterface {
 	public void close() throws IOException {
 		if (privateMount != null) unmount();
 	}
-	
-	public void login(String address, String userName, String pw) throws IOException {
-		domain = UniAddress.getByName(address);
-		auth = new NtlmPasswordAuthentication(address, userName, pw);
-		SmbSession.logon(domain, auth);
-	}
 
+	@Override
+	public long getFreeSpace() throws IOException {
+		SmbFile sFile = getFile("/", false);
+		return sFile.getDiskFreeSpace();
+	}
+	
+	@Override
+	public long getTotalSpace() throws IOException {
+		SmbFile sFile = getFile("/", false);
+		return sFile.length();
+	}
+	
+	@Override
 	public boolean exists(String path) throws IOException {
 		SmbFile sFile = getFile(path, false);
 		return sFile.exists();
 	}
 	
+	@Override
 	public boolean isDirectory(String path) throws IOException {
 		if (!path.endsWith("/")) path += "/";
 		SmbFile sFile = getFile(path, false);
 		return sFile.isDirectory();
 	}
 	
+	@Override
 	public long getCreateTime(String path) throws IOException {
 		SmbFile sFile = getFile(path, false);
 		return sFile.createTime();
 	}
 	
+	@Override
 	public long getLastModified(String path) throws IOException {
 		SmbFile sFile = getFile(path, false);
 		return sFile.lastModified();
 	}
 	
+	@Override
 	public List<String> dir(String path) throws IOException {
 		if (!path.endsWith("/")) path += "/";
 		SmbFile sFile = getFile(path, false);
@@ -104,51 +112,45 @@ public class SMBInterface implements FSInterface {
 		return Arrays.asList(children);
 	}
 	
+	@Override
 	public void mkDir(String path) throws IOException {
 		if (!path.endsWith("/")) path += "/";
 		SmbFile sFile = getFile(path, false);
 		sFile.mkdir();
 	}
 	
+	@Override
 	public void mkDirs(String path) throws IOException {
 		if (!path.endsWith("/")) path += "/";
 		SmbFile sFile = getFile(path, false);
 		sFile.mkdirs();
 	}
 
+	@Override
 	public void delete(String path) throws IOException {
 		SmbFile sFile = getFile(path, false);
 		sFile.delete();
 	}
 	
-	public void renameTo(String oldPath, String newPath) throws IOException {
-		SmbFile oldSmb = getFile(oldPath, false);
-		SmbFile newSmb = getFile(newPath, false);
-		oldSmb.renameTo(newSmb);
-	}
-	
+	@Override
 	public long getLength(String path) throws IOException {
 		SmbFile sFile = getFile(path, false);
 		return sFile.length();
 	}
 	
+	@Override
 	public InputStream getInputStream(String path) throws IOException {
 		SmbFile sFile = getFile(path, false);
 		return sFile.getInputStream();
 	}
 
-	public OutputStream getOutputStream(String path) throws IOException {
-		SmbFile sFile = getFile(path, true);
-		return sFile.getOutputStream();
-	}
-	
 	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
-		//TODO On Windows, stick with UNC access: SeekableSMBFile seems to have performance issues
+		//TODO SeekableSMBFile seems to have performance issues. Prefer UNC access on Windows.
 		if (ProcessUtils.isWindows() && !mode.toLowerCase().contains("w")) {
 			Set<OpenOption> opts = new HashSet<>();
 			opts.add(StandardOpenOption.READ);
-			return Files.newByteChannel(Paths.get(path), opts);
+			return Files.newByteChannel(Paths.get(SMBHelper.toUNCNotation(getFullPath(path))), opts);
 		} else {
 			return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
 		}
@@ -156,12 +158,25 @@ public class SMBInterface implements FSInterface {
 	
 	@Override
 	public File getAsFile(String path) {
-		if (path.startsWith(SecureFileServer.UNC_PREFIX) && !ProcessUtils.isWindows()) {
-			if (privateMount == null) mount();
-			return new File(privateMount + path.substring(basePath.length()));
+		if (ProcessUtils.isWindows()) {
+			return new File(SMBHelper.toUNCNotation(getFullPath(path)));
 		} else {
-			return new File(path);
+			if (privateMount == null) mount();
+			return new File(privateMount + "/" + path);
 		}
+	}
+	
+	@Override
+	protected void doRenameTo(String from, String to) throws IOException {
+		SmbFile oldSmb = getFile(from, false);
+		SmbFile newSmb = getFile(to, false);
+		oldSmb.renameTo(newSmb);
+	}
+	
+	@Override
+	protected void doUpload(String path, InputStream input) throws IOException {
+		SmbFile sFile = getFile(path, true);
+		StreamUtils.copyAndClose(input, sFile.getOutputStream());
 	}
 	
 	/*
@@ -169,8 +184,20 @@ public class SMBInterface implements FSInterface {
 	 * **********
 	 */
 	
+	private void login(String address, String userName, String pw) throws IOException {
+		domain = UniAddress.getByName(address);
+		auth = new NtlmPasswordAuthentication(address, userName, pw);
+		SmbSession.logon(domain, auth);
+	}
+	
+	private String getFullPath(String path) {
+		if (!path.startsWith("/") && !path.startsWith("\\")) path = "/" + path;
+		if (basePath.endsWith("/") || basePath.endsWith("\\")) return basePath + path;
+		else return basePath + "/" + path;
+	}
+	
 	private SmbFile getFile(String path, boolean lock) throws MalformedURLException {
-		return SMBHelper.getFile(path, auth, lock);
+		return SMBHelper.getFile(getFullPath(path), auth, lock);
 	}
 	
 	private void mount() {
@@ -179,8 +206,7 @@ public class SMBInterface implements FSInterface {
 			privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
 			new File(privateMount).mkdirs();
 			
-			String smbPath = "//"+ auth.getDomain() + ";"+ auth.getUsername() + ":"+ auth.getPassword() + "@"+ basePath.substring(2);
-			
+			String smbPath = String.format("//%s;%s:%s@%s", auth.getDomain(), auth.getUsername(), auth.getPassword(), basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()));
 			String[] cmd = { "mount", "-t", "smbfs", smbPath, privateMount };
 			try {
 				ProcessUtils.execute(cmd, null, null, true, true);

@@ -5,14 +5,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -21,28 +20,45 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import eu.openanalytics.phaedra.base.fs.FSInterface;
+import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.fs.SMBHelper;
+import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 
-public class NIOInterface implements FSInterface {
+public class NIOInterface extends BaseFileServer {
+	
+	private String basePath;
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
-		// Works with local paths, or UNC paths if they require no alternate credentials.
-		boolean isSystemUser = (ProcessUtils.isWindows() && userName.substring(userName.indexOf("\\") + 1).equalsIgnoreCase(System.getProperty("user.name")));
-		boolean isSMB = SMBHelper.isSMBPath(fsPath); 
-		return (isSystemUser || !isSMB);
+		if (ProcessUtils.isWindows() && SMBHelper.isSMBPath(fsPath)) {
+			String fsUser = userName.substring(userName.indexOf("\\") + 1);
+			String currentUser = System.getProperty("user.name");
+			return fsUser.equalsIgnoreCase(currentUser);
+		} else {
+			return Files.exists(Paths.get(fsPath));
+		}
 	}
 	
 	@Override
-	public void initialize(String fsPath, String userName, String pw, String wins) throws IOException {
-		// Nothing to do.
+	public void initialize(String fsPath, String userName, String pw) throws IOException {
+		if (fsPath.startsWith(SMBHelper.SMB_PROTOCOL_PREFIX)) fsPath = SMBHelper.toUNCNotation(fsPath);
+		basePath = fsPath;
 	}
 	
 	@Override
 	public void close() throws IOException {
 		// Nothing to do.
+	}
+	
+	@Override
+	public long getFreeSpace() throws IOException {
+		return getNIOPath("/").toFile().getFreeSpace();
+	}
+	
+	@Override
+	public long getTotalSpace() throws IOException {
+		return getNIOPath("/").toFile().getTotalSpace();
 	}
 	
 	@Override
@@ -108,11 +124,6 @@ public class NIOInterface implements FSInterface {
 	}
 	
 	@Override
-	public void renameTo(String oldPath, String newPath) throws IOException {
-		Files.move(getNIOPath(oldPath), getNIOPath(newPath));
-	}
-	
-	@Override
 	public long getLength(String path) throws IOException {
 		return Files.size(getNIOPath(path));
 	}
@@ -123,11 +134,6 @@ public class NIOInterface implements FSInterface {
 	}
 
 	@Override
-	public OutputStream getOutputStream(String path) throws IOException {
-		return new FileOutputStream(getNIOPath(path).toFile());
-	}
-	
-	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
 		Set<OpenOption> opts = new HashSet<>();
 		if (mode.toLowerCase().contains("r")) opts.add(StandardOpenOption.READ);
@@ -136,8 +142,18 @@ public class NIOInterface implements FSInterface {
 	}
 	
 	@Override
+	protected void doRenameTo(String from, String to) throws IOException {
+		Files.move(getNIOPath(from), getNIOPath(to));
+	}
+	
+	@Override
+	protected void doUpload(String path, InputStream input) throws IOException {
+		StreamUtils.copyAndClose(input, new FileOutputStream(getNIOPath(path).toFile()));
+	}
+	
+	@Override
 	public File getAsFile(String path) {
-		return new File(path);
+		return getNIOPath(path).toFile();
 	}
 	
 	/*
@@ -146,6 +162,7 @@ public class NIOInterface implements FSInterface {
 	 */
 	
 	private Path getNIOPath(String path) {
-		return FileSystems.getDefault().getPath(path);
+		if (path.startsWith("/") || path.startsWith("\\")) path = path.substring(1);
+		return Paths.get(basePath, path);
 	}
 }

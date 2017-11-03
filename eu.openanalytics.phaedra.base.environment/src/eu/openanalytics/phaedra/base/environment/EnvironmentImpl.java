@@ -58,8 +58,7 @@ public class EnvironmentImpl implements IEnvironment {
 		String fsPath = config.getValue(name, "fs", "path");
 		String fsUser = config.getValue(name, "fs", "user");
 		String fsPassword = config.resolvePassword(name, "fs");
-		String fsWins = config.getValue(name, "fs", "wins");
-		fileServer = new SecureFileServer(fsPath, fsUser, fsPassword, fsWins);
+		fileServer = new SecureFileServer(fsPath, fsUser, fsPassword);
 
 		// Set up database connectivity.
 		String dbUrl = config.getValue(name, "db", "url");

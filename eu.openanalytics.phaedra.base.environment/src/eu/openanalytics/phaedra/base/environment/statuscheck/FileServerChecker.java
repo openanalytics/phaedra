@@ -32,15 +32,18 @@ public class FileServerChecker extends AbstractStatusChecker {
 
 	@Override
 	public TrafficStatus poll() {
+		double free = 0;
+		double total = 0;
+		
 		SecureFileServer fs = Screening.getEnvironment().getFileServer();
 		try {
 			fs.dir("/");
+			free = (double)fs.getFreeSpace() / (1024*1024*1024);
+			total = (double)fs.getTotalSpace() / (1024*1024*1024);
 		} catch (IOException e) {
 			return new TrafficStatus(TrafficStatus.DOWN, "Cannot access: " + e.getMessage());
 		}
 
-		double free = (double)fs.getFreeSpace() / (1024*1024*1024);
-		double total = (double)fs.getTotalSpace() / (1024*1024*1024);
 		String gbFree = NumberUtils.round(free, 0);
 		String gbTotal = NumberUtils.round(total, 0);
 		String pctFree = NumberUtils.round(100*(free/total), 2);

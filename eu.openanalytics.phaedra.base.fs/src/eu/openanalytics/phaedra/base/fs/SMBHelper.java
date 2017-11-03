@@ -12,9 +12,10 @@ import jcifs.smb.SmbFile;
 public class SMBHelper {
 
 	public static final String SMB_PROTOCOL_PREFIX = "smb://";
+	public final static String UNC_PROTOCOL_PREFIX = "\\\\";
 	
 	public static boolean isSMBPath(String path) {
-		return path != null && (path.startsWith(SMB_PROTOCOL_PREFIX) || path.startsWith(SecureFileServer.UNC_PREFIX));
+		return path != null && (path.startsWith(SMB_PROTOCOL_PREFIX) || path.startsWith(UNC_PROTOCOL_PREFIX));
 	}
 	
 	public static InputStream open(String path) throws IOException {
@@ -34,21 +35,21 @@ public class SMBHelper {
 		return new SmbFile(toSMBNotation(path), auth, sharing);
 	}
 	
-	private static String toUNCNotation(String smbPath) {
+	public static String toUNCNotation(String smbPath) {
 		if (smbPath.startsWith(SMB_PROTOCOL_PREFIX)) {
 			smbPath = smbPath.substring(SMB_PROTOCOL_PREFIX.length());
 		}
 		
-		if (!smbPath.startsWith(SecureFileServer.UNC_PREFIX)) {
-			smbPath = SecureFileServer.UNC_PREFIX + smbPath;
+		if (!smbPath.startsWith(UNC_PROTOCOL_PREFIX)) {
+			smbPath = UNC_PROTOCOL_PREFIX + smbPath;
 		}
 		
 		return smbPath;
 	}
 	
-	private static String toSMBNotation(String smbPath) {
-		if (smbPath.startsWith(SecureFileServer.UNC_PREFIX)) {
-			smbPath = smbPath.substring(SecureFileServer.UNC_PREFIX.length());
+	public static String toSMBNotation(String smbPath) {
+		if (smbPath.startsWith(UNC_PROTOCOL_PREFIX)) {
+			smbPath = smbPath.substring(UNC_PROTOCOL_PREFIX.length());
 		}
 		
 		if (!smbPath.startsWith(SMB_PROTOCOL_PREFIX)) {
