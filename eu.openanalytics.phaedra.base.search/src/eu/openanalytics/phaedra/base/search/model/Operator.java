@@ -170,13 +170,18 @@ public enum Operator {
 							? builder.notEqual(from.get(field), value)
 							: builder.notEqual(builder.lower(from.<String>get(field)), ((String) value).toLowerCase());
 		case LIKE:
-			return positive
+			String[] values = ((String) value).split("\\|");
+			Predicate[] predicates = new Predicate[values.length];
+			for (int i = 0; i < predicates.length; i++) {
+				predicates[i] = positive
 					? caseSensitive
-							? builder.like(from.<String>get(field), "%" + value + "%")
-							: builder.like(builder.lower(from.<String>get(field)), "%" + ((String) value).toLowerCase() + "%")
+								? builder.like(from.<String>get(field), "%" + values[i] + "%")
+								: builder.like(builder.lower(from.<String>get(field)), "%" + values[i].toLowerCase() + "%")
 					: caseSensitive
-							? builder.notLike(from.<String>get(field), "%" + value + "%")
-							: builder.notLike(builder.lower(from.<String>get(field)), "%" + ((String) value).toLowerCase() + "%");
+								? builder.notLike(from.<String>get(field), "%" + values[i] + "%")
+								: builder.notLike(builder.lower(from.<String>get(field)), "%" + values[i].toLowerCase() + "%");
+			}
+			return positive ? builder.or(predicates) : builder.and(predicates);
 		case STARTS_WITH:
 			return positive
 					? caseSensitive
