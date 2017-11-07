@@ -30,6 +30,7 @@ public class DropdownSelectionListener extends SelectionAdapter {
 	}
 
 	public void removeAll() {
+		if (menu == null || menu.isDisposed()) return;
 		for (MenuItem item: menu.getItems()) {
 			item.setData(null);
 
