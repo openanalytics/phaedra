@@ -151,7 +151,7 @@ public class PlateService extends BaseJPAService {
 				+ " (select count(pc.platecompound_id) from phaedra.hca_plate_compound pc, phaedra.hca_plate p"
 				+ "		where pc.plate_id = p.plate_id and p.experiment_id = ?"
 				+ "		and (select count(w.well_id) from phaedra.hca_plate_well w where w.platecompound_id = pc.platecompound_id) <= 3) screen_count"
-				+ " from dual";
+				+ JDBCUtils.getFromDual();
 		sql = sql.replace("?", "" + exp.getId());
 
 		PreparedStatement ps = null;
