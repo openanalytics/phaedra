@@ -14,4 +14,4 @@ console.print("I have received " + args.length + " arguments.");
 var a = parseInt(100 * Math.random());
 var b = parseInt(100 * Math.random());
 
-console.print("Did you know that " + a + " * " + b " = " + (a*b) + "?");
+console.print("Did you know that " + a + " * " + b + " = " + (a*b) + "?");
