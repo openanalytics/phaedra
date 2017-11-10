@@ -10,7 +10,7 @@ import java.util.zip.CRC32;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
- * Convenience methods for manipulating Input- and OutputStreams.
+ * A collection of utilities for manipulating input- and outputstreams.
  */
 public class StreamUtils {
 

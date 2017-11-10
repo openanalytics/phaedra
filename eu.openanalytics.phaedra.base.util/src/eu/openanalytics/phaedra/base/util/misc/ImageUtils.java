@@ -23,6 +23,9 @@ import org.eclipse.swt.widgets.Display;
 
 import eu.openanalytics.phaedra.base.util.convert.AWTImageConverter;
 
+/**
+ * A collection of utilities for manipulating SWT and AWT images.
+ */
 public class ImageUtils {
 
 	/**
@@ -66,37 +69,6 @@ public class ImageUtils {
 	}
 
 	/**
-	 * Scale an image to another size using a zoom level. The scaling uses interpolation and anti-aliasing
-	 * to generate a smooth result.
-	 *
-	 * @param image The image to scale.
-	 * @param zoomLevel The zoom level to scale.
-	 * @param disposeOld Dispose image.
-	 * @return A scaled image.
-	 */
-	public static Image zoomByLevel(Image image, int zoomLevel, boolean disposeOld) {
-		if (image == null) return null;
-
-		int oldWidth = image.getBounds().width;
-		int oldHeight = image.getBounds().height;
-
-		int newWidth = oldWidth * zoomLevel;
-		int newHeight = oldHeight * zoomLevel;
-
-		Image scaled = new Image(Display.getDefault(), newWidth, newHeight);
-		GC gc = new GC(scaled);
-		gc.setAntialias(SWT.ON);
-		gc.setInterpolation(SWT.HIGH);
-
-		gc.drawImage(image, 0, 0, oldWidth, oldHeight, 0, 0, newWidth, newHeight);
-		gc.dispose();
-		if (disposeOld)
-			image.dispose();
-
-		return scaled;
-	}
-
-	/**
 	 * Add transparency to an image by setting alpha to zero for a target color value (e.g. white).
 	 * The original image's alpha, if any, will be replaced.
 	 *
@@ -122,6 +94,9 @@ public class ImageUtils {
 		return new Image(Display.getDefault(), data);
 	}
 
+	/**
+	 * Add one or more padding pixels to an AWT image.
+	 */
 	public static BufferedImage addPadding(BufferedImage image, int paddingX, int paddingY) {
 		BufferedImage bi = new BufferedImage(image.getWidth() + 2*paddingX , image.getHeight() + 2*paddingY, image.getType());
 		Graphics2D g2d = null;
@@ -134,6 +109,9 @@ public class ImageUtils {
 		return bi;
 	}
 
+	/**
+	 * Add one or more padding pixels to an SWT image.
+	 */
 	public static Image addPadding(Image originalImage, int padX, int padY) {
 		// Create an empty image, with size = original size + padding.
 		Rectangle bounds = originalImage.getBounds();
@@ -168,16 +146,9 @@ public class ImageUtils {
 		return paddedImage;
 	}
 
-	public static ImageData crop(ImageData img, Rectangle r) {
-		ImageData cropped = new ImageData(r.width, r.height, img.depth, img.palette);
-		for (int y=0; y<r.height; y++) {
-			int[] pixels = new int[r.width];
-			img.getPixels(r.x, r.y + y, pixels.length, pixels, 0);
-			cropped.setPixels(0, y, pixels.length, pixels, 0);
-		}
-		return cropped;
-	}
-
+	/**
+	 * Apply a gamma factor to an SWT image.
+	 */
 	public static ImageData applyGamma(ImageData img, float gamma) {
 		ImageData out = new ImageData(img.width, img.height, img.depth, img.palette);
 
@@ -198,23 +169,25 @@ public class ImageUtils {
 
 		// Loop over pixels and apply gamma.
 		for (int i=0; i<pixels.length; i++) {
-
 			int pix = pixels[i];
 			int red = (pix & 0xFF0000) >> 16;
-		int green = (pix & 0x00FF00) >> 8;
-		int blue = (pix & 0x0000FF);
+			int green = (pix & 0x00FF00) >> 8;
+			int blue = (pix & 0x0000FF);
 
-		red = gammaLUT[red];
-		green = gammaLUT[green];
-		blue = gammaLUT[blue];
+			red = gammaLUT[red];
+			green = gammaLUT[green];
+			blue = gammaLUT[blue];
 
-		pixelsOut[i] = (red << 16) + (green << 8) + blue;
+			pixelsOut[i] = (red << 16) + (green << 8) + blue;
 		}
 
 		out.setPixels(0, 0, pixelsOut.length, pixelsOut, 0);
 		return out;
 	}
 
+	/**
+	 * Blend two pixel values together using an alpha value (1-255).
+	 */
 	public static int blend(int srcValue, int destValue, int alpha) {
 		int destR = (destValue & 0xFF0000) >> 16;
 		int destG = (destValue & 0x00FF00) >> 8;
@@ -226,7 +199,7 @@ public class ImageUtils {
 		return (newRGB[0] << 16) + (newRGB[1] << 8) + newRGB[2];
 	}
 
-	public static int[] blend(int srcR, int srcG, int srcB, int destR, int destG, int destB, int alpha) {
+	private static int[] blend(int srcR, int srcG, int srcB, int destR, int destG, int destB, int alpha) {
 		int[] out = new int[3];
 		float a = alpha / 255f;
 		out[0] = (int)(destR * (1-a) + srcR * a);
@@ -307,6 +280,13 @@ public class ImageUtils {
 		return grayValue;
 	}
 
+	/**
+	 * Apply a mask to an SWT image.
+	 * 
+	 * @param image The image to mask.
+	 * @param mask The bitmask.
+	 * @return The pixels of the input image, with all masked pixels set to 0.
+	 */
 	public static int[] applyBitMask(ImageData image, PathData mask) {
 
 		// Render the mask on an image.
@@ -340,6 +320,9 @@ public class ImageUtils {
 		return maskedPixels;
 	}
 
+	/**
+	 * Get the smallest bounding box around a given shape.
+	 */
 	public static Rectangle getBoundingBox(PathData pd) {
 		Path path = new Path(null, pd);
 		float[] bounds = new float[4];

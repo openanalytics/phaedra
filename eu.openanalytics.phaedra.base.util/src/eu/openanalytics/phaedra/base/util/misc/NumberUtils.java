@@ -6,8 +6,22 @@ import java.text.DecimalFormatSymbols;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A collection of utilities for manipulating numeric values.
+ * Methods relating to well numbers use the following terminology:
+ * <ul>
+ * <li><b>Well Number</b>: this is a number given to each well, starting at 1 for the first well in the upper left corner of the plate.</li>
+ * <li><b>Well Position</b>: this is a pair of numbers given to each well, starting at [1,1] for the first well in the upper left corner of the plate.</li>
+ * <li><b>Well Coordinate</b>: this is a string representation of the well. Several common formats are supported, such as "A01", "R1C1", "r1_c1", etc</li>
+ * </ul>
+ */
 public class NumberUtils {
-	public final static String DEFAULT_DECIMAL_FORMAT = "##.#";
+
+	public static final String DEFAULT_DECIMAL_FORMAT = "##.#";
+	
+	private static final Pattern WELL_COORD_PATTERN = Pattern.compile("([a-zA-Z]+) *-*_* *(\\d+)");
+	private static final Pattern WELL_ROW_COL_PATTERN = Pattern.compile("[Rr](\\d+) *-*_* *[Cc](\\d+)");
+	private static final DecimalFormat DURATION_FORMAT = new DecimalFormat("00");
 	
 	private static String Digits = "(\\p{Digit}+)";
 	private static String HexDigits = "(\\p{XDigit}+)";
@@ -19,7 +33,6 @@ public class NumberUtils {
             + "(((0[xX]"+HexDigits+"(\\.)?)|"
             + "(0[xX]"+HexDigits+"?(\\.)"+HexDigits+")"
             + ")[pP][+-]?"+Digits+"))"+"[fFdD]?))"+"[\\x00-\\x20]*");
-
 	private static Pattern floatPattern = Pattern.compile(fpRegex);
 
 	public static boolean isDouble(String val) {
@@ -74,8 +87,6 @@ public class NumberUtils {
 		return format;
 	}
 	
-	private final static DecimalFormat DURATION_FORMAT = new DecimalFormat("00");
-	
 	public static String formatDuration(long duration) {
 		int hours = (int)(duration/3600000);
 		int minutes = (int)((duration%3600000)/60000);
@@ -90,24 +101,24 @@ public class NumberUtils {
 		return round(gBytes, 2);
 	}
 	
-	/* Well number and position converters */
-	
-	public final static Pattern WELL_COORD_PATTERN = Pattern.compile("([a-zA-Z]+) *-*_* *(\\d+)");
-	
-	public final static Pattern WELL_ROW_COL_PATTERN = Pattern.compile("[Rr](\\d+) *-*_* *[Cc](\\d+)");
-	
 	public static String getWellCoordinate(int row, int col) {
 		return getWellCoordinate(row, col, null);
 	}
 	
+	/**
+	 * Get the well coordinate from a well row nr and column nr.
+	 * E.g. 13,24 becomes "M24"
+	 */
 	public static String getWellCoordinate(int row, int col, String separator) {
-		// E.g. 13,24 becomes "M24"
 		if (separator == null) separator = "";
 		return getWellRowLabel(row) + separator + col;
 	}
 	
+	/**
+	 * Get the row label for a well row nr.
+	 * E.g. 4 becomes "D"
+	 */
 	public static String getWellRowLabel(int row) {
-		// E.g. 4 becomes "D"
 		String rowString = "";
 		if (row <= 26) {
 			rowString = "" + (char) (row + 64);
@@ -120,22 +131,37 @@ public class NumberUtils {
 		return rowString;
 	}
 	
+	/**
+	 * Convert a well coordinate to a well number, starting at 1.
+	 * E.g. "C10" with 12 columns per row becomes 34
+	 * 
+	 * @param coordinate The well coordinate, e.g. "P24" or "R10-C12".
+	 * @param colsPerRow The number of columns in the plate, e.g. 12 or 24.
+	 */
 	public static int getWellNr(String coordinate, int colsPerRow) {
-		// E.g. "C10" with 12 cols per row becomes 34
 		int row = convertToRowNumber(coordinate);
 		int col = convertToColumnNumber(coordinate);
 		int value = (row-1)*colsPerRow + col;
 		return value;
 	}
 
+	/**
+	 * Convert a well position to a well number, starting at 1.
+	 * E.g. 2,3 with 12 columns per row becomes 34
+	 */
 	public static int getWellNr(int row, int col, int colsPerRow) {
-		// E.g. 2,3 with 12 cols per row becomes 15
 		int value = (row-1)*colsPerRow + col;
 		return value;
 	}
 	
+	/**
+	 * Get the well position from a well number.
+	 * E.g. wellNr 96 with 12 columns per row becomes [8,12]
+	 * 
+	 * @param wellNr The well number, starting from 1.
+	 * @param colsPerRow The number of columns in the plate, e.g. 12 or 24.
+	 */
 	public static int[] getWellPosition(int wellNr, int colsPerRow) {
-		// E.g. wellNr 96 with colsPerRow 12 becomes [8,12]
 		wellNr--;
 		int rowNr = 1 + wellNr / colsPerRow;
 		int colNr = 1 + wellNr % colsPerRow;

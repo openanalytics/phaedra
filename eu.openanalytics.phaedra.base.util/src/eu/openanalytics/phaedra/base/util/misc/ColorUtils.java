@@ -9,8 +9,14 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Display;
 
+/**
+ * A collection of utilities for working with RGB color values.
+ */
 public class ColorUtils {
 
+	/**
+	 * Create a gradient between two colors, consisting of a specified number of gradient values.
+	 */
 	public static RGB[] createGradient(RGB start, RGB end, int values) {
 		RGB[] colors = new RGB[values];
 		int steps = values-1;
@@ -28,7 +34,10 @@ public class ColorUtils {
 		
 		return colors;
 	}
-	
+
+	/**
+	 * Create a chain of gradients between multiple colors, with a specified total number of gradient values.
+	 */
 	public static RGB[] createGradient(RGB[] colorSteps, int values) {
 		RGB[] colors = new RGB[values];
 		int colorBlocks = colorSteps.length - 1;
@@ -48,6 +57,9 @@ public class ColorUtils {
 		return colors;
 	}
 	
+	/**
+	 * Convert an rgb integer value (highest byte, often the alpha, is not used) into an RGB object.
+	 */
 	public static RGB hexToRgb(int rgb) {
 		int r = (rgb >> 16) & 0xFF;
 		int g = (rgb >> 8) & 0xFF;
@@ -55,6 +67,9 @@ public class ColorUtils {
 		return new RGB(r, g, b);
 	}
 	
+	/**
+	 * Convert an RGB object into an rgb integer value. The highest integer byte, often the alpha, is not used.
+	 */
 	public static int rgbToHex(RGB rgb) {
 		if (rgb == null) return 0;
 		int intRgb = rgb.red;
@@ -63,16 +78,26 @@ public class ColorUtils {
 		return intRgb;
 	}
 	
+	/**
+	 * Convert an RGB object into a hexadecimal string.
+	 * E.g. the color green becomes 0x00FF00.
+	 */
 	public static String rgbToStringHex(RGB rgb) {
 		return Integer.toHexString(rgbToHex(rgb)).toUpperCase();
 	}
 	
+	/**
+	 * Parse an RGB value from a comma-separated string of 3 integer values (red,green,blue).
+	 */
 	public static RGB parseRGBString(String rgb) {
 		if (rgb == null || rgb.isEmpty() || !rgb.contains(",")) return null;
 		String[] parts = rgb.split(",");
 		return new RGB(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
 	}
 	
+	/**
+	 * Convert an RGB value into a comma-separated string of 3 integer values (red,green,blue).
+	 */
 	public static String createRGBString(RGB rgb) {
 		return StringConverter.asString(rgb);
 	}

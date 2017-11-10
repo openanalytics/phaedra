@@ -6,6 +6,9 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * A collection of utilities for manipulating date objects.
+ */
 public class DateUtils {
 
 	/**
@@ -23,7 +26,7 @@ public class DateUtils {
 	}
 
 	/**
-	 * Checks if two dates are on the same day.
+	 * Checks if two dates (as Calendar objects) are on the same day.
 	 */
 	public static boolean isSameDay(Calendar cal1, Calendar cal2) {
 		if (cal1 == null || cal2 == null) {
