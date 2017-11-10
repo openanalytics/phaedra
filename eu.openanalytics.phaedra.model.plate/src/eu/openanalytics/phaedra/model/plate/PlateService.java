@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.Status;
 
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
+import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
@@ -440,7 +441,7 @@ public class PlateService extends BaseJPAService {
 				+ "		and (select count(w.well_id) from phaedra.hca_plate_well w where w.platecompound_id = pc.platecompound_id) > 3) crc_count,"
 				+ " (select count(pc.platecompound_id) from phaedra.hca_plate_compound pc where pc.plate_id = ?"
 				+ "		and (select count(w.well_id) from phaedra.hca_plate_well w where w.platecompound_id = pc.platecompound_id) <= 3) screen_count"
-				+ " from dual";
+				+ JDBCUtils.getFromDual();
 		sql = sql.replace("?", "" + plate.getId());
 
 		PreparedStatement ps = null;

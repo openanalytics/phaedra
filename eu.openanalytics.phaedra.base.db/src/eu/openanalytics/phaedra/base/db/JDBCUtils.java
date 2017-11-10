@@ -232,6 +232,14 @@ public class JDBCUtils {
 		return res.next();
 	}
 	
+	public static String getFromDual() {
+		if (isOracle()) {
+			return " from dual";
+		} else {
+			return "";
+		}
+	}
+	
 	public static String getDBSize(Connection conn) throws SQLException {
 		StringBuilder response = new StringBuilder();
 		if (isEmbedded()) {
