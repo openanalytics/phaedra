@@ -13,12 +13,19 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 
+/**
+ * A collection of utilities related to String manipulation.
+ */
 public class StringUtils {
 
 	private static final Pattern NUMERIC_SPLITTER = Pattern.compile("([\\-\\+]?\\d+(\\.\\d+)?|\\D+)");
 	private static final Pattern EMAIL_VALIDATOR = Pattern.compile("^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
 			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
 
+	/**
+	 * Trim a String to a specified length.
+	 * If the String was longer, "..." will be appended.
+	 */
 	public static String trim(String string, int maxLength) {
 		// E.g. "Dodecahedron with maxLength 7 becomes "Dode..."
 		if (maxLength < 4) return string.substring(0, maxLength);
@@ -34,6 +41,10 @@ public class StringUtils {
 		return createSeparatedString(items, separator, true);
 	}
 
+	/**
+	 * Create a new String by concatenating an array of Strings, optionally
+	 * inserting a separator between each.
+	 */
 	public static String createSeparatedString(String[] items, String separator, boolean whitespace) {
 		StringBuilder sb = new StringBuilder();
 		for (int i=0; i<items.length; i++) {
@@ -43,22 +54,14 @@ public class StringUtils {
 		return sb.toString();
 	}
 
-	public static <E extends Enum<E>> String[] getEnumNames(E[] enums) {
-		String[] names = new String[enums.length];
-		for (int i=0; i<names.length; i++) {
-			names[i] = enums[i].name();
-		}
-		return names;
-	}
-
 	/**
 	 * Returns the extent of the given text.
 	 * Note: This method does not dispose of the given Font.
+	 * 
 	 * @param text The string to be measured
 	 * @param height The available height
 	 * @param width The available width
 	 * @param usedFont The font used to draw the String
-	 * @return
 	 */
 	public static Point calculateTextSize(String text, int height, int width, Font usedFont) {
 		Image tempImg = new Image(null, width, height);
@@ -73,12 +76,19 @@ public class StringUtils {
 		return textSize;
 	}
 
+	/**
+	 * Checks if a given String is a valid email address.
+	 * Only the format is checked, not the existence of the address.
+	 */
 	public static boolean isValidEmail(String email) {
 		if (email == null) return false;
 		Matcher matcher = EMAIL_VALIDATOR.matcher(email);
 		return matcher.matches();
 	}
 
+	/**
+	 * Get the full stack trace of a Throwable as a String. 
+	 */
 	public static String getStackTrace(Throwable t) {
 		if (t == null) return "";
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -87,6 +97,10 @@ public class StringUtils {
 		return out.toString();
 	}
 
+	/**
+	 * Get the stack trace of a Throwable as a String, op to maxSize.
+	 * If the stack trace is longer, append "..." at the end.
+	 */
 	public static String getStackTrace(Throwable t, int maxSize) {
 		String stackTrace = getStackTrace(t);
 		if (stackTrace.length() > maxSize) {
@@ -95,6 +109,14 @@ public class StringUtils {
 		return stackTrace;
 	}
 
+	/**
+	 * Resolve variables in a String by looking for the format '${varName}'.
+	 * For each variable found, the resolver is called to translate the variable
+	 * reference into a value, which is inserted into the String instead of the reference.
+	 * 
+	 * Note that the resolution is recursive, so variable values may contain variables
+	 * by themselves.
+	 */
 	public static String resolveVariables(String unresolvedValue, Function<String,String> resolver) {
 		if (resolver == null || unresolvedValue == null || unresolvedValue.isEmpty()) return unresolvedValue;
 		
@@ -157,26 +179,23 @@ public class StringUtils {
 		return resolvedString;
 	}
 	
+	/**
+	 * Get the String, or an empty String if the String is null.
+	 */
 	public static String nonNull(String s) {
 		return (s == null) ? "" : s;
 	}
 
+	/**
+	 * Check if the given String is null or empty.
+	 */
 	public static boolean isEmpty(String s) {
 		return s == null || s.isEmpty();
 	}
 
 	/**
-	 * <p>Return given string in proper case.</p>
-	 *
-	 * <pre>
-	 * Example:
-	 * 	HELLO		->	Hello
-	 * 	world		->	World
-	 * 	hEllOWoRlD	->	Helloworld
-	 * </pre>
-	 *
-	 * @param string
-	 * @return
+	 * Capitalize the first character of the String, and convert
+	 * the rest of the String to lowercase.
 	 */
 	public static String getProperCase(String string) {
 		return string.substring(0, 1).toUpperCase() + string.substring(1).toLowerCase();
@@ -185,10 +204,6 @@ public class StringUtils {
 	/**
 	 * Compare Strings containing numbers.
 	 * Useful for sorting e.g. Well Positions (A9 comes before A10)
-	 *
-	 * @param s1 String 1
-	 * @param s2 String 2
-	 * @return
 	 */
 	public static int compareToNumericStrings(String s1, String s2) {
 		// We split each string as runs of number/non-number strings

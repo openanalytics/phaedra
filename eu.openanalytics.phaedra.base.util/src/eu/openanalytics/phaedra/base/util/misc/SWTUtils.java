@@ -13,10 +13,16 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.graphics.TextStyle;
 import org.eclipse.swt.widgets.Display;
 
+/**
+ * A collection of utilities related to SWT objects.
+ */
 public class SWTUtils {
 
+	/**
+	 * Calculate the surface area of a path.
+	 * Assumes that the path represents a closed polygon.
+	 */
 	public static float getSurface(PathData path) {
-		// Assuming path represents a closed polygon.
 		float sum = 0;
 		float[] points = new float[path.points.length + 2];
 		System.arraycopy(path.points, 0, points, 0, path.points.length);
@@ -30,8 +36,11 @@ public class SWTUtils {
 		return sum;
 	}
 	
+	/**
+	 * Calculate the length of a path.
+	 * Assumes the path contains only "moveTo" and "lineTo" components.
+	 */
 	public static float getLength(PathData path) {
-		// Assuming path contains only "moveTo" and "lineTo" components.
 		double totalLength = 0;
 		int pointCount = path.points.length / 2;
 		Point previousPoint = null;
@@ -43,6 +52,9 @@ public class SWTUtils {
 		return (float)totalLength;
 	}
 	
+	/**
+	 * Convert a path to an array of points.
+	 */
 	public static Point[] getPoints(PathData path) {
 		int pointCount = path.points.length / 2;
 		Point[] points = new Point[pointCount];
@@ -52,6 +64,9 @@ public class SWTUtils {
 		return points;
 	}
 	
+	/**
+	 * Create a path from an array of points.
+	 */
 	public static Path createPath(Point[] points) {
 		Path p = new Path(null);
 		if (points.length > 0) {
@@ -64,6 +79,12 @@ public class SWTUtils {
 		return p;
 	}
 	
+	/**
+	 * Check whether two ranges overlap.
+	 * 
+	 * @param rangeA Point representing a range, i.e. [start, end]
+	 * @param rangeB Point representing a range, i.e. [start, end]
+	 */
 	public static boolean overlaps(Point rangeA, Point rangeB) {
 		return (rangeA.y <= rangeB.y && rangeA.y >= rangeB.x) || (rangeB.y <= rangeA.y && rangeB.y >= rangeA.x);
 	}
@@ -85,10 +106,16 @@ public class SWTUtils {
 		}
 	}
 	
+	/**
+	 * Create a rectangle from an array of 4 values: minX, minY, maxX, maxY.
+	 */
 	public static Rectangle create(int[] coords) {
 		return create(coords[0],coords[1],coords[2],coords[3]);
 	}
 	
+	/**
+	 * Create a rectangle from 4 values: minX, minY, maxX, maxY.
+	 */
 	public static Rectangle create(int x1, int y1, int x2, int y2) {
 		int x = Math.min(x1,x2);
 		int y = Math.min(y1,y2);
@@ -98,26 +125,41 @@ public class SWTUtils {
 		return rect;
 	}
 	
+	/**
+	 * Create a copy of a rectangle.
+	 */
 	public static Rectangle copy(Rectangle rectangle) {
 		return new Rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
 	}
 	
+	/**
+	 * Calculate the center of a rectangle.
+	 */
 	public static Point getCenter(Rectangle rect) {
 		int x = rect.x + rect.width/2;
 		int y = rect.y + rect.height/2;
 		return new Point(x,y);
 	}
 
+	/**
+	 * Calculate the surface of a rectangle.
+	 */
 	public static int getSurface(Rectangle rect) {
 		return rect.width * rect.height;
 	}
 
+	/**
+	 * Calculate the geometric distance between two points.
+	 */
 	public static double getDistance(Point a, Point b) {
 		double v1 = Math.pow(a.x - b.x, 2);
 		double v2 = Math.pow(a.y - b.y, 2);
 		return Math.sqrt(v1+v2);
 	}
 	
+	/**
+	 * Increase the size of a rectangle by adding a number of padding pixels to it.
+	 */
 	public static void addPadding(Rectangle r, int pad) {
 		r.x -= pad/2;
 		r.y -= pad/2;
@@ -125,6 +167,9 @@ public class SWTUtils {
 		r.height += pad;
 	}
 	
+	/**
+	 * Convert a rectangle to an array of 4 values: minX, minY, maxX, maxY.
+	 */
 	public static int[] getPoints(Rectangle r) {
 		return new int[] { r.x, r.y, r.x + r.width, r.y + r.height };
 	}
@@ -150,6 +195,14 @@ public class SWTUtils {
 		else run.run();
 	}
 	
+	/**
+	 * Create an array of style ranges to be used in a JFace ViewerCell.
+	 * 
+	 * @param length The total length of the text.
+	 * @param baseStyle The base style, for parts of the text that are not in any region.
+	 * @param regionStyle The region style, for parts of the text that are in a region.
+	 * @param regions The array of regions where the text style should be different.
+	 */
 	public static StyleRange[] createStyleRanges(int length, TextStyle baseStyle, TextStyle regionStyle, Point[] regions) {
 		List<StyleRange> ranges = new ArrayList<>();
 		int lastPos = 0;
@@ -167,6 +220,13 @@ public class SWTUtils {
 		return ranges.toArray(new StyleRange[ranges.size()]);
 	}
 	
+	/**
+	 * Create an array of style ranges to be used in a JFace ViewerCell.
+	 * 
+	 * @param from The start offset in a text where style should be applied.
+	 * @param to The end offset in a text where style should be applied.
+	 * @param style The style to apply.
+	 */
 	public static StyleRange createStyleRange(int from, int to, TextStyle style) {
 		StyleRange range = new StyleRange(style);
 		range.start = from;

@@ -9,35 +9,51 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+/**
+ * A collection of utilities related to OS processes, and their Java representation.
+ */
 public class ProcessUtils {
+	
+	private static int physicalCoreCount = -1;
+	private static int logicalCoreCount = -1;
 
-	/*
-	 * *****************
-	 * Process execution
-	 * *****************
+	/**
+	 * See {@link ProcessUtils#execute(String[], String, String[], OutputStream, OutputStream, int)}
 	 */
-
 	public static int execute(String cmd) throws InterruptedException {
 		return execute(new String[]{cmd}, null, null, null, null);
 	}
 
+	/**
+	 * See {@link ProcessUtils#execute(String[], String, String[], OutputStream, OutputStream, int)}
+	 */
 	public static int execute(String cmd, String workingDir) throws InterruptedException {
 		return execute(new String[]{cmd}, workingDir, null, null, null);
 	}
 
+	/**
+	 * See {@link ProcessUtils#execute(String[], String, String[], OutputStream, OutputStream, int)}
+	 */
 	public static int execute(String[] cmd, String workingDir) throws InterruptedException {
 		return execute(cmd, workingDir, null, null, null);
 	}
 
+	/**
+	 * See {@link ProcessUtils#execute(String[], String, OutputStream, boolean, boolean, int)}
+	 */
 	public static int execute(String[] cmd, String workingDir,
 			final OutputStream stdOut, boolean failOnStdErr, boolean failOnExitNonZero) throws InterruptedException {
-
 		return execute(cmd, workingDir, stdOut, failOnStdErr, failOnExitNonZero, 0);
 	}
 
+	/**
+	 * Execute a process, as a child of the current process.
+	 * See also {@link ProcessUtils#execute(String[], String, String[], OutputStream, OutputStream, int)}
+	 * 
+	 * @param failOnStdErr If true, will throw an exception if the error output is not empty.
+	 * @param failOnExitNonZero If true, will throw an exception if the return code is not 0. 
+	 */
 	public static int execute(String[] cmd, String workingDir,
 			final OutputStream stdOut, boolean failOnStdErr, boolean failOnExitNonZero, int timeout) throws InterruptedException {
 
@@ -55,12 +71,28 @@ public class ProcessUtils {
 		return exitCode;
 	}
 
+	/**
+	 * See {@link ProcessUtils#execute(String[], String, String[], OutputStream, OutputStream, int)}
+	 */
 	public static int execute(String[] cmd, String workingDir, String[] environment,
 			final OutputStream stdOut, final OutputStream stdErr) throws InterruptedException {
-
 		return execute(cmd, workingDir, environment, stdOut, stdErr, 0);
 	}
 
+	/**
+	 * Execute a native process, as a child of the current process.
+	 * 
+	 * @param cmd The full command to execute.
+	 * @param workingDir The working directory for the process, or null to use the current working directory.
+	 * @param environment The environment variables to set, or null to inherit the current environment variables.
+	 * @param stdOut An OutputStream to send standard output to (optional).
+	 * @param stdErr An OutputStream to send error output to (optional).
+	 * @param timeout A timeout value to wait for the process to finish. If set, an exception will be thrown if
+	 * the process does not finish in time. Set to 0 to disable.
+	 * 
+	 * @return The return code of the process.
+	 * @throws InterruptedException If an interrupt was raised while waiting for the process to complete.
+	 */
 	public static int execute(String[] cmd, String workingDir, String[] environment,
 			final OutputStream stdOut, final OutputStream stdErr, int timeout) throws InterruptedException {
 
@@ -101,82 +133,36 @@ public class ProcessUtils {
 		}
 	}
 
-	/*
-	 * ***************************
-	 * System-dependent properties
-	 * ***************************
-	 *
-	 * Note that most of these are Windows-specific.
+	/**
+	 * Test if the operating system is Windows.
 	 */
-
-	private static int isSystem64bit = -1;
-	private static int physicalCoreCount = -1;
-	private static int logicalCoreCount = -1;
-
 	public static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase().contains("win");
 	}
 
+	/**
+	 * Test if the operating system is Mac OSX.
+	 */
 	public static boolean isMac() {
 		return System.getProperty("os.name").toLowerCase().contains("mac");
 	}
 	
-	public static boolean isSystem64Bit() {
-		if (isSystem64bit == -1) {
-			String output = null;
-			if (isWindows()) {
-				try {
-					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					execute(new String[]{"cmd.exe", "/c", "systeminfo"}, null, out, true, true);
-					output = out.toString();
-					Pattern pattern = Pattern.compile("System Type: *(.*)");
-					for (String line: output.split("\n")) {
-						Matcher matcher = pattern.matcher(line);
-						if (matcher.matches()) {
-							output = matcher.group(1);
-							break;
-						}
-					}
-				} catch (Throwable ignore) {
-					ignore.printStackTrace();
-				}
-			} else {
-				try {
-					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					execute(new String[]{"uname", "-m"}, null, out, true, true);
-					output = out.toString();
-				} catch (Throwable ignore) {}
-			}
-			if (output != null && output.contains("64")) {
-				isSystem64bit = 1;
-			} else {
-				isSystem64bit = 0;
-			}
-		}
-		return isSystem64bit == 1;
-	}
-
-	public static boolean isPlatform64Bit() {
-		String arch = System.getProperty("os.arch");
-		if (arch == null) return isSystem64Bit();
-		return arch.contains("64");
-	}
-
+	/**
+	 * Get the number of physical CPU cores, as reported by the operating system.
+	 */
 	public static int getPhysicalCores() {
 		if (physicalCoreCount == -1) physicalCoreCount = getNumberOfCores("NumberOfCores");
 		return physicalCoreCount;
 	}
 
+	/**
+	 * Get the number of logical CPU cores, as reported by the operating system.
+	 * This may include hyperthreads.
+	 */
 	public static int getLogicalCores() {
 		if (logicalCoreCount == -1) logicalCoreCount = getNumberOfCores("NumberOfLogicalProcessors");
 		return logicalCoreCount;
 	}
-
-	/*
-	 * **********
-	 * Non-public
-	 * **********
-	 */
 
 	private static void startChanneling(InputStream in, OutputStream out) {
 		if (in != null && out != null) {
@@ -185,15 +171,10 @@ public class ProcessUtils {
 		}
 	}
 
-	/**
-	 * Get the number of cores for the given type.
-	 *
-	 * @param typeOfCores NumberOfCores or NumberOfLogicalProcessors
-	 * @return
-	 */
 	private static int getNumberOfCores(String typeOfCores) {
 		int cores = 0;
 		try {
+			//TODO Works on Windows only. Support other operating systems.
 			ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
 			String[] cmd = { "WMIC", "CPU", "Get", typeOfCores };
 			execute(cmd, null, stdOut, true, true, 10000);

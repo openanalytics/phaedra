@@ -14,12 +14,21 @@ import eu.openanalytics.phaedra.base.util.Activator;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 
+/**
+ * A collection of Java reflection utilities.
+ */
 public class ReflectionUtils {
 
+	/**
+	 * See {@link ReflectionUtils#invoke(String, Object, Object[], Class[])}
+	 */
 	public static Object invoke(String methodName, Object object) {
 		return invoke(methodName, object, (Object[])null);
 	}
 
+	/**
+	 * See {@link ReflectionUtils#invoke(String, Object, Object[], Class[])}
+	 */
 	public static Object invoke(String methodName, Object object, Object... args) {
 		Class<?>[] argClasses = null;
 		if (args != null && args.length > 0) {
@@ -31,6 +40,16 @@ public class ReflectionUtils {
 		return invoke(methodName, object, args, argClasses);
 	}
 
+	/**
+	 * Invoke a method on an object using reflection.
+	 * Also works on protected/private methods and classes that are not exposed to the caller.
+	 * 
+	 * @param methodName The name of the method to invoke.
+	 * @param object The object to invoke the method on.
+	 * @param args The arguments to pass to the method.
+	 * @param argClasses The classes of the arguments.
+	 * @return The return value of the method invokation.
+	 */
 	public static Object invoke(String methodName, Object object, Object[] args, Class<?>[] argClasses) {
 		Object result = null;
 		if (object == null) return result;
@@ -62,7 +81,6 @@ public class ReflectionUtils {
 	 * @param wrapPrimitives	When true primitives are wrapped before determining compatibility.
 	 * @param allowSubclass		When true the given field may be a subclass of one of the field classes
 	 * @param fieldClasses		The field classes to which the field must be compatible.
-	 * @return
 	 */
 	public static boolean isCompatibleField(Field field, boolean allowStatic, boolean wrapPrimitives, boolean allowSubclass, List<Class<?>> fieldClasses) {
 		Class<?> fieldType = (wrapPrimitives && field.getType().isPrimitive()) ? ClassUtils.primitiveToWrapper(field.getType()) : field.getType();
@@ -72,12 +90,6 @@ public class ReflectionUtils {
 
 	/**
 	 * Returns the fields from the given class which are compatible with the given parameters.
-	 * @param clazz
-	 * @param allowStatic
-	 * @param allowSubclass
-	 * @param wrapPrimitives
-	 * @param fieldClasses
-	 * @return
 	 */
 	public static Collection<Field> getCompatibleFields(final Class<?> clazz, final boolean allowStatic, final boolean allowSubclass, final boolean wrapPrimitives, final List<Class<?>> fieldClasses) {
 		return Arrays.stream(clazz.getDeclaredFields())
@@ -85,6 +97,9 @@ public class ReflectionUtils {
 				.collect(Collectors.toList());
 	}
 
+	/**
+	 * Returns the static fields on the given class.
+	 */
 	public static Collection<Field> getDeclaredStaticFields(Class<?> clazz, final boolean isStatic) {
 		return Arrays.stream(clazz.getDeclaredFields())
 				.filter(field -> Modifier.isStatic(field.getModifiers()) == isStatic)
@@ -94,12 +109,6 @@ public class ReflectionUtils {
 	/**
 	 * Gets the static or non-static fields from the given class which are from the given fieldClass (or its wrapped counterpart for primitives).
 	 * If allowChild is true, also fields from classes which inherit from the given field class are allowed.
-	 *
-	 * @param clazz
-	 * @param fieldClass
-	 * @param isStatic
-	 * @param allowChild
-	 * @return
 	 */
 	public static Collection<Field> getDeclaredWrappedFields(final Class<?> clazz, final Class<?> fieldClass, final boolean isStatic, final boolean allowChild) {
 		return Arrays.stream(clazz.getDeclaredFields())

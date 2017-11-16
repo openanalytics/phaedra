@@ -29,6 +29,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+/**
+ * A collection of utilities related to XML manipulation.
+ */
 public class XmlUtils {
 
 	private static DocumentBuilderFactory xmlFactory = DocumentBuilderFactory.newInstance();
