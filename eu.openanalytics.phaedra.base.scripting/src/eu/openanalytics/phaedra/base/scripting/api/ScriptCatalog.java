@@ -20,6 +20,15 @@ import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.scripting.Activator;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 
+/**
+ * <p>
+ * The ScriptCatalog represents a catalog of scripts which
+ * are hosted on the file server and can be executed via
+ * this class.
+ * </p>
+ * This class does not allow modification or removal of scripts.
+ * Administrator privileges are required to do so.
+ */
 public class ScriptCatalog {
 	
 	private final static String FS_SUBPATH = "/script.catalog";
@@ -35,10 +44,19 @@ public class ScriptCatalog {
 		ctx.registerService(URLStreamHandlerService.class, urlHandler, urlHandler.getProperties());
 	}
 	
+	/**
+	 * Get a list of names of the available scripts in the catalog,
+	 * under the specified map. If an empty String is provided, the whole
+	 * catalog is returned.
+	 */
 	public List<String> getAvailableScripts(String map) throws IOException {
 		return listScripts(FS_SUBPATH + "/" + map);
 	}
 	
+	/**
+	 * Load the body of the named script. If the script doesn't exist,
+	 * null is returned instead.
+	 */
 	public String getScriptBody(String scriptName) throws IOException {
 		try (InputStream script = getScript(scriptName)) {
 			if (script == null) return null;
@@ -46,20 +64,44 @@ public class ScriptCatalog {
 		}
 	}
 	
+	/**
+	 * Execute the script with the specified name.
+	 * The argument array will be passed into the script as a top-level object named 'args'.
+	 * 
+	 * See also {@link ScriptCatalog#run(String, Map, boolean)}
+	 */
 	public Object run(String name, Object[] args) throws ScriptException {
 		return run(name, args, false);
 	}
 	
+	/**
+	 * Execute the script with the specified name.
+	 * The argument array will be passed into the script as a top-level object named 'args'.
+	 * 
+	 * See also {@link ScriptCatalog#run(String, Map, boolean)}
+	 */
 	public Object run(String name, Object[] args, boolean async) throws ScriptException {
 		Map<String, Object> argMap = new HashMap<>();
 		argMap.put("args", args);
 		return run(name, argMap, async);
 	}
 	
+	/**
+	 * See {@link ScriptCatalog#run(String, Map, boolean)}
+	 */
 	public Object run(String name, Map<String,Object> args) throws ScriptException {
 		return run(name, args, false);
 	}
 	
+	/**
+	 * Execute the script with the specified name.
+	 * 
+	 * @param name The name of the script (including any folder names)
+	 * @param args The arguments to pass into the script as top-level objects
+	 * @param async True to run the script in a separate thread and not wait for its outcome.
+	 * @return The return value of the script, or null if async is true.
+	 * @throws ScriptException If the script execution fails for any reason.
+	 */
 	public Object run(String name, final Map<String,Object> args, boolean async) throws ScriptException {
 		try (InputStream script = getScript(name)) {
 			if (script == null) throw new ScriptException("Script not found: " + name);
@@ -97,8 +139,9 @@ public class ScriptCatalog {
 	private List<String> listScripts(String map) throws IOException {
 		List<String> scriptFiles = new ArrayList<>();
 		for (String item: fs.dir(map)) {
-			if (fs.isDirectory(item)) scriptFiles.addAll(listScripts(""));
-			else scriptFiles.add((map + "/" + item).substring(FS_SUBPATH.length() + 1));
+			String path = map + "/" + item;
+			if (fs.isDirectory(path)) scriptFiles.addAll(listScripts(path));
+			else scriptFiles.add(path.substring(FS_SUBPATH.length() + 1));
 		}
 		return scriptFiles;
 	}

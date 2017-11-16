@@ -17,7 +17,7 @@ import eu.openanalytics.phaedra.base.scripting.engine.ScriptEngineFactory;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 
 /**
- * Provides an API to execute scripts. 
+ * API to execute scripts using any of the supported script engines.
  */
 public class ScriptService {
 
@@ -76,19 +76,32 @@ public class ScriptService {
 	 * **********
 	 */
 	
+	/**
+	 * Get the {@link ScriptCatalog} for the current environment.
+	 */
 	public ScriptCatalog getCatalog() {
 		return catalog;
 	}
 	
+	/**
+	 * Get the IDs of supported script engines.
+	 */
 	public String[] getEngineIds() {
 		return engines.stream().map(e -> e.getId()).toArray(i -> new String[i]);
 	}
 	
+	/**
+	 * Get the user-friendly name of the specified script engine.
+	 */
 	public String getEngineLabel(String id) {
 		IScriptEngine engine = getEngine(id);
 		return engine == null ? null : engine.getLabel();
 	}
 	
+	/**
+	 * Get a list of file type extensions that can be executed
+	 * by at least one of the currently supported script engines.
+	 */
 	public String[] getSupportedFileTypes() {
 		String[] types = new String[engines.size()];
 		for (int i=0; i<types.length; i++) {
@@ -97,6 +110,11 @@ public class ScriptService {
 		return types;
 	}
 	
+	/**
+	 * Given a script file name, find the ID of a script engine that
+	 * can evaluate the script. Returns null if no compatible script
+	 * engine was found.
+	 */
 	public String getEngineIdForFile(String fileName) {
 		String extension = FileUtils.getExtension(fileName);
 		if (extension == null) return null;
@@ -109,6 +127,15 @@ public class ScriptService {
 		return null;
 	}
 	
+	/**
+	 * Create a dialog that can assist the user with the creation of a script.
+	 * 
+	 * @param script The current script body that the user wants to edit in a dialog.
+	 * @param engineId The ID of the engine that supports the script language.
+	 * @param parentShell The parent shell to create the dialog under.
+	 * 
+	 * @return A script editing dialog, or null if no appropriate dialog could be created.
+	 */
 	public Dialog createScriptEditor(StringBuilder script, String engineId, Shell parentShell) {
 		IScriptEngine engine = getEngine(engineId);
 		if (engine == null) return null;
@@ -120,16 +147,39 @@ public class ScriptService {
 	 * ************************
 	 */
 
+	/**
+	 * See {@link ScriptService#executeScript(String, Map, String)}.
+	 */
 	public Object executeScript(String body, Map<String, Object> objects) throws ScriptException {
 		return executeScript(body, objects, null);
 	}
 	
+	/**
+	 * Execute a script.
+	 * 
+	 * @param body The script to execute.
+	 * @param objects Additional top-level objects to pass into the script engine.
+	 * @param engineId The ID of the script engine to evaluate the script with, or null to use the default engine.
+	 * 
+	 * @return The return value of the script, if any.
+	 * @throws ScriptException If the script execution fails for any reason.
+	 */
 	public Object executeScript(String body, Map<String, Object> objects, String engineId) throws ScriptException {
 		IScriptEngine engine = getEngine(engineId);
 		if (engine == null) throw new ScriptException("Script engine " + engineId + " not found.");
 		return engine.eval(body, objects);
 	}
 	
+	/**
+	 * Execute a script from a file. An appropriate script engine will be searched for
+	 * using the file's extension.
+	 * 
+	 * @param path The path of the script file to execute.
+	 * @param objects Additional top-level objects to pass into the script engine.
+	 * 
+	 * @return The return value of the script, if any.
+	 * @throws ScriptException If the script execution fails for any reason.
+	 */
 	public Object executeScriptFile(String path, Map<String, Object> objects) throws ScriptException {
 		String engineId = getEngineIdForFile(path);
 		IScriptEngine engine = getEngine(engineId);
