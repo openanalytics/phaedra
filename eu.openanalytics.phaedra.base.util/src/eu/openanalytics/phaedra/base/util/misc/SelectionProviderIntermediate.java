@@ -8,11 +8,16 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 
+/**
+ * Utility to have one part work with multiple selection providers (e.g. multiple tabs in an editor).
+ * Listeners have to be added only once, and when the active provider should change, the part can call
+ * {@link setSelectionProviderDelegate}.
+ */
 public class SelectionProviderIntermediate implements IPostSelectionProvider {
 
-	private final ListenerList selectionListeners = new ListenerList();
+	private final ListenerList<ISelectionChangedListener> selectionListeners = new ListenerList<>();
 
-	private final ListenerList postSelectionListeners = new ListenerList();
+	private final ListenerList<ISelectionChangedListener> postSelectionListeners = new ListenerList<>();
 
 	private ISelectionProvider delegate;
 
@@ -84,7 +89,7 @@ public class SelectionProviderIntermediate implements IPostSelectionProvider {
 		fireSelectionChanged(postSelectionListeners, selection);
 	}
 
-	private void fireSelectionChanged(ListenerList list, ISelection selection) {
+	private void fireSelectionChanged(ListenerList<ISelectionChangedListener> list, ISelection selection) {
 		SelectionChangedEvent event = new SelectionChangedEvent(delegate, selection);
 		Object[] listeners = list.getListeners();
 		for (int i = 0; i < listeners.length; i++) {

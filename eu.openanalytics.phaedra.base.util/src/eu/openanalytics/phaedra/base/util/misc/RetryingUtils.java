@@ -5,6 +5,9 @@ import java.io.InputStream;
 
 import org.apache.log4j.Logger;
 
+/**
+ * Utility to re-try a task multiple times in case of failure.
+ */
 public class RetryingUtils {
 
 	private static Logger log = Logger.getLogger(RetryingUtils.class);

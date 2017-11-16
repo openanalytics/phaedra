@@ -17,12 +17,22 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 
+/**
+ * A collection of utilities related to JFace selection events.
+ */
 public class SelectionUtils {
 
+	/**
+	 * Get the first element of a selection that matches the specified class.
+	 * Both casting and adapting will be attempted.
+	 */
 	public static <E> E getFirstObject(ISelection selection, Class<E> clazz) {
 		return getFirstObject(selection, clazz, true);
 	}
 
+	/**
+	 * Get the first element of a selection that matches the specified class.
+	 */
 	public static <E> E getFirstObject(ISelection selection, Class<E> clazz, boolean allowAdapting) {
 		E element = null;
 		if (selection instanceof IStructuredSelection) {
@@ -32,10 +42,17 @@ public class SelectionUtils {
 		return element;
 	}
 
+	/**
+	 * Get all elements of a selection that match the specified class.
+	 * Both casting and adapting will be attempted.
+	 */
 	public static <E> List<E> getObjects(ISelection selection, Class<E> clazz) {
 		return getObjects(selection, clazz, true);
 	}
 
+	/**
+	 * Get all elements of a selection that match the specified class.
+	 */
 	public static <E> List<E> getObjects(ISelection selection, Class<E> clazz, boolean allowAdapting) {
 		Set<E> elements = new LinkedHashSet<>();
 		if (selection instanceof IStructuredSelection) {
@@ -48,10 +65,17 @@ public class SelectionUtils {
 		return new ArrayList<>(elements);
 	}
 
+	/**
+	 * Attempt to convert the given object to the given class.
+	 * Both casting and adapting will be attempted.
+	 */
 	public static <E> E getAsClass(Object o, Class<E> clazz) {
 		return getAsClass(o, clazz, true);
 	}
 
+	/**
+	 * Attempt to convert the given object to the given class.
+	 */
 	@SuppressWarnings("unchecked")
 	public static <E> E getAsClass(Object o, Class<E> clazz, boolean allowAdapting) {
 		if (clazz.isAssignableFrom(o.getClass())) {
@@ -64,6 +88,10 @@ public class SelectionUtils {
 		return null;
 	}
 
+	/**
+	 * Attempt to convert the given array of objects to the given class.
+	 * Both casting and adapting will be attempted.
+	 */
 	public static <E> List<E> getAsClass(Object[] objects, Class<E> clazz) {
 		List<E> results = new ArrayList<>();
 		if (objects == null) return results;
@@ -74,6 +102,10 @@ public class SelectionUtils {
 		return results;
 	}
 
+	/**
+	 * Attempt to convert the given collection of objects to the given class.
+	 * Both casting and adapting will be attempted.
+	 */
 	public static <E> List<E> getAsClass(Collection<?> o, Class<E> clazz) {
 		List<E> results = new ArrayList<>();
 		if (o == null || o.isEmpty()) return results;
@@ -85,6 +117,11 @@ public class SelectionUtils {
 		return results;
 	}
 
+	/**
+	 * Get the first element of the collection that matches the given class.
+	 * Both casting and adapting will be attempted.
+	 * Note: if the first element doesn't match, the next will be attempted.
+	 */
 	public static <E> E getFirstAsClass(Collection<?> o, Class<E> clazz) {
 		if (o == null || o.isEmpty()) return null;
 		Iterator<?> it = o.iterator();
@@ -96,9 +133,8 @@ public class SelectionUtils {
 	}
 
 	/**
-	 * Obtain an initial selection for given listener(s).
-	 *
-	 * @param listeners One or more listeners.
+	 * Obtain an initial selection for the given listeners.
+	 * The initial selection will be retrieved from the active workbench part, if any.
 	 */
 	public static void triggerActiveSelection(ISelectionListener... listeners) {
 		try {
@@ -113,6 +149,10 @@ public class SelectionUtils {
 		}
 	}
 
+	/**
+	 * Obtain an initial selection for the given listeners.
+	 * The initial selection will be retrieved from the active editor, if any.
+	 */
 	public static void triggerActiveEditorSelection(ISelectionListener... listeners) {
 		try {
 			IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
