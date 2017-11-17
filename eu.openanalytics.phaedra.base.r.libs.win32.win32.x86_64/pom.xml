@@ -19,7 +19,7 @@
 				<version>1.7</version>
 				<executions>
 					<execution>
-						<phase>generate-resources</phase>
+						<phase>prepare-package</phase>
 						<configuration>
 							<target>
 								<copy todir="user-libs" overwrite="true" force="true">
