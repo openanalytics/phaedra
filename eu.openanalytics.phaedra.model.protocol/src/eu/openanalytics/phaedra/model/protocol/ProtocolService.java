@@ -40,8 +40,9 @@ import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 /**
- * This service controls the creation, retrieval and modification of Protocols and their related objects:
- * Protocol Classes, Features, Feature Groups.
+ * API for interaction with protocols and protocol classes.
+ * This includes creation, retrieval and modification of protocols, protocol classes
+ * and features.
  */
 public class ProtocolService extends BaseJPAService {
 
@@ -63,19 +64,10 @@ public class ProtocolService extends BaseJPAService {
 		return instance;
 	}
 
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
-	/*
-	 * **********
-	 * Public API
-	 * **********
-	 */
-
 	/**
-	 * Get an alphabetical list of all available well types (a.k.a. well roles).
+	 * Get a list of all configured well types.
+	 * 
+	 * @return An alphabetical list of all known well types.
 	 */
 	public List<WellType> getWellTypes() {
 		return streamableList(getList(WellType.class)).stream()
@@ -88,38 +80,71 @@ public class ProtocolService extends BaseJPAService {
 				.collect(Collectors.toList());
 	}
 
-	/* Feature groups
-	 * **************
-	 */
-
 	/**
-	 * Get an alphabetical list of all feature groups (default and custom groups) for
-	 * a given protocol class and group type (well or subwell).
+	 * Get a list of all feature groups in the given protocol class of the given type.
+	 * 
+	 * @param pClass The parent protocol class.
+	 * @param groupType The type of group: well or subwell.
+	 * @return An alphabetical list of matching groups.
 	 */
 	public List<FeatureGroup> getAllFeatureGroups(ProtocolClass pClass, GroupType groupType) {
 		return featureGroupManager.getGroups(pClass, groupType, true);
 	}
 	
 	/**
-	 * Get an alphabetical list of the custom feature groups for
-	 * a given protocol class and group type (well or subwell).
+	 * Get a list of custom feature groups in the given protocol class of the given type.
+	 * Custom feature groups are groups that were created by users, excluding the default
+	 * groups (All, Key, etc).
+	 * 
+	 * @param pClass The parent protocol class.
+	 * @param groupType The type of group: well or subwell.
+	 * @return An alphabetical list of matching groups.
 	 */
 	public List<FeatureGroup> getCustomFeatureGroups(ProtocolClass pClass, GroupType groupType) {
 		return featureGroupManager.getGroups(pClass, groupType, false);
 	}
 	
+	/**
+	 * Get a feature group by its name.
+	 * 
+	 * @param pClass The parent protocol class.
+	 * @param groupType The type of group: well or subwell.
+	 * @param name The name of the group.
+	 * @return The matching group, or null if no match was found.
+	 */
 	public FeatureGroup getFeatureGroup(ProtocolClass pClass, GroupType groupType, String name) {
 		return featureGroupManager.getGroup(pClass, groupType, name);
 	}
 	
+	/**
+	 * Check if the given feature is member of the given feature group.
+	 *  
+	 * @param feature The feature to test.
+	 * @param group The group to look in.
+	 * @return True if the feature is a member of the given group.
+	 */
 	public boolean isMember(IFeature feature, FeatureGroup group) {
 		return featureGroupManager.isMember(feature, group);
 	}
 
+	/**
+	 * List all the features of the given feature group.
+	 * 
+	 * @param group The group to list features for.
+	 * @return A list of features in the given group.
+	 */
 	public <F extends IFeature> List<F> getMembers(FeatureGroup group) {
 		return featureGroupManager.getMembers(group);
 	}
 
+	/**
+	 * Create a new feature group. Make sure to  call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
+	 * 
+	 * @param pClass The parent protocol class.
+	 * @param type The type of group to create: well or subwell.
+	 * @param name The name for the new group.
+	 * @return A newly created feature group, not yet saved.
+	 */
 	public FeatureGroup createFeatureGroup(ProtocolClass pClass, GroupType type, String name) {
 		FeatureGroup fGroup = new FeatureGroup();
 		fGroup.setName(name);
@@ -129,12 +154,10 @@ public class ProtocolService extends BaseJPAService {
 		return fGroup;
 	}
 
-	/* Protocol classes
-	 * ****************
-	 */
-
 	/**
-	 * Get a list of all protocol classes that are visible to the current user.
+	 * Get a list of all protocol classes the current user has access to.
+	 * 
+	 * @return A list of all protocol classes.
 	 */
 	public List<ProtocolClass> getProtocolClasses() {
 		return streamableList(getList(ProtocolClass.class)).stream()
@@ -143,7 +166,10 @@ public class ProtocolService extends BaseJPAService {
 	}
 
 	/**
-	 * Get the protocol class with the given id, if the current user has access to it.
+	 * Retrieve a protocol class by its primary ID.
+	 * 
+	 * @param protocolClassId The primary ID of the protocol class to retrieve.
+	 * @return The matching protocol class, or null if no match was found.
 	 */
 	public ProtocolClass getProtocolClass(long protocolClassId) {
 		ProtocolClass pc = getEntityManager().find(ProtocolClass.class, protocolClassId);
@@ -151,6 +177,11 @@ public class ProtocolService extends BaseJPAService {
 		return pc;
 	}
 
+	/**
+	 * Create a new protocol class. Make sure to call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
+	 * 
+	 * @return A new protocol class, not yet saved.
+	 */
 	public ProtocolClass createProtocolClass() {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOLCLASS_CREATE, null);
 		// Note: the security check is performed when the user attempts to save.
@@ -172,6 +203,18 @@ public class ProtocolService extends BaseJPAService {
 		return pClass;
 	}
 
+	/**
+	 * Create a full copy of an existing protocol class. This includes:
+	 * <ul>
+	 * <li>All the well and subwell feature configurations</li>
+	 * <li>All image channels</li>
+	 * <li>Data capture configuration</li>
+	 * </ul>
+	 * Note that this will <b>not</b> copy the experiments and plates of the underlying protocols.
+	 * 
+	 * @param protocolClass The protocol class to clone.
+	 * @return A new copy of the protocol class.
+	 */
 	public ProtocolClass cloneProtocolClass(ProtocolClass protocolClass) {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOLCLASS_CREATE, null);
 		ProtocolClass clone = createProtocolClass();
@@ -191,31 +234,69 @@ public class ProtocolService extends BaseJPAService {
 		return clone;
 	}
 	
+	/**
+	 * Get the path to the data capture configuration file with the given ID.
+	 * 
+	 * @param configId The ID of the config file to look up.
+	 * @return A path to the config file, relative to the file server root.
+	 */
 	public String getDCConfigFile(String configId) {
 		//TODO This path is an implementation detail of the DC bundles, see eu.openanalytics.phaedra.datacapture.module.ModuleFactory
 		String path = "/data.capture.configurations/%s.xml";
 		return String.format(path, configId);
 	}
 	
+	/**
+	 * Save any changes made to a protocol class. This includes the feature and image channel configurations.
+	 * 
+	 * @param protocolClass The protocol class to update.
+	 */
 	public void updateProtocolClass(ProtocolClass protocolClass) {
 		checkCanEditProtocolClass(protocolClass);
 		validateProtocolClass(protocolClass);
 		save(protocolClass);
 	}
 
+	/**
+	 * Delete a protocol class.
+	 * <p>
+	 * <b>Important:</b> this will permanently delete all configuration,
+	 * as well as all experiments and plates for the given protocol class.
+	 * </p>
+	 * @param protocolClass The protocol class to delete.
+	 */
 	public void deleteProtocolClass(ProtocolClass protocolClass) {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOLCLASS_DELETE, protocolClass);
 		delete(protocolClass);
 	}
 
+	/**
+	 * Check if the current user has permission to edit the given protocol class.
+	 * If not, an exception will be thrown.
+	 * 
+	 * @param protocolClass The protocol class to check.
+	 */
 	public void checkCanEditProtocolClass(ProtocolClass protocolClass) {
 		if (!canEditProtocolClass(protocolClass)) throw new PermissionDeniedException("No permission to update Protocol Class");
 	}
 	
+	/**
+	 * Check if the current user has permission to edit the given protocol class.
+	 * 
+	 * @param protocolClass The protocol class to check.
+	 * @return True if the current user has permission.
+	 */
 	public boolean canEditProtocolClass(ProtocolClass protocolClass) {
 		return canEditProtocolClass(SecurityService.getInstance().getCurrentUserName(), protocolClass);
 	}
 
+	/**
+	 * Check if the given user has permission to edit the given protocol class.
+	 * 
+	 * @param userName The username to check.
+	 * @param protocolClass The protocol class to check.
+	 * @return True if the given user has permission.
+	 */
 	public boolean canEditProtocolClass(String userName, ProtocolClass protocolClass) {
 		SecurityService security = SecurityService.getInstance();
 		boolean isAdmin = security.isGlobalAdmin(userName);
@@ -228,6 +309,16 @@ public class ProtocolService extends BaseJPAService {
 		return false;
 	}
 
+	/**
+	 * Validate the current settings of the given protocol class.
+	 * <p>
+	 * This will check for duplicate feature names, and other constraints
+	 * such as max feature name length.
+	 * </p>
+	 * This method is automatically called before attempting to save a protocol class.
+	 * 
+	 * @param protocolClass The protocol class to check.
+	 */
 	public void validateProtocolClass(ProtocolClass protocolClass) {
 		// Ensure the protocol class has no duplicate feature names.
 		Set<String> featureNames = new HashSet<String>();
@@ -256,6 +347,14 @@ public class ProtocolService extends BaseJPAService {
 		if (feature != null) throw new RuntimeException("Feature alias too long: " + feature.getName());
 	}
 
+	/**
+	 * Get a summary of a protocol class.
+	 * <p>
+	 * The summary contains an overview of the number of protocols, features, and image channels.
+	 * </p>
+	 * @param pClass The protocol class to get a summary for.
+	 * @return A protocol class summary object.
+	 */
 	public ProtocolClassSummary getProtocolClassSummary(ProtocolClass pClass) {
 		ProtocolClassSummary summary = new ProtocolClassSummary();
 
@@ -288,12 +387,10 @@ public class ProtocolService extends BaseJPAService {
 		return summary;
 	}
 
-	/* Protocols
-	 * *********
-	 */
-
 	/**
-	 * Get a list of all protocols that are visible to the current user.
+	 * Get a list of all protocols the current user has access to.
+	 * 
+	 * @return A list of accessible protocols.
 	 */
 	public List<Protocol> getProtocols() {
 		return streamableList(getList(Protocol.class)).stream()
@@ -302,7 +399,10 @@ public class ProtocolService extends BaseJPAService {
 	}
 
 	/**
-	 * Get a list of all protocols in the specified protocol class that are visible to the current user.
+	 * Get a list of all accessible protocols for the given protocol class.
+	 * 
+	 * @param pClass The protocol class to get protocols for.
+	 * @return A list of accessible protocols.
 	 */
 	public List<Protocol> getProtocols(ProtocolClass pClass) {
 		String query = "select p from Protocol p where p.protocolClass = ?1";
@@ -312,7 +412,10 @@ public class ProtocolService extends BaseJPAService {
 	}
 
 	/**
-	 * Get the protocol with the given id, if the current user has access to it.
+	 * Retrieve the protocol with the given primary ID.
+	 * 
+	 * @param protocolId The ID of the protocol to retrieve.
+	 * @return The matching protocol, or null if no match was found.
 	 */
 	public Protocol getProtocol(long protocolId) {
 		Protocol p = getEntityManager().find(Protocol.class, protocolId);
@@ -320,6 +423,12 @@ public class ProtocolService extends BaseJPAService {
 		return p;
 	}
 
+	/**
+	 * Get all accessible protocol(s) that match the given name.
+	 * 
+	 * @param protocolName The name of the protocol(s) to retrieve.
+	 * @return The matching protocols.
+	 */
 	public List<Protocol> getProtocolsByName(String protocolName) {
 		String query = "select p from Protocol p where p.name = ?1";
 		return streamableList(getList(query, Protocol.class, protocolName)).stream()
@@ -327,6 +436,13 @@ public class ProtocolService extends BaseJPAService {
 				.collect(Collectors.toList());
 	}
 
+	/**
+	 * Create a new protocol under the given protocol class.
+	 * Make sure to call {@link ProtocolService#updateProtocol(Protocol)} afterwards.
+	 * 
+	 * @param protocolClass The parent protocol class.
+	 * @return A new protocol, not yet saved.
+	 */
 	public Protocol createProtocol(ProtocolClass protocolClass) {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOL_CREATE, protocolClass);
 		Protocol p = new Protocol();
@@ -337,20 +453,34 @@ public class ProtocolService extends BaseJPAService {
 		return p;
 	}
 
+	/**
+	 * Save any changes made to a protocol.
+	 * 
+	 * @param protocol The protocol to update.
+	 */
 	public void updateProtocol(Protocol protocol) {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOL_EDIT, protocol);
 		save(protocol);
 	}
 
+	/**
+	 * Delete a protocol.
+	 * <p>
+	 * <b>Important:</b> this will permanently delete all experiments and plates for the given protocol.
+	 * </p>
+	 * @param protocol The protocol to delete.
+	 */
 	public void deleteProtocol(Protocol protocol) {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOL_DELETE, protocol);
 		delete(protocol);
 	}
 
-	/* Features
-	 * ********
+	/**
+	 * Create a new well feature. Make sure to call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
+	 * 
+	 * @param pClass The protocol class to create the feature in.
+	 * @return The newly created feature.
 	 */
-
 	public Feature createFeature(ProtocolClass pClass) {
 		checkCanEditProtocolClass(pClass);
 		Feature feature = new Feature();
@@ -368,12 +498,24 @@ public class ProtocolService extends BaseJPAService {
 		return feature;
 	}
 
+	/**
+	 * Retrieve a well feature by its primary ID.
+	 * 
+	 * @param featureId The ID of the feature.
+	 * @return The matching feature, or null if no match was found.
+	 */
 	public Feature getFeature(long featureId) {
 		Feature f = getEntity(Feature.class, featureId);
 		if (!SecurityService.getInstance().check(Permissions.PROTOCOLCLASS_OPEN, f)) return null;
 		return f;
 	}
 
+	/**
+	 * Create a new subwell feature. Make sure to call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
+	 * 
+	 * @param pClass The protocol class to create the feature in.
+	 * @return The newly created feature.
+	 */
 	public SubWellFeature createSubWellFeature(ProtocolClass pClass) {
 		checkCanEditProtocolClass(pClass);
 		SubWellFeature feature = new SubWellFeature();
@@ -385,6 +527,12 @@ public class ProtocolService extends BaseJPAService {
 		return feature;
 	}
 
+	/**
+	 * Retrieve a subwell feature by its primary ID.
+	 * 
+	 * @param featureId The ID of the feature.
+	 * @return The matching feature, or null if no match was found.
+	 */
 	public SubWellFeature getSubWellFeature(long featureId) {
 		SubWellFeature f = getEntity(SubWellFeature.class, featureId);
 		//TODO Causes a big performance issue, because this method may be called many times in succession.
@@ -392,6 +540,12 @@ public class ProtocolService extends BaseJPAService {
 		return f;
 	}
 
+	/**
+	 * Create a new feature class for classification features.
+	 * Make sure to call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
+	 * 
+	 * @return The new class, not yet saved.
+	 */
 	public FeatureClass createFeatureClass() {
 		FeatureClass fClass = new FeatureClass();
 		fClass.setPattern("1");
@@ -402,6 +556,16 @@ public class ProtocolService extends BaseJPAService {
 		return fClass;
 	}
 
+	/**
+	 * Create a new image channel for a protocol class.
+	 * Make sure to call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
+	 * <p>
+	 * <b>Important:</b> do not create or remove channels in a protocol class that already contains plate data.
+	 * This will corrupt the plate's image data.
+	 * </p>
+	 * @param settings The settings for the new channel.
+	 * @return The new image channel, not yet saved.
+	 */
 	public ImageChannel createChannel(ImageSettings settings) {
 		ImageChannel channel = new ImageChannel();
 		channel.setName("New Channel");
@@ -415,12 +579,6 @@ public class ProtocolService extends BaseJPAService {
 		channel.setChannelConfig(new HashMap<String,String>());
 		return channel;
 	}
-
-	/*
-	 * **************
-	 * Event handling
-	 * **************
-	 */
 
 	protected void fire(ModelEventType type, Object object, int status) {
 		ModelEvent event = new ModelEvent(object, type, status);
@@ -443,4 +601,8 @@ public class ProtocolService extends BaseJPAService {
 		fire(ModelEventType.ObjectRemoved, o, 0);
 	}
 
+	@Override
+	protected EntityManager getEntityManager() {
+		return Screening.getEnvironment().getEntityManager();
+	}
 }

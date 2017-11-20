@@ -4,6 +4,19 @@ import java.util.Arrays;
 
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 
+/**
+ * Dose-response curves can be grouped on specific properties (which are just regular well features).
+ * <p>
+ * E.g. suppose that a plate contains 10 samples of a compound at various concentrations. 5 samples are infected with a virus
+ * and the 5 other samples are not. An additional well feature named 'Virus' represents this infection property.
+ * </p>
+ * <p>
+ * Without grouping, these 10 samples would be fit onto a single dose-response curve for each feature being fit.
+ * </p>
+ * <p>
+ * With grouping by 'Virus', each feature being fit would result in 2 dose-response curves for these 10 samples.
+ * </p>
+ */
 public class CurveGrouping {
 
 	private String[] keys = EMPTY;

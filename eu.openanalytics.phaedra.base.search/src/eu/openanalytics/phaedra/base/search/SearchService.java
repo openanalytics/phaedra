@@ -27,6 +27,14 @@ import eu.openanalytics.phaedra.base.search.model.QueryFilter;
 import eu.openanalytics.phaedra.base.search.model.QueryModel;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 
+/**
+ * API to interact with queries. This includes:
+ * <ul>
+ * <li>Executing ad-hoc or saved queries</li>
+ * <li>Saving, updating and deleting queries</li>
+ * <li>Retrieving saved queries</li>
+ * </ul>
+ */
 public final class SearchService extends BaseJPAService {
 	
 	private static final SearchService INSTANCE = new SearchService();
@@ -45,10 +53,6 @@ public final class SearchService extends BaseJPAService {
 	
 	public static SearchService getInstance() {
 		return INSTANCE;
-	}
-	
-	private IQueryBuilderFactory getQueryBuilderFactory(Class<? extends PlatformObject> clazz) {
-		return (IQueryBuilderFactory) QueryBuilderFactoryRegistry.getInstance().getQueryBuilderFactory(clazz);
 	}
 	
 	/**
@@ -144,11 +148,6 @@ public final class SearchService extends BaseJPAService {
 		else return results.get(0);
 	}
 	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
 	/**
 	 * Returns a saved query by id.
 	 * @param id
@@ -228,5 +227,14 @@ public final class SearchService extends BaseJPAService {
 	 */
 	public int getSimilarQueryCount(String queryName) {
 		return getEntityManager().createNamedQuery(QueryModel.NAMED_QUERY_GET_SIMILAR_QUERIES).setParameter("name", queryName).setParameter("owner", SecurityService.getInstance().getCurrentUserName()).getResultList().size();
+	}
+	
+	@Override
+	protected EntityManager getEntityManager() {
+		return Screening.getEnvironment().getEntityManager();
+	}
+	
+	private IQueryBuilderFactory getQueryBuilderFactory(Class<? extends PlatformObject> clazz) {
+		return (IQueryBuilderFactory) QueryBuilderFactoryRegistry.getInstance().getQueryBuilderFactory(clazz);
 	}
 }

@@ -3,6 +3,11 @@ package eu.openanalytics.phaedra.datacapture.parser.model;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * An in-memory representation of a parsed plate.
+ * A ParsedPlate may contain a set of {@link ParsedWell}s,
+ * plus an optional map of key-value plate properties.
+ */
 public class ParsedPlate {
 
 	private Map<String,ParsedWell> wells;

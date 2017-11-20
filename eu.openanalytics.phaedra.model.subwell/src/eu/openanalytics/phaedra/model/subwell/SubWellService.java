@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
+import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.environment.prefs.PrefUtils;
 import eu.openanalytics.phaedra.base.environment.prefs.Prefs;
@@ -31,15 +32,22 @@ import eu.openanalytics.phaedra.model.subwell.util.SubWellModificationTransactio
 import eu.openanalytics.phaedra.validation.ValidationUtils;
 
 /**
- * This service allows interaction with subwell data: reading, writing, updating.
- * Subwell data is stored internally in HDF5 format, and Phaedra supports two types of data:
- * numeric (32bit float) and String.
+ * API for interaction with subwell data. This includes retrieving data and writing or updating data.
+ * Subwell data can either be numeric (32bit floating point) or text (String of any length).
+ * <p>
+ * For performance reasons, subwell data is always returned in arrays. There is one array per well
+ * per feature, and the length of the array is equal to the number of subwell items in that well.
+ * The array is sorted, so that the id of the subwell item is equal to its index in the array.
+ * </p>
+ * <p>
+ * All data that is retrieved once, is cached for future lookups.
+ * See {@link CacheService} for more information about caching.
+ * </p>
  */
 public class SubWellService  {
 
 	private static SubWellService instance = new SubWellService();
 
-	private boolean eagerLoading = true;
 	private SubWellDataCache cache;
 
 	private boolean useParallelReading;
@@ -57,12 +65,14 @@ public class SubWellService  {
 		return instance;
 	}
 
-	/*
-	 * ********
-	 * Read API
-	 * ********
+	/**
+	 * Get a sample subwell feature that has at least one point of subwell data.
+	 * This can be used to determine the count of subwell items in a well, as all
+	 * features should have the same amount of data for any given well.
+	 * 
+	 * @param well The well to retrieve a sample feature for.
+	 * @return A sample feature, or null if no feature has data for this well.
 	 */
-
 	public SubWellFeature getSampleFeature(Well well) {
 		HDF5File hdf5File = null;
 		try {
@@ -81,6 +91,13 @@ public class SubWellService  {
 		return null;
 	}
 
+	/**
+	 * Get the data of a feature for a well, be it text or numeric.
+	 * 
+	 * @param well The well to retrieve data for.
+	 * @param feature The subwell feature to retrieve data for.
+	 * @return The data, either a String array, a float array, or null.
+	 */
 	public Object getAnyData(Well well, SubWellFeature feature) {
 		if (well == null || feature == null) return null;
 
@@ -129,32 +146,50 @@ public class SubWellService  {
 		}
 	}
 
+	/**
+	 * Get the numeric data of a feature for a well.
+	 * 
+	 * @param well The well to retrieve data for.
+	 * @param feature The name of the subwell feature to retrieve data for.
+	 * @return The numeric data, or null if the well has no data for this feature.
+	 */
 	public Object getNumericData(Well well, String feature) {
 		ProtocolClass pClass = PlateUtils.getProtocolClass(well);
 		SubWellFeature f = ProtocolUtils.getSubWellFeatureByName(feature, pClass);
 		return getNumericData(well, f);
 	}
 
+	/**
+	 * Get the numeric data of a feature for a well.
+	 * Eager loading will be attempted. See {@link SubWellService#getNumericData(Well, SubWellFeature, boolean)}.
+	 * 
+	 * @param well The well to retrieve data for.
+	 * @param feature The subwell feature to retrieve data for.
+	 * @return The numeric data, or null if the well has no data for this feature.
+	 */
 	public float[] getNumericData(Well well, SubWellFeature feature) {
-		return getNumericData(well, feature, 0);
+		return getNumericData(well, feature, true);
 	}
 
-	public float[] getNumericData(Well well, SubWellFeature feature, int timepoint) {
-		return getNumericData(well, feature, 0, eagerLoading);
-	}
-
-	public float[] getNumericData(Well well, SubWellFeature feature, int timepoint, boolean eager) {
+	/**
+	 * Get the numeric data of a feature for a well.
+	 * 
+	 * @param well The well to retrieve data for.
+	 * @param feature The subwell feature to retrieve data for.
+	 * @param eager True to perform eager loading: pre-load all data for this well.
+	 * @return The numeric data, or null if the well has no data for this feature.
+	 */
+	public float[] getNumericData(Well well, SubWellFeature feature, boolean eager) {
 		if (well == null || feature == null) return null;
 
-		//TODO Enable caching for timepoint data.
-		if (cache.isCached(well, feature) && timepoint <= 0) {
+		if (cache.isCached(well, feature)) {
 			if (cache.isNumeric(well, feature)) return cache.getNumericData(well, feature);
 			else return null;
 		}
 
 		synchronized (well.getPlate()) {
 			// Check cache again: maybe another thread filled the cache while we were waiting for synchronization.
-			if (cache.isCached(well, feature) && timepoint <= 0) {
+			if (cache.isCached(well, feature)) {
 				if (cache.isNumeric(well, feature)) return cache.getNumericData(well, feature);
 				else return null;
 			}
@@ -178,19 +213,19 @@ public class SubWellService  {
 							if (cached) {
 								data = cache.getNumericData(well, f);
 							} else {
-								data = loadNumericData(hdf5File, f, wellNr, timepoint);
+								data = loadNumericData(hdf5File, f, wellNr, 0);
 								cache.putData(well, f, data);
 							}
 							if (f.equals(feature)) dataToReturn = data;
 						} else if (!cached) {
-							String[] data = loadStringData(hdf5File, f, wellNr, timepoint);
+							String[] data = loadStringData(hdf5File, f, wellNr, 0);
 							cache.putData(well, f, data);
 						}
 					}
 					return dataToReturn;
 				} else {
 					// Lazy loading: load only this feature for this well.
-					float[] data = loadNumericData(hdf5File, feature, wellNr, timepoint);
+					float[] data = loadNumericData(hdf5File, feature, wellNr, 0);
 					cache.putData(well, feature, data);
 					return data;
 				}
@@ -203,6 +238,14 @@ public class SubWellService  {
 		}
 	}
 
+	/**
+	 * Load a set of 2-dimensional (single-cell, timepoint-based) subwell data.
+	 * 
+	 * @deprecated Phaedra does not fully support 2D subwell data.
+	 * @param well The well to retrieve data for.
+	 * @param feature The subwell feature to retrieve data for.
+	 * @return The 2D numeric data, or null if the well has no 2D data for this feature.
+	 */
 	public float[][] getNumericData2D(Well well, SubWellFeature feature) {
 		if (well == null || feature == null) return null;
 
@@ -230,12 +273,26 @@ public class SubWellService  {
 		}
 	}
 
+	/**
+	 * Get the String data of a feature for a well.
+	 * 
+	 * @param well The well to retrieve data for.
+	 * @param feature The name of the subwell feature to retrieve data for.
+	 * @return The String data, or null if the well has no data for this feature.
+	 */
 	public Object getStringData(Well well, String feature) {
 		ProtocolClass pClass = PlateUtils.getProtocolClass(well);
 		SubWellFeature f = ProtocolUtils.getSubWellFeatureByName(feature, pClass);
 		return getStringData(well, f);
 	}
 
+	/**
+	 * Get the String data of a feature for a well.
+	 * 
+	 * @param well The well to retrieve data for.
+	 * @param feature The subwell feature to retrieve data for.
+	 * @return The String data, or null if the well has no data for this feature.
+	 */
 	public String[] getStringData(Well well, SubWellFeature feature) {
 		if (well == null || feature == null) return null;
 
@@ -277,32 +334,13 @@ public class SubWellService  {
 		}
 	}
 
-	public float[] getPropertyFloatArray(Plate plate, SubWellFeature feature, String property) {
-		if (plate == null || feature == null && property == null) return null;
-		HDF5File hdf5File = null;
-		try {
-			hdf5File = getDataFile(plate);
-			if (hdf5File == null) return new float[0];
-			String path = HDF5File.getSubWellDataPath() + "/" + feature.getName();
-			if(!hdf5File.exists(path)) return null;
-			if(!hdf5File.existsAttribute(path, property)) return null;
-			return hdf5File.getAttributeFloatArray(path, property);
-
-		} finally {
-			if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
-		}
-	}
-
 	/**
-	 * Will return the size for the first available Feature.
-	 * By using the getDataDimensions(String path) method it can retrieve the size without actually reading the data.
-	 *
-	 * Warning: While this feature is a lot faster, the returned number of cells could be lower than the actual value.
-	 *
-	 * @param well
-	 * @return
+	 * Get the number of subwell items for a given well.
+	 * 
+	 * @param well The well whose number of subwell items should be retrieved.
+	 * @return The number of subwell items in the well, possibly 0.
 	 */
-	public int getFastNumberOfCells(Well well) {
+	public int getNumberOfCells(Well well) {
 		if (well == null || !well.getPlate().isSubWellDataAvailable()) return 0;
 
 		ProtocolClass pClass = PlateUtils.getProtocolClass(well);
@@ -344,68 +382,14 @@ public class SubWellService  {
 	}
 
 	/**
-	 * This method will return the size of the largest Feature data array.
-	 * By using the getDataDimensions(String path) method it can retrieve the size without actually reading the data.
-	 *
-	 * Only use this if you need the largest size of all the Subwell Data without actually needing the data.
-	 *
-	 * @param well
-	 * @return
+	 * Preload the data for a set of wells and a set of features.
+	 * The data will be cached so that future lookups will be very fast.
+	 * This may offer better performance than loading the data one well or one feature at a time.
+	 * 
+	 * @param wells The wells to preload data for.
+	 * @param features The features to preload data for.
+	 * @param monitor A progress monitor that will be updated during the load (optional)
 	 */
-	public int getNumberOfCells(Well well) {
-		if (well == null || !well.getPlate().isSubWellDataAvailable()) return 0;
-
-		ProtocolClass pClass = PlateUtils.getProtocolClass(well);
-
-		if (!pClass.isMultiDimensionalSubwellData()) {
-			// All SW Features have the same size.
-			return getFastNumberOfCells(well);
-		}
-
-		HDF5File hdf5File = null;
-		try {
-			int rows = 0;
-			for (SubWellFeature feature : pClass.getSubWellFeatures()) {
-				// If the data was already cached, use it
-				if (cache.isCached(well, feature)) {
-					int size = 0;
-					if (cache.isNumeric(well, feature)) {
-						float[] data = cache.getNumericData(well, feature);
-						if (data != null) size = data.length;
-					} else {
-						String[] data = cache.getStringData(well, feature);
-						if (data != null) size = data.length;
-					}
-					rows = Math.max(rows, size);
-				} else {
-					if (hdf5File == null) {
-						hdf5File = getDataFile(well.getPlate());
-						if (hdf5File == null) return 0;
-					}
-
-					int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-					String featureId = feature.getName();
-					boolean dataExists = hdf5File.existsSubWellData(featureId, wellNr);
-					if (dataExists) {
-						String path = HDF5File.getSubWellDataPath(wellNr, featureId);
-						long[] dims = hdf5File.getDataDimensions(path);
-						if (dims.length > 0) {
-							rows = Math.max(rows, (int) dims[0]);
-						}
-					}
-				}
-			}
-
-			return rows;
-		} finally {
-			if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
-		}
-	}
-
-	public void preloadData(Plate plate, List<SubWellFeature> features, IProgressMonitor monitor) {
-		preloadData(plate.getWells(), features, monitor);
-	}
-
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, IProgressMonitor monitor) {
 		// If the entire plate is already cached, abort the loading process.
 		boolean allCached = true;
@@ -458,7 +442,7 @@ public class SubWellService  {
 		} else {
 			for (Well well: wells) {
 				if (monitorToUse.isCanceled()) return;
-				for (SubWellFeature f: features) getNumericData(well, f, 0, false);
+				for (SubWellFeature f: features) getNumericData(well, f, false);
 				monitorToUse.worked(1);
 			}
 		}
@@ -466,16 +450,13 @@ public class SubWellService  {
 		monitorToUse.done();
 	}
 
-	/*
-	 * *********
-	 * Write API
-	 * *********
+	/**
+	 * Update the subwell data for a set of wells in a single transaction.
+	 * 
+	 * @param dataMap The map of data to update, containing an array of data (String or float) per well.
+	 * @param feature The subwell feature that the data belongs to.
+	 * @throws IOException If the update transaction fails for any reason.
 	 */
-
-	public SubWellModificationTransaction createTransaction(Plate plate) {
-		return new SubWellModificationTransaction(plate);
-	}
-
 	public void updateData(Map<Well, Object> dataMap, SubWellFeature feature) throws IOException {
 		if (feature == null || dataMap.isEmpty()) return;
 		Map<SubWellFeature, Map<Well, Object>> data = new HashMap<>();
@@ -483,6 +464,13 @@ public class SubWellService  {
 		updateData(data);
 	}
 
+	/**
+	 * Update the subwell data for a set of wells and features in a single transaction.
+	 * 
+	 * @param data The map of data to update, containing a sub-map per feature. The sub-map contains
+	 * an array of data (String or float) per well.
+	 * @throws IOException If the update transaction fails for any reason.
+	 */
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) throws IOException {
 		if (data == null || data.isEmpty()) return;
 		Well sampleWell = data.values().iterator().next().keySet().iterator().next();
@@ -499,53 +487,27 @@ public class SubWellService  {
 		}
 	}
 
-	public void updateData(Map<SubWellFeature, Map<Well, Object>> data, SubWellModificationTransaction transaction) throws IOException {
-		if (data == null || data.isEmpty() || transaction == null) return;
-
-		// Plate status check.
-		Set<Plate> plates = new HashSet<>();
-		for (Map<Well, Object> featureData: data.values()) {
-			for (Well well: featureData.keySet()) plates.add(well.getPlate());
-		}
-		for (Plate plate: plates) ValidationUtils.checkCanModifyPlate(plate);
-
-		// Important: data is REPLACED, so the data objects have to be fully loaded.
-		for (SubWellFeature feature: data.keySet()) {
-			Map<Well, Object> featureData = data.get(feature);
-			for (Well well : featureData.keySet()) {
-				Object wellData = featureData.get(well);
-				int dataCount = (wellData instanceof float[]) ? ((float[])wellData).length : ((String[])wellData).length;
-				if (dataCount == 0) continue;
-
-				int wellNumber = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-
-				if (wellData instanceof float[]) {
-					float[] items = (float[])wellData;
-					transaction.getWorkingCopy().writeSubWellData(items, wellNumber, feature.getName());
-				} else {
-					String[] items = (String[])wellData;
-					transaction.getWorkingCopy().writeSubWellData(items, wellNumber, feature.getName());
-				}
-				cache.removeData(well, feature);
-			}
-		}
-	}
-
+	/**
+	 * Remove all subwell data for a given plate and feature from the cache.
+	 * 
+	 * @param plate The plate whose data will be cleared from the cache.
+	 * @param feature The feature whose data will be cleared from the cache.
+	 */
 	public void removeFromCache(Plate plate, SubWellFeature feature) {
 		for (Well well: plate.getWells()) {
 			removeFromCache(well, feature);
 		}
 	}
 
+	/**
+	 * Remove all subwell data for a given well and feature from the cache.
+	 * 
+	 * @param well The well whose data will be cleared from the cache.
+	 * @param feature The feature whose data will be cleared from the cache.
+	 */
 	public void removeFromCache(Well well, SubWellFeature feature) {
 		cache.removeData(well, feature);
 	}
-
-	/*
-	 * **********
-	 * Non-public
-	 * **********
-	 */
 
 	private String getDataPath(Plate plate) {
 		return PlateService.getInstance().getPlateFSPath(plate) + "/" + plate.getId() + ".h5";
@@ -597,6 +559,42 @@ public class SubWellService  {
 		return data;
 	}
 
+	private SubWellModificationTransaction createTransaction(Plate plate) {
+		return new SubWellModificationTransaction(plate);
+	}
+	
+	private void updateData(Map<SubWellFeature, Map<Well, Object>> data, SubWellModificationTransaction transaction) throws IOException {
+		if (data == null || data.isEmpty() || transaction == null) return;
+
+		// Plate status check.
+		Set<Plate> plates = new HashSet<>();
+		for (Map<Well, Object> featureData: data.values()) {
+			for (Well well: featureData.keySet()) plates.add(well.getPlate());
+		}
+		for (Plate plate: plates) ValidationUtils.checkCanModifyPlate(plate);
+
+		// Important: data is REPLACED, so the data objects have to be fully loaded.
+		for (SubWellFeature feature: data.keySet()) {
+			Map<Well, Object> featureData = data.get(feature);
+			for (Well well : featureData.keySet()) {
+				Object wellData = featureData.get(well);
+				int dataCount = (wellData instanceof float[]) ? ((float[])wellData).length : ((String[])wellData).length;
+				if (dataCount == 0) continue;
+
+				int wellNumber = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
+
+				if (wellData instanceof float[]) {
+					float[] items = (float[])wellData;
+					transaction.getWorkingCopy().writeSubWellData(items, wellNumber, feature.getName());
+				} else {
+					String[] items = (String[])wellData;
+					transaction.getWorkingCopy().writeSubWellData(items, wellNumber, feature.getName());
+				}
+				cache.removeData(well, feature);
+			}
+		}
+	}
+	
 	private void initPrefListener() {
 		PrefUtils.getPrefStore().addPropertyChangeListener((event) -> {
 			if (event.getProperty().equals(Prefs.USE_PARALLEL_SUBWELL_LOADING)

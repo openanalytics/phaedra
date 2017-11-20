@@ -13,8 +13,21 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.subwell.SubWellItem;
 import eu.openanalytics.phaedra.model.subwell.SubWellSelection;
 
+/**
+ * A collection of utilities related to subwell selections.
+ * Since subwell items can be very numerous, they are not represented
+ * as individual objects in JFace selections, but rather as groups.
+ * 
+ * See also {@link SubWellSelection}.
+ */
 public class SubWellUtils {
 
+	/**
+	 * Get a list of subwell items from a JFace selection.
+	 * 
+	 * @param selection The selection containing zero or more subwell items.
+	 * @return A list of all subwell items found in the selection.
+	 */
 	public static List<SubWellItem> getSubWellItems(ISelection selection) {
 		// Only check the first item so not all the items have to be looped.
 		Object o = SelectionUtils.getFirstObject(selection, SubWellItem.class);
@@ -30,6 +43,12 @@ public class SubWellUtils {
 		return new ArrayList<>();
 	}
 
+	/**
+	 * Get a list of subwell items from a list of SubWellSelections.
+	 * 
+	 * @param swSelections The list of SubWellSelections containing all the subwell items.
+	 * @return A list of all subwell items found.
+	 */
 	public static List<SubWellItem> getSubWellItems(List<SubWellSelection> swSelections) {
 		List<SubWellItem> items = new ArrayList<>();
 
@@ -44,10 +63,17 @@ public class SubWellUtils {
 		return items;
 	}
 
+	/**
+	 * Get a list of SubWellSelections from a JFace selection.
+	 * Individual subwell items will be converted into SubWellSelections
+	 * for better performance.
+	 * 
+	 * @param selection The JFace selection to inspect.
+	 * @return A list of SubWellSelections representing all selected subwell items.
+	 */
 	public static List<SubWellSelection> getSubWellSelections(ISelection selection) {
 		/*
 		 * Only checks the first item so not all the items have to be looped.
-		 *
 		 * Check if the selection has SubWellItems, if so convert to SubWellSelections.
 		 * We check for SubWellItems first because checking SubWellSelection first would adapt all SubWellItems.
 		 */
@@ -63,6 +89,13 @@ public class SubWellUtils {
 		return new ArrayList<>();
 	}
 
+	/**
+	 * Convert a list of individual subwell items into a list of SubWellSelections
+	 * for better performance.
+	 * 
+	 * @param swItems The list of individual subwell items to convert.
+	 * @return A list of SubWellSelections representing all selected subwell items.
+	 */
 	public static List<SubWellSelection> getSubWellSelections(List<SubWellItem> swItems) {
 		Map<Well, SubWellSelection> tempMap = new ConcurrentHashMap<>();
 		swItems.parallelStream().forEach(item -> {

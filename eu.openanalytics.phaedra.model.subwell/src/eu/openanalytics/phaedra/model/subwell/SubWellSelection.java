@@ -5,6 +5,11 @@ import java.util.BitSet;
 import org.eclipse.core.runtime.PlatformObject;
 
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+
+/**
+ * Represents a group of multiple subwell items in a single well.
+ * This object is used for better performance of subwell items in JFace selections.
+ */
 public class SubWellSelection extends PlatformObject {
 
 	private Well well;

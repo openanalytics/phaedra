@@ -3,6 +3,14 @@ package eu.openanalytics.phaedra.datacapture.parser.model;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * An in-memory representation of a parsed well.
+ * A ParsedWell may contain:
+ * <ul>
+ * <li>A map of {@link ParsedFeature}s: the key is the name of the feature, the value is the text or numeric value for the feature</li>
+ * <li>A map of {@link ParsedSubWellDataset}s: the key is the name of the feature, the value is an array of text or numeric values for the feature</li>
+ * </ul>
+ */
 public class ParsedWell {
 
 	private Map<String,ParsedFeature> features;

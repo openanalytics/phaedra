@@ -24,8 +24,14 @@ import eu.openanalytics.phaedra.datacapture.DataCaptureException;
 import eu.openanalytics.phaedra.datacapture.config.ModuleConfig;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 
+/**
+ * A collection of utilities for data capture scripts.
+ */
 public class CaptureUtils {
 	
+	/**
+	 * Sort readings by their ID.
+	 */
 	public final static Comparator<PlateReading> READING_ID_SORTER = new Comparator<PlateReading>() {
 		@Override
 		public int compare(PlateReading o1, PlateReading o2) {
@@ -35,6 +41,9 @@ public class CaptureUtils {
 		}
 	};
 	
+	/**
+	 * Sort readings by their creation date.
+	 */
 	public final static Comparator<PlateReading> READING_DATE_SORTER = new Comparator<PlateReading>() {
 		@Override
 		public int compare(PlateReading o1, PlateReading o2) {
@@ -46,8 +55,7 @@ public class CaptureUtils {
 
 	/**
 	 * Create a CSV reader on the specified file.
-	 * Keep in mind that the reader must be closed after use by calling
-	 * reader.close().
+	 * Keep in mind that the reader must be closed after use by calling reader.close().
 	 * 
 	 * @param path The path to the CSV file. 
 	 * @return A CSV reader, ready for use.
@@ -59,8 +67,7 @@ public class CaptureUtils {
 	
 	/**
 	 * Create a CSV reader on the specified file.
-	 * Keep in mind that the reader must be closed after use by calling
-	 * reader.close().
+	 * Keep in mind that the reader must be closed after use by calling reader.close().
 	 * 
 	 * @param path The path to the CSV file.
 	 * @param columnSeparator The separator character, default a comma ','.
@@ -232,10 +239,27 @@ public class CaptureUtils {
 		return (value == null) ? null : value.toString();
 	}
 	
+	/**
+	 * Resolve all variable references in the given string against the given data capture context.
+	 * 
+	 * @param unresolvedValue The string to resolve.
+	 * @param escapeValuesForRegex If the resolved value will be used as a regular expression pattern, set to true to escape any regex characters.
+	 * @param ctx The data capture context to look in.
+	 * @return The resolved string value.
+	 */
 	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex, DataCaptureContext ctx) {
 		return resolveVars(unresolvedValue, escapeValuesForRegex, ctx, null);
 	}
 	
+	/**
+	 * Resolve all variable references in the given string against the given data capture context.
+	 * 
+	 * @param unresolvedValue The string to resolve.
+	 * @param escapeValuesForRegex If the resolved value will be used as a regular expression pattern, set to true to escape any regex characters.
+	 * @param ctx The data capture context to look in.
+	 * @param localVariables An optional map of variables to look in while resolving variables.
+	 * @return The resolved string value.
+	 */
 	public static String resolveVars(String unresolvedValue, boolean escapeValuesForRegex, DataCaptureContext ctx, Map<String,String> localVariables) {
 		if (unresolvedValue == null || unresolvedValue.isEmpty()) return unresolvedValue;
 		
@@ -311,10 +335,22 @@ public class CaptureUtils {
 		return resolvedString;
 	}
 	
+	/**
+	 * Generate and throw a data capture exception with the given message.
+	 * 
+	 * @param message The message to include in the exception.
+	 * @throws DataCaptureException The exception that will be generated and thrown.
+	 */
 	public static void doError(String message) throws DataCaptureException {
 		throw new DataCaptureException(message);
 	}
 	
+	/**
+	 * Create a map containing a copy of all parameters of the given data capture module.
+	 * 
+	 * @param config The data capture module's configuration.
+	 * @return A map containing all parameters from the module.
+	 */
 	public static Map<String,String> createParamMap(ModuleConfig config) {
 		Map<String,String> params = new HashMap<String, String>();
 		if (config != null) {
@@ -327,6 +363,13 @@ public class CaptureUtils {
 		return params;
 	}
 	
+	/**
+	 * Create a new feature definition, to be used when a data capture job
+	 * detects new features in the data source.
+	 * 
+	 * @param name The name of the new feature definition.
+	 * @return A new feature definition.
+	 */
 	public static FeatureDefinition newFeatureDef(String name) {
 		return new FeatureDefinition(name);
 	}

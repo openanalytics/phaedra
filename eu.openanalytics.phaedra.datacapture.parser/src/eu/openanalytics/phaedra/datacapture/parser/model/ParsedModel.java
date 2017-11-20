@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * An in-memory representation of a parsed data source.
+ * A ParsedModel may contain one or more {@link ParsedPlate}s.
+ */
 public class ParsedModel {
 
 	private List<ParsedPlate> plates;

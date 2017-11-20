@@ -101,6 +101,10 @@ public class NumberUtils {
 		return round(gBytes, 2);
 	}
 	
+	/**
+	 * Get the well coordinate from a well row nr and column nr.
+	 * E.g. 13,24 becomes "M24"
+	 */
 	public static String getWellCoordinate(int row, int col) {
 		return getWellCoordinate(row, col, null);
 	}

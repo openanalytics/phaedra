@@ -14,6 +14,21 @@ import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.datacapture.parser.scripting.ScriptedParser;
 
+/**
+ * This registry contains a listing of all known data parsers.
+ * <p>
+ * Parsers are primarily used during data capture jobs. Each parser has a unique ID
+ * that can be used to invoke the parser (see {@link ParserService}).
+ * </p>
+ * <p>
+ * Two types of parsers are supported:
+ * <ul>
+ * <li>Java parsers: are written in Java and contributed via the {@link IParser} extension point</li>
+ * <li>Scripted parsers: are written in script (e.g. JavaScript) and are contributed by placing them
+ * in the <b>/data.parsers</b> folder on the file server. The name of the script file (without its 
+ * extension) will serve as the parser's ID.</li>
+ * </ul>
+ */
 public class ParserRegistry {
 
 	private Map<String, IParser> javaParsers;

@@ -56,6 +56,18 @@ import eu.openanalytics.phaedra.validation.ValidationService.PlateCalcStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
 
+
+/**
+ * API for interaction with dose-response curves. This includes:
+ * <ul>
+ * <li>Fitting dose-response curves</li>
+ * <li>Getting and setting custom fit settings for individual curves</li>
+ * <li>Retrieving properties of curve fits</li>
+ * <li>Retrieving plots of curve fits</li>
+ * </ul>
+ * All data that is retrieved once, is cached for future use.
+ * See {@link CacheService} for more information about caching.
+ */
 public class CurveFitService extends BaseJPAService {
 
 	private static final CurveGrouping NO_GROUPING = new CurveGrouping(null, null);
@@ -101,6 +113,12 @@ public class CurveFitService extends BaseJPAService {
 		return instance;
 	}
 	
+	/**
+	 * Retrieve a dose-response curve by its primary ID.
+	 * 
+	 * @param curveId The primary ID of the curve to retrieve.
+	 * @return The matching curve, or null if no match was found.
+	 */
 	public Curve getCurve(long curveId) {
 		if (curveIdCache.contains(curveId)) {
 			CacheKey key = (CacheKey) curveIdCache.get(curveId);
@@ -114,11 +132,29 @@ public class CurveFitService extends BaseJPAService {
 		}
 	}
 
+	/**
+	 * Get a dose-response curve by a well and feature.
+	 *  
+	 * @param well The well whose data point is in the curve.
+	 * @param feature The feature the curve was fit for.
+	 * @return The matching curve, or null if no match was found.
+	 */
 	public Curve getCurve(Well well, Feature feature) {
 		CurveGrouping grouping = getGrouping(well, feature);
 		return getCurve(well.getCompound(), feature, grouping, false);
 	}
 	
+	/**
+	 * Get a curve for a given compound, feature, and grouping.
+	 * See {@link CurveGrouping} for more information about grouping.
+	 * 
+	 * @param compound The compound to retrieve a curve for.
+	 * @param feature The well feature to retrieve a curve for.
+	 * @param grouping The grouping to retrieve a curve for (may be null).
+	 * @param batchMode If true, all dose-response curves of the whole plate will be retrieved
+	 * and cached for better performance.
+	 * @return The matching curve, or null if no match was found.
+	 */
 	public Curve getCurve(Compound compound, Feature feature, CurveGrouping grouping, boolean batchMode) {
 		// If the feature is incompatible, abort now.
 		if (compound == null || feature == null || !PlateUtils.isSameProtocolClass(compound, feature)) {
@@ -165,6 +201,14 @@ public class CurveFitService extends BaseJPAService {
 		}
 	}
 
+	/**
+	 * Get the image of a dose-response curve.
+	 * 
+	 * @param curveId The primary ID of the curve.
+	 * @param w The width to render the image on.
+	 * @param h The height to render the image on.
+	 * @return An image representing the dose-response curve.
+	 */
 	public ImageData getCurveImage(long curveId, int w, int h) {
 		CacheKey key = getImageCacheKey(curveId, w, h);
 		if (curveImageCache.contains(key)) return (ImageData) curveImageCache.get(key);
@@ -196,6 +240,15 @@ public class CurveFitService extends BaseJPAService {
 		return image;
 	}
 	
+	/**
+	 * Fit (or re-fit) all dose-response curves in a plate.
+	 * <p>
+	 * Note: some or all of the curves may fail to fit, for example if the plate is already approved.
+	 * This will generate warning messages, but not throw any exception.
+	 * </p>
+	 * 
+	 * @param plate The plate whose curves will be fit.
+	 */
 	public void fitCurves(Plate plate) {
 		List<Feature> features = CollectionUtils.findAll(ProtocolUtils.getFeatures(plate), CurveUtils.FEATURES_WITH_CURVES);
 		List<Compound> compounds = streamableList(plate.getCompounds()).stream().filter(c -> c.getWells().size() > 1).collect(Collectors.toList());
@@ -232,6 +285,14 @@ public class CurveFitService extends BaseJPAService {
 		}
 	}
 
+	/**
+	 * Fit all curves for a given compound and feature.
+	 * Note: if the feature has no grouping configured, this will fit just one single curve.
+	 * 
+	 * @param compound The compound to fit curves for.
+	 * @param feature The well feature to fit curves for.
+	 * @throws CurveFitException If the fit fails for any reason.
+	 */
 	public void fitCurves(Compound compound, Feature feature) throws CurveFitException {
 		Assert.isLegal(compound != null);
 		Assert.isLegal(feature != null);
@@ -242,10 +303,25 @@ public class CurveFitService extends BaseJPAService {
 		}
 	}
 	
+	/**
+	 * Re-fit a dose-response curve.
+	 * 
+	 * @param curve The curve to fit.
+	 * @throws CurveFitException If the fit fails for any reason.
+	 */
 	public void fitCurve(Curve curve) throws CurveFitException {
 		fitCurve(curve.getCompounds().get(0), curve.getFeature(), getGrouping(curve));
 	}
 	
+	/**
+	 * Fit a dose-response curve for the given compound, well feature and grouping.
+	 * 
+	 * @param compound The compound to fit a curve for.
+	 * @param feature The well feature to fit a curve for.
+	 * @param grouping The grouping to fit for, may be null.
+	 * @return The dose-response curve that was fit.
+	 * @throws CurveFitException If the fit fails for any reason.
+	 */
 	public Curve fitCurve(Compound compound, Feature feature, CurveGrouping grouping) throws CurveFitException {
 		Assert.isLegal(compound != null, "Compound cannot be null");
 		Assert.isLegal(feature != null, "Feature cannot be null");
@@ -296,6 +372,16 @@ public class CurveFitService extends BaseJPAService {
 		return curve;
 	}
 	
+	/**
+	 * Get the default curve fit settings for the given feature.
+	 * <p>
+	 * Note that an individual dose-response curve may override these settings.
+	 * See {@link CurveFitService#getSettings(Curve)}.
+	 * </p>
+	 * 
+	 * @param feature The feature to get curve fit settings for.
+	 * @return Tne fit settings for the given feature, or null if the feature has no curve fit settings.
+	 */
 	public CurveFitSettings getSettings(Feature feature) {
 		if (feature.getCurveSettings() == null) return null;
 		String modelId = feature.getCurveSettings().get(CurveFitSettings.MODEL);
@@ -324,6 +410,13 @@ public class CurveFitService extends BaseJPAService {
 		return settings;
 	}
 	
+	/**
+	 * Get the overriding curve fit settings for the given dose-response curve,
+	 * or the feature's default fit settings if the curve has no overriding settings.
+	 * 
+	 * @param curve The curve to get overriding settings for.
+	 * @return Tne fit settings for the given curve
+	 */
 	public CurveFitSettings getSettings(Curve curve) {
 		if (curve == null) return null;
 		if (curve.getId() == 0) return getSettings(curve.getFeature());
@@ -340,6 +433,12 @@ public class CurveFitService extends BaseJPAService {
 		return (settings == null) ? getSettings(curve.getFeature()) : settings;
 	}
 
+	/**
+	 * Save the overriding curve fit settings for the given dose-response curve.
+	 * 
+	 * @param curve The curve to save settings for.
+	 * @param settings The settings to save, or null to clear any previous settings.
+	 */
 	public void updateCurveSettings(Curve curve, CurveFitSettings settings) {
 		for (Compound c: curve.getCompounds()) {
 			if (PlateApprovalStatus.APPROVED.matches(c.getPlate())) throw new IllegalStateException("Cannot change settings: plate is approved");
@@ -361,32 +460,50 @@ public class CurveFitService extends BaseJPAService {
 		}
 	}
 
+	/**
+	 * Get a list of IDs of supported fit models.
+	 * 
+	 * @return The IDs of supported fit models.
+	 */
 	public String[] getFitModels() {
 		return knownModelIds;
 	}
 	
+	/**
+	 * Get the fit model for the given model ID.
+	 * 
+	 * @param modelId The ID of the fit model.
+	 * @return The matching fit model, or null if no match was found.
+	 */
 	public ICurveFitModel getModel(String modelId) {
 		return modelFactories.stream()
 				.filter(f -> CollectionUtils.contains(f.getSupportedModelIds(), modelId)).map(f -> f.createModel(modelId)).findAny()
 				.orElse(ExtensionUtils.createInstance(ICurveFitModel.EXT_PT_ID, ICurveFitModel.ATTR_ID, modelId, ICurveFitModel.ATTR_CLASS, ICurveFitModel.class));
 	}
 
+	/**
+	 * Get a renderer that can draw curves that were fit by the given model.
+	 * 
+	 * @param modelId The ID of the model used in the fit.
+	 * @return A compatible renderer, possibly null.
+	 */
 	public ICurveRenderer getRenderer(String modelId) {
 		return curveRenderers.stream()
 				.filter(r -> CollectionUtils.contains(r.getSupportedModelIds(), modelId)).findAny()
 				.orElse(new BaseCurveRenderer());
 	}
 	
+	/**
+	 * Get the input (data points and settings) that was used for fitting the given curve.
+	 *  
+	 * @param curve The curve whose input should be retrieved.
+	 * @return The input used for the given curve.
+	 */
 	public CurveFitInput getInput(Curve curve) {
 		CurveFitInput input = createInput(curve.getCompounds(), curve.getFeature(), getGrouping(curve));
 		input.setSettings(getSettings(curve));
 		return input;
 	}
-	
-	/**
-	 * Non-public
-	 * **********
-	 */
 	
 	protected EntityManager getEntityManager() {
 		return Screening.getEnvironment().getEntityManager();

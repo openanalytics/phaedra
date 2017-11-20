@@ -50,8 +50,14 @@ import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 
 /**
- * This service controls the creation, retrieval and modification of Plates and their related objects:
- * Experiments, Wells, Compounds, well data.
+ * API for interaction with plates. This includes creation, retrieval and modification of plates
+ * and their related objects:
+ * <ul>
+ * <li>Experiments</li>
+ * <li>Wells</li>
+ * <li>Compounds</li>
+ * <li>Well data (i.e. well feature values)</li>
+ * </ul>
  */
 public class PlateService extends BaseJPAService {
 
@@ -75,18 +81,11 @@ public class PlateService extends BaseJPAService {
 		return Screening.getEnvironment().getEntityManager();
 	}
 
-	/*
-	 * **********
-	 * Public API
-	 * **********
-	 */
-
-	/* Experiments
-	 * ***********
-	 */
-
 	/**
-	 * Get a list of all experiments in the given protocol that are visible to the current user.
+	 * Get a list of all experiments in a protocol.
+	 * 
+	 * @param protocol The protocol whose experiments will be listed.
+	 * @return A list of experiments currently in the protocol.
 	 */
 	public List<Experiment> getExperiments(Protocol protocol) {
 		if (!SecurityService.getInstance().check(Permissions.PROTOCOL_OPEN, protocol)) return new ArrayList<>();
@@ -95,7 +94,10 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Get an experiment using its id, if the current user has access to it.
+	 * Retrieve an experiment by its primary ID.
+	 * 
+	 * @param experimentId The ID of the experiment.
+	 * @return The experiment, or null if no matching experiment was found.
 	 */
 	public Experiment getExperiment(long experimentId) {
 		Experiment exp = getEntity("select e from Experiment e where e.id = ?1", Experiment.class, experimentId);
@@ -103,6 +105,11 @@ public class PlateService extends BaseJPAService {
 		return exp;
 	}
 
+	/**
+	 * Delete an experiment.
+	 * 
+	 * @param experiment The experiment to delete.
+	 */
 	public void deleteExperiment(Experiment experiment) {
 		SecurityService.getInstance().checkWithException(Permissions.EXPERIMENT_DELETE, experiment);
 		List<Plate> plates = getPlates(experiment);
@@ -110,12 +117,23 @@ public class PlateService extends BaseJPAService {
 		delete(experiment);
 	}
 
+	/**
+	 * Update an experiment. Any changes made to the experiment object will be saved.
+	 * 
+	 * @param experiment The experiment to update.
+	 */
 	public void updateExperiment(Experiment experiment) {
 		SecurityService.getInstance().checkWithException(Permissions.EXPERIMENT_EDIT, experiment);
 		if (experiment.getName() == null) throw new IllegalArgumentException("Experiment name cannot be null.");
 		save(experiment);
 	}
 
+	/**
+	 * Create a new experiment. Make sure to call {@link PlateService#updateExperiment(Experiment)} afterwards.
+	 * 
+	 * @param protocol The parent protocol of the experiment.
+	 * @return The new experiment, not yet saved.
+	 */
 	public Experiment createExperiment(Protocol protocol) {
 		SecurityService.getInstance().checkWithException(Permissions.EXPERIMENT_CREATE, protocol);
 		Experiment experiment = new Experiment();
@@ -127,6 +145,16 @@ public class PlateService extends BaseJPAService {
 		return experiment;
 	}
 
+	/**
+	 * Move a list of experiments to a different protocol.
+	 * <p>
+	 * <b>Important</b>: this should not be used to move an experiment to a protocol of a different protocol class.
+	 * Doing so may corrupt the experiment and all its data.
+	 * </p>
+	 * 
+	 * @param experiments The experiments to move.
+	 * @param newProtocol The new parent protocol.
+	 */
 	public void moveExperiments(List<Experiment> experiments, Protocol newProtocol) {
 		SecurityService.getInstance().checkWithException(Permissions.EXPERIMENT_CREATE, newProtocol);
 		for (Experiment experiment: experiments) {
@@ -136,7 +164,13 @@ public class PlateService extends BaseJPAService {
 		saveCollection(experiments);
 	}
 
-	public ExperimentSummary getExperimentSummary(Experiment exp) {
+	/**
+	 * Get a "to-do summary" of an experiment.
+	 * 
+	 * @param experiment The experiment to get a summary for.
+	 * @return A summary for the given experiment.
+	 */
+	public ExperimentSummary getExperimentSummary(Experiment experiment) {
 		ExperimentSummary summary = new ExperimentSummary();
 
 		String sql = "select"
@@ -152,7 +186,7 @@ public class PlateService extends BaseJPAService {
 				+ "		where pc.plate_id = p.plate_id and p.experiment_id = ?"
 				+ "		and (select count(w.well_id) from phaedra.hca_plate_well w where w.platecompound_id = pc.platecompound_id) <= 3) screen_count"
 				+ JDBCUtils.getFromDual();
-		sql = sql.replace("?", "" + exp.getId());
+		sql = sql.replace("?", "" + experiment.getId());
 
 		PreparedStatement ps = null;
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
@@ -177,31 +211,23 @@ public class PlateService extends BaseJPAService {
 		return summary;
 	}
 
-	/* Plates
-	 * ******
-	 */
-
 	/**
-	 * Get a list of all plates in the given experiment, if the user has access to them.
+	 * Get a list of plates in a given experiment.
+	 * 
+	 * @param experiment The parent experiment.
+	 * @return A list of plates in the experiment.
 	 */
-	public List<Plate> getPlates(Experiment exp) {
-		if (!SecurityService.getInstance().check(Permissions.EXPERIMENT_OPEN, exp)) return new ArrayList<>();
-		return streamableList(getList("select p from Plate p where p.experiment = ?1", Plate.class, exp));
+	public List<Plate> getPlates(Experiment experiment) {
+		if (!SecurityService.getInstance().check(Permissions.EXPERIMENT_OPEN, experiment)) return new ArrayList<>();
+		return streamableList(getList("select p from Plate p where p.experiment = ?1", Plate.class, experiment));
 	}
 
 	/**
-	 * Get a list of all plates that match the given barcode, and are visible to the current user.
-	 */
-	public List<Plate> getPlates(String barcodePattern) {
-		String query = "select p from Plate p where p.barcode like ?1";
-		barcodePattern = "%" + barcodePattern + "%";
-		return streamableList(getList(query, Plate.class, barcodePattern)).stream()
-				.filter(p -> SecurityService.getInstance().check(Permissions.PLATE_OPEN, p))
-				.collect(Collectors.toList());
-	}
-
-	/**
-	 * Get a list of all plates in the given protocol class that match the given barcode, and are visible to the current user.
+	 * Get a list of all plates in a protocol class that match the given barcode pattern.
+	 * 
+	 * @param barcodePattern The barcode, or part of it.
+	 * @param pClass The parent protocol class.
+	 * @return A list of matching plates.
 	 */
 	public List<Plate> getPlates(String barcodePattern, ProtocolClass pClass) {
 		String query = "select p from Plate p where p.barcode like ?1 and p.experiment.protocol.protocolClass = ?2";
@@ -212,7 +238,10 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Get a plate by its id, if the current user has access to it.
+	 * Retrieve a plate by its primary ID.
+	 * 
+	 * @param plateId The ID of the plate.
+	 * @return The plate, or null if no matching plate was found.
 	 */
 	public Plate getPlateById(long plateId) {
 		Plate plate = getEntity(Plate.class, plateId);
@@ -220,6 +249,14 @@ public class PlateService extends BaseJPAService {
 		return plate;
 	}
 	
+	/**
+	 * Create a new plate. Make sure to call {@link PlateService#updatePlate(Plate)} afterwards.
+	 * 
+	 * @param exp The parent experiment to create the plate in.
+	 * @param rows The number of rows in the plate.
+	 * @param cols The number of columns in the plate.
+	 * @return A new plate, not yet saved.
+	 */
 	public Plate createPlate(Experiment exp, int rows, int cols) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CREATE, exp);
 		
@@ -247,16 +284,23 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Modify the properties of a plate. Note that the permission needed to modify a plate
-	 * depends on the plate's validation and approval status.
-	 * To modify an approved plate's validation or approval status, use {@link updatePlateValidation} instead.
+	 * Save the changes made to a plate or its wells.
+	 * 
+	 * Depending on the plate's validation and approval status, this operation may be prohibited.
+	 * To modify a plate's validation or approval status, use {@link PlateService#updatePlateValidation(Plate)} instead.
+	 * To modify the well data of a plate, use {@link PlateService#updateWellDataRaw(Plate, Feature, double[])} or one
+	 * of its sibling methods instead.
+	 * 
+	 * @param plate The plate to update.
 	 */
 	public void updatePlate(Plate plate) {
 		updatePlate(plate, ModelEventType.ObjectChanged);
 	}
 
 	/**
-	 * Modify a validation-related field of a plate, well or compound.
+	 * Save the changes made to a plate's validation or approval state.
+	 * 
+	 * @param plate The plate to update.
 	 */
 	public void updatePlateValidation(Plate plate) {
 		updatePlate(plate, ModelEventType.ValidationChanged);
@@ -275,6 +319,15 @@ public class PlateService extends BaseJPAService {
 		}
 	}
 
+	/**
+	 * Move a list of plates to a different experiment.
+	 * <p>
+	 * <b>Important</b>: this should not be used to move a plate to an experiment of a different protocol class.
+	 * Doing so may corrupt the plate and all its data.
+	 * </p>
+	 * @param plates The plates to move.
+	 * @param newExperiment The new parent experiment.
+	 */
 	public void movePlates(List<Plate> plates, Experiment newExperiment) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CREATE, newExperiment);
 		PlateActionHookManager.startBatch();
@@ -294,14 +347,20 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Create an copy of a plate, including its well data, image data and subwell data.
+	 * Create a full copy of a plate in the same experiment.
+	 * 
+	 * This includes the plate's properties, its well data, image data and subwell data.
 	 * The following properties are NOT copied:
 	 * <ul>
 	 * <li>Validation and approval status</li>
 	 * <li>Curve fits and manual curve settings</li>
 	 * <li>Validation history</li>
 	 * </ul>
-	 * The plate is recalculated immediately after the copy.
+	 * The plate will be recalculated immediately after the copy.
+	 * 
+	 * @param plate The plate to clone.
+	 * @param monitor A progress monitor to update the clone progress (optional).
+	 * @return The newly created copy.
 	 */
 	public Plate clonePlate(Plate plate, IProgressMonitor monitor) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CREATE, plate.getExperiment());
@@ -399,6 +458,11 @@ public class PlateService extends BaseJPAService {
 		return copy;
 	}
 	
+	/**
+	 * Delete a list of plates.
+	 * 
+	 * @param plates The plates to delete.
+	 */
 	public void deletePlates(List<Plate> plates) {
 		PlateActionHookManager.startBatch();
 		try {
@@ -412,6 +476,11 @@ public class PlateService extends BaseJPAService {
 		PlateActionHookManager.endBatch(true);
 	}
 
+	/**
+	 * Delete a single plate.
+	 * 
+	 * @param plate The plate to delete.
+	 */
 	public void deletePlate(Plate plate) {
 		PlateActionHookManager.preAction(plate, ModelEventType.ObjectRemoved);
 
@@ -433,6 +502,12 @@ public class PlateService extends BaseJPAService {
 		PlateActionHookManager.postAction(plate, ModelEventType.ObjectRemoved);
 	}
 
+	/**
+	 * Get a summary of a plate, including the number of single-dose compounds and dose-response curves.
+	 * 
+	 * @param plate The plate to get a summary for.
+	 * @return A summary for the given plate.
+	 */
 	public PlateSummary getPlateSummary(Plate plate) {
 		PlateSummary summary = new PlateSummary();
 
@@ -463,9 +538,10 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Get a full or relative path to a plate's image file.
-	 * A relative path is only useful for the SecureFileServer, because the path is relative
-	 * to the file server root.
+	 * Get the path to a plate's image, relative to the file server root.
+	 * 
+	 * @param plate The plate to get the path for.
+	 * @return The path to the plate's image file, relative to the file server root.
 	 */
 	public String getImageFSPath(Plate plate) {
 		if (!plate.isImageAvailable()) return null;
@@ -480,9 +556,10 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
-	 * Get a full or relative path to a plate's file server folder.
-	 * A relative path is only useful for the SecureFileServer, because the path is relative
-	 * to the file server root.
+	 * Get the path to a plate's data folder, relative to the file server root.
+	 * 
+	 * @param plate The plate to get the path for.
+	 * @return The path to the plate's data folder, relative to the file server root.
 	 */
 	public String getPlateFSPath(Plate plate) {
 		if (plate == null) return null;
@@ -500,6 +577,12 @@ public class PlateService extends BaseJPAService {
 		return sb.toString();
 	}
 
+	/**
+	 * Get all the key-value properties of a plate.
+	 * 
+	 * @param plate The plate whose properties will be retrieved.
+	 * @return A map of key-value properties of the plate.
+	 */
 	@SuppressWarnings("unchecked")
 	public Map<String, String> getPlateProperties(Plate plate) {
 		ICache cache = CacheService.getInstance().getDefaultCache();
@@ -512,16 +595,36 @@ public class PlateService extends BaseJPAService {
 		return properties;
 	}
 
+	/**
+	 * Retrieve a single plate property.
+	 * 
+	 * @param plate The plate to retrieve a property for.
+	 * @param name The name of the property (case sensitive).
+	 * @return The value of the property, or null if the plate does not have the given property.
+	 */
 	public String getPlateProperty(Plate plate, String name) {
 		return getPlateProperties(plate).get(name);
 	}
 
+	/**
+	 * Save a single property value for a plate.
+	 * 
+	 * @param plate The plate to save a property for.
+	 * @param name The name of the property.
+	 * @param value The value of the property.
+	 */
 	public void setPlateProperty(Plate plate, String name, String value) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		getPlateProperties(plate).put(name, value);
 		platePropertyDAO.setProperty(plate, name, value);
 	}
 
+	/**
+	 * Save a set of properties for a plate.
+	 * 
+	 * @param plate The plate to save properties for.
+	 * @param props The map of key-value properties to save.
+	 */
 	public void setPlateProperties(Plate plate, Map<String,String> props) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		getPlateProperties(plate).clear();
@@ -529,13 +632,12 @@ public class PlateService extends BaseJPAService {
 		platePropertyDAO.setProperties(plate, props);
 	}
 
-	/* Compounds
-	 * *********
-	 */
-
 	/**
-	 * Get a list of all compounds that match a given type and number, and that are contained
-	 * in plates that are visible to the current user.
+	 * Get a list of all compounds that match the given type and number.
+	 * 
+	 * @param type The compound type.
+	 * @param nr The compound number.
+	 * @return A list of matching compounds.
 	 */
 	public List<Compound> getCompounds(String type, String nr) {
 		String query = "select c from Compound c where c.type = ?1 and c.number = ?2";
@@ -544,6 +646,14 @@ public class PlateService extends BaseJPAService {
 				.collect(Collectors.toList());
 	}
 
+	/**
+	 * Create a new compound. Make sure to call {@link PlateService#saveCompounds(Plate)} afterwards.
+	 * 
+	 * @param plate The plate to create the compound in.
+	 * @param type The compound type.
+	 * @param number The compound number.
+	 * @return The newly created compound, not yet saved.
+	 */
 	public Compound createCompound(Plate plate, String type, String number) {
 		Compound compound = new Compound();
 		compound.setType(type);
@@ -554,6 +664,12 @@ public class PlateService extends BaseJPAService {
 		return compound;
 	}
 
+	/**
+	 * Save the compounds in a plate.
+	 * This will automatically remove compounds that are no longer referenced by any well in the plate.
+	 * 
+	 * @param plate The plate whose compounds should be saved.
+	 */
 	public void saveCompounds(Plate plate) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		List<Compound> orphanCompounds = streamableList(plate.getCompounds()).stream().filter(c -> c.getWells().isEmpty()).collect(Collectors.toList());
@@ -562,39 +678,97 @@ public class PlateService extends BaseJPAService {
 		for (Compound c: orphanCompounds) delete(c);
 	}
 	
-	public void updateCompound(Compound c) {
-		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, c.getPlate());
-		save(c);
+	/**
+	 * Update the validation status of a compound.
+	 * For changes to the compound itself, use {@link PlateService#saveCompounds(Plate)} instead.
+	 * 
+	 * @param compound The compound to update.
+	 */
+	public void updateCompound(Compound compound) {
+		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, compound.getPlate());
+		save(compound);
 	}
 
-	/* Well data
-	 * *********
+	/**
+	 * See {@link PlateService#getWellData(List, List))}
+	 * 
+	 * @param wells The wells whose data should be retrieved.
+	 * @return A list of well data for the given wells and feature.
 	 */
-
 	public List<FeatureValue> getWellData(List<Well> wells, Feature feature) {
 		return featureValueDAO.getValues(wells, feature);
 	}
 
+	/**
+	 * See {@link PlateService#getWellData(List, List))}
+	 * 
+	 * @param well The well whose data should be retrieved.
+	 * @return A list of well data for the given well and features.
+	 */
 	public List<FeatureValue> getWellData(Well well, List<Feature> features) {
 		return featureValueDAO.getValues(well, features);
 	}
 
+	/**
+	 * Retrieve the well data for a list of wells, for a list of well features.
+	 * <p>
+	 * Note that this data is <b>not</b> cached. This is a low-level method that 
+	 * should not be called directly.
+	 * </p>
+	 * 
+	 * @param wells The wells whose well data should be retrieved.
+	 * @param features The features to retrieve data for.
+	 * @return A list of well data for the given wells and features.
+	 */
 	public List<FeatureValue> getWellData(List<Well> wells, List<Feature> features) {
 		return featureValueDAO.getValues(wells, features);
 	}
 
+	/**
+	 * See {@link PlateService#getWellData(Plate, List)}
+	 * 
+	 * @param plate The plate whose well data should be retrieved.
+	 * @return A list of well data for the given plate and features.
+	 */
+	public List<FeatureValue> getWellData(Plate plate) {
+		return featureValueDAO.getValues(plate);
+	}
+	
+	/**
+	 * Retrieve the well data for all wells of a plate, for a list of well features.
+	 * <p>
+	 * Note that this data is <b>not</b> cached. This is a low-level method that 
+	 * should not be called directly.
+	 * </p>
+	 * 
+	 * @param plate The plate whose well data should be retrieved.
+	 * @param features The features to retrieve data for.
+	 * @return A list of well data for the given plate and features.
+	 */
 	public List<FeatureValue> getWellData(Plate plate, List<Feature> features) {
 		return featureValueDAO.getValues(plate, features);
 	}
 
-	public List<FeatureValue> getWellData(Plate plate) {
-		return featureValueDAO.getValues(plate);
-	}
-
+	/**
+	 * See {@link PlateService#updateWellDataRaw(Plate, Feature, double[], boolean)}
+	 * 
+	 * @param plate The plate whose well data should be updated.
+	 * @param feature The feature to update data for.
+	 * @param rawValues The raw numeric values that should be saved.
+	 */
 	public void updateWellDataRaw(Plate plate, Feature feature, double[] rawValues) {
 		updateWellDataRaw(plate, feature, rawValues, false);
 	}
 	
+	/**
+	 * Update the numeric well data for a given plate and feature.
+	 * 
+	 * @param plate The plate whose well data should be updated.
+	 * @param feature The feature to update data for.
+	 * @param rawValues The raw numeric values that should be saved.
+	 * @param newPlate True if this plate does not yet have raw data for the given feature.
+	 * This is faster because no check needs to be made for existing values to replace.
+	 */
 	public void updateWellDataRaw(Plate plate, Feature feature, double[] rawValues, boolean newPlate) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		WellDataActionHookManager.preAction(plate, feature, rawValues, false, ModelEventType.ObjectChanged);
@@ -603,10 +777,26 @@ public class PlateService extends BaseJPAService {
 		WellDataActionHookManager.postAction(plate, feature, rawValues, false, ModelEventType.ObjectChanged);
 	}
 	
+	/**
+	 * See {@link PlateService#updateWellDataRaw(Plate, Feature, String[], boolean)}
+	 * 
+	 * @param plate The plate whose well data should be updated.
+	 * @param feature The feature to update data for.
+	 * @param stringValues The String values that should be saved.
+	 */
 	public void updateWellDataRaw(Plate plate, Feature feature, String[] stringValues) {
 		updateWellDataRaw(plate, feature, stringValues, false);
 	}
 	
+	/**
+	 * Update the String well data for a given plate and feature.
+	 * 
+	 * @param plate The plate whose well data should be updated.
+	 * @param feature The feature to update data for.
+	 * @param stringValues The String values that should be saved.
+	 * @param newPlate True if this plate does not yet have data for the given feature.
+	 * This is faster because no check needs to be made for existing values to replace.
+	 */
 	public void updateWellDataRaw(Plate plate, Feature feature, String[] stringValues, boolean newPlate) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		WellDataActionHookManager.preAction(plate, feature, stringValues, false, ModelEventType.ObjectChanged);
@@ -615,18 +805,19 @@ public class PlateService extends BaseJPAService {
 		WellDataActionHookManager.postAction(plate, feature, stringValues, false, ModelEventType.ObjectChanged);
 	}
 	
+	/**
+	 * Update the normalized numeric well data for a given plate and feature.
+	 * 
+	 * @param plate The plate whose well data should be updated.
+	 * @param feature The feature to update data for.
+	 * @param normValues The normalized values that should be saved.
+	 */
 	public void updateWellDataNorm(Plate plate, Feature feature, double[] normValues) {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
 		WellDataActionHookManager.preAction(plate, feature, normValues, true, ModelEventType.ObjectChanged);
 		featureValueDAO.updateValues(plate, feature, null, null, normValues);
 		WellDataActionHookManager.postAction(plate, feature, normValues, true, ModelEventType.ObjectChanged);
 	}
-
-	/*
-	 * **************
-	 * Event handling
-	 * **************
-	 */
 
 	protected void fire(ModelEventType type, Object object, int status) {
 		ModelEvent event = new ModelEvent(object, type, status);
