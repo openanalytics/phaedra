@@ -151,7 +151,7 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 		if (col < subWellFeatures.size()) {
 			// It's a Feature column. Retrieve Feature values.
 			SubWellFeature feature = subWellFeatures.get(col);
-			values = SubWellService.getInstance().getNumericData(well, feature, 0, false);
+			values = SubWellService.getInstance().getNumericData(well, feature);
 
 			if (values != null) {
 				// Check if this Feature has more data than previous read Features.

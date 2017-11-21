@@ -1,25 +1,21 @@
 package eu.openanalytics.phaedra.model.subwell;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.environment.Screening;
-import eu.openanalytics.phaedra.base.environment.prefs.PrefUtils;
-import eu.openanalytics.phaedra.base.environment.prefs.Prefs;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
-import eu.openanalytics.phaedra.base.hdf5.parallel.HDF5MultiProcessReader;
+import eu.openanalytics.phaedra.base.util.CollectionUtils;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
-import eu.openanalytics.phaedra.base.util.threading.ThreadPool;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -28,6 +24,8 @@ import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
+import eu.openanalytics.phaedra.model.subwell.data.HDF5Datasource;
+import eu.openanalytics.phaedra.model.subwell.data.ISubWellDataSource;
 import eu.openanalytics.phaedra.model.subwell.util.SubWellModificationTransaction;
 import eu.openanalytics.phaedra.validation.ValidationUtils;
 
@@ -48,17 +46,13 @@ public class SubWellService  {
 
 	private static SubWellService instance = new SubWellService();
 
+	private ISubWellDataSource dataSource;
 	private SubWellDataCache cache;
-
-	private boolean useParallelReading;
-	private HDF5MultiProcessReader parallelReader;
-	private ThreadPool parallelReaderTP;
 
 	private SubWellService() {
 		// Hidden constructor.
+		dataSource = new HDF5Datasource();
 		cache = new SubWellDataCache();
-		initPrefListener();
-		initParalellReading();
 	}
 
 	public static SubWellService getInstance() {
@@ -74,20 +68,17 @@ public class SubWellService  {
 	 * @return A sample feature, or null if no feature has data for this well.
 	 */
 	public SubWellFeature getSampleFeature(Well well) {
-		HDF5File hdf5File = null;
-		try {
-			hdf5File = getDataFile(well.getPlate());
-			if (hdf5File == null) return null;
-			int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-			for (SubWellFeature feature: PlateUtils.getSubWellFeatures(well.getPlate())) {
-				String featureId = feature.getName();
-				boolean dataExists = hdf5File.existsSubWellData(featureId, wellNr);
-				if (dataExists) return feature;
+		if (well == null) return null;
+		
+		for (SubWellFeature f: ProtocolUtils.getProtocolClass(well).getSubWellFeatures()) {
+			if (f.isNumeric()) {
+				float[] data = getNumericData(well, f);
+				if (data != null && data.length > 0) return f;
+			} else {
+				String[] data = getStringData(well, f);
+				if (data != null && data.length > 0) return f;
 			}
-		} finally {
-			if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
 		}
-
 		return null;
 	}
 
@@ -98,52 +89,11 @@ public class SubWellService  {
 	 * @param feature The subwell feature to retrieve data for.
 	 * @return The data, either a String array, a float array, or null.
 	 */
-	public Object getAnyData(Well well, SubWellFeature feature) {
+	public Object getData(Well well, SubWellFeature feature) {
 		if (well == null || feature == null) return null;
 
-		if (cache.isCached(well, feature)) {
-			if (cache.isNumeric(well, feature)) return cache.getNumericData(well, feature);
-			else return cache.getStringData(well, feature);
-		}
-
-		synchronized (well.getPlate()) {
-			// Check cache again: maybe another thread filled the cache while we were waiting for synchronization.
-			if (cache.isCached(well, feature)) {
-				if (cache.isNumeric(well, feature)) return cache.getNumericData(well, feature);
-				else return cache.getStringData(well, feature);
-			}
-
-			// Not in cache: read from file and add to cache.
-			HDF5File hdf5File = null;
-			try {
-				hdf5File = getDataFile(well.getPlate());
-				if (hdf5File == null) return null;
-				int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-				String featureId = feature.getName();
-				boolean dataExists = hdf5File.existsSubWellData(featureId, wellNr);
-				if (!dataExists) {
-					cache.putData(well, feature, (float[])null);
-					return null;
-				}
-
-				Object value = null;
-				if (hdf5File.isSubWellDataNumeric(featureId, wellNr)) {
-					float[] numericValues = hdf5File.getNumericSubWellData(featureId, wellNr);
-					cache.putData(well, feature, numericValues);
-					value = numericValues;
-				} else {
-					String[] stringValues = hdf5File.getStringSubWellData(featureId, wellNr);
-					cache.putData(well, feature, stringValues);
-					value = stringValues;
-				}
-
-				return value;
-			} catch (IOException e) {
-				throw new RuntimeException("Failed to load subwell data", e);
-			} finally {
-				if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
-			}
-		}
+		if (feature.isNumeric()) return getNumericData(well, feature);
+		else return getStringData(well, feature);
 	}
 
 	/**
@@ -246,33 +196,6 @@ public class SubWellService  {
 	 * @param feature The subwell feature to retrieve data for.
 	 * @return The 2D numeric data, or null if the well has no 2D data for this feature.
 	 */
-	public float[][] getNumericData2D(Well well, SubWellFeature feature) {
-		if (well == null || feature == null) return null;
-
-		HDF5File hdf5File = null;
-		try {
-			hdf5File = getDataFile(well.getPlate());
-			if (hdf5File == null) return new float[0][];
-
-			int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-			String featureId = feature.getName();
-			boolean dataExists = hdf5File.existsSubWellData(featureId, wellNr);
-			if (!dataExists){
-				cache.putData(well, feature, (float[])null);
-				return null;
-			}
-			if (!hdf5File.isSubWellDataNumeric(featureId, wellNr)) return null;
-			String path = HDF5File.getSubWellDataPath(wellNr, featureId);
-
-			float[][] data = hdf5File.getNumericData2D(path);
-			return data;
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to load subwell data", e);
-		} finally {
-			if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
-		}
-	}
-
 	/**
 	 * Get the String data of a feature for a well.
 	 * 
@@ -294,44 +217,13 @@ public class SubWellService  {
 	 * @return The String data, or null if the well has no data for this feature.
 	 */
 	public String[] getStringData(Well well, SubWellFeature feature) {
-		if (well == null || feature == null) return null;
-
 		if (cache.isCached(well, feature)) {
 			if (!cache.isNumeric(well, feature)) return cache.getStringData(well, feature);
 			else return null;
 		}
-
-		synchronized (well.getPlate()) {
-			// Check cache again: maybe another thread filled the cache while we were waiting for synchronization.
-			if (cache.isCached(well, feature)) {
-				if (!cache.isNumeric(well, feature)) return cache.getStringData(well, feature);
-				else return null;
-			}
-
-			// Not in cache: read from file and add to cache.
-			HDF5File hdf5File = null;
-			try {
-				hdf5File = getDataFile(well.getPlate());
-				if (hdf5File==null) return new String[0];
-
-				int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-				String featureId = feature.getName();
-				boolean dataExists = hdf5File.existsSubWellData(featureId, wellNr);
-				if (!dataExists){
-					cache.putData(well, feature, (String[])null);
-					return null;
-				}
-				if (hdf5File.isSubWellDataNumeric(featureId, wellNr)) return null;
-				String[] stringValues = hdf5File.getStringSubWellData(featureId, wellNr);
-
-				cache.putData(well, feature, stringValues);
-				return stringValues;
-			} catch (IOException e) {
-				throw new RuntimeException("Failed to load subwell data", e);
-			} finally {
-				if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
-			}
-		}
+		String[] data = dataSource.getStringData(well, feature);
+		cache.putData(well, feature, data);
+		return data;
 	}
 
 	/**
@@ -341,44 +233,15 @@ public class SubWellService  {
 	 * @return The number of subwell items in the well, possibly 0.
 	 */
 	public int getNumberOfCells(Well well) {
-		if (well == null || !well.getPlate().isSubWellDataAvailable()) return 0;
-
-		ProtocolClass pClass = PlateUtils.getProtocolClass(well);
-
-		HDF5File hdf5File = null;
-		try {
-			for (SubWellFeature feature : pClass.getSubWellFeatures()) {
-				// If the data was already cached, use it
-				if (cache.isCached(well, feature)) {
-					if (cache.isNumeric(well, feature)) {
-						float[] data = cache.getNumericData(well, feature);
-						if (data != null) return data.length;
-					} else {
-						String[] data = cache.getStringData(well, feature);
-						if (data != null) return data.length;
-					}
-				} else {
-					if (hdf5File == null) {
-						hdf5File = getDataFile(well.getPlate());
-						if (hdf5File == null) return 0;
-					}
-
-					int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-					String featureId = feature.getName();
-					boolean dataExists = hdf5File.existsSubWellData(featureId, wellNr);
-					if (dataExists) {
-						String path = HDF5File.getSubWellDataPath(wellNr, featureId);
-						long[] dims = hdf5File.getDataDimensions(path);
-						if (dims.length > 0) {
-							return (int) dims[0];
-						}
-					}
-				}
+		ProtocolClass pClass = ProtocolUtils.getProtocolClass(well);
+		for (SubWellFeature feature : pClass.getSubWellFeatures()) {
+			if (cache.isCached(well, feature)) {
+				int dataSize = CollectionUtils.length(getData(well, feature));
+				// This particular feature may not have any values. Use it only if it is not-empty.
+				if (dataSize > 0) return dataSize;
 			}
-			return 0;
-		} finally {
-			if (hdf5File != null) try { hdf5File.close(); } catch (Exception e) {}
 		}
+		return dataSource.getNrCells(well);
 	}
 
 	/**
@@ -391,65 +254,20 @@ public class SubWellService  {
 	 * @param monitor A progress monitor that will be updated during the load (optional)
 	 */
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, IProgressMonitor monitor) {
-		// If the entire plate is already cached, abort the loading process.
-		boolean allCached = true;
-		for (SubWellFeature f: features) {
-			for (Well well: wells) {
-				if (!cache.isCached(well, f)) {
-					allCached = false;
-					break;
-				}
-			}
-		}
-		if (allCached) return;
-
-		IProgressMonitor monitorToUse = (monitor == null) ? new NullProgressMonitor() : monitor;
-		monitorToUse.beginTask("Loading subwell data for " + wells.size() + " wells", wells.size() + 5);
-
-		// Determine the needed HDF5 files (downloading them if desired).
-		Map<Plate, String> hdf5Files = new HashMap<>();
+		long start = System.currentTimeMillis();
+		
+		Set<Well> wellsToLoad = new HashSet<>();
 		for (Well well: wells) {
-			if (hdf5Files.containsKey(well.getPlate())) continue;
-			String hdf5Path = Screening.getEnvironment().getFileServer().getAsFile(getDataPath(well.getPlate())).getAbsolutePath();
-			if (new File(hdf5Path).exists()) hdf5Files.put(well.getPlate(), hdf5Path);
-		}
-		monitorToUse.worked(5);
-
-		if (useParallelReading) {
-			List<String> featureNames = features.stream().map(f -> f.getName()).collect(Collectors.toList());
-			for (Well well: wells) {
-				int wellNr = PlateUtils.getWellNr(well);
-				String filePathToUse = hdf5Files.get(well.getPlate());
-				if (filePathToUse == null) continue;
-				parallelReaderTP.schedule(() -> {
-					synchronized (monitorToUse) {
-						if (monitorToUse.isCanceled()) return;
-					}
-					Map<String, float[]> data = parallelReader.read(filePathToUse, featureNames, wellNr);
-					for (String f: data.keySet()) {
-						SubWellFeature feature = ProtocolUtils.getSubWellFeatureByName(f, features.get(0).getProtocolClass());
-						// Feature null may occur if the HDF5 file contains features which are no longer present in the protocol class.
-						if (feature != null) cache.putData(well, feature, data.get(f));
-					}
-					synchronized (monitorToUse) { monitorToUse.worked(1); }
-				});
-			}
-			while (!parallelReaderTP.isIdle()) {
-				// Check if the monitor is canceled because the thread pool could be doing other tasks.
-				if (monitorToUse.isCanceled()) break;
-				try { Thread.sleep(100); } catch (InterruptedException e) {}
-			}
-		} else {
-			for (Well well: wells) {
-				if (monitorToUse.isCanceled()) return;
-				for (SubWellFeature f: features) getNumericData(well, f, false);
-				monitorToUse.worked(1);
+			for (SubWellFeature feature: features) {
+				if (!cache.isCached(well, feature)) wellsToLoad.add(well);
 			}
 		}
+		if (!wellsToLoad.isEmpty()) dataSource.preloadData(new ArrayList<>(wellsToLoad), features, cache, monitor);
 
-		monitorToUse.done();
+		long duration = System.currentTimeMillis() - start;
+		EclipseLog.info(String.format("Data preload (%d wells, %d features): %d ms", wellsToLoad.size(), features.size(), duration), Activator.getContext().getBundle());
 	}
-
+	
 	/**
 	 * Update the subwell data for a set of wells in a single transaction.
 	 * 
@@ -592,36 +410,6 @@ public class SubWellService  {
 				}
 				cache.removeData(well, feature);
 			}
-		}
-	}
-	
-	private void initPrefListener() {
-		PrefUtils.getPrefStore().addPropertyChangeListener((event) -> {
-			if (event.getProperty().equals(Prefs.USE_PARALLEL_SUBWELL_LOADING)
-					|| event.getProperty().equals(Prefs.THREAD_POOL_SIZE)
-					|| event.getProperty().equals(Prefs.USE_ALL_LOG_CORES)
-					|| event.getProperty().equals(Prefs.USE_ALL_PHYS_CORES)) {
-				initParalellReading();
-			}
-		});
-	}
-
-	private void initParalellReading() {
-		useParallelReading = PrefUtils.getPrefStore().getBoolean(Prefs.USE_PARALLEL_SUBWELL_LOADING);
-		int processCount = PrefUtils.getNumberOfThreads();
-		int oldProcessCount = (parallelReader == null) ? 0 : parallelReader.getSlaveCount();
-
-		if (!useParallelReading || processCount != oldProcessCount) {
-			if (parallelReader != null) parallelReader.shutdown();
-			if (parallelReaderTP != null) parallelReaderTP.stop(false);
-			parallelReader = null;
-			parallelReaderTP = null;
-		}
-
-		if (useParallelReading && parallelReader == null) {
-			parallelReader = new HDF5MultiProcessReader(processCount);
-			parallelReader.startup();
-			parallelReaderTP = new ThreadPool(processCount);
 		}
 	}
 }

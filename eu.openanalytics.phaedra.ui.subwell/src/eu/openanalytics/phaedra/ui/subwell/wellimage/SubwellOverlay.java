@@ -519,7 +519,7 @@ public class SubwellOverlay extends JP2KOverlay {
 
 		SubWellFeature f = SubWellService.getInstance().getSampleFeature(currentWell);
 		int entityCount = 0;
-		Object testData = SubWellService.getInstance().getAnyData(currentWell, f);
+		Object testData = SubWellService.getInstance().getData(currentWell, f);
 		if (testData != null) entityCount = (testData instanceof float[]) ? ((float[])testData).length : ((String[])testData).length;
 		entityPositions = new Point[entityCount];
 

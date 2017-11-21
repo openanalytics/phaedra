@@ -59,7 +59,9 @@ public class SubWellDataCalculator {
 	}
 
 	public ImageData createSignalPlot(Well well, SubWellFeature feature, int cellNr) {
-		float[][] data = SubWellService.getInstance().getNumericData2D(well, feature);
+		//TODO
+//		float[][] data = SubWellService.getInstance().getNumericData2D(well, feature);
+		float[][] data = new float[0][0];
 		if (data == null) return null;
 		if (cellNr >= data.length) return null;
 		float[] tpData = data[cellNr];

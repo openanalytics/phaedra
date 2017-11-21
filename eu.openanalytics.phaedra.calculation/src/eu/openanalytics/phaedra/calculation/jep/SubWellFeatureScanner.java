@@ -44,7 +44,7 @@ public class SubWellFeatureScanner extends BaseScanner<Well> {
 	}
 	
 	private float[] getSubwellData(Well well, SubWellFeature feature, String normalization) {
-		float[] featureData = SubWellService.getInstance().getNumericData(well, feature, 0, false);
+		float[] featureData = SubWellService.getInstance().getNumericData(well, feature);
 		if (featureData == null || featureData.length == 0) return null;
 
 		if (normalization != null && !normalization.isEmpty()) {

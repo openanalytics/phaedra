@@ -47,7 +47,7 @@ public class WellPropertyScanner extends BaseScanner<Well> {
 		else if (scope.equalsIgnoreCase(SCOPE_SUBWELL)) {
 			int cellCount = 0;
 			SubWellFeature swf = SubWellService.getInstance().getSampleFeature(well);
-			Object data = SubWellService.getInstance().getAnyData(well, swf);
+			Object data = SubWellService.getInstance().getData(well, swf);
 			if (data != null) {
 				if (swf.isNumeric()) cellCount = ((float[])data).length;
 				else cellCount = ((String[])data).length;

@@ -232,7 +232,7 @@ public class CalculatorFactory {
 	private float getValue(Well well, int i, long featureId) {
 		SubWellFeature feature = ProtocolService.getInstance().getSubWellFeature(featureId);
 		if (feature == null) return Float.NaN;
-		float[] data = SubWellService.getInstance().getNumericData(well, feature, 0, false);
+		float[] data = SubWellService.getInstance().getNumericData(well, feature);
 		if (data == null || i < 0 || i >= data.length) return Float.NaN;
 		return data[i];
 	}

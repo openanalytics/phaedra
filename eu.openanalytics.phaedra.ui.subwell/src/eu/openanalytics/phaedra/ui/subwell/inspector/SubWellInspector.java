@@ -170,8 +170,8 @@ public class SubWellInspector extends DecoratedView {
 				if (o1 instanceof SubWellFeature && o2 instanceof SubWellFeature) {
 					SubWellFeature f1 = (SubWellFeature) o1;
 					SubWellFeature f2 = (SubWellFeature) o2;
-					Object d1 = SubWellService.getInstance().getAnyData(currentWell, f1);
-					Object d2 = SubWellService.getInstance().getAnyData(currentWell, f2);
+					Object d1 = SubWellService.getInstance().getData(currentWell, f1);
+					Object d2 = SubWellService.getInstance().getData(currentWell, f2);
 					String t1 = "";
 					String t2 = "";
 					if (d1 != null) t1 = Formatters.getInstance().format(Array.get(d1, currentIndex), f1);
@@ -336,7 +336,7 @@ public class SubWellInspector extends DecoratedView {
 				if (cell.getColumnIndex() == 0) {
 					text = feature.getName();
 				} else {
-					Object data = SubWellService.getInstance().getAnyData(currentWell, feature);
+					Object data = SubWellService.getInstance().getData(currentWell, feature);
 					if (data != null) {
 						text = Formatters.getInstance().format(Array.get(data, currentIndex), feature);
 					}

@@ -61,8 +61,14 @@ public class ConnectionPoolManager implements AutoCloseable {
 			config.setMaximumPoolSize(nrOfDBConnections);
 			config.setConnectionTimeout(dbConnectionTimeOut);
 			config.setJdbcUrl(url);
-			if (user != null)  config.addDataSourceProperty("user", user);
-			if (pw != null)  config.addDataSourceProperty("password", AESEncryptor.decrypt(pw));
+			if (user != null) {
+				config.addDataSourceProperty("user", user);
+				config.setUsername(user);
+			}
+			if (pw != null) {
+				config.addDataSourceProperty("password", AESEncryptor.decrypt(pw));
+				config.setPassword(AESEncryptor.decrypt(pw));
+			}
 
 			JDBCUtils.customizeHikariSettings(config);
 			dataSource = new HikariDataSource(config);
