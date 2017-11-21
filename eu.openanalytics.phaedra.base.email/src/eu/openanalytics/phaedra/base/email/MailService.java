@@ -29,8 +29,8 @@ public class MailService extends BaseJPAService {
 	
 	private MailService() {
 		// Hidden constructor
-		smtpHost = Screening.getEnvironment().getSetting("email.smtp.host");
-		mailSuffix = Screening.getEnvironment().getSetting("email.suffix");
+		smtpHost = Screening.getEnvironment().getConfig().getValue("email.smtp.host");
+		mailSuffix = Screening.getEnvironment().getConfig().getValue("email.suffix");
 		if (mailSuffix == null || mailSuffix.isEmpty()) mailSuffix = "phaedra.org";
 	}
 	

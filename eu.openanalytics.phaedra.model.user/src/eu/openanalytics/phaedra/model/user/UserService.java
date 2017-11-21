@@ -137,7 +137,7 @@ public class UserService extends BaseJPAService {
 			// Note that this only works if the current user is a service account with its password stored.
 			LDAPConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
 			String currentUserName = SecurityService.getInstance().getCurrentUserName();
-			String password = Screening.getEnvironment().resolvePassword(currentUserName);
+			String password = Screening.getEnvironment().getConfig().resolvePassword(currentUserName);
 			ctx = LDAPUtils.bind(currentUserName, password.getBytes(), ldapConfig);
 			email = LDAPUtils.lookupEmail(userName, ctx, ldapConfig);
 			email = StringUtils.isValidEmail(email)? email.toLowerCase() : "";

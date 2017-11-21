@@ -30,14 +30,8 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private ConnectionPoolManager connectionPoolManager;
 
-	public DBDataSource() {
-		//TODO configure
-		try { Class.forName("org.postgresql.Driver"); } catch (ClassNotFoundException e) {}
-		String baseURL = "jdbc:postgresql://localhost:5432/phaedra";
-		String username = "phaedra";
-		String password = "phaedra";
-		
-		connectionPoolManager = new ConnectionPoolManager(baseURL, username, password);
+	public DBDataSource(String url, String username, String password) {
+		connectionPoolManager = new ConnectionPoolManager(url, username, password);
 		try {
 			connectionPoolManager.startup();
 		} catch (SQLException e) {

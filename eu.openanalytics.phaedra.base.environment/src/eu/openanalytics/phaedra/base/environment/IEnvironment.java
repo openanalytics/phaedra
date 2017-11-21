@@ -5,6 +5,7 @@ import java.sql.Connection;
 
 import javax.persistence.EntityManager;
 
+import eu.openanalytics.phaedra.base.environment.config.Config;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 
@@ -31,7 +32,5 @@ public interface IEnvironment {
 	
 	public Connection getJDBCConnection();
 	
-	public String getSetting(String name);
-	
-	public String resolvePassword(String id) throws IOException;
+	public Config getConfig();
 }

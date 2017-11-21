@@ -93,12 +93,7 @@ public class EnvironmentImpl implements IEnvironment {
 	}
 
 	@Override
-	public String getSetting(String name) {
-		return config.getValue(name);
-	}
-	
-	@Override
-	public String resolvePassword(String id) throws IOException {
-		return config.resolvePassword(id);
+	public Config getConfig() {
+		return config;
 	}
 }

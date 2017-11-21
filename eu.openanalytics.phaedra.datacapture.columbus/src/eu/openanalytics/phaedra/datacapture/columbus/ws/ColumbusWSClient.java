@@ -32,7 +32,7 @@ public class ColumbusWSClient implements AutoCloseable {
 		if (password == null || password.isEmpty()) {
 			try {
 				String pwKey = username + "@" + host;
-				this.connectionInfo.password = Screening.getEnvironment().resolvePassword(pwKey);
+				this.connectionInfo.password = Screening.getEnvironment().getConfig().resolvePassword(pwKey);
 			} catch (Exception e) {
 				throw new IllegalArgumentException("No password found for Columbus user " + username);
 			}
