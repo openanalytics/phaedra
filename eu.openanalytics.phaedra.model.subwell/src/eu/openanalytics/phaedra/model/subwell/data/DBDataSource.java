@@ -18,6 +18,7 @@ import javax.persistence.PersistenceException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 
+import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.pool.ConnectionPoolManager;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -31,6 +32,7 @@ public class DBDataSource implements ISubWellDataSource {
 	private ConnectionPoolManager connectionPoolManager;
 
 	public DBDataSource(String url, String username, String password) {
+		JDBCUtils.loadJDBCDriver(url);
 		connectionPoolManager = new ConnectionPoolManager(url, username, password);
 		try {
 			connectionPoolManager.startup();

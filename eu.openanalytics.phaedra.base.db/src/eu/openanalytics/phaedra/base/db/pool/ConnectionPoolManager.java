@@ -72,7 +72,7 @@ public class ConnectionPoolManager implements AutoCloseable {
 
 			JDBCUtils.customizeHikariSettings(config);
 			dataSource = new HikariDataSource(config);
-			ThreadUtils.startDBPool(nrOfDBConnections);
+			ThreadUtils.configureDBThreadPool(nrOfDBConnections);
 		} catch (GeneralSecurityException e) {
 			throw new RuntimeException("Decryption failed", e);
 		}

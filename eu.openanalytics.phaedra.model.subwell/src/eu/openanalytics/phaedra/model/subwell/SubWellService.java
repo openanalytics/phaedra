@@ -51,6 +51,7 @@ public class SubWellService  {
 		// Hidden constructor.
 		dataSource = DataSourceFactory.loadDataSource(Screening.getEnvironment());
 		cache = new SubWellDataCache();
+		EclipseLog.info("Using " + dataSource.getClass().getName(), Activator.getContext().getBundle());
 	}
 
 	public static SubWellService getInstance() {

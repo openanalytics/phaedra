@@ -55,18 +55,6 @@ public class ThreadUtils {
 	}
 
 	/**
-	 * <p>Starts the DB Pool. Should be called on launch.</p>
-	 *
-	 * <p>If the pool has already been initialized, it will do nothing.</p>
-	 *
-	 * @param nrOfThreads
-	 */
-	public static void startDBPool(int nrOfThreads) {
-		if (DB_POOL != null) EclipseLog.warn("The DB Pool is already running.", Activator.getDefault());
-		else DB_POOL = new ForkJoinPool(nrOfThreads, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true);
-	}
-
-	/**
 	 * <p>Change the number of threads for the DB Pool.</p>
 	 *
 	 * <p>Since {@link ForkJoinPool} does not allow changing the number of threads, the existing DB Pool will be closed.</p>
@@ -75,11 +63,9 @@ public class ThreadUtils {
 	 */
 	public static void configureDBThreadPool(int nrOfThreads) {
 		if (DB_POOL == null) {
-			EclipseLog.warn("No DB Pool was initialized. Initialize it.", null, Activator.getDefault());
 			DB_POOL = new ForkJoinPool(nrOfThreads, ForkJoinPool.defaultForkJoinWorkerThreadFactory, null, true);
 		} else {
 			ForkJoinPool temp = DB_POOL;
-			// Let the variable reference a new thread pool.
 			DB_POOL = new ForkJoinPool(nrOfThreads);
 			// Close the previous thread pool after it has finished running.
 			temp.awaitQuiescence(10, TimeUnit.SECONDS);

@@ -39,6 +39,7 @@ public class JDBCUtils {
 		Oracle("oracle.jdbc.OracleDriver"),
 		Postgresql("org.postgresql.Driver"),
 		H2("org.h2.Driver"),
+		MonetDB("nl.cwi.monetdb.jdbc.MonetDriver"),
 		Unknown("");
 
 		private String driverClassName;
@@ -57,19 +58,28 @@ public class JDBCUtils {
 			}
 			return Unknown;
 		}
+		
+		public static DbType getByURL(String url) {
+			String type = url.split(":")[1];
+			return getByName(type);
+		}
 	};
 	
 	private static DbType dbType;
 	
 	public static void checkDbType(String url) {
-		String type = url.split(":")[1];
-		dbType = DbType.getByName(type);
-
-		if(dbType == DbType.Unknown) throw new RuntimeException("Unsupported database type: " + url);
+		dbType = DbType.getByURL(url);
+		if (dbType == DbType.Unknown) throw new RuntimeException("Unsupported database type: " + url);
+		loadJDBCDriver(url);
+	}
+	
+	public static void loadJDBCDriver(String url) {
+		DbType type = DbType.getByURL(url);
+		if (type == DbType.Unknown) return;
 		try {
-			Class.forName(dbType.getDriverClassName());
+			Class.forName(type.getDriverClassName());
 		} catch (ClassNotFoundException e) {
-			throw new RuntimeException("Failed to initialize database driver: " + url);
+			throw new RuntimeException("Failed to initialize database driver: " + type.getDriverClassName());
 		}
 	}
 	
