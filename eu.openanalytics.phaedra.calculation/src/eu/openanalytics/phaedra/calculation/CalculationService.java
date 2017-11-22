@@ -47,11 +47,11 @@ import eu.openanalytics.phaedra.validation.ValidationService.PlateCalcStatus;
 /**
  * This service performs plate calculations. A plate calculation consists of several steps:
  * <ol>
- * <li>Remove previous values from caches (stat cache, normalization cache, etc)</li>
+ * <li>Remove any stale values from cache (stat cache, normalization cache, etc)</li>
  * <li>Calculate raw values for features that have a calculation formula set.</li>
  * <li>Calculate normalized values for features that have a normalization method set.</li>
  * <li>Calculate some commonly used statistics (min, mean, max, zprime, etc)</li>
- * <li>Set plate calculation status flags and trigger post-calculation events</li>
+ * <li>Set plate calculation status flags and trigger post-calculation events (e.g. dose-response curve fitting)</li>
  * </ol>
  */
 public class CalculationService {
@@ -71,12 +71,16 @@ public class CalculationService {
 		return instance;
 	}
 
-	/*
-	 * **********
-	 * Public API
-	 * **********
-	 */
 
+	/**
+	 * Obtain a {@link PlateDataAccessor} for a plate.
+	 * <p>
+	 * This is the preferred way of retrieving well data, as it automatically
+	 * deals with caching and normalization.
+	 * </p>
+	 * @param plate The plate to get an accessor for.
+	 * @return A data accessor for the given plate.
+	 */
 	public PlateDataAccessor getAccessor(Plate plate) {
 		PlateDataAccessor accessor = dataAccessors.get(plate);
 		if (accessor == null) {
@@ -86,14 +90,36 @@ public class CalculationService {
 		return accessor;
 	}
 
+	/**
+	 * Force the full recalculation of a plate, including any calculated features
+	 * that reference subwell data.
+	 * <p>
+	 * Note that this may be a slow operation, as subwell-based calculated features
+	 * typically involve large subwell data reads.
+	 * Use this only when a plate's subwell data has changed, e.g. after a cell classification
+	 * process has completed.
+	 * </p>
+	 * @param plate The plate whose data should be recalculated.
+	 */
 	public void triggerSubWellCalculation(Plate plate) {
 		calculate(plate, CalculationMode.FULL);
 	}
 
+	/**
+	 * Force the recalculation of a plate.
+	 * 
+	 * @param plate The plate whose data should be recalculated.
+	 */
 	public void calculate(Plate plate) {
 		calculate(plate, CalculationMode.NORMAL);
 	}
 
+	/**
+	 * Force the calculation of a plate at the given calculation mode.
+	 * 
+	 * @param plate The plate to recalculate.
+	 * @param mode The mode: light, normal or full.
+	 */
 	public void calculate(Plate plate, CalculationMode mode) {
 
 		// Security check
@@ -198,10 +224,18 @@ public class CalculationService {
 		}
 	}
 
-	/* Multiplo plates and compounds
-	 * *****************************
+	/**
+	 * Get a list of plates that make up the same multiplo test.
+	 * Always includes the given plate itself.
+	 * <p>
+	 * E.g. if a multiplo experiment is set to group by a plate property named 'Virus',
+	 * this method will return all plates in that experiment that have the same
+	 * value for that property.
+	 * </p>
+	 *
+	 * @param plate The plate whose multiplo siblings must be retrieved.
+	 * @return A list of multiplo-linked plates.
 	 */
-	
 	public List<Plate> getMultiploPlates(Plate plate) {
 		List<Plate> multiploPlates = new ArrayList<>();
 		if (plate == null) return multiploPlates;
@@ -211,6 +245,13 @@ public class CalculationService {
 		return multiploPlates;
 	}
 	
+	/**
+	 * Get a list of compounds that were tested in multiplo in the same experiment.
+	 * See also {@link CalculationService#getMultiploPlates(Plate)}.
+	 * 
+	 * @param compound The compound whose multiplo siblings must be retrieved.
+	 * @return A list of multiplo-linked compounds.
+	 */
 	public List<Compound> getMultiploCompounds(Compound compound) {
 		return getMultiploPlates(compound.getPlate()).stream()
 				.flatMap(p -> PlateService.streamableList(p.getCompounds()).stream())
@@ -218,6 +259,12 @@ public class CalculationService {
 				.collect(Collectors.toList());
 	}
 	
+	/**
+	 * Check whether an experiment is configured for multiplo.
+	 * 
+	 * @param exp The experiment to check.
+	 * @return True if the experiment has a multiplo method configured.
+	 */
 	public boolean isMultiplo(Experiment exp) {
 		return MultiploMethod.get(exp) != MultiploMethod.None;
 	}

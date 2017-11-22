@@ -7,17 +7,29 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import eu.openanalytics.phaedra.datacapture.parser.ParseException;
-
+/**
+ * A collection of utilities for parsing files.
+ */
 public class ParserUtils {
-	
+
+	/**
+	 * Convert a byte array (containing a parsed text) into an array of lines.
+	 * 
+	 * @param data The byte array to convert.
+	 * @return An array of lines.
+	 */
 	public static String[] toLines(byte[] data) {
 		return toLines(data, true);
 	}
 	
+	/**
+	 * Convert a byte array (containing a parsed text) into an array of lines.
+	 * 
+	 * @param data The byte array to convert.
+	 * @param trim True to trim any whitespace from each line.
+	 * @return An array of lines.
+	 */
 	public static String[] toLines(byte[] data, boolean trim) {
 		try {
 			InputStream input = new ByteArrayInputStream(data);
@@ -33,21 +45,5 @@ public class ParserUtils {
 			throw new RuntimeException("Failed to read data", e);
 		}
 	}
-	
-	public static void doError(String message) throws ParseException {
-		throw new ParseException(message);
-	}
 
-	public static String find(String[] strings, String regex) {
-		Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-		for (String string: strings) {
-			if (string == null) continue;
-			Matcher matcher = pattern.matcher(string);
-			if (matcher.matches()) {
-				if (matcher.groupCount() > 0) return matcher.group(1);
-				else return string;
-			}
-		}
-		return null;
-	}
 }

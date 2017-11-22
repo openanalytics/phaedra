@@ -35,17 +35,18 @@ import eu.openanalytics.phaedra.validation.action.well.ResetWellAction;
 import eu.openanalytics.phaedra.validation.hook.ValidationHookManager;
 
 /**
- * Entry point for status-related operations, such as:
+ * API for changing the status of various objects, such as:
  * <ul>
  * <li>Accepting and rejecting wells</li>
- * <li>Plate calculation status</li>
- * <li>Plate validation status</li>
- * <li>Plate approval status</li>
- * <li>Compound validation status</li>
- * <li>Compound approval status</li>
+ * <li>Updating plate calculation status</li>
+ * <li>Updating plate validation status</li>
+ * <li>Updating plate approval status</li>
+ * <li>Updating compound validation status</li>
+ * <li>Updating compound approval status</li>
  * </ul>
- * If a status-related operation succeeds, a ValidationChanged
- * event will be triggered (see ModelEventService).
+ * <p>
+ * Validation-related actions are always saved in a history table, and cannot be erased.
+ * </p>
  */
 public class ValidationService {
 
@@ -67,12 +68,15 @@ public class ValidationService {
 		return instance;
 	}
 
-	/*
-	 * **********
-	 * Public API
-	 * **********
+	/**
+	 * Perform the given action on the given object(s).
+	 * 
+	 * @param action The {@link Action} to perform.
+	 * @param remark An optional remark to include in the action.
+	 * @param showError True to display an error message if the action fails. False to just throw the exception.
+	 * @param objects The objects to perform the action on.
+	 * @throws ValidationException If the action fails, for example because it is not allowed on the given objects.
 	 */
-
 	public void doAction(Action action, String remark, boolean showError, Object... objects) throws ValidationException {
 		//TODO Return if nothing to do, e.g. accepting an accepted well.
 
@@ -106,20 +110,44 @@ public class ValidationService {
 		}
 	}
 
+	/**
+	 * Check if the given action is a well accept/reject/reset action.
+	 * 
+	 * @param action The action to check.
+	 * @return True if the action is a well action.
+	 */
 	public static boolean isWellAction(Action action) {
 		return (action == Action.REJECT_WELL || action == Action.REJECT_OUTLIER_WELL
 				|| action == Action.ACCEPT_WELL || action == Action.RESET_WELL);
 	}
 
+	/**
+	 * Check if the given action is a plate or compound validation/invalidation/reset action.
+	 * 
+	 * @param action The action to check.
+	 * @return True if the action is a plate or compound action.
+	 */
 	public static boolean isValidationAction(Action action) {
 		return (action == Action.VALIDATE_PLATE || action == Action.RESET_PLATE_VALIDATION || action == Action.INVALIDATE_PLATE
 				|| action == Action.VALIDATE_COMPOUND || action == Action.RESET_COMPOUND_VALIDATION || action == Action.INVALIDATE_COMPOUND);
 	}
 
+	/**
+	 * Check if the given action is a plate approval/disapproval/reset action.
+	 * 
+	 * @param action The action to check.
+	 * @return True if the action is a plate action.
+	 */
 	public static boolean isApprovalAction(Action action) {
 		return (action == Action.APPROVE_PLATE || action == Action.RESET_PLATE_APPROVAL || action == Action.DISAPPROVE_PLATE);
 	}
 
+	/**
+	 * Retrieve the current validation and approval status of a plate, ignoring local caching.
+	 * 
+	 * @param plate The plate whose status should be retrieved.
+	 * @return The current status of the plate.
+	 */
 	public PlateStatus getPlateStatus(Plate plate) {
 		String sql = "select validate_status, approve_status from phaedra.hca_plate where plate_id = " + plate.getId();
 		EntityManager em = Screening.getEnvironment().getEntityManager();
@@ -149,12 +177,6 @@ public class ValidationService {
 		public boolean validationSet;
 		public boolean approvalSet;
 	}
-
-	/*
-	 * **********************
-	 * Supported status codes
-	 * **********************
-	 */
 
 	public static enum Action {
 

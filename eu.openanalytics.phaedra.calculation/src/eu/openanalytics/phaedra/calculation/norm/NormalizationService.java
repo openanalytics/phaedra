@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.calculation.norm;
 
+import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.norm.cache.NormalizationCache;
 import eu.openanalytics.phaedra.calculation.norm.cache.NormalizedGrid;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -8,10 +9,16 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 
 /**
- * <p>Entry point for normalization calculations.</p>
- *
- * <p>Normalizers can be added via the INormalizer extension point.
- * Calls to getNormalizedValue are optimized using internal caching.</p>
+ * API for performing normalization calculations.
+ * <p>
+ * Each well feature can have a normalization method set.
+ * This method refers to one of the available normalizers.
+ * </p>
+ * <p>
+ * Note that this service is designed primarily for internal use.
+ * It is always preferable to call {@link CalculationService#getAccessor(Plate)} instead,
+ * and use that accessor to obtain normalized feature values.
+ * </p>
  */
 public class NormalizationService {
 
@@ -32,12 +39,6 @@ public class NormalizationService {
 	public static NormalizationService getInstance() {
 		return instance;
 	}
-	
-	/*
-	 * **********
-	 * Public API
-	 * **********
-	 */
 
 	/**
 	 * <p>Get the available normalization methods.</p>

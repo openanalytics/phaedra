@@ -8,6 +8,9 @@ import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
 import loci.formats.in.TiffReader;
 
+/**
+ * Use one of the available image codecs to identify an image file.
+ */
 public class ImageIdentifier {
 
 	/**

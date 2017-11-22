@@ -29,11 +29,19 @@ import loci.formats.tiff.IFD;
  * <li>Multipage TIFF images</li>
  * </ul>
  * This codec uses Bioformats.
- * 
+ * <p>
  * TODO Rename this codec: it can read many more formats than TIFF
+ * </p>
  */
 public class TIFFCodec {
 
+	/**
+	 * Attempt to read image data from the given file.
+	 * 
+	 * @param inputFile The file to parse.
+	 * @return An array of ImageData. E.g. for a multipage TIFF, the array will contain multiple elements. 
+	 * @throws IOException If the file cannot be parsed for any reason.
+	 */
 	public static ImageData[] read(String inputFile) throws IOException {
 		// Generic reader
 		IFormatReader reader = new ImageReader();
@@ -106,6 +114,13 @@ public class TIFFCodec {
 		}
 	}
 
+	/**
+	 * Write image data to a TIFF file.
+	 * 
+	 * @param data The image data to write.
+	 * @param destination The destination of the TIFF file.
+	 * @throws IOException If the image cannot be written for any reason.
+	 */
 	public static void write(ImageData data, String destination) throws IOException {
 		
 		File destFile = new File(destination);

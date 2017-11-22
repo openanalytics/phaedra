@@ -29,11 +29,11 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 /**
  * <p>
- * Accessor for feature values on a per-plate basis.
- * For access on a per-well basis, use {@link WellDataAccessor} instead.
- * </p><p>
- * This accessor will load data in multi-threaded mode if {@link #loadEager} is used
- * and the data size (FeatureCount * WellCount) is sufficiently large.
+ * Accessor for well feature values on a per-plate basis.
+ * </p>
+ * <p>
+ * Under normal circumstances, data will be lazily loaded and cached per-feature.
+ * To load multiple features immediately, use {@link #loadEager}.
  * </p>
  * Note: instances of this class should always be obtained via {@link CalculationService#getAccessor(Plate)}.
  */
@@ -56,15 +56,28 @@ public class PlateDataAccessor implements Serializable {
 		this.lock = new ReentrantLock();
 	}
 
+	/**
+	 * Immediately load the data for the given well features.
+	 * 
+	 * @param features The features to load.
+	 */
 	public void loadEager(List<Feature> features) {
 		if (features == null) features = ProtocolUtils.getFeatures(plate);
 		loadData(features);
 	}
 
+	/**
+	 * See {@link PlateDataAccessor#reset(boolean)}
+	 */
 	public void reset() {
 		reset(true);
 	}
 
+	/**
+	 * Clear data from the cache.
+	 * 
+	 * @param allFeatures True to clear all data, false to clear only data for calculated features.
+	 */
 	public void reset(boolean allFeatures) {
 		lock.lock();
 		try {
@@ -82,6 +95,13 @@ public class PlateDataAccessor implements Serializable {
 		}
 	}
 
+	/**
+	 * Force calculation of a calculated feature, bypassing any cached values.
+	 * <p>
+	 * Normally, calculated features are calculated lazily, when they are requested and not yet cached.
+	 * </p> 
+	 * @param f The feature to calculate.
+	 */
 	public void forceFeatureCalculation(Feature f) {
 		if (f == null || !f.isCalculated()) return;
 		// Do not lock yet! runCalculatedFeature may call getValue (via JEP) in other threads.
@@ -94,21 +114,48 @@ public class PlateDataAccessor implements Serializable {
 		}
 	}
 
+	/**
+	 * Get the plate this accessor is for.
+	 * 
+	 * @return The parent plate.
+	 */
 	public Plate getPlate() {
 		return plate;
 	}
 
+	/**
+	 * Get the string value of the given feature at the given well position.
+	 * 
+	 * @param row The well row, starting at 1.
+	 * @param col The well column, starting at 1.
+	 * @param f The well feature.
+	 * @return The string value, possibly null.
+	 */
 	public String getStringValue(int row, int col, Feature f) {
 		int wellNr = NumberUtils.getWellNr(row, col, plate.getColumns());
 		return getStringValue(wellNr, f);
 	}
 
+	/**
+	 * Get the string value of the given feature and the given well number.
+	 * 
+	 * @param wellNr The well number, starting at 1.
+	 * @param f The well feature.
+	 * @return The string value, possibly null.
+	 */
 	public String getStringValue(int wellNr, Feature f) {
 		if (wellNr > wells.size() || f.isNumeric()) return null;
 		Well well = wells.get(wellNr-1);
 		return getStringValue(well, f);
 	}
 
+	/**
+	 * Get the string value of the given feature and well.
+	 * 
+	 * @param well The well to get a value for.
+	 * @param f The well feature.
+	 * @return The string value, possibly null.
+	 */
 	public String getStringValue(Well well, Feature f) {
 		CacheableFeatureValue value = getValue(well, f);
 		if (value == null || value == MISSING_VALUE) return null;
@@ -116,17 +163,42 @@ public class PlateDataAccessor implements Serializable {
 		return value.getRawStringValue();
 	}
 
+	/**
+	 * Get the numeric value of the given feature at the given well position.
+	 * 
+	 * @param row The well row, starting at 1.
+	 * @param col The well column, starting at 1.
+	 * @param f The well feature.
+	 * @param normalization To get a normalized value, specify the normalization method here. See {@link NormalizationService}
+	 * @return The numeric value, possibly NaN (not-a-number).
+	 */
 	public double getNumericValue(int row, int col, Feature f, String normalization) {
 		int wellNr = NumberUtils.getWellNr(row, col, plate.getColumns());
 		return getNumericValue(wellNr, f, normalization);
 	}
 
+	/**
+	 * Get the numeric value of the given feature at the given well number.
+	 * 
+	 * @param wellNr The well number, starting at 1.
+	 * @param f The well feature.
+	 * @param normalization To get a normalized value, specify the normalization method here. See {@link NormalizationService}
+	 * @return The numeric value, possibly NaN (not-a-number).
+	 */
 	public double getNumericValue(int wellNr, Feature f, String normalization) {
 		if (wellNr > wells.size() || !f.isNumeric()) return Double.NaN;
 		Well well = wells.get(wellNr-1);
 		return getNumericValue(well, f, normalization);
 	}
 
+	/**
+	 * Get the numeric value of the given feature and well.
+	 * 
+	 * @param well The well to get a value for.
+	 * @param f The well feature.
+	 * @param normalization To get a normalized value, specify the normalization method here. See {@link NormalizationService}
+	 * @return The numeric value, possibly NaN (not-a-number).
+	 */
 	public double getNumericValue(Well well, Feature f, String normalization) {
 		CacheableFeatureValue value = getValue(well, f);
 		if (value == null || value == MISSING_VALUE) return Double.NaN;
@@ -141,12 +213,6 @@ public class PlateDataAccessor implements Serializable {
 			return Double.NaN;
 		}
 	}
-
-	/*
-	 * **********
-	 * Non-public
-	 * **********
-	 */
 
 	private CacheableFeatureValue getValue(Well w, Feature f) {
 		CacheableFeatureValue value = getCachedValue(w, f);

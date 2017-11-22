@@ -26,11 +26,11 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 
 /**
- * Entry point for statistic computations on plate data. Statistics are always
- * given per plate per feature, but may also be given per plate per feature per
- * welltype.
- *
+ * API for performing statistical computations on plates and wells.
+ * The statistics are always calculated per feature, optionally also grouped by welltype.
+ * <p>
  * Results are cached for future requests.
+ * </p>
  */
 public class StatService {
 
@@ -63,40 +63,99 @@ public class StatService {
 		return instance;
 	}
 
-	/*
-	 * **********
-	 * Public API
-	 * **********
+	/**
+	 * Get the names of statistical computations that this service supports.
+	 * 
+	 * @return An array of supported stat names.
 	 */
-
 	public String[] getAvailableStats() {
 		return calculatorRegistry.getCalculatorNames();
 	}
 
+	/**
+	 * Perform the given stat computation on the given array of data.
+	 * Note that this computation is <b>not</b> cached.
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param values The values to compute on.
+	 * @return The computed value, possibly NaN.
+	 */
 	public double calculate(String stat, double[] values) {
 		return doCalculate(stat, new SimpleStatContext(values));
 	}
 
+	/**
+	 * Perform the given stat computation on the given array of data.
+	 * Note that this computation is <b>not</b> cached.
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param values The values to compute on.
+	 * @param args Optional arguments for the computation, e.g. the n value for an n-th percentile computation.
+	 * @return The computed value, possibly NaN.
+	 */
 	public double calculate(String stat, double[] values, Object... args) {
 		return doCalculate(stat, new ArgumentStatContext(values, args));
 	}
 
+	/**
+	 * Perform the given stat computation on the well data of the given plate.
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param p The plate whose well data will be used.
+	 * @param f The feature whose data will be used.
+	 * @param wellType Only values from wells with this well type will be used. Use null to include all wells.
+	 * @param norm The normalization to use. Use null to perform calculation on raw values instead.
+	 * @return The computed value, possibly NaN.
+	 */
 	public double calculate(String stat, Plate p, Feature f, String wellType, String norm) {
 		return calculate(new StatQuery(stat, p, f, wellType, norm));
 	}
 
+	/**
+	 * Perform the given stat computation on the well data of the given experiment.
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param exp The experiment whose well data will be used.
+	 * @param f The feature whose data will be used.
+	 * @param wellType Only values from wells with this well type will be used. Use null to include all wells.
+	 * @param norm The normalization to use. Use null to perform calculation on raw values instead.
+	 * @return The computed value, possibly NaN.
+	 */
 	public double calculate(String stat, Experiment exp, Feature f, String wellType, String norm) {
 		return calculate(new StatQuery(stat, exp, f, wellType, norm));
 	}
 
+	/**
+	 * Perform the given stat computation on the subwell data of the given well.
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param w The well whose subwell data will be used.
+	 * @param f The subwell feature whose data will be used.
+	 * @return The computed value, possibly NaN. 
+	 */
 	public double calculate(String stat, Well w, SubWellFeature f) {
 		return calculate(new StatQuery(stat, w, f, null, null));
 	}
 
+	/**
+	 * Perform the given stat computation on the subwell data of the given well.
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param p The plate whose subwell data will be used.
+	 * @param f The subwell feature whose data will be used.
+	 * @param wellType Only values from wells with this well type will be used. Use null to include all wells.
+	 * @return The computed value, possibly NaN. 
+	 */
 	public double calculate(String stat, Plate p, SubWellFeature f, String wellType) {
 		return calculate(new StatQuery(stat, p, f, wellType, null));
 	}
 
+	/**
+	 * Perform a custom statistical query.
+	 * 
+	 * @param query The custom query to execute.
+	 * @return The computed value, possibly NaN.
+	 */
 	public double calculate(StatQuery query) {
 
 		if (query == null || query.getStat() == null || query.getFeature() == null) return Double.NaN;
@@ -128,12 +187,26 @@ public class StatService {
 		return stats.get(stat);
 	}
 
+	/**
+	 * Remove all computed stat values from the cache, for the given plate.
+	 * 
+	 * @param p The plate to remove from the cache.
+	 */
 	public void purgeCache(Plate p) {
 		// Remove all stored values relating to the plate.
 		statCache.remove(p);
 		persistentStatsLoaded.remove(p);
 	}
 
+	/**
+	 * Load the persisted stats for the given plate.
+	 * <p>
+	 * Plates always have some common stat values (e.g. min, mean, max per feature per welltype)
+	 * that are calculated on every plate recalculation, and persisted for frequent and performant usage.
+	 * </p>
+	 * 
+	 * @param p The plate to load persisted stats for.
+	 */
 	public void loadPersistentPlateStats(Plate p) {
 		if (persistentStatsDisabled.contains(p)) return;
 		if (persistentStatsLoaded.contains(p)) return;
@@ -144,21 +217,36 @@ public class StatService {
 		}
 	}
 
+	/**
+	 * Enable or disable the saving of persisted stats for a plate.
+	 * See {@link StatService#loadPersistentPlateStats(Plate)}.
+	 * <p>
+	 * Note: this method is used internally during plate recalculation,
+	 * and should not be called in other circumstances.
+	 * </p>
+	 * 
+	 * @param p The plate to toggle persisted stats for.
+	 * @param enabled The status to toggle to.
+	 */
 	public void togglePersistentStatsEnabled(Plate p, boolean enabled) {
 		if (enabled) persistentStatsDisabled.remove(p);
 		else persistentStatsDisabled.add(p);
 	}
 
+	/**
+	 * Update the persisted stats of the given plate.
+	 * See {@link StatService#loadPersistentPlateStats(Plate)}.
+	 * <p>
+	 * Note: this method is used internally during plate recalculation,
+	 * and should not be called in other circumstances.
+	 * </p>
+	 * 
+	 * @param p The plate to save persisted stats for.
+	 */
 	public void updatePersistentPlateStats(Plate p) {
 		// Calculate and store plate stats.
 		doUpdatePersistentPlateStats(p);
 	}
-
-	/*
-	 * **********
-	 * Non-public
-	 * **********
-	 */
 
 	private double doCalculate(StatQuery query) {
 		// If the feature is not numeric, do not bother trying to calculate.
