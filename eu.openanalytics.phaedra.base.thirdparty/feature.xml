@@ -693,4 +693,18 @@
          version="0.0.0"
          unpack="false"/>
 
+   <plugin
+         id="org.monetdb.jdbc"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.amazon.aws"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
 </feature>
