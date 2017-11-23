@@ -137,6 +137,10 @@
 	<build>
 		<plugins>
 			<plugin>
+				<artifactId>maven-install-plugin</artifactId>
+				<version>2.5</version>
+			</plugin>
+			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>tycho-maven-plugin</artifactId>
 				<version>${tycho.version}</version>
