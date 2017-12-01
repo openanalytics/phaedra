@@ -167,8 +167,7 @@ public class SMBInterface extends BaseFileServer {
 		if (ProcessUtils.isWindows()) {
 			return new File(SMBHelper.toUNCNotation(getFullPath(path)));
 		} else {
-			if (privateMount == null) mount();
-			return new File(privateMount + "/" + path);
+			return new File(getMount() + "/" + path);
 		}
 	}
 	
@@ -204,6 +203,11 @@ public class SMBInterface extends BaseFileServer {
 	
 	private SmbFile getFile(String path, boolean lock) throws MalformedURLException {
 		return SMBHelper.getFile(getFullPath(path), auth, lock);
+	}
+	
+	private synchronized String getMount() {
+		if (privateMount == null) mount();
+		return privateMount;
 	}
 	
 	private synchronized void mount() {
