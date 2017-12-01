@@ -25,7 +25,7 @@ public class JavaScriptEngine extends BaseScriptEngine {
 
 		String label = getLabel();
 		if (label == null) label = getId();
-		InteractiveConsole console = new InteractiveConsole(label, Activator.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/js.png")) {
+		InteractiveConsole console = new InteractiveConsole(label, getImageDescriptor(Activator.PLUGIN_ID, "/icons/js.png")) {
 			@Override
 			protected String processInput(String input) throws Exception {
 				Object output = executeScript(input, null, true);

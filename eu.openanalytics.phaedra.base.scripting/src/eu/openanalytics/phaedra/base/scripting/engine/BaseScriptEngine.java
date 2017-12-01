@@ -9,9 +9,12 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import eu.openanalytics.phaedra.base.console.InteractiveConsole;
+import eu.openanalytics.phaedra.base.scripting.Activator;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 
 public abstract class BaseScriptEngine implements IScriptEngine, IExecutableExtension {
@@ -90,5 +93,13 @@ public abstract class BaseScriptEngine implements IScriptEngine, IExecutableExte
 	
 	protected void setConsole(InteractiveConsole console) {
 		this.console = console;
+	}
+	
+	protected ImageDescriptor getImageDescriptor(String pluginId, String imagePath) {
+		ImageDescriptor[] desc = new ImageDescriptor[1];
+		Display.getDefault().syncExec(() -> {
+			desc[0] = Activator.imageDescriptorFromPlugin(pluginId, imagePath);
+		});
+		return desc[0];
 	}
 }

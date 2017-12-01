@@ -146,13 +146,19 @@ public class SMBInterface extends BaseFileServer {
 
 	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
-		//TODO SeekableSMBFile seems to have performance issues. Prefer UNC access on Windows.
-		if (ProcessUtils.isWindows() && !mode.toLowerCase().contains("w")) {
+		//TODO SeekableSMBFile is very slow. Avoid using it if possible.
+		if (mode.toLowerCase().contains("w")) {
+			return new SeekableSMBFile(getFile(path, true), mode);
+		} else {
 			Set<OpenOption> opts = new HashSet<>();
 			opts.add(StandardOpenOption.READ);
-			return Files.newByteChannel(Paths.get(SMBHelper.toUNCNotation(getFullPath(path))), opts);
-		} else {
-			return new SeekableSMBFile(getFile(path, mode.toLowerCase().contains("w")), mode);
+			String filePath = null;
+			if (ProcessUtils.isWindows()) {
+				filePath = SMBHelper.toUNCNotation(getFullPath(path));
+			} else {
+				filePath = getAsFile(path).getAbsolutePath();
+			}
+			return Files.newByteChannel(Paths.get(filePath), opts);
 		}
 	}
 	
@@ -200,7 +206,9 @@ public class SMBInterface extends BaseFileServer {
 		return SMBHelper.getFile(getFullPath(path), auth, lock);
 	}
 	
-	private void mount() {
+	private synchronized void mount() {
+		if (privateMount != null) return;
+		
 		if (ProcessUtils.isMac()) {
 			// On Mac, make a private non-sudo mount
 			privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
@@ -215,15 +223,20 @@ public class SMBInterface extends BaseFileServer {
 			}
 		} else {
 			// On Linux, depend on the system property pointing to a local path or dedicated sudo mount
-			privateMount = System.getProperty("phaedra.fs.path");
+			String sysProp = "phaedra.fs.path";
+			privateMount = System.getProperty(sysProp);
+			if (privateMount == null || privateMount.isEmpty()) throw new RuntimeException("Cannot access SMB file: please set the " + sysProp + "system property.");
 		}
 	}
 	
-	private void unmount() {
+	private synchronized void unmount() {
+		if (privateMount == null) return;
+		
 		if (ProcessUtils.isMac()) {
 			try {
 				int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
 				if (retCode == 0) FileUtils.deleteRecursive(privateMount);
+				privateMount = null;
 			} catch (InterruptedException e) {}
 		}
 	}

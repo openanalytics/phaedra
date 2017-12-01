@@ -1,7 +1,8 @@
 package eu.openanalytics.phaedra.base.environment.login;
 
-import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IProduct;
 import org.eclipse.core.runtime.Platform;
@@ -42,8 +43,6 @@ import eu.openanalytics.phaedra.base.util.misc.VersionUtils;
 
 public class LoginSplash extends BasicSplashHandler {
 
-	private static final int MAX_ATTEMPTS = 3;
-	
 	private static final int F_LABEL_HORIZONTAL_INDENT = 20;
 	private static final int F_BUTTON_WIDTH_HINT = 80;
 	private static final int F_TEXT_WIDTH_HINT = 175;
@@ -63,16 +62,10 @@ public class LoginSplash extends BasicSplashHandler {
 	private Button okBtn;
 	private Button cancelBtn;
 	
-	private boolean authenticated;
-	private int attempts = 0;
+	private AtomicBoolean authenticated;
 
 	public LoginSplash() {
-		loginCmp = null;
-		usernameTxt = null;
-		passwordTxt = null;
-		okBtn = null;
-		cancelBtn = null;
-		authenticated = false;
+		authenticated = new AtomicBoolean(false);
 	}
 
 	@Override
@@ -91,16 +84,13 @@ public class LoginSplash extends BasicSplashHandler {
 		
 		createUI();
 		getSplash().layout(true);
-		
-		// Keep the splash screen visible and prevent the RCP application from
-		// loading until the close button is clicked.
 		doEventLoop();
 	}
 
 	private void doEventLoop() {
 		Shell splash = getSplash();
 		try {
-			while (authenticated == false) {
+			while (!authenticated.get()) {
 				if (splash.getDisplay().readAndDispatch() == false) {
 					splash.getDisplay().sleep();
 				}
@@ -112,7 +102,7 @@ public class LoginSplash extends BasicSplashHandler {
 			}
 		}
 		loginCmp.dispose();
-		loading();
+		loadWorkbench();
 		splash.layout(true);
 	}
 
@@ -277,72 +267,75 @@ public class LoginSplash extends BasicSplashHandler {
 	private void handleButtonOKWidgetSelected() {
 		String envId = environmentCmb.getItem(environmentCmb.getSelectionIndex());
 		IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
+		String username = usernameTxt.getText();
+		String password = passwordTxt.getText();
+		attemptLogin(env, username, password);
+	}
+
+	private void handleButtonCancelWidgetSelected() {
+		EclipseLog.info("Login cancelled: " + new Date(), Activator.getDefault());
+		Display.getDefault().close();
+		System.exit(0);
+	}
+
+	private void attemptLogin(IEnvironment env, String username, String password) {
+		loadingLbl.setText("Logging in...");
+		okBtn.setEnabled(false);
+		String envName = environmentCmb.getText();
 		
-		if (attempts < MAX_ATTEMPTS) {
+		ForkJoinPool.commonPool().submit(() -> {
 			try {
-				loadingLbl.setText("Logging in...");
-				String username = usernameTxt.getText();
-				byte[] password = passwordTxt.getText().getBytes();
-				Screening.login(env, username, password);
-				authenticated = true;
+				Screening.login(env, username, password.getBytes());
+				authenticated.set(true);
 			} catch (AuthenticationException e) {
-				AccessDialog.openLoginFailedDialog(getSplash(), "Login failed", e.getMessage());
-				attempts++;
-				passwordTxt.setText("");
-				loadingLbl.setText("");
-				passwordTxt.setFocus();
 				EclipseLog.warn("Authentication failure", e, Activator.getDefault());
-			} catch (IOException e) {
-				String message = "An error occured connecting to the " + environmentCmb.getText() + " environment.";
+				loginFailed(e.getMessage(), false);
+			} catch (Exception e) {
+				String message = "An error occured connecting to the " + envName + " environment.";
 				message += "\nPlease contact an administrator.";
 				message += "\n\nCause:\n";
 				if (e.getMessage() != null) message += e.getMessage();
 				else if (e.getCause() != null) message += e.getCause().getMessage();
 				else message += e.toString();
 				
-				EclipseLog.error("Error connecting to environment " + environmentCmb.getText(), e, Activator.getDefault());
-				AccessDialog.openLoginFailedDialog(getSplash(), "Connection Error", message);
-				handleButtonCancelWidgetSelected();
+				EclipseLog.error("Error connecting to environment " + envName, e, Activator.getDefault());
+				loginFailed(message, true);
 			}
-		}
-
-		if (!authenticated && attempts >= MAX_ATTEMPTS) {
-			handleButtonCancelWidgetSelected();
-		}
+		});
 	}
-
-	private void handleButtonCancelWidgetSelected() {
-		EclipseLog.info("Session cancelled: " + new Date() + " (before login)", Activator.getDefault());
-		Display.getDefault().close();
-		System.exit(0);
+	
+	private void loginFailed(String msg, boolean exit) {
+		Display.getDefault().asyncExec(() -> {
+			AccessDialog.openLoginFailedDialog(getSplash(), "Login failed", msg);
+			passwordTxt.setText("");
+			loadingLbl.setText("");
+			passwordTxt.setFocus();
+			okBtn.setEnabled(true);
+			if (exit) handleButtonCancelWidgetSelected();
+		});
 	}
-
-	private void loading() {
+	
+	private void loadWorkbench() {
 		super.init(getSplash());
+		
 		String progressRectString = null;
 		String messageRectString = null;
 		String foregroundColorString = null;
+		
 		IProduct product = Platform.getProduct();
 		if (product != null) {
 			progressRectString = product.getProperty(IProductConstants.STARTUP_PROGRESS_RECT);
 			messageRectString = product.getProperty(IProductConstants.STARTUP_MESSAGE_RECT);
 			foregroundColorString = product.getProperty(IProductConstants.STARTUP_FOREGROUND_COLOR);
 		}
-		Rectangle progressRect = StringConverter.asRectangle(progressRectString, new Rectangle(10, 10, 300, 15));
-		setProgressRect(progressRect);
+		
+		setProgressRect(StringConverter.asRectangle(progressRectString, new Rectangle(10, 10, 300, 15)));
+		setMessageRect(StringConverter.asRectangle(messageRectString, new Rectangle(10, 35, 300, 15)));
 
-		Rectangle messageRect = StringConverter.asRectangle(messageRectString, new Rectangle(10, 35, 300, 15));
-		setMessageRect(messageRect);
-
-		int foregroundColorInteger;
-		try {
-			foregroundColorInteger = Integer.parseInt(foregroundColorString, 16);
-		} catch (Exception ex) {
-			foregroundColorInteger = 0xD2D7FF; // off white
-		}
-
+		int foregroundColorInteger = 0xD2D7FF;
+		try { foregroundColorInteger = Integer.parseInt(foregroundColorString, 16); } catch (Exception ex) {}
 		setForeground(new RGB((foregroundColorInteger & 0xFF0000) >> 16, (foregroundColorInteger & 0xFF00) >> 8, foregroundColorInteger & 0xFF));
 
-		getContent(); // ensure creation of the progress
+		getContent();
 	}
 }
