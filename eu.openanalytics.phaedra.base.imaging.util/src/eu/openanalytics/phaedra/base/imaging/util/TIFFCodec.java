@@ -43,29 +43,19 @@ public class TIFFCodec {
 	 * @throws IOException If the file cannot be parsed for any reason.
 	 */
 	public static ImageData[] read(String inputFile) throws IOException {
-		// Generic reader
-		IFormatReader reader = new ImageReader();
-		
-		// TIFF reader
-		String[] tiffExtensions = { ".tif", ".tiff", ".flex" };
-		for (String ext: tiffExtensions) {
-			if (inputFile.toLowerCase().endsWith(ext)) reader = new TiffReader();
-		}
-		
-		// SWT reader (faster than Bioformats)
-		String[] swtExtensions = { ".bmp", ".gif", ".png", ".jpg", ".jpeg" };
-		for (String ext: swtExtensions) {
-			if (inputFile.toLowerCase().endsWith(ext)) reader = null;
-		}
-		
+		return read(inputFile, (String) null);
+	}
+	
+	public static ImageData[] read(String inputFile, String readerClass) throws IOException {
+		IFormatReader reader = getReader(inputFile, readerClass);
 		if (reader == null) {
 			return new ImageLoader().load(inputFile);
 		} else {
-			return tryRead(inputFile, reader);
+			return read(inputFile, reader);
 		}
 	}
 	
-	private static ImageData[] tryRead(String inputFile, IFormatReader reader) throws IOException {
+	public static ImageData[] read(String inputFile, IFormatReader reader) throws IOException {
 		try {
 			reader.setGroupFiles(false);
 			reader.setId(inputFile);
@@ -114,6 +104,31 @@ public class TIFFCodec {
 		}
 	}
 
+	public static IFormatReader getReader(String inputFile, String readerClass) throws IOException {
+		if (readerClass != null && !readerClass.isEmpty()) {
+			try {
+				return (IFormatReader) Class.forName(readerClass).newInstance();
+			} catch (Exception e) {
+				throw new IOException("Failed to load reader class: " + readerClass, e);
+			}
+		}
+		
+		// TIFF reader
+		String[] tiffExtensions = { ".tif", ".tiff", ".flex" };
+		for (String ext: tiffExtensions) {
+			if (inputFile.toLowerCase().endsWith(ext)) return new TiffReader();
+		}
+		
+		// null: use SWT ImageLoader instead (faster than Bioformats)
+		String[] swtExtensions = { ".bmp", ".gif", ".png", ".jpg", ".jpeg" };
+		for (String ext: swtExtensions) {
+			if (inputFile.toLowerCase().endsWith(ext)) return null;
+		}
+		
+		// Generic reader
+		return new ImageReader();
+	}
+	
 	/**
 	 * Write image data to a TIFF file.
 	 * 
