@@ -98,6 +98,8 @@ public class ImageProcessor {
 			int fieldCount = uniqueFields.size();
 			if (fieldLayout == null) fieldLayout = FieldLayoutSourceRegistry.getInstance().getLayout(reading, fieldCount, montageConfig, context);
 			
+			String imageReaderClass = CaptureUtils.getImageReaderClass(context);
+			
 			SubProgressMonitor wellMonitor = new SubProgressMonitor(subMonitor, 85);
 			
 			MTExecutor<String> threadPool = createThreadPool();
@@ -105,7 +107,7 @@ public class ImageProcessor {
 				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false, context,
 						Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 				MTCallable<String> task = new MTCallable<>();
-				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile));
+				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile, imageReaderClass));
 				threadPool.queue(task);
 			}
 			threadPool.run(wellMonitor);
@@ -142,12 +144,14 @@ public class ImageProcessor {
 		private int fieldCount;
 		private Map<String,String> inputFileMap;
 		private String outputFile;
+		private String imageReaderClass;
 		
-		public MontageWellCallable(String wellId, int fieldCount, Map<String,String> inputFileMap, String outputFile) {
+		public MontageWellCallable(String wellId, int fieldCount, Map<String,String> inputFileMap, String outputFile, String imageReaderClass) {
 			this.wellId = wellId;
 			this.fieldCount = fieldCount;
 			this.inputFileMap = inputFileMap;
 			this.outputFile = outputFile;
+			this.imageReaderClass = imageReaderClass;
 		}
 		
 		@Override
@@ -173,7 +177,7 @@ public class ImageProcessor {
 			}
 			
 			try {
-				Montage.montage(inputFiles, (fieldLayout == null) ? null : fieldLayout.getLayoutString(), montageConfig.padding, outputFile);
+				Montage.montage(inputFiles, (fieldLayout == null) ? null : fieldLayout.getLayoutString(), montageConfig.padding, outputFile, imageReaderClass);
 			} catch (IOException e) {
 				throw new DataCaptureException("Failed to montage images", e);
 			}
