@@ -516,7 +516,7 @@ public class WellBrowser extends EditorPart {
 				dataAccessor.loadEager(columnAccessor.getFeatures());
 
 				tableTabInitialized = true;
-				final float aspectRatio = columnAccessor.getImageAspectRatio(getPlate());
+				final float aspectRatio = 1.0f; //Disabled for performance: columnAccessor.getImageAspectRatio(getPlate());
 
 				Display.getDefault().syncExec(() -> {
 					if (!table.isDisposed()) {
