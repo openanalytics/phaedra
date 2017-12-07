@@ -152,23 +152,14 @@ public class SMBInterface extends BaseFileServer {
 		} else {
 			Set<OpenOption> opts = new HashSet<>();
 			opts.add(StandardOpenOption.READ);
-			String filePath = null;
-			if (ProcessUtils.isWindows()) {
-				filePath = SMBHelper.toUNCNotation(getFullPath(path));
-			} else {
-				filePath = getAsFile(path).getAbsolutePath();
-			}
+			String filePath = getAsFile(path).getAbsolutePath();
 			return Files.newByteChannel(Paths.get(filePath), opts);
 		}
 	}
 	
 	@Override
 	public File getAsFile(String path) {
-		if (ProcessUtils.isWindows()) {
-			return new File(SMBHelper.toUNCNotation(getFullPath(path)));
-		} else {
-			return new File(getMount() + "/" + path);
-		}
+		return new File(getMount() + "/" + path);
 	}
 	
 	@Override
@@ -213,7 +204,15 @@ public class SMBInterface extends BaseFileServer {
 	private synchronized void mount() {
 		if (privateMount != null) return;
 		
-		if (ProcessUtils.isMac()) {
+		if (ProcessUtils.isWindows()) {
+			privateMount = SMBHelper.toUNCNotation(basePath).replace('/', '\\');
+			String[] cmd = { "net", "use", privateMount, auth.getPassword(), "/user:" + auth.getUsername()};
+			try {
+				ProcessUtils.execute(cmd, null, null, true, true);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+		} else if (ProcessUtils.isMac()) {
 			// On Mac, make a private non-sudo mount
 			privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
 			new File(privateMount).mkdirs();
@@ -236,12 +235,17 @@ public class SMBInterface extends BaseFileServer {
 	private synchronized void unmount() {
 		if (privateMount == null) return;
 		
-		if (ProcessUtils.isMac()) {
+		if (ProcessUtils.isWindows()) {
+			try {
+				ProcessUtils.execute(new String[] { "net", "use", privateMount, "/delete" }, null, null, true, true);
+			} catch (InterruptedException e) {}
+		} else if (ProcessUtils.isMac()) {
 			try {
 				int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
 				if (retCode == 0) FileUtils.deleteRecursive(privateMount);
-				privateMount = null;
 			} catch (InterruptedException e) {}
 		}
+		
+		privateMount = null;
 	}
 }
