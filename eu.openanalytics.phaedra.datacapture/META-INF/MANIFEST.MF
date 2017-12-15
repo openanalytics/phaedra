@@ -12,6 +12,10 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.base.seda;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.email;bundle-version="1.0.1",
+<<<<<<< Upstream, based on origin/master
+=======
+ eu.openanalytics.phaedra.base.hdf5;bundle-version="1.0.0",
+>>>>>>> 1613dcb Datacapture refactor: remove HDF5 usage, plus misc improvements (w.i.p.)
  eu.openanalytics.phaedra.base.hook;bundle-version="1.0.1",
  eu.openanalytics.phaedra.base.imaging.jp2k;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.imaging.util;bundle-version="1.0.0",
