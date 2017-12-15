@@ -7,6 +7,7 @@ import eu.openanalytics.phaedra.datacapture.config.ParameterGroup;
 import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogger;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.datacapture.module.IModule;
+import eu.openanalytics.phaedra.datacapture.store.DefaultDataCaptureStore;
 import eu.openanalytics.phaedra.datacapture.store.IDataCaptureStore;
 
 /**
@@ -83,7 +84,7 @@ public class DataCaptureContext {
 		readings.put(nr, reading);
 		readingSourceIds.put(nr, sourceId);
 		readingParameters.put(nr, new ParameterGroup());
-		IDataCaptureStore dataStore = DataCaptureService.getInstance().createDataCaptureStore();
+		IDataCaptureStore dataStore = new DefaultDataCaptureStore();
 		dataStore.initialize(reading);
 		stores.put(nr, dataStore);
 		

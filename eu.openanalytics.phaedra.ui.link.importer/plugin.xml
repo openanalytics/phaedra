@@ -9,16 +9,6 @@
             id="eu.openanalytics.phaedra.ui.link.importer.wizard.StartImportWizardCmd"
             name="Import Wizard">
       </command>
-      <command
-            defaultHandler="eu.openanalytics.phaedra.ui.link.importer.wizard.StartTestImportWizardCmd"
-            id="eu.openanalytics.phaedra.ui.link.importer.wizard.StartTestImportWizardCmd"
-            name="Test Import Wizard">
-      </command>
-      <command
-            defaultHandler="eu.openanalytics.phaedra.ui.link.importer.cmd.DeleteReadings"
-            id="eu.openanalytics.phaedra.ui.link.importer.cmd.DeleteReadings"
-            name="Delete Readings">
-      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -46,30 +36,6 @@
    </extension>
    <extension
          point="org.eclipse.ui.views">
-      <view
-            category="eu.openanalytics.phaedra.ui.link.importer.import"
-            class="eu.openanalytics.phaedra.ui.link.importer.view.ImportView"
-            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/cd_go.png"
-            id="eu.openanalytics.phaedra.ui.link.importer.view.ImportView"
-            name="Import"
-            restorable="true">
-      </view>
-      <view
-            category="eu.openanalytics.phaedra.ui.link.importer.import"
-            class="eu.openanalytics.phaedra.ui.link.importer.view.ImportSourceView"
-            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/drive.png"
-            id="eu.openanalytics.phaedra.ui.link.importer.view.ImportSourceView"
-            name="Import Source"
-            restorable="true">
-      </view>
-      <view
-            category="eu.openanalytics.phaedra.ui.link.importer.import"
-            class="eu.openanalytics.phaedra.ui.link.importer.view.ImportDestinationView"
-            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/map.png"
-            id="eu.openanalytics.phaedra.ui.link.importer.view.ImportDestinationView"
-            name="Import Destination"
-            restorable="true">
-      </view>
       <category
             id="eu.openanalytics.phaedra.ui.link.importer.import"
             name="Import">
@@ -84,22 +50,6 @@
       </view>
    </extension>
    <extension
-         point="org.eclipse.ui.perspectives">
-      <perspective
-            class="eu.openanalytics.phaedra.ui.link.importer.ImportPerspective"
-            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/cd_go.png"
-            id="eu.openanalytics.phaedra.ui.link.importer.ImportPerspective"
-            name="Import">
-      </perspective>
-   </extension>
-   <extension
-         point="org.eclipse.ui.dropActions">
-      <action
-            class="eu.openanalytics.phaedra.ui.link.importer.dnd.ReadingDropAction"
-            id="eu.openanalytics.phaedra.ui.link.importer.dnd.ReadingDropAction">
-      </action>
-   </extension>
-   <extension
          point="eu.openanalytics.phaedra.ui.link.importer.importWizard">
       <importWizard
             class="eu.openanalytics.phaedra.ui.link.importer.wizard.GenericImportWizard"
@@ -110,22 +60,9 @@
    <extension
          point="eu.openanalytics.phaedra.base.hook.hook">
       <hook
-            class="eu.openanalytics.phaedra.ui.link.importer.addfeature.PreLinkHook"
-            hookPointId="eu.openanalytics.phaedra.link.data.dataHookPoint"
-            priority="1">
+            class="eu.openanalytics.phaedra.ui.link.importer.addfeature.PostCaptureAddMissingFeaturesUI"
+            hookPointId="eu.openanalytics.phaedra.datacapture.dcHookPoint">
       </hook>
-   </extension>
-   <extension
-         point="eu.openanalytics.phaedra.base.ui.navigator.elementProvider">
-      <elementProvider
-            class="eu.openanalytics.phaedra.ui.link.importer.navigator.ReadingProvider">
-      </elementProvider>
-   </extension>
-   <extension
-         point="eu.openanalytics.phaedra.base.ui.navigator.elementHandler">
-      <elementHandler
-            class="eu.openanalytics.phaedra.ui.link.importer.navigator.ReadingHandler">
-      </elementHandler>
    </extension>
 
 </plugin>

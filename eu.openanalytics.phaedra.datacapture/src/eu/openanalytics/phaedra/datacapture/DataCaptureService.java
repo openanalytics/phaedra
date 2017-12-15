@@ -29,6 +29,7 @@ import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
+import eu.openanalytics.phaedra.datacapture.DataCaptureTask.DataCaptureParameter;
 import eu.openanalytics.phaedra.datacapture.config.CaptureConfig;
 import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem;
 import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem.LogItemSeverity;
@@ -37,9 +38,10 @@ import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.datacapture.model.SavedLogEvent;
 import eu.openanalytics.phaedra.datacapture.module.ModuleFactory;
 import eu.openanalytics.phaedra.datacapture.queue.DataCaptureJobQueue;
-import eu.openanalytics.phaedra.datacapture.store.HDF5DataCaptureStore;
-import eu.openanalytics.phaedra.datacapture.store.IDataCaptureStore;
 import eu.openanalytics.phaedra.datacapture.util.CaptureUtils;
+import eu.openanalytics.phaedra.datacapture.util.EmailNotifier;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
+import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 
 
 public class DataCaptureService extends BaseJPAService {
@@ -57,7 +59,10 @@ public class DataCaptureService extends BaseJPAService {
 		logListeners = new ListenerList<>();
 		runningJobs = new ConcurrentHashMap<>();
 		
-		if (serverEnabled) checkUnfinishedJobs();
+		if (serverEnabled) {
+			addLogListener(new EmailNotifier());
+			checkUnfinishedJobs();
+		}
 	}
 	
 	public static DataCaptureService getInstance() {
@@ -92,17 +97,10 @@ public class DataCaptureService extends BaseJPAService {
 		return captureConfig;
 	}
 	
-	public IDataCaptureStore createDataCaptureStore() {
-		return new HDF5DataCaptureStore();
-	}
-	
 	public DataCaptureTask createTask(String source, long protocolId) {
 		DataCaptureTask task = createTask(source, getCaptureConfigId(protocolId));
-		
-		String query = "select protocol_name from phaedra.hca_protocol where protocol_id = " + protocolId;
-		List<?> res = JDBCUtils.queryWithLock(getEntityManager().createNativeQuery(query), getEntityManager());
-		if (!res.isEmpty() && res.get(0) != null) task.getParameters().put(DataCaptureTask.PARAM_PROTOCOL_NAME, res.get(0).toString());
-		
+		Protocol protocol = ProtocolService.getInstance().getProtocol(protocolId);
+		task.getParameters().put(DataCaptureParameter.TargetProtocol.name(), protocol);
 		return task;
 	}
 	
@@ -198,8 +196,10 @@ public class DataCaptureService extends BaseJPAService {
 	}
 	
 	public String getImagePath(PlateReading reading) throws IOException {
+		String basePath = reading.getCapturePath();
+		basePath = basePath.substring(0, basePath.lastIndexOf('.') + 1);
 		for (String fmt: CodecFactory.getSupportedFormats()) {
-			String imagePath = reading.getCapturePath().replace(".h5", "." + fmt);
+			String imagePath = basePath + fmt;
 			if (Screening.getEnvironment().getFileServer().exists(imagePath)) return imagePath;
 		}
 		return null;

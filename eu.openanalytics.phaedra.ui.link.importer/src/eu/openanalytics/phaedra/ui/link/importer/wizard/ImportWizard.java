@@ -20,10 +20,8 @@ import org.eclipse.swt.widgets.Label;
 
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizard;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
-import eu.openanalytics.phaedra.datacapture.DataCaptureTask;
 import eu.openanalytics.phaedra.link.importer.Activator;
 import eu.openanalytics.phaedra.link.importer.preferences.Prefs;
-import eu.openanalytics.phaedra.ui.link.importer.wizard.GenericImportWizard.ImportWizardState;
 
 public class ImportWizard extends Wizard {
 
@@ -112,18 +110,6 @@ public class ImportWizard extends Wizard {
         			Activator.getDefault().getPreferenceStore().setValue(Prefs.DETECT_SUBWELL_FEATURES, createSubWellFeaturesBtn.getSelection());
         		}
 			});
-        	
-        	if (preconfiguredState != null) {
-        		Object isTest = ((ImportWizardState)preconfiguredState).task.getParameters().get(DataCaptureTask.PARAM_TEST);
-        		if (isTest == Boolean.TRUE) {
-        			Label l = new Label(container, SWT.WRAP);
-        			l.setText("Test Mode: This import is running in Test Mode."
-        					+ " Any data captured during this import will be discarded."
-        					+ " Some data capture steps may be skipped.");
-        			GridDataFactory.fillDefaults().grab(true, false).applyTo(l);
-        		}
-        		
-        	}
         		
         	setTitle("Select Wizard");
         	setDescription("Select one of the available wizards below."

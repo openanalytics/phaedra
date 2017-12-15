@@ -27,12 +27,6 @@ public class ImportTask {
 	// If createNewPlates is false, use this reading -> plate mapping.
 	public Map<PlateReading, Plate> plateMapping;
 	
-	// True to attempt barcode linking automatically.
-	public boolean linkBarcodes;
-	
-	// If linkBarcodes is true, use this plate definition source.
-	public String linkSourceId;
-	
 	// The import steps to execute or skip (if the data capture config supports skipping modules).
 	public boolean importPlateData;
 	public boolean importWellData;

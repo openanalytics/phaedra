@@ -7,23 +7,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.w3c.dom.Node;
 
 import eu.openanalytics.phaedra.base.environment.prefs.PrefUtils;
 import eu.openanalytics.phaedra.base.imaging.jp2k.CodecFactory;
 import eu.openanalytics.phaedra.base.imaging.jp2k.IEncodeAPI;
-import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
-import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.threading.IConcurrentExecutor;
 import eu.openanalytics.phaedra.base.util.threading.IConcurrentFactory;
 import eu.openanalytics.phaedra.base.util.threading.MTFactory;
-import eu.openanalytics.phaedra.datacapture.Activator;
 import eu.openanalytics.phaedra.datacapture.DataCaptureContext;
 import eu.openanalytics.phaedra.datacapture.DataCaptureException;
-import eu.openanalytics.phaedra.datacapture.DataCaptureTask;
 import eu.openanalytics.phaedra.datacapture.config.ModuleConfig;
 import eu.openanalytics.phaedra.datacapture.jp2k.config.ComponentConfig;
 import eu.openanalytics.phaedra.datacapture.jp2k.config.ComponentFileConfig;
@@ -64,19 +60,18 @@ public class ImageCompressionModule extends AbstractModule {
 
 	@Override
 	public void execute(DataCaptureContext context, IProgressMonitor monitor) throws DataCaptureException {
-		monitor.beginTask("Gathering image data", 100);
+		SubMonitor mon = SubMonitor.convert(monitor);
+		mon.beginTask("Gathering image data", 100);
+		
 		if (context.getReadings().length > 0) {
 			int progressPerPlate = 100/context.getReadings().length;
 			
 			for (PlateReading reading: context.getReadings()) {
-				if (monitor.isCanceled()) break;
+				if (mon.isCanceled()) break;
 				context.setActiveReading(reading);
-				SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, progressPerPlate);
-				compressPlate(reading, context, subMonitor);
-				subMonitor.done();
+				compressPlate(reading, context, mon.split(progressPerPlate));
 			}
 		}
-		monitor.done();
 	}
 	
 	@Override
@@ -85,9 +80,8 @@ public class ImageCompressionModule extends AbstractModule {
 	}
 	
 	private void compressPlate(PlateReading reading, DataCaptureContext context, IProgressMonitor monitor) throws DataCaptureException {
-		
-		String msg = "Gathering image data for plate '" + reading.getBarcode() + "' ...";
-		monitor.beginTask(msg, 100);
+		SubMonitor mon = SubMonitor.convert(monitor);
+		mon.beginTask("Gathering image data for plate '" + reading.getBarcode() + "' ...", 100);
 		context.getLogger().info(reading, "Compressing images for " + config.components.length + " channel(s)");
 		
 		int rows = reading.getRows();
@@ -100,14 +94,14 @@ public class ImageCompressionModule extends AbstractModule {
 	
 		try {
 			// Locate input files
-			monitor.subTask("Locating input files");
-			String[][][] inputFiles = locateInputFiles(reading, context, monitor);
+			mon.subTask("Locating input files");
+			String[][][] inputFiles = locateInputFiles(reading, context, mon.split(5));
 			
 			// Run the validator
-			runValidator(inputFiles, reading, context);
+			validateInput(inputFiles, reading, context);
 			
 			// Set up Executor
-			int nrOfThreads = ((Number)context.getTask().getParameters().get(DataCaptureTask.PARAM_NR_THREADS)).intValue();
+			int nrOfThreads = PrefUtils.getNumberOfThreads();
 			IConcurrentExecutor<String[]> compressPool = factory.createExecutor();
 			compressPool.init(nrOfThreads);
 			
@@ -122,12 +116,8 @@ public class ImageCompressionModule extends AbstractModule {
 			}
 			
 			// Wait until done.
-			SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, 95);
-			List<String[]> output = compressPool.run(subMonitor);
-			subMonitor.done();
-			if (monitor.isCanceled()) {
-				return;
-			}
+			List<String[]> output = compressPool.run(mon.split(90));
+			if (mon.isCanceled()) return;
 			
 			String outputFormat = (String)VariableResolver.get(PARAM_CONTAINER_FORMAT, context);
 			if (outputFormat == null) outputFormat = CodecFactory.FORMAT_ZIP;
@@ -143,14 +133,14 @@ public class ImageCompressionModule extends AbstractModule {
 			
 			try (IEncodeAPI composer = CodecFactory.getEncoder()) {
 				String[] files = fileNames.toArray(new String[fileNames.size()]);
-				composer.composeCodestreamFile(files, destination, new SubProgressMonitor(monitor, 5));
+				composer.composeCodestreamFile(files, destination, mon.split(5));
 			} catch (Exception e) {
 				throw new DataCaptureException("Image creation failed", e);
 			}
 			
 			// Move the image file into the capture store.
 			IDataCaptureStore store = context.getStore(reading);
-			store.addImage(destination, true);
+			store.saveImage(destination);
 		
 			monitor.done();
 		} finally {
@@ -210,29 +200,30 @@ public class ImageCompressionModule extends AbstractModule {
 		return inputFiles;
 	}
 
-	private void runValidator(String[][][] inputFiles, PlateReading reading, DataCaptureContext context) {
-		// Execute the validator script.
-		DataCaptureTask task = context.getTask();
-		try {
-			// Get number of Threads.
-			task.getParameters().put(DataCaptureTask.PARAM_NR_THREADS, PrefUtils.getNumberOfThreads());
+	private void validateInput(String[][][] inputFiles, PlateReading reading, DataCaptureContext context) {
+		int rows = inputFiles.length;
+		int columns = rows > 0 ? inputFiles[0].length : 0;
+		int components = columns > 0 ? inputFiles[0][0].length : 0;
+		
+		for (int c=0; c<components; c++) {
+			// Test for missing files
+			int missingCount = 0;
+			for (int x=0; x<inputFiles.length; x++) {
+				for (int y=0; y<inputFiles[x].length; y++) {
+					if (inputFiles[x][y][c] == null) missingCount++;
+				}
+			}
 			
-			String scriptName = this.getClass().getSimpleName().toLowerCase() + ".validator";
-			
-			Map<String,Object> params = new HashMap<>();
-			params.put("args", params); // Add the map itself, so it is passed to the ScriptCatalog.run method.
-			params.put("inputFiles", inputFiles);
-			params.put("reading", reading);
-			params.put("ctx", context);
-			params.put("config", config);
-			params.put("task", task);
-			
-			// Running a script inside a script is a bit silly, but it's the only way to access the ScriptCatalog.
-			ScriptService.getInstance().executeScript("API.get('ScriptService').getCatalog().run('dc/" + scriptName + "', args);", params);
-		} catch (Exception e) {
-			// Ignore exceptions. Validation exceptions are passed via the DataCaptureContext to the validator.
-			EclipseLog.error("Image validation failed", e, Activator.getDefault());
+			if (missingCount > 0) {
+				int expectedCount = rows * columns;
+				ComponentFileConfig cfg = null;
+				if (config.components[c].files.length > 0) cfg = config.components[c].files[0];
+				String msg = "Image component " + c + " : expected " + expectedCount + " images, found "
+						+ (expectedCount - missingCount) + " images.\n Path: " + cfg.path + ", pattern: " + cfg.pattern;
+				context.getLogger().warn(reading, msg);
+			}
 		}
+		
+		//TODO The old validator also adjusted threadpool size according to image size and RAM
 	}
-
 }

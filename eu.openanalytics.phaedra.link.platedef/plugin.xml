@@ -21,6 +21,15 @@
             class="eu.openanalytics.phaedra.link.platedef.hook.PostLinkSaltformRetriever"
             hookPointId="eu.openanalytics.phaedra.link.platedef.platedefHookPoint">
       </hook>
+      <hook
+            class="eu.openanalytics.phaedra.link.platedef.hook.PreLinkValidationCheck"
+            hookPointId="eu.openanalytics.phaedra.link.platedef.platedefHookPoint"
+            priority="0">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.link.platedef.hook.PostLinkCalculator"
+            hookPointId="eu.openanalytics.phaedra.link.platedef.platedefHookPoint">
+      </hook>
    </extension>
 
 </plugin>
