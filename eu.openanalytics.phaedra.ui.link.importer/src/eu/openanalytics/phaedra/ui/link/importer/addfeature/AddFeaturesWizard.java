@@ -1,17 +1,20 @@
 package eu.openanalytics.phaedra.ui.link.importer.addfeature;
 
-import org.eclipse.jface.window.Window;
+import java.util.List;
 
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizard;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
-import eu.openanalytics.phaedra.link.data.addfeatures.AddFeaturesTask;
-import eu.openanalytics.phaedra.link.data.addfeatures.AddFeaturesUtils;
+import eu.openanalytics.phaedra.datacapture.util.FeatureDefinition;
+import eu.openanalytics.phaedra.datacapture.util.MissingFeaturesHelper;
 
 public class AddFeaturesWizard extends BaseStatefulWizard {
 	
-	public AddFeaturesWizard(AddFeaturesWizardState preconfiguredState) {
+	private AddFeaturesWizardState state;
+	
+	public AddFeaturesWizard(MissingFeaturesHelper helper) {
 		setWindowTitle("Add New Features");
-		state = preconfiguredState;
+		state = new AddFeaturesWizardState();
+		state.helper = helper;
 	}
 	
 	@Override
@@ -27,25 +30,15 @@ public class AddFeaturesWizard extends BaseStatefulWizard {
 	@Override
 	public boolean performFinish() {
 		super.performFinish();
-		
-		AddFeaturesTask task = ((AddFeaturesWizardState)state).task;
-		int retVal = AddFeaturesUtils.promptFeatureCreation(task);
-		
-		switch (retVal) {
-		case Window.OK:
-			// Create features, close wizard
-			AddFeaturesUtils.createMissingFeatures(task);
-			return true;
-		case Window.CANCEL:
-			// Create nothing, close wizard
-			return true;
-		default:
-			// Create nothing, do not close wizard
-			return false;
+		if (state.featureDefinitions == null || state.featureDefinitions.isEmpty()) return true;
+		if (state.helper.confirmFeatureCreation(state.featureDefinitions)) {
+			state.helper.createMissingFeatures(state.featureDefinitions);
 		}
+		return true;
 	}
 
 	public static class AddFeaturesWizardState implements IWizardState {
-		public AddFeaturesTask task= new AddFeaturesTask();
+		public MissingFeaturesHelper helper;
+		public List<FeatureDefinition> featureDefinitions;
 	}
 }

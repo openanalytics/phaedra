@@ -58,5 +58,18 @@
             class="eu.openanalytics.phaedra.datacapture.scripting.ScriptAPI">
       </apiProvider>
    </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hookPoint">
+      <hookPoint
+            id="eu.openanalytics.phaedra.datacapture.dcHookPoint">
+      </hookPoint>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.datacapture.hook.PostCaptureAddMissingFeaturesHeadless"
+            hookPointId="eu.openanalytics.phaedra.datacapture.dcHookPoint">
+      </hook>
+   </extension>
 
 </plugin>

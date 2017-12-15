@@ -14,6 +14,7 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
 import eu.openanalytics.phaedra.datacapture.DataCaptureTask;
+import eu.openanalytics.phaedra.datacapture.DataCaptureTask.DataCaptureParameter;
 import eu.openanalytics.phaedra.datacapture.columbus.prefs.Prefs;
 import eu.openanalytics.phaedra.datacapture.columbus.prefs.Prefs.ColumbusLogin;
 import eu.openanalytics.phaedra.datacapture.columbus.ws.ColumbusWSClient;
@@ -145,11 +146,9 @@ public class ColumbusScannerType extends BaseScannerType {
 		DataCaptureTask task = DataCaptureService.getInstance().createTask(source, config.protocolId);
 		if (config.captureConfig != null) task.setConfigId(config.captureConfig);
 		task.setUser(user.loginname);
-		task.getParameters().put(DataCaptureTask.PARAM_EXPERIMENT_NAME, screen.screenName.trim());
-		task.getParameters().put(DataCaptureTask.PARAM_ALLOW_AUTO_LINK, true);
-		task.getParameters().put(DataCaptureTask.PARAM_CREATE_NEW_EXP, false);
-		task.getParameters().put(DataCaptureTask.PARAM_CREATE_MISSING_WELL_FEATURES, config.createMissingWellFeatures);
-		task.getParameters().put(DataCaptureTask.PARAM_CREATE_MISSING_SUBWELL_FEATURES, config.createMissingSubWellFeatures);
+		task.getParameters().put(DataCaptureParameter.TargetExperimentName.name(), screen.screenName.trim());
+		task.getParameters().put(DataCaptureParameter.CreateMissingWellFeatures.name(), config.createMissingWellFeatures);
+		task.getParameters().put(DataCaptureParameter.CreateMissingSubWellFeatures.name(), config.createMissingSubWellFeatures);
 		
 		ColumbusService.getInstance().setInstanceConfig(task.getParameters(), instance);
 		ColumbusService.getInstance().setResultIds(task.getParameters(), newResults);

@@ -17,8 +17,6 @@ public class ImportTypePage extends BaseStatefulWizardPage {
 
 	private Button newPlatesBtn;
 	private Button addToPlatesBtn;
-//	private Button linkPlatesBtn;
-//	private Combo linkSourceCombo;
 	
 	private Button importPlateDataBtn;
 	private Button importWellDataBtn;
@@ -134,8 +132,5 @@ public class ImportTypePage extends BaseStatefulWizardPage {
 		task.importWellData = importWellDataBtn.getSelection();
 		task.importImageData = importImageDataBtn.getSelection();
 		task.importSubWellData = importSubWellDataBtn.getSelection();
-		task.linkBarcodes = false;
-//		task.linkBarcodes = linkPlatesBtn.getSelection();
-//		task.linkSourceId = linkSourceCombo.getText();
 	}
 }

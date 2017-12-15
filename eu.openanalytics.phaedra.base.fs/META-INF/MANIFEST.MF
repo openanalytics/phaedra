@@ -8,10 +8,12 @@ Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.samba.jcifs;bundle-version="1.3.16",
+ net.java.truevfs;bundle-version="0.10.7",
  eu.openanalytics.phaedra.base.security;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.fs,
- eu.openanalytics.phaedra.base.fs.preferences
+ eu.openanalytics.phaedra.base.fs.preferences,
+ eu.openanalytics.phaedra.base.fs.store

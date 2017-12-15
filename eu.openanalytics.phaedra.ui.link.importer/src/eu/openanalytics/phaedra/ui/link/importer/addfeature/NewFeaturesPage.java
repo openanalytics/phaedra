@@ -7,15 +7,12 @@ import org.eclipse.swt.widgets.Composite;
 
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizardPage;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
-import eu.openanalytics.phaedra.link.data.addfeatures.AddFeaturesTask;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.link.importer.addfeature.AddFeaturesWizard.AddFeaturesWizardState;
 
 
 public class NewFeaturesPage extends BaseStatefulWizardPage {
 
 	private NewFeatureTableViewer newFeaturesTableViewer;
-	private String featureType;
 	
 	public NewFeaturesPage() {
 		super("Select features to be added to the Protocol Class");
@@ -34,17 +31,15 @@ public class NewFeaturesPage extends BaseStatefulWizardPage {
 
 	@Override
 	public void applyState(IWizardState state, boolean firstTime) {
-		AddFeaturesTask task = ((AddFeaturesWizardState)state).task;
-		if (task.featureDefinitions != null) newFeaturesTableViewer.setInput(task.featureDefinitions);
-		featureType = (task.featureClass == Feature.class) ? "well" : "subwell";
-		
-		setTitle("There are " + featureType + " features in the import data that are not present in the protocol class");
+		AddFeaturesWizardState wState = (AddFeaturesWizardState) state;
+		if (wState.featureDefinitions != null) newFeaturesTableViewer.setInput(wState.featureDefinitions);
+		setTitle("There are " + wState.helper.getFeatureTypeName() + " features in the import data that are not present in the protocol class");
 		setPageComplete(true);
 	}
 
 	@Override
 	public void collectState(IWizardState state) {
-		AddFeaturesTask task = ((AddFeaturesWizardState)state).task;
-		task.featureDefinitions = newFeaturesTableViewer.getNewFeatureDefinitions();
+		AddFeaturesWizardState wState = (AddFeaturesWizardState) state;
+		wState.featureDefinitions = newFeaturesTableViewer.getNewFeatureDefinitions();
 	}
 }

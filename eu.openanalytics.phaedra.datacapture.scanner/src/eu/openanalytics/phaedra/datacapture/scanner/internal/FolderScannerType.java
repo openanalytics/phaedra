@@ -16,6 +16,7 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
 import eu.openanalytics.phaedra.datacapture.DataCaptureTask;
+import eu.openanalytics.phaedra.datacapture.DataCaptureTask.DataCaptureParameter;
 import eu.openanalytics.phaedra.datacapture.scanner.Activator;
 import eu.openanalytics.phaedra.datacapture.scanner.BaseScannerType;
 import eu.openanalytics.phaedra.datacapture.scanner.ScanException;
@@ -82,11 +83,10 @@ public class FolderScannerType extends BaseScannerType {
 		// Create a data capture task.
 		DataCaptureTask task = DataCaptureService.getInstance().createTask(sourcePath, cfg.protocolId);
 		if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
-		task.getParameters().put(DataCaptureTask.PARAM_EXPERIMENT_NAME, experimentName);
-		task.getParameters().put(DataCaptureTask.PARAM_ALLOW_AUTO_LINK, true);
-		task.getParameters().put(DataCaptureTask.PARAM_CREATE_NEW_EXP, false);
-		task.getParameters().put(DataCaptureTask.PARAM_CREATE_MISSING_WELL_FEATURES, cfg.createMissingWellFeatures);
-		task.getParameters().put(DataCaptureTask.PARAM_CREATE_MISSING_SUBWELL_FEATURES, cfg.createMissingSubWellFeatures);
+		
+		task.getParameters().put(DataCaptureParameter.TargetExperimentName.name(), experimentName);
+		task.getParameters().put(DataCaptureParameter.CreateMissingWellFeatures.name(), cfg.createMissingWellFeatures);
+		task.getParameters().put(DataCaptureParameter.CreateMissingSubWellFeatures.name(), cfg.createMissingSubWellFeatures);
 		task.getParameters().put("plateIds", plateIds);
 		
 		// Submit to the data capture service, and log an event.

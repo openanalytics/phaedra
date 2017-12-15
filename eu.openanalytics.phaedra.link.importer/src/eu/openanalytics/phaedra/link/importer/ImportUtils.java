@@ -89,7 +89,7 @@ public class ImportUtils {
 
 			DataCaptureTask task = DataCaptureService.getInstance().createTask(path, captureConfigId);
 			task.setModuleFilter(new String[]{PLATE_LOCATOR_ID});
-			task.setTest(true); // Do not save the plate readings!
+//TODO		task.setTest(true); // Do not save the plate readings!
 
 			// Locate the plates.
 			List<PlateReading> readingList = DataCaptureService.getInstance().executeTask(task, null);
