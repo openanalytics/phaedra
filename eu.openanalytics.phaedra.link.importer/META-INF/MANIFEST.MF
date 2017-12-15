@@ -9,12 +9,10 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.commands,
  org.eclipse.ui,
  eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
- eu.openanalytics.phaedra.link.data;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
  eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.console;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.hdf5;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

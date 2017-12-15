@@ -66,10 +66,8 @@ public class ColumbusDownloadModule extends AbstractModule {
 		String userName = columbusPath[1];
 		String screenName = task.getSource().substring((columbusPath[0] + "/" + columbusPath[1] + "/").length());
 		
-		// If user provided a custom experiment name, make sure ${experimentName} still refers to the original screen name.
-		String targetExpName = (String) task.getParameters().get(DataCaptureTask.PARAM_EXPERIMENT_NAME);
-		if (targetExpName != null) task.getParameters().put(DataCaptureTask.PARAM_TARGET_EXPERIMENT_NAME, targetExpName);
-		task.getParameters().put(DataCaptureTask.PARAM_EXPERIMENT_NAME, screenName);
+		// Make sure ${experimentName} exists, as it's still used by Columbus-based capture configs
+		task.getParameters().put("experimentName", screenName);
 		
 		monitor.beginTask("Downloading data from Columbus", 100);
 		context.getLogger().info("Downloading data from Columbus screen " + screenName);
@@ -133,11 +131,11 @@ public class ColumbusDownloadModule extends AbstractModule {
 					readingSequence++;
 					
 					// Save some meas and result information as plate properties.
-					context.getStore(reading).setProperty("/", "MeasId", meas.measurementId);
-					context.getStore(reading).setProperty("/", "ResultId", result.resultId);
-					if (meas.measurementDate != null) context.getStore(reading).setProperty("/", "MeasDate", meas.measurementDate.toString());
-					if (result.resultName != null) context.getStore(reading).setProperty("/", "ResultName", result.resultName);
-					if (result.resultDate != null) context.getStore(reading).setProperty("/", "ResultDate", result.resultDate.toString());
+					context.getStore(reading).setProperty("MeasId", meas.measurementId);
+					context.getStore(reading).setProperty("ResultId", result.resultId);
+					if (meas.measurementDate != null) context.getStore(reading).setProperty("MeasDate", meas.measurementDate.toString());
+					if (result.resultName != null) context.getStore(reading).setProperty("ResultName", result.resultName);
+					if (result.resultDate != null) context.getStore(reading).setProperty("ResultDate", result.resultDate.toString());
 					
 					// Keep a set of fields from a random well to build the Meas file later.
 					List<Field> fields = new ArrayList<>();

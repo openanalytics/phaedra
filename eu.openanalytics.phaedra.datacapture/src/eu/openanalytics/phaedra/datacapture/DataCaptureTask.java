@@ -10,20 +10,18 @@ public class DataCaptureTask {
 	private String configId;
 	private String source;
 	private String[] moduleFilter;
-	private boolean test;
+	
 	private Map<String, Object> parameters;
 	
-	// Parameters related to data capture:
-	public final static String PARAM_NR_THREADS = "nrOfThreads";
-	public final static String PARAM_TARGET_EXPERIMENT_NAME = "targetExperimentName"; // May be modified by user, do not use to resolve vars
-	public final static String PARAM_EXPERIMENT_NAME = "experimentName";
-	public final static String PARAM_PROTOCOL_NAME = "protocolName";
-	public final static String PARAM_TEST = "test";
-	// Parameters related to data linking:
-	public final static String PARAM_ALLOW_AUTO_LINK = "allowAutoLink";
-	public final static String PARAM_CREATE_NEW_EXP = "createNewExperiment";
-	public final static String PARAM_CREATE_MISSING_WELL_FEATURES = "createMissingWellFeatures";
-	public final static String PARAM_CREATE_MISSING_SUBWELL_FEATURES = "createMissingSubWellFeatures";
+	public enum DataCaptureParameter {
+		TargetProtocol,			// To capture into a new experiment
+		TargetExperimentName,
+		
+		TargetExperiment,		// To capture into an existing experiment
+
+		CreateMissingWellFeatures,
+		CreateMissingSubWellFeatures
+	};
 	
 	public DataCaptureTask() {
 		parameters = new HashMap<>();
@@ -67,14 +65,6 @@ public class DataCaptureTask {
 	
 	public void setModuleFilter(String[] moduleFilter) {
 		this.moduleFilter = moduleFilter;
-	}
-	
-	public void setTest(boolean test) {
-		this.test = test;
-	}
-	
-	public boolean isTest() {
-		return test;
 	}
 	
 	public Map<String, Object> getParameters() {

@@ -126,27 +126,6 @@
          unpack="false"/>
 
    <plugin
-         id="eu.openanalytics.phaedra.link.data"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="eu.openanalytics.phaedra.link.data.notification"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="eu.openanalytics.phaedra.link.hooks"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="eu.openanalytics.phaedra.link.importer"
          download-size="0"
          install-size="0"
