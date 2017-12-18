@@ -48,6 +48,11 @@
             id="eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyView"
             name="Copy View">
       </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.base.ui.util.copy.cmd.SaveViewToFile"
+            id="eu.openanalytics.phaedra.base.ui.util.copy.cmd.SaveViewToFile"
+            name="Save View to File">
+      </command>
    </extension>
    <extension
          point="org.eclipse.core.expressions.definitions">
