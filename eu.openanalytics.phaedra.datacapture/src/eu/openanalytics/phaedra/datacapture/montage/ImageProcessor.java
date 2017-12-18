@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 
 import eu.openanalytics.phaedra.base.environment.prefs.PrefUtils;
 import eu.openanalytics.phaedra.base.imaging.util.ImageIdentifier;
@@ -53,14 +53,13 @@ public class ImageProcessor {
 	}
 	
 	public void process(PlateReading reading, String outputPath, DataCaptureContext context, IProgressMonitor monitor) throws DataCaptureException {
+		SubMonitor mon = SubMonitor.convert(monitor);
 		int componentCount = montageConfig.imageComponents.length;
+		mon.beginTask("Creating montage", componentCount*100);
 		fieldLayout = null;
-		monitor.beginTask("Creating montage", componentCount);
 		
 		for (int componentNr=0; componentNr<componentCount; componentNr++) {
-			if (monitor.isCanceled()) return;
-			SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, 1);
-			subMonitor.beginTask("Combining fields for component " + componentNr, 100);
+			if (mon.isCanceled()) return;
 			
 			ImageComponent component = montageConfig.imageComponents[componentNr];
 			
@@ -78,9 +77,9 @@ public class ImageProcessor {
 			Set<String> idSet = new HashSet<>();
 			Map<String, String> inputFileMap = new HashMap<String, String>();
 			
-			subMonitor.subTask("Locating image files");
+			mon.subTask("Locating image files");
 			for (File file: files) {
-				if (monitor.isCanceled()) return;
+				if (mon.isCanceled()) return;
 				
 				PatternMatch match = interpreter.match(file.getName());
 				if (match.isMatch) {
@@ -93,14 +92,12 @@ public class ImageProcessor {
 					uniqueFields.add(match.field);
 				}
 			}
-			subMonitor.worked(15);
+			mon.worked(5);
 			
 			int fieldCount = uniqueFields.size();
 			if (fieldLayout == null) fieldLayout = FieldLayoutSourceRegistry.getInstance().getLayout(reading, fieldCount, montageConfig, context);
 			
 			String imageReaderClass = CaptureUtils.getImageReaderClass(context);
-			
-			SubProgressMonitor wellMonitor = new SubProgressMonitor(subMonitor, 85);
 			
 			MTExecutor<String> threadPool = createThreadPool();
 			for (String wellId: idSet) {
@@ -110,13 +107,8 @@ public class ImageProcessor {
 				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile, imageReaderClass));
 				threadPool.queue(task);
 			}
-			threadPool.run(wellMonitor);
-			
-			wellMonitor.done();
-			subMonitor.done();
+			threadPool.run(mon.split(95));
 		}
-		
-		monitor.done();
 	}
 	
 	public Point getImageDimensions() {
