@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.SubMonitor;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -57,20 +57,16 @@ public class MontageModule extends AbstractModule {
 	
 	@Override
 	public void execute(DataCaptureContext context, IProgressMonitor monitor) throws DataCaptureException {
-		monitor.beginTask("Creating image montages", 100);
+		SubMonitor mon = SubMonitor.convert(monitor);
+		mon.beginTask("Creating image montages", 100);
 		
 		if (context.getReadings().length > 0) {
 			int progressPerPlate = 100/context.getReadings().length;
-			
 			for (PlateReading reading: context.getReadings()) {
-				SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, progressPerPlate);
 				context.setActiveReading(reading);
-				processReading(reading, context, subMonitor);
-				subMonitor.done();
+				processReading(reading, context, mon.split(progressPerPlate));
 			}
 		}
-		
-		monitor.done();
 	}
 
 	@Override
@@ -88,9 +84,8 @@ public class MontageModule extends AbstractModule {
 	}
 	
 	private void processReading(PlateReading reading, DataCaptureContext context, IProgressMonitor monitor) throws DataCaptureException {
-		
-		String msg = "Create montage for plate '" + reading.getBarcode() + "' ...";
-		monitor.beginTask(msg, 100);
+		SubMonitor mon = SubMonitor.convert(monitor);
+		mon.beginTask("Create montage for plate '" + reading.getBarcode() + "' ...", 100);
 		
 		if (monitor.isCanceled()) return;
 		
@@ -105,25 +100,21 @@ public class MontageModule extends AbstractModule {
 		
 		if ((importImageData == null || importImageData.booleanValue()) && montageConfig.imageComponents != null) {
 			context.getLogger().info(reading, "Creating image montage for " + montageConfig.imageComponents.length + " channel(s)");
-			SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, 50);
-			imageProcessor.process(reading, outputPath, context, subMonitor);
+			imageProcessor.process(reading, outputPath, context, mon.split(50));
 		} else {
 			monitor.worked(50);
 		}
 		
 		if (importSubWellData == null || importSubWellData.booleanValue()) {
 			context.getLogger().info(reading, "Recalculating sub-well data for all fields");
-			SubProgressMonitor subMonitor = new SubProgressMonitor(monitor, 50);
 			Point dims = new Point(0,0);
 			AtomicBoolean fullDims = new AtomicBoolean();
 			retrieveImageDimensions(reading, dims, fullDims, context);
 			swDataProcessor.setImageDimensions(dims, fullDims.get());
-			swDataProcessor.process(reading, outputPath, context, subMonitor);
+			swDataProcessor.process(reading, outputPath, context, mon.split(50));
 		} else {
 			monitor.worked(50);
 		}
-		
-		monitor.done();
 	}
 	
 	private void retrieveImageDimensions(PlateReading reading, Point dimensions, AtomicBoolean fullDimensions, DataCaptureContext context)
