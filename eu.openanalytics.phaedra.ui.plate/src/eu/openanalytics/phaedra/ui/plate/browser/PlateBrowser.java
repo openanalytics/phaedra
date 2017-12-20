@@ -451,7 +451,7 @@ public class PlateBrowser extends DecoratedEditor {
 		if (valueObjects.size() == 1 && valueObjects.get(0) instanceof Experiment) {
 			singleExperiment = (Experiment) valueObjects.get(0);
 			// Set the current protocolclass, when this editor is opened directly (for example via My Favorites).
-			ProtocolUIService.getInstance().setCurrentProtocolClass(singleExperiment.getProtocol().getProtocolClass());
+			Display.getDefault().asyncExec(() -> ProtocolUIService.getInstance().setCurrentProtocolClass(singleExperiment.getProtocol().getProtocolClass()));
 		}
 	}
 
