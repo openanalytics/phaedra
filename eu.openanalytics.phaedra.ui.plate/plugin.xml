@@ -3085,6 +3085,13 @@
             id="eu.openanalytics.phaedra.ui.plate.tablesandgrids"
             name="Tables and Grids">
       </category>
+      <view
+            class="eu.openanalytics.phaedra.ui.plate.view.ScriptedChart"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_line.png"
+            id="eu.openanalytics.phaedra.ui.plate.view.ScriptedChart"
+            name="Scripted Chart"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">

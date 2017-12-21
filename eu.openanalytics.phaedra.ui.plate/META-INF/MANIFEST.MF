@@ -74,4 +74,5 @@ Export-Package: eu.openanalytics.phaedra.ui.plate,
  eu.openanalytics.phaedra.ui.plate.preferences,
  eu.openanalytics.phaedra.ui.plate.stats,
  eu.openanalytics.phaedra.ui.plate.util,
+ eu.openanalytics.phaedra.ui.plate.view,
  eu.openanalytics.phaedra.ui.plate.wellimage
