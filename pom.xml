@@ -44,6 +44,7 @@
 		<module>eu.openanalytics.phaedra.base.environment</module>
 		<module>eu.openanalytics.phaedra.base.event</module>
 		<module>eu.openanalytics.phaedra.base.fs</module>
+		<module>eu.openanalytics.phaedra.base.fs.s3</module>
 		<module>eu.openanalytics.phaedra.base.hdf5</module>
 		<module>eu.openanalytics.phaedra.base.hook</module>
 		<module>eu.openanalytics.phaedra.base.pref.store</module>
