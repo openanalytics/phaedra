@@ -35,9 +35,16 @@ public class NIOInterface extends BaseFileServer {
 			String fsUser = userName.substring(userName.indexOf("\\") + 1);
 			String currentUser = System.getProperty("user.name");
 			return fsUser.equalsIgnoreCase(currentUser);
-		} else {
-			return Files.exists(Paths.get(fsPath));
+		} else if (!SMBHelper.isSMBPath(fsPath)) {
+			Path path = Paths.get(fsPath);
+			try {
+				Files.createDirectories(path);
+			} catch (IOException e) {
+				return false;
+			}
+			return Files.exists(path);
 		}
+		return false;
 	}
 	
 	@Override
