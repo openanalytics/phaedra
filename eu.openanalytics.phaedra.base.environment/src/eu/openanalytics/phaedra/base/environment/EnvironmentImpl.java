@@ -40,15 +40,7 @@ public class EnvironmentImpl implements IEnvironment {
 	public void connect(String userName, byte[] password) throws AuthenticationException, IOException {
 		// Set up security configuration.
 		LDAPConfig ldapConfig = null;
-		if (requiresAuthentication()) {
-			ldapConfig = new LDAPConfig();
-			ldapConfig.ldapUrl = config.getValue(name, "auth", "url");
-			ldapConfig.defaultDomain = config.getValue(name, "auth", "default.domain");
-			ldapConfig.groupPrefix = config.getValue(name, "auth", "group.prefix");
-			ldapConfig.groupFilter = config.getValue(name, "auth", "group.filter");
-			ldapConfig.principalMapping = config.getValue(name, "auth", "principal.mapping");
-			
-		}
+		if (requiresAuthentication()) ldapConfig = new LDAPConfig(key -> config.getValue(name, "auth", key));
 		SecurityService.createInstance(ldapConfig);
 		
 		// Perform authentication, if needed.

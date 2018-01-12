@@ -37,6 +37,7 @@ import eu.openanalytics.phaedra.base.environment.IEnvironment;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.environment.config.ConfigLoader;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
+import eu.openanalytics.phaedra.base.security.ldap.LDAPUtils;
 import eu.openanalytics.phaedra.base.security.ui.AccessDialog;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.VersionUtils;
@@ -134,6 +135,7 @@ public class LoginSplash extends BasicSplashHandler {
 		data.widthHint = F_TEXT_WIDTH_HINT;
 		data.horizontalSpan = 2;
 		usernameTxt.setLayoutData(data);
+		usernameTxt.setText(LDAPUtils.getAutoLoginName());
 		
 		passwordLbl = new Label(loginCmp, SWT.NONE);
 		passwordLbl.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
@@ -217,13 +219,6 @@ public class LoginSplash extends BasicSplashHandler {
 				handleButtonCancelWidgetSelected();
 			}
 		});
-		
-		String username = System.getProperty("user.name");
-		String domain = System.getenv("USERDOMAIN");
-		if (username != null) {
-			if (domain != null) username = domain + "\\" + username;
-			usernameTxt.setText(username);
-		}
 		
 		// Load environment configuration
 		boolean retry = true;

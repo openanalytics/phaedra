@@ -1,34 +1,26 @@
 package eu.openanalytics.phaedra.base.security.ldap;
 
+import java.util.function.Function;
+
 public class LDAPConfig {
 
-	/**
-	 * The URL pointing to the LDAP server.
-	 */
-	public String ldapUrl;
+	public static final String URL = "url";
+	public static final String AUTH_TYPE = "type";
+	public static final String DEFAULT_DOMAIN = "default.domain";
+	public static final String GROUP_PREFIX = "group.prefix";
+	public static final String GROUP_FILTER = "group.filter";
+	public static final String PRINCIPAL_MAPPING = "principal.mapping";
+	public static final String USERNAME_ATTRIBUTE = "username.attribute";
 	
-	/**
-	 * The prefix that all Phaedra group names share.
-	 */
-	public String groupPrefix;
+	private Function<String, String> resolver;
 	
-	/**
-	 * The LDAP search filter for Phaedra groups.
-	 */
-	public String groupFilter;
+	public LDAPConfig(Function<String, String> resolver) {
+		this.resolver = resolver;
+	}
 	
-	/**
-	 * The LDAP attribute that specifies the username.
-	 */
-	public String usernameAttribute;
-	
-	/**
-	 * The default domain for accounts who log in without a domain specified.
-	 */
-	public String defaultDomain;
-	
-	/**
-	 * The mapping from the user name to the principal string.
-	 */
-	public String principalMapping;
+	public String get(String name) {
+		String value = resolver.apply(name);
+		if (value == null || value.isEmpty()) value = System.getProperty("phaedra.auth." + name);
+		return value;
+	}
 }

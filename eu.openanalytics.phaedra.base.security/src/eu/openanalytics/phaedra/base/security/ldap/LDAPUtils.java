@@ -27,19 +27,39 @@ public class LDAPUtils {
 	private static final String MEMBER_ATTR = "member";
 	private static final String MAIL_ATTR = "mail";
 	
+	private static final String PROP_AUTO_USERNAME = "phaedra.login.auto.username";
+	private static final String PROP_AUTO_DOMAIN = "phaedra.login.auto.domain";
+	
+	public static String getAutoLoginName() {
+		boolean autoUsername = Boolean.valueOf(System.getProperty(PROP_AUTO_USERNAME));
+		boolean autoDomain= Boolean.valueOf(System.getProperty(PROP_AUTO_DOMAIN));
+		
+		String username = autoUsername ? System.getProperty("user.name") : null;
+		String domain = autoDomain ? System.getenv("USERDOMAIN") : null;
+
+		String login = "";
+		if (username != null && !username.isEmpty()) {
+			login = username;
+			if (domain != null && !domain.isEmpty()) login = domain + "\\" + login;
+		}
+		return login;
+	}
+	
 	public static DirContext bind(String userName, byte[] password, LDAPConfig cfg) {
-		// LDAP bind may need a qualified userName, including domain.
-		if (cfg.defaultDomain != null && !cfg.defaultDomain.isEmpty() && !userName.contains("\\")) {
-			userName = cfg.defaultDomain + "\\" + userName;
+
+		if (password.length == 0) throw new AuthenticationException("Password cannot be empty");
+		
+		// If a default domain has been configured, prepend it to the username (AD only).
+		String defaultDomain = cfg.get(LDAPConfig.DEFAULT_DOMAIN);
+		if (defaultDomain != null && !defaultDomain.isEmpty() && !userName.contains("\\")) {
+			userName = defaultDomain + "\\" + userName;
 		}
 		
+		// If a principal mapping has been configured, apply it (e.g. map username to DN).
 		String principal = userName;
-		if (cfg.principalMapping != null && !cfg.principalMapping.isEmpty()) {
-			principal = cfg.principalMapping.replace("${username}", userName);
-		}
-		
-		if (password.length == 0) {
-			throw new AuthenticationException("Password cannot be empty");
+		String principalMapping = cfg.get(LDAPConfig.PRINCIPAL_MAPPING);
+		if (principalMapping != null && !principalMapping.isEmpty()) {
+			principal = principalMapping.replace("${username}", userName);
 		}
 		
 		try {
@@ -47,9 +67,12 @@ public class LDAPUtils {
 			
 			Hashtable<String, String> env = new Hashtable<>(11);
 			env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-			env.put(Context.PROVIDER_URL, cfg.ldapUrl);
+			env.put(Context.PROVIDER_URL, cfg.get(LDAPConfig.URL));
 			env.put(Context.SECURITY_PRINCIPAL, principal);
 			env.put(Context.SECURITY_CREDENTIALS, new String(password));
+			
+			String authType = cfg.get(LDAPConfig.AUTH_TYPE);
+			if (authType != null && !authType.isEmpty()) env.put(Context.SECURITY_AUTHENTICATION, authType);
 			
 			DirContext ctx = new InitialDirContext(env);
 			return ctx;
@@ -63,7 +86,7 @@ public class LDAPUtils {
 	
 	public static String lookupEmail(String username, DirContext ctx, LDAPConfig cfg) {
 		try {
-			String usernameAttribute = cfg.usernameAttribute;
+			String usernameAttribute = cfg.get(LDAPConfig.USERNAME_ATTRIBUTE);
 			if (usernameAttribute == null) usernameAttribute = DEFAULT_USERNAME_ATTR;
 			
 			SearchControls ctrl = new SearchControls();
@@ -86,7 +109,13 @@ public class LDAPUtils {
 	protected static Map<Group, List<String>> loadGroups(DirContext ctx, LDAPConfig cfg) {
 		Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
 		
-		if (cfg.groupPrefix == null || cfg.groupPrefix.isEmpty()) {
+		String groupPrefix = cfg.get(LDAPConfig.GROUP_PREFIX);
+		String groupFilter = cfg.get(LDAPConfig.GROUP_FILTER);
+		String usernameAttribute = cfg.get(LDAPConfig.USERNAME_ATTRIBUTE);
+		if (usernameAttribute == null) usernameAttribute = DEFAULT_USERNAME_ATTR;
+		
+		// If no group config is provided, treat all users as admins.
+		if (groupPrefix == null || groupPrefix.isEmpty()) {
 			Group group = new Group(Group.GLOBAL_TEAM, Roles.ADMINISTRATOR);
 			List<String> members = new ArrayList<>();
 			members.add("*");
@@ -98,7 +127,7 @@ public class LDAPUtils {
 			SearchControls ctrl = new SearchControls();
 			ctrl.setReturningAttributes(new String[] { NAME_ATTR, MEMBER_ATTR });
 			ctrl.setSearchScope(SearchControls.SUBTREE_SCOPE);
-			NamingEnumeration<SearchResult> resultSet = ctx.search(cfg.groupFilter, "(" + NAME_ATTR + "=" + cfg.groupPrefix + "*)", ctrl);
+			NamingEnumeration<SearchResult> resultSet = ctx.search(groupFilter, "(" + NAME_ATTR + "=" + groupPrefix + "*)", ctrl);
 			
 			while (resultSet.hasMore()) {
 				// Each entry is one Afrax group.
@@ -108,7 +137,7 @@ public class LDAPUtils {
 				String team = null;
 				String role = null;
 				String groupName = entry.getAttributes().get(NAME_ATTR).get().toString();
-				groupName = groupName.substring(cfg.groupPrefix.length());
+				groupName = groupName.substring(groupPrefix.length());
 				String[] parts = groupName.split("_");
 
 				if (parts.length < 2) continue;
@@ -123,9 +152,6 @@ public class LDAPUtils {
 					groups.put(group, members);
 				}
 
-				String usernameAttribute = cfg.usernameAttribute;
-				if (usernameAttribute == null) usernameAttribute = DEFAULT_USERNAME_ATTR;
-				
 				Attribute memberLists = entry.getAttributes().get(MEMBER_ATTR);
 				if (memberLists != null) {
 					NamingEnumeration<?> values = memberLists.getAll();
