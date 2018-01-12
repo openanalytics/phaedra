@@ -3,7 +3,9 @@ package eu.openanalytics.phaedra.base.fs.smb;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
+import java.net.UnknownHostException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
@@ -43,7 +45,6 @@ public class SMBInterface extends BaseFileServer {
 	@Override
 	public void initialize(String fsPath, String userName, String pw) throws IOException {
 		basePath = SMBHelper.toSMBNotation(fsPath);
-		String serverName = basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()).split("/")[0];
 		
 		// Set timeouts based on user preferences.
 		int smbSocketTimeout = Activator.getDefault().getPreferenceStore().getInt(Prefs.SMB_SOCKET_TIMEOUT);
@@ -59,7 +60,7 @@ public class SMBInterface extends BaseFileServer {
 		// Use WINS servers if the file server is in a different subnet.
 //		if (wins != null && !wins.isEmpty()) jcifs.Config.setProperty("jcifs.netbios.wins", wins);
 		
-		login(serverName, userName, pw);
+		login(getHostname(), userName, pw);
 	}
 	
 	@Override
@@ -196,6 +197,10 @@ public class SMBInterface extends BaseFileServer {
 		return SMBHelper.getFile(getFullPath(path), auth, lock);
 	}
 	
+	private String getHostname() {
+		return basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()).split("/")[0];
+	}
+	
 	private synchronized String getMount() {
 		if (privateMount == null) mount();
 		return privateMount;
@@ -205,7 +210,15 @@ public class SMBInterface extends BaseFileServer {
 		if (privateMount != null) return;
 		
 		if (ProcessUtils.isWindows()) {
-			privateMount = SMBHelper.toUNCNotation(basePath).replace('/', '\\');
+			// Mapping won't work if another mapping exists to the same server!
+			// See https://support.microsoft.com/en-us/help/938120/error-message-when-you-use-user-credentials-to-connect-to-a-network-sh
+			// Workaround: map with ip address instead of hostname
+			try {
+				InetAddress ip = InetAddress.getByName(getHostname());
+				privateMount = SMBHelper.toUNCNotation(basePath).replace(getHostname(), ip.getHostAddress()).replace('/', '\\');
+			} catch (UnknownHostException e) {
+				throw new RuntimeException(e);
+			}
 			String[] cmd = { "net", "use", privateMount, auth.getPassword(), "/user:" + auth.getUsername()};
 			try {
 				ProcessUtils.execute(cmd, null, null, true, true);
