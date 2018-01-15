@@ -245,7 +245,8 @@ public class LoginSplash extends BasicSplashHandler {
 			environmentCmb.setItems(env);
 			environmentCmb.select(0);
 			handleEnvironmentSelected();
-			passwordTxt.setFocus();
+			if (usernameTxt.getText().isEmpty()) usernameTxt.setFocus();
+			else passwordTxt.setFocus();
 		}
 	}
 
