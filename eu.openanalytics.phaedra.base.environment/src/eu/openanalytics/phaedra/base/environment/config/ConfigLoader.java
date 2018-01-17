@@ -8,7 +8,6 @@ import java.net.URL;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 
 import eu.openanalytics.phaedra.base.environment.Activator;
 import eu.openanalytics.phaedra.base.fs.SMBHelper;
@@ -31,9 +30,11 @@ public class ConfigLoader {
 	}
 
 	public static String getPreferredConfig() {
-		String preferredConfig = Platform.getPreferencesService().getString(Activator.PLUGIN_ID, CONFIG_PROP, null, null);
-		if (preferredConfig == null || preferredConfig.isEmpty()) preferredConfig = System.getProperty(CONFIG_PROP);
-		return preferredConfig;
+		//TODO reconsider config load order.
+//		String preferredConfig = Platform.getPreferencesService().getString(Activator.PLUGIN_ID, CONFIG_PROP, null, null);
+//		if (preferredConfig == null || preferredConfig.isEmpty()) preferredConfig = System.getProperty(CONFIG_PROP);
+//		return preferredConfig;
+		return null;
 	}
 	
 	public static void setPreferredConfig(String path) {
