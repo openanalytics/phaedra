@@ -14,33 +14,21 @@ import eu.openanalytics.phaedra.base.fs.SMBHelper;
 
 public class ConfigLoader {
 
-	private static final String ALLOW_EMBEDDED = "phaedra.allow.embedded";
 	private static final String CONFIG_PROP = "phaedra.config";
 	
 	public static Config loadConfig() throws IOException {
-		String preferredConfig = getPreferredConfig();
-		if (preferredConfig != null) return parseConfig(openStream(preferredConfig));
+		InputStream config = null;
 		
-		String allowEmbedded = System.getProperty(ALLOW_EMBEDDED);
-		if (allowEmbedded == null || Boolean.valueOf(allowEmbedded)) {
-			return parseConfig(FileLocator.openStream(Activator.getDefault().getBundle(), new Path("config.xml"), false));
-		} else {
-			throw new IOException("No configuration file found");
+		String configPath = System.getProperty(CONFIG_PROP);
+		if (configPath != null) config = openStream(configPath);
+
+		if (config == null) {
+			config = FileLocator.openStream(Activator.getDefault().getBundle(), new Path("config.xml"), false);
 		}
+		
+		return parseConfig(config);
 	}
 
-	public static String getPreferredConfig() {
-		//TODO reconsider config load order.
-//		String preferredConfig = Platform.getPreferencesService().getString(Activator.PLUGIN_ID, CONFIG_PROP, null, null);
-//		if (preferredConfig == null || preferredConfig.isEmpty()) preferredConfig = System.getProperty(CONFIG_PROP);
-//		return preferredConfig;
-		return null;
-	}
-	
-	public static void setPreferredConfig(String path) {
-		Activator.getDefault().getPreferenceStore().setValue(CONFIG_PROP, path);
-	}
-	
 	private static InputStream openStream(String path) throws IOException {
 		if (SMBHelper.isSMBPath(path)) {
 			return SMBHelper.open(path);
