@@ -168,7 +168,7 @@ public class ContextMenuBindingConfiguration extends AbstractUiBindingConfigurat
 			new MenuItem(bodyMenu, SWT.SEPARATOR);
 			
 			menuItem = new MenuItem(bodyMenu, SWT.PUSH);
-			menuItem.setText("Export");
+			menuItem.setText("Export Table");
 			menuItem.setImage(IconManager.getIconImage("page_excel.png"));
 			menuItem.setEnabled(true);
 			menuItem.addListener(SWT.Selection, (event) -> {

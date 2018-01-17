@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
+import eu.openanalytics.phaedra.base.ui.nattable.misc.IAsyncColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.util.misc.ThreadsafeDialogHelper;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.threading.JobUtils;
@@ -64,6 +65,7 @@ public class ExportExcelCommandHandler extends AbstractLayerCommandHandler<Expor
 		if (destinationPath == null) return true;
 		
 		JobUtils.runUserJob(monitor -> {
+			if (columnAccessor instanceof IAsyncColumnAccessor) ((IAsyncColumnAccessor<?>) columnAccessor).setAsync(false);
 			try (SXSSFWorkbook wb = new SXSSFWorkbook(100)) {
 				Sheet sheet = wb.createSheet();
 				writeData(sheet, exportMode, monitor);
@@ -72,7 +74,9 @@ public class ExportExcelCommandHandler extends AbstractLayerCommandHandler<Expor
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
-			}			
+			} finally {
+				if (columnAccessor instanceof IAsyncColumnAccessor) ((IAsyncColumnAccessor<?>) columnAccessor).setAsync(true);
+			}
 		}, "Exporting table", selectionLayer.getRowCount(), null, null);
 		return true;
 	}
