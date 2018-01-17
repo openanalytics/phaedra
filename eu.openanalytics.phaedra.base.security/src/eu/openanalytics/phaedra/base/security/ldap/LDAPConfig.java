@@ -19,8 +19,8 @@ public class LDAPConfig {
 	}
 	
 	public String get(String name) {
-		String value = resolver.apply(name);
-		if (value == null || value.isEmpty()) value = System.getProperty("phaedra.auth." + name);
+		String value = System.getProperty("phaedra.auth." + name);
+		if (value == null || value.isEmpty()) value = resolver.apply(name);
 		return value;
 	}
 }
