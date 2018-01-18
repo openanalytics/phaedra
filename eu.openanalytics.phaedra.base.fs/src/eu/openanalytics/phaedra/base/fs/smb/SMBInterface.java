@@ -250,13 +250,13 @@ public class SMBInterface extends BaseFileServer {
 		
 		if (ProcessUtils.isWindows()) {
 			try {
-				ProcessUtils.execute(new String[] { "net", "use", privateMount, "/delete" }, null, null, true, true);
-			} catch (InterruptedException e) {}
+				ProcessUtils.execute(new String[] { "net", "use", privateMount, "/delete", "/yes" }, null, null, true, true);
+			} catch (Exception e) {}
 		} else if (ProcessUtils.isMac()) {
 			try {
 				int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
 				if (retCode == 0) FileUtils.deleteRecursive(privateMount);
-			} catch (InterruptedException e) {}
+			} catch (Exception e) {}
 		}
 		
 		privateMount = null;
