@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -48,6 +50,16 @@ public class Config {
 	
 	public String getValue(String env, String category, String property) {
 		return resolveVars(XmlUtils.findString(createCategoryXPath(env, category) + "/" + property, doc));
+	}
+	
+	public String[] getKeys(String env, String category, String prefix) {
+		NodeList matches = XmlUtils.findTags(createCategoryXPath(env, category) + "/*", doc);
+		List<String> keys = new ArrayList<>();
+		for (int i=0; i<matches.getLength(); i++) {
+			String tagName = matches.item(i).getNodeName().toLowerCase();
+			if (prefix == null || prefix.isEmpty() || tagName.startsWith(prefix.toLowerCase())) keys.add(tagName);
+		}
+		return keys.toArray(new String[keys.size()]);
 	}
 	
 	public String resolvePassword(String env, String category) throws IOException {

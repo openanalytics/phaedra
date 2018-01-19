@@ -18,8 +18,10 @@ import javax.persistence.PersistenceException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 
+import eu.openanalytics.phaedra.base.db.DatabaseConfig;
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.pool.ConnectionPoolManager;
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
@@ -32,12 +34,22 @@ public class DBDataSource implements ISubWellDataSource {
 	private ConnectionPoolManager connectionPoolManager;
 
 	public DBDataSource(String url, String username, String password) {
-		JDBCUtils.loadJDBCDriver(url);
-		connectionPoolManager = new ConnectionPoolManager(url, username, password);
-		try {
-			connectionPoolManager.startup();
-		} catch (SQLException e) {
-			throw new RuntimeException("Failed to open database connection", e);
+		if (url != null) {
+			DatabaseConfig cfg = new DatabaseConfig();
+			cfg.setResolver(key -> {
+				if (key.equalsIgnoreCase(DatabaseConfig.URL)) return url;
+				if (key.equalsIgnoreCase(DatabaseConfig.USERNAME)) return username;
+				return null;
+			});
+			cfg.setEncryptedResolver(key -> password);
+			
+			JDBCUtils.loadJDBCDriver(url);
+			connectionPoolManager = new ConnectionPoolManager(cfg);
+			try {
+				connectionPoolManager.startup();
+			} catch (SQLException e) {
+				throw new RuntimeException("Failed to open database connection", e);
+			}
 		}
 	}
 
@@ -167,7 +179,7 @@ public class DBDataSource implements ISubWellDataSource {
 			Map<Well, Object> featureData = data.get(feature);
 
 			PreparedStatement ps = null;
-			try (Connection conn = connectionPoolManager.getConnection()) {
+			try (Connection conn = getConnection()) {
 				ps = conn.prepareStatement(queryString);
 
 				if (feature.isNumeric()) {
@@ -215,7 +227,7 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private <T> T select(String sql, ResultProcessor<T> resultProcessor) {
 		long start = System.currentTimeMillis();
-		try (Connection conn = connectionPoolManager.getConnection()) {
+		try (Connection conn = getConnection()) {
 			try (Statement stmt = conn.createStatement()) {
 				try (ResultSet rs = stmt.executeQuery(sql)) {
 					return resultProcessor.process(rs);
@@ -237,5 +249,13 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private interface ResultProcessor<T> {
 		public T process(ResultSet rs) throws SQLException;
+	}
+	
+	private Connection getConnection() throws SQLException {
+		if (connectionPoolManager == null) {
+			return Screening.getEnvironment().getJDBCConnection();
+		} else {
+			return connectionPoolManager.getConnection();
+		}
 	}
 }

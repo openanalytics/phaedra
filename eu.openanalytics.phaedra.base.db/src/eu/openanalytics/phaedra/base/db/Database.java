@@ -27,10 +27,10 @@ public class Database {
 	private EntityManagerFactory entityManagerFactory;
 	private EntityManager entityManager;
 	
-	public Database(String url, String user, String password) {
-		JDBCUtils.checkDbType(url);
+	public Database(DatabaseConfig cfg) {
+		JDBCUtils.checkDbType(cfg.get(DatabaseConfig.URL));
 		
-		connectionPoolManager = new ConnectionPoolManager(url, user, password);
+		connectionPoolManager = new ConnectionPoolManager(cfg);
 		try {
 			connectionPoolManager.startup();
 		} catch (SQLException e) {

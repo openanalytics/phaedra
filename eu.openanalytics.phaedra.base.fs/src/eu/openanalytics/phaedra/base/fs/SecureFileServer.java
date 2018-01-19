@@ -25,7 +25,11 @@ public class SecureFileServer {
 	private final static String ATTR_CLASS = "class";
 	private final static String ATTR_PRIORITY = "priority";
 	
-	public SecureFileServer(String fsPath, String userName, String password) {
+	public SecureFileServer(FileServerConfig cfg) {
+		String fsPath = cfg.get(FileServerConfig.PATH);
+		String userName = cfg.get(FileServerConfig.USERNAME);
+		String password = cfg.getEncrypted(FileServerConfig.PASSWORD);
+		
 		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(EXT_PT_ID);
 		Function<IConfigurationElement, Integer> priority = e -> {
 			String prio = e.getAttribute(ATTR_PRIORITY);

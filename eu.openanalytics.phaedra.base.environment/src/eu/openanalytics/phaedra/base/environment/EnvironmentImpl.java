@@ -7,7 +7,9 @@ import java.sql.SQLException;
 import javax.persistence.EntityManager;
 
 import eu.openanalytics.phaedra.base.db.Database;
+import eu.openanalytics.phaedra.base.db.DatabaseConfig;
 import eu.openanalytics.phaedra.base.environment.config.Config;
+import eu.openanalytics.phaedra.base.fs.FileServerConfig;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
@@ -38,25 +40,31 @@ public class EnvironmentImpl implements IEnvironment {
 	
 	@Override
 	public void connect(String userName, byte[] password) throws AuthenticationException, IOException {
-		// Set up security configuration.
 		LDAPConfig ldapConfig = null;
-		if (requiresAuthentication()) ldapConfig = new LDAPConfig(key -> config.getValue(name, "auth", key));
+		if (requiresAuthentication()) {
+			ldapConfig = new LDAPConfig();
+			ldapConfig.setResolver(key -> config.getValue(name, "auth", key));
+		}
 		SecurityService.createInstance(ldapConfig);
-		
-		// Perform authentication, if needed.
 		SecurityService.getInstance().getLoginHandler().authenticate(userName, password);
 		
-		// Set up file server connection.
-		String fsPath = config.getValue(name, "fs", "path");
-		String fsUser = config.getValue(name, "fs", "user");
-		String fsPassword = config.resolvePassword(name, "fs");
-		fileServer = new SecureFileServer(fsPath, fsUser, fsPassword);
+		FileServerConfig fsConfig = new FileServerConfig();
+		fsConfig.setResolver(key -> config.getValue(name, "fs", key)); 
+		fsConfig.setEncryptedResolver(key -> {
+			if (key == null || key.equalsIgnoreCase("password")) return config.resolvePassword(name, "fs");
+			else return config.resolvePassword(key);
+		});
+		fsConfig.setKeySupplier(prefix -> config.getKeys(name, "fs", prefix));
+		fileServer = new SecureFileServer(fsConfig);
 
-		// Set up database connectivity.
-		String dbUrl = config.getValue(name, "db", "url");
-		String dbUser = config.getValue(name, "db", "user");
-		String dbPassword = config.resolvePassword(name, "db");
-		database = new Database(dbUrl, dbUser, dbPassword);
+		DatabaseConfig dbConfig = new DatabaseConfig();
+		dbConfig.setResolver(key -> config.getValue(name, "db", key)); 
+		dbConfig.setEncryptedResolver(key -> {
+			if (key == null || key.equalsIgnoreCase("password")) return config.resolvePassword(name, "db");
+			else return config.resolvePassword(key);
+		});
+		dbConfig.setKeySupplier(prefix -> config.getKeys(name, "db", prefix));
+		database = new Database(dbConfig);
 	}
 
 	@Override

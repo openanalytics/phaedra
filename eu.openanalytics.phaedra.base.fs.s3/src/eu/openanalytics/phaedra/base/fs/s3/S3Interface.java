@@ -26,16 +26,17 @@ public class S3Interface extends BaseFileServer {
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
-		return fsPath.startsWith("https://s3");
+		return fsPath.startsWith("https://");
 	}
 
 	@Override
 	public void initialize(String fsPath, String userName, String pw) throws IOException {
 		BasicAWSCredentials credentials = new BasicAWSCredentials(userName, pw);
 		EndpointConfiguration endpointConfiguration = new EndpointConfiguration(fsPath, null);
-		
+
 		s3 = AmazonS3ClientBuilder.standard()
 				.withEndpointConfiguration(endpointConfiguration)
+				.enablePathStyleAccess()
 				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
 		bucketName = getLocalName(fsPath);
 	}
