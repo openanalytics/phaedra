@@ -15,6 +15,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
@@ -31,6 +32,9 @@ public class S3Interface extends BaseFileServer {
 
 	@Override
 	public void initialize(String fsPath, String userName, String pw) throws IOException {
+		bucketName = getLocalName(fsPath);
+		fsPath = fsPath.substring(0, fsPath.lastIndexOf("/"));
+		
 		BasicAWSCredentials credentials = new BasicAWSCredentials(userName, pw);
 		EndpointConfiguration endpointConfiguration = new EndpointConfiguration(fsPath, null);
 
@@ -38,7 +42,6 @@ public class S3Interface extends BaseFileServer {
 				.withEndpointConfiguration(endpointConfiguration)
 				.enablePathStyleAccess()
 				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
-		bucketName = getLocalName(fsPath);
 	}
 
 	@Override
@@ -85,6 +88,7 @@ public class S3Interface extends BaseFileServer {
 	public List<String> dir(String path) throws IOException {
 		String key = getKey(path);
 		if (!key.endsWith("/")) key += "/";
+		if (key.equals("/")) key = "";
 		
 		ListObjectsV2Request req = new ListObjectsV2Request();
 		req.setBucketName(bucketName);
@@ -147,7 +151,7 @@ public class S3Interface extends BaseFileServer {
 	
 	@Override
 	protected void doUpload(String path, InputStream input) throws IOException {
-		throw new IOException("S3 interface does not support output streams");
+		s3.putObject(bucketName, getKey(path), input, new ObjectMetadata());
 	}
 	
 	private String getKey(String path) {
