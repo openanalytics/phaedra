@@ -51,6 +51,10 @@ public class RServiManager {
 			System.setProperty("java.rmi.server.codebase", ServerUtil.concatCodebase(libs));
 
 			PatchedRMIUtil.INSTANCE.setEmbeddedPrivateMode(true);
+			
+			//TODO Make port (default: 51234) configurable: PatchedRMIUtil.INSTANCE.setEmbeddedPrivatePort(port);
+			// But each node also opens 1 or 2 random ports! cfr UnicastRemoteObject.exportObject
+			
 			RMIRegistry registry = PatchedRMIUtil.INSTANCE.getEmbeddedPrivateRegistry(new NullProgressMonitor());
 			RServiNodeFactory nodeFactory = RServiImplE.createLocalNodeFactory(name, context);
 			RServiNodeConfig rConfig = new RServiNodeConfig();
