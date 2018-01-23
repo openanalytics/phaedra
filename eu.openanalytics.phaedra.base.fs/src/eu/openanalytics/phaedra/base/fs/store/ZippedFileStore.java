@@ -78,6 +78,8 @@ public class ZippedFileStore implements IFileStore {
 	
 	@Override
 	public String[] listKeys() throws IOException {
+		//TODO properly implement switching
+		if (mode == AccessMode.WRITE) switchMode();
 		return inputEntries.keySet().stream().sorted().toArray(i -> new String[i]);
 	}
 	
@@ -147,7 +149,7 @@ public class ZippedFileStore implements IFileStore {
 		if (mode != AccessMode.READ) throw new IOException("Cannot read entry: file is write-only");
 		
 		ZipEntry entry = inputEntries.get(key);
-		if (entry == null) throw new IOException("Key not found: " + key);
+		if (entry == null) return null; //throw new IOException("Key not found: " + key);
 		
 		try (InputStream i = input.getInputStream(entry.getName())) {
 			ObjectInputStream is = new ObjectInputStream(i);

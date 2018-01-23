@@ -4,8 +4,11 @@ import java.util.List;
 
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizard;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.datacapture.DataCaptureException;
 import eu.openanalytics.phaedra.datacapture.util.FeatureDefinition;
 import eu.openanalytics.phaedra.datacapture.util.MissingFeaturesHelper;
+import eu.openanalytics.phaedra.ui.link.importer.Activator;
 
 public class AddFeaturesWizard extends BaseStatefulWizard {
 	
@@ -13,6 +16,11 @@ public class AddFeaturesWizard extends BaseStatefulWizard {
 		setWindowTitle("Add New Features");
 		state = new AddFeaturesWizardState();
 		((AddFeaturesWizardState) state).helper = helper;
+		try {
+			((AddFeaturesWizardState) state).featureDefinitions = helper.findMissingFeatures();
+		} catch (DataCaptureException e) {
+			EclipseLog.warn("Failed to detect missing features", e, Activator.PLUGIN_ID);
+		}
 	}
 	
 	@Override
