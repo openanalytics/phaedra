@@ -100,9 +100,6 @@
 		<module>eu.openanalytics.phaedra.datacapture.parser</module>
 		<module>eu.openanalytics.phaedra.datacapture.scanner</module>
 		<module>eu.openanalytics.phaedra.export</module>
-		<module>eu.openanalytics.phaedra.link.data</module>
-		<module>eu.openanalytics.phaedra.link.data.notification</module>
-		<module>eu.openanalytics.phaedra.link.hooks</module>
 		<module>eu.openanalytics.phaedra.link.importer</module>
 		<module>eu.openanalytics.phaedra.link.platedef</module>
 		<module>eu.openanalytics.phaedra.model.curve</module>

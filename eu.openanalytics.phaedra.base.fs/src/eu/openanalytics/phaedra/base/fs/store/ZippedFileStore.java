@@ -161,7 +161,7 @@ public class ZippedFileStore implements IFileStore {
 		}
 	}
 	
-	private void writeEntry(String key, Object data) throws IOException {
+	private synchronized void writeEntry(String key, Object data) throws IOException {
 		if (mode != AccessMode.WRITE) throw new IOException("Cannot write entry: file is read-only");
 		
 		byte[] serialized = null;
