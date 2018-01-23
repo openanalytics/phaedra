@@ -26,6 +26,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.Activator;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
 
+//TODO delete rows when plate is deleted
 public class DBDataSource implements ISubWellDataSource {
 
 	private static final String SCHEMA = "phaedra";

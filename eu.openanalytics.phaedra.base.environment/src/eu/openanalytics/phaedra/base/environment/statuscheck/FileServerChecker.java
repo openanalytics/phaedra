@@ -47,7 +47,9 @@ public class FileServerChecker extends AbstractStatusChecker {
 		String gbFree = NumberUtils.round(free, 0);
 		String gbTotal = NumberUtils.round(total, 0);
 		String pctFree = NumberUtils.round(100*(free/total), 2);
-		if (free/total > 0.1) {
+		if (total == 0 || Double.isNaN(total)) {
+			return new TrafficStatus(TrafficStatus.UP, "OK\n" + "Free space: unknown", detailedInfo);
+		} else if (free/total > 0.1) {
 			return new TrafficStatus(TrafficStatus.UP, "OK\n" + "Free space: " + pctFree + "% (" + gbFree + " / " + gbTotal + " gb)", detailedInfo);
 		} else {
 			return new TrafficStatus(TrafficStatus.WARN, "Low Disk Space!\n" + "Free space: " + pctFree + "% (" + gbFree + " / " + gbTotal + " gb)", detailedInfo);

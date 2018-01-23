@@ -119,6 +119,7 @@ public class S3Interface extends BaseFileServer {
 
 	@Override
 	public long getLength(String path) throws IOException {
+		if (!exists(path)) return 0L;
 		try (S3Object o = s3.getObject(bucketName, getKey(path))) {
 			return o.getObjectMetadata().getContentLength();
 		}
