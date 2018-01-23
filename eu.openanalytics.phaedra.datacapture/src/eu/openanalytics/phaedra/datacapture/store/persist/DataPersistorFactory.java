@@ -5,7 +5,9 @@ public class DataPersistorFactory {
 	public static IDataPersistor[] createPersistors() {
 		return new IDataPersistor[] {
 			new PlateDataPersistor(),
-			new WellDataPersistor()
+			new WellDataPersistor(),
+			new SubWellDataPersistor(),
+			new ImageDataPersistor()
 		};
 	}
 }

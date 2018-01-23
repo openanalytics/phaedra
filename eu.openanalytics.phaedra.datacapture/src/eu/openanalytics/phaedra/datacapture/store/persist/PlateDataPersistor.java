@@ -58,8 +58,12 @@ public class PlateDataPersistor extends BaseDataPersistor {
 	}
 	
 	public PlateTemplate getLayout(IFileStore store) throws IOException {
-		String rows = store.readStringValue(PLATE_LAYOUT_PREFIX + PROP_ROWS);
-		String columns = store.readStringValue(PLATE_LAYOUT_PREFIX + PROP_COLUMNS);
+		String rows = null;
+		String columns = null;
+		try {
+			rows = store.readStringValue(PLATE_LAYOUT_PREFIX + PROP_ROWS);
+			columns = store.readStringValue(PLATE_LAYOUT_PREFIX + PROP_COLUMNS);
+		} catch (IOException e) {}
 		if (rows == null || columns == null) return null;
 		
 		PlateTemplate template = new PlateTemplate();

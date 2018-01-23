@@ -5,6 +5,8 @@ import org.eclipse.swt.widgets.Display;
 
 import eu.openanalytics.phaedra.base.hook.BaseHook;
 import eu.openanalytics.phaedra.base.hook.IHookArguments;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.datacapture.DataCaptureException;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
 import eu.openanalytics.phaedra.datacapture.DataCaptureTask.DataCaptureParameter;
 import eu.openanalytics.phaedra.datacapture.hook.DataCaptureHookArguments;
@@ -14,6 +16,7 @@ import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
+import eu.openanalytics.phaedra.ui.link.importer.Activator;
 
 public class PostCaptureAddMissingFeaturesUI extends BaseHook {
 
@@ -38,6 +41,11 @@ public class PostCaptureAddMissingFeaturesUI extends BaseHook {
 	}
 
 	private void createMissing(MissingFeaturesHelper helper) {
+		try {
+			if (helper.findMissingFeatures().isEmpty()) return;
+		} catch (DataCaptureException e) {
+			EclipseLog.warn("Failed to detect missing features", e, Activator.PLUGIN_ID);
+		}
 		Display.getDefault().syncExec(new Runnable() {
 			@Override
 			public void run() {

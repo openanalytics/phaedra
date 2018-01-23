@@ -1,8 +1,12 @@
 package eu.openanalytics.phaedra.datacapture.store;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.AccessMode;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,6 +14,7 @@ import java.util.stream.Stream;
 
 import eu.openanalytics.phaedra.base.fs.store.FileStoreFactory;
 import eu.openanalytics.phaedra.base.fs.store.IFileStore;
+import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureException;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
@@ -25,6 +30,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 public class DefaultDataCaptureStore implements IDataCaptureStore {
 
 	private IFileStore store;
+	private Set<String> tempFolders;
 	
 	public static final String PLATE_PROPERTY_PREFIX = "plate.properties.";
 	public static final String WELL_PROPERTY_PREFIX = "well.properties.";
@@ -35,6 +41,7 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	@Override
 	public void initialize(PlateReading reading) throws DataCaptureException {
 		try {
+			tempFolders = new HashSet<>();
 			store = FileStoreFactory.open(null, AccessMode.WRITE, null);
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to create a temporary data capture store", e);
@@ -44,9 +51,11 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	@Override
 	public void finish(Plate plate) throws DataCaptureException {
 		try {
+			store.switchMode();
 			for (IDataPersistor persistor: DataPersistorFactory.createPersistors()) {
 				persistor.persist(store, plate);
 			}
+			cleanupTempFolders();
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to save persist captured data", e);
 		} finally {
@@ -56,6 +65,7 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 
 	@Override
 	public void rollback() {
+		cleanupTempFolders();
 		try { store.close(); } catch (Exception e) {}
 	}
 
@@ -118,7 +128,10 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	@Override
 	public void saveImage(String imagePath) throws DataCaptureException {
 		try {
-			store.writeValue(KEY_IMAGE_PATH, imagePath);
+			String outputPath = FileUtils.generateTempFolder(true);
+			tempFolders.add(outputPath);
+			Files.move(Paths.get(imagePath), Paths.get(outputPath, FileUtils.getName(imagePath)));
+			store.writeValue(KEY_IMAGE_PATH, outputPath + "/" + FileUtils.getName(imagePath));
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to save image path " + imagePath, e);
 		}
@@ -161,6 +174,13 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 					.toArray(i -> new String[i]);
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to list subwell features", e);
+		}
+	}
+	
+	private void cleanupTempFolders() {
+		if (tempFolders == null) return;
+		for (String file: tempFolders) {
+			FileUtils.deleteRecursive(new File(file));
 		}
 	}
 	

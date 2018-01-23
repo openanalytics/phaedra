@@ -59,6 +59,10 @@ public abstract class BaseFileServer implements FSInterface {
 			public InputStream getInput() throws IOException {
 				return new FileInputStream(file);
 			}
+			@Override
+			public long getInputLength() {
+				return file.length();
+			}
 		});
 	}
 	
@@ -69,16 +73,20 @@ public abstract class BaseFileServer implements FSInterface {
 			public InputStream getInput() throws IOException {
 				return new ByteArrayInputStream(bytes);
 			}
+			@Override
+			public long getInputLength() {
+				return bytes.length;
+			}
 		});
 	}
 	
 	@Override
 	public void upload(String path, InputStream input) throws IOException {
 		// No retrying possible here: inputstreams cannot be reset.
-		safeModification(path, () -> doUpload(path, input));
+		safeModification(path, () -> doUpload(path, input, -1));
 	}
 	
-	protected abstract void doUpload(String path, InputStream input) throws IOException;
+	protected abstract void doUpload(String path, InputStream input, long length) throws IOException;
 	
 	protected void uploadRetrying(String path, RetryingInputAccessor accessor) throws IOException {
 		int tries = Activator.getDefault().getPreferenceStore().getInt(Prefs.UPLOAD_RETRIES);
@@ -87,7 +95,7 @@ public abstract class BaseFileServer implements FSInterface {
 			RetryingUtils.doRetrying(() -> {
 				safeModification(path, () -> {
 					try (InputStream in = accessor.getInput()) {
-						doUpload(path, in);
+						doUpload(path, in, accessor.getInputLength());
 					}
 				});
 			}, tries, delay);

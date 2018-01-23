@@ -150,8 +150,10 @@ public class S3Interface extends BaseFileServer {
 	}
 	
 	@Override
-	protected void doUpload(String path, InputStream input) throws IOException {
-		s3.putObject(bucketName, getKey(path), input, new ObjectMetadata());
+	protected void doUpload(String path, InputStream input, long length) throws IOException {
+		ObjectMetadata metadata = new ObjectMetadata();
+		if (length > 0) metadata.setContentLength(length);
+		s3.putObject(bucketName, getKey(path), input, metadata);
 	}
 	
 	private String getKey(String path) {

@@ -14,7 +14,6 @@ import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -24,8 +23,6 @@ import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
 import eu.openanalytics.phaedra.model.subwell.data.DataSourceFactory;
 import eu.openanalytics.phaedra.model.subwell.data.ISubWellDataSource;
-import eu.openanalytics.phaedra.model.subwell.util.SubWellModificationTransaction;
-import eu.openanalytics.phaedra.validation.ValidationUtils;
 
 /**
  * API for interaction with subwell data. This includes retrieving data and writing or updating data.
@@ -227,19 +224,7 @@ public class SubWellService  {
 	 * @throws IOException If the update transaction fails for any reason.
 	 */
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) throws IOException {
-		if (data == null || data.isEmpty()) return;
-		Well sampleWell = data.values().iterator().next().keySet().iterator().next();
-		Plate plate = sampleWell.getPlate();
-
-		SubWellModificationTransaction transaction = createTransaction(plate);
-		try {
-			transaction.begin();
-			updateData(data, transaction);
-			transaction.commit();
-		} catch (IOException e) {
-			transaction.rollback();
-			throw e;
-		}
+		dataSource.updateData(data);
 	}
 
 	/**
@@ -262,41 +247,5 @@ public class SubWellService  {
 	 */
 	public void removeFromCache(Well well, SubWellFeature feature) {
 		cache.removeData(well, feature);
-	}
-
-	private SubWellModificationTransaction createTransaction(Plate plate) {
-		return new SubWellModificationTransaction(plate);
-	}
-	
-	private void updateData(Map<SubWellFeature, Map<Well, Object>> data, SubWellModificationTransaction transaction) throws IOException {
-		if (data == null || data.isEmpty() || transaction == null) return;
-
-		// Plate status check.
-		Set<Plate> plates = new HashSet<>();
-		for (Map<Well, Object> featureData: data.values()) {
-			for (Well well: featureData.keySet()) plates.add(well.getPlate());
-		}
-		for (Plate plate: plates) ValidationUtils.checkCanModifyPlate(plate);
-
-		// Important: data is REPLACED, so the data objects have to be fully loaded.
-		for (SubWellFeature feature: data.keySet()) {
-			Map<Well, Object> featureData = data.get(feature);
-			for (Well well : featureData.keySet()) {
-				Object wellData = featureData.get(well);
-				int dataCount = (wellData instanceof float[]) ? ((float[])wellData).length : ((String[])wellData).length;
-				if (dataCount == 0) continue;
-
-				int wellNumber = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-
-				if (wellData instanceof float[]) {
-					float[] items = (float[])wellData;
-					transaction.getWorkingCopy().writeSubWellData(items, wellNumber, feature.getName());
-				} else {
-					String[] items = (String[])wellData;
-					transaction.getWorkingCopy().writeSubWellData(items, wellNumber, feature.getName());
-				}
-				cache.removeData(well, feature);
-			}
-		}
 	}
 }

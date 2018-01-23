@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.AccessMode;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,16 +37,10 @@ public class ZippedFileStore implements IFileStore {
 		this.fsPath = fsPath;
 		this.mode = mode;
 		this.fs = fs;
-		
+
 		if (mode == AccessMode.READ) {
 			input = new ZipFile(fs.getChannel(fsPath, "r"));
-			inputEntries = new HashMap<>();
-			Enumeration<? extends ZipEntry> zipEntries = input.entries();
-			while (zipEntries.hasMoreElements()) {
-				ZipEntry entry = zipEntries.nextElement();
-				if (entry.isDirectory()) continue;
-				inputEntries.put(entry.getName(), entry);
-			}
+			readZipEntries();
 		} else {
 			tempOutputPath = FileUtils.generateTempFolder(true) + "/filestore.zip";
 			output = new ZipOutputStream(new FileOutputStream(tempOutputPath));
@@ -66,7 +61,19 @@ public class ZippedFileStore implements IFileStore {
 	@Override
 	public void commit() throws IOException {
 		try { output.close(); } catch (IOException e) {}
-		fs.putContents(fsPath, new File(tempOutputPath));
+		if (fs != null) fs.putContents(fsPath, new File(tempOutputPath));
+	}
+	
+	@Override
+	public void switchMode() throws IOException {
+		if (mode == AccessMode.WRITE) {
+			mode = AccessMode.READ;
+			output.close();
+			input = new ZipFile(Paths.get(tempOutputPath));
+			readZipEntries();
+		} else {
+			//TODO Switch from read to write mode?
+		}
 	}
 	
 	@Override
@@ -168,9 +175,20 @@ public class ZippedFileStore implements IFileStore {
 		ZipEntry zipEntry = new ZipEntry(key);
 		zipEntry.setTime(System.currentTimeMillis());
 		zipEntry.setSize(serialized.length);
+		zipEntry.setCompressedSize(serialized.length);
 		zipEntry.setCrc(StreamUtils.calculateCRC(new ByteArrayInputStream(serialized)));
 		zipEntry.setMethod(ZipEntry.STORED);
 		output.putNextEntry(zipEntry);
 		StreamUtils.copy(new ByteArrayInputStream(serialized), output);
+	}
+	
+	private void readZipEntries() {
+		inputEntries = new HashMap<>();
+		Enumeration<? extends ZipEntry> zipEntries = input.entries();
+		while (zipEntries.hasMoreElements()) {
+			ZipEntry entry = zipEntries.nextElement();
+			if (entry.isDirectory()) continue;
+			inputEntries.put(entry.getName(), entry);
+		}
 	}
 }

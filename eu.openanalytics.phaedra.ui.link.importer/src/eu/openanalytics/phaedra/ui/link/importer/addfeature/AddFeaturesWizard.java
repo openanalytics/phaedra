@@ -9,12 +9,10 @@ import eu.openanalytics.phaedra.datacapture.util.MissingFeaturesHelper;
 
 public class AddFeaturesWizard extends BaseStatefulWizard {
 	
-	private AddFeaturesWizardState state;
-	
 	public AddFeaturesWizard(MissingFeaturesHelper helper) {
 		setWindowTitle("Add New Features");
 		state = new AddFeaturesWizardState();
-		state.helper = helper;
+		((AddFeaturesWizardState) state).helper = helper;
 	}
 	
 	@Override
@@ -30,9 +28,10 @@ public class AddFeaturesWizard extends BaseStatefulWizard {
 	@Override
 	public boolean performFinish() {
 		super.performFinish();
-		if (state.featureDefinitions == null || state.featureDefinitions.isEmpty()) return true;
-		if (state.helper.confirmFeatureCreation(state.featureDefinitions)) {
-			state.helper.createMissingFeatures(state.featureDefinitions);
+		AddFeaturesWizardState s = (AddFeaturesWizardState) state;
+		if (s.featureDefinitions == null || s.featureDefinitions.isEmpty()) return true;
+		if (s.helper.confirmFeatureCreation(s.featureDefinitions)) {
+			s.helper.createMissingFeatures(s.featureDefinitions);
 		}
 		return true;
 	}

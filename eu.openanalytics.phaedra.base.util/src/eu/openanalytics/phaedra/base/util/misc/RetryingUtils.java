@@ -45,5 +45,8 @@ public class RetryingUtils {
 		public InputStream getInput() throws IOException {
 			return null;
 		}
+		public long getInputLength() {
+			return -1;
+		}
 	}
 }

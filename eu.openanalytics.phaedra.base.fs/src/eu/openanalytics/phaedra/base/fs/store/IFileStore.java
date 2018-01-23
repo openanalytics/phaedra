@@ -15,6 +15,8 @@ public interface IFileStore extends AutoCloseable {
 	 */
 	public void commit() throws IOException;
 	
+	public void switchMode() throws IOException;
+	
 	public String[] listKeys() throws IOException;
 	
 	public String readStringValue(String key) throws IOException;

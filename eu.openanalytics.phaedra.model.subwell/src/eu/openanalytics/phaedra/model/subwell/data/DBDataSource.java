@@ -5,8 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +20,8 @@ import org.eclipse.core.runtime.Platform;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.Activator;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
@@ -56,7 +58,8 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public float[] getNumericData(Well well, SubWellFeature feature) {
-		String sql = String.format("select f%d_num_val from %s.%s where well_id = %d order by cell_id asc", getFeatureIndex(feature), SCHEMA, DATA_TABLE, well.getId());
+		int featureIndex = getFeatureMapping(feature.getProtocolClass()).get(feature);
+		String sql = String.format("select f%d_num_val from %s.%s where well_id = %d order by cell_id asc", featureIndex, SCHEMA, DATA_TABLE, well.getId());
 		return select(sql, rs -> {
 			float[] values = new float[10000];
 			int i=0;
@@ -67,7 +70,8 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public String[] getStringData(Well well, SubWellFeature feature) {
-		String sql = String.format("select f%d_str_val from %s.%s where well_id = %d order by cell_id asc", getFeatureIndex(feature), SCHEMA, DATA_TABLE, well.getId());
+		int featureIndex = getFeatureMapping(feature.getProtocolClass()).get(feature);
+		String sql = String.format("select f%d_str_val from %s.%s where well_id = %d order by cell_id asc", featureIndex, SCHEMA, DATA_TABLE, well.getId());
 		return select(sql, rs -> {
 			String[] values = new String[10000];
 			int i=0;
@@ -78,6 +82,8 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache, IProgressMonitor monitor) {
+		if (wells.isEmpty() || features.isEmpty()) return;
+		
 		String well_ids = wells.stream().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
 
 		// First, retrieve the cell count of each well.
@@ -91,8 +97,10 @@ public class DBDataSource implements ISubWellDataSource {
 			return null;
 		});
 
+		Map<SubWellFeature, Integer> featureMapping = getFeatureMapping(ProtocolUtils.getProtocolClass(wells.get(0)));
+		
 		String colNames = "*";
-		if (features.size() < 200) colNames = getColNames(features);
+		if (features.size() < 200) colNames = getColNames(featureMapping);
 
 		// Mark the whole set as cached, so empty wells are not queried again later.
 		for (Well well: wells) {
@@ -104,18 +112,12 @@ public class DBDataSource implements ISubWellDataSource {
 
 		// The, retrieve the actual data for each well.
 		sql = String.format("select %s from %s.%s where well_id in (%s) order by well_id asc", colNames, SCHEMA, DATA_TABLE, well_ids);
-		select(sql, rs -> processResultSet(rs, cellCounts, wells, features, cache));
+		select(sql, rs -> processResultSet(rs, cellCounts, wells, featureMapping, cache));
 	}
 
-	private Object processResultSet(ResultSet rs, Map<Well, Integer> cellCounts, List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache) throws SQLException {
+	private Object processResultSet(ResultSet rs, Map<Well, Integer> cellCounts, List<Well> wells, Map<SubWellFeature, Integer> features, SubWellDataCache cache) throws SQLException {
 		Well currentWell = null;
 		Map<SubWellFeature, Object> currentWellData = new HashMap<>();
-
-		Map<SubWellFeature, Integer> featureIndices = new HashMap<>();
-		for (SubWellFeature feature: features) {
-			int index = getFeatureIndex(feature);
-			featureIndices.put(feature, index);
-		}
 
 		while (rs.next()) {
 			long well_id = rs.getLong("well_id");
@@ -128,8 +130,8 @@ public class DBDataSource implements ISubWellDataSource {
 			}
 
 			int cellCount = cellCounts.get(currentWell);
-			for (SubWellFeature feature: features) {
-				int index = featureIndices.get(feature);
+			for (SubWellFeature feature: features.keySet()) {
+				int index = features.get(feature);
 				if (feature.isNumeric()) {
 					float value = rs.getFloat(String.format("f%d_num_val", index));
 					if (!currentWellData.containsKey(feature)) currentWellData.put(feature, new float[cellCount]); 
@@ -159,8 +161,24 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
+		if (data.isEmpty()) return;
+		
+		SubWellFeature sample = data.keySet().iterator().next();
+		Map<SubWellFeature, Integer> featureMapping = getFeatureMapping(sample.getProtocolClass());
+		
+		String wellIds = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
+		String sql = String.format("select count(*) from %s.%s where well_id in (%s)", SCHEMA, DATA_TABLE, wellIds);
+		int rowCount = select(sql, rs -> {
+			rs.next();
+			return rs.getInt(1);
+		});
+		if (rowCount == 0) {
+			insertData(data, featureMapping);
+			return;
+		}
+		
 		for (SubWellFeature feature: data.keySet()) {
-			String colName = String.format(feature.isNumeric() ? "f%d_num_val" : "f%d_str_val", getFeatureIndex(feature));
+			String colName = String.format(feature.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(feature));
 			String queryString = String.format("update %s.%s set %s = ? where well_id = ? and cell_id = ?", SCHEMA, DATA_TABLE, colName);
 
 			Map<Well, Object> featureData = data.get(feature);
@@ -201,43 +219,95 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 
+	private void insertData(Map<SubWellFeature, Map<Well, Object>> data, Map<SubWellFeature, Integer> featureMapping) {
+		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
+		if (data.isEmpty() || wells.isEmpty()) return;
+		
+		try (Connection conn = getConnection()) {
+			for (Well well: wells) {
+				Map<SubWellFeature, Object> dataForWell = new HashMap<>();
+				data.keySet().stream().forEach(f -> dataForWell.put(f, data.get(f).get(well)));
+				if (dataForWell.isEmpty()) continue;
+				
+				List<SubWellFeature> orderedFeatures = new ArrayList<>(dataForWell.keySet());
+				String colNames = orderedFeatures.stream()
+						.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
+						.collect(Collectors.joining(","));
+				String args = dataForWell.keySet().stream().map(f -> "?").collect(Collectors.joining(","));
+				String queryString = String.format("insert into %s.%s(well_id,cell_id," + colNames + ") values (?,?," + args + ")", SCHEMA, DATA_TABLE);
+				
+				// Determine nr of cells (rows) for this well
+				int cellCount = 0;
+				for (SubWellFeature f: orderedFeatures) {
+					Object o = dataForWell.get(f);
+					if (o instanceof float[]) { cellCount = ((float[]) o).length; break; }
+					else if (o instanceof String[]) { cellCount = ((String[]) o).length; break; }
+				}
+				if (cellCount == 0) continue;
+				
+				try (PreparedStatement ps = conn.prepareStatement(queryString)) {
+					for (int cellId = 0; cellId < cellCount; cellId++) {
+						ps.setLong(1, well.getId());
+						ps.setLong(2, cellId);
+						for (int i = 0; i < orderedFeatures.size(); i++) {
+							SubWellFeature f = orderedFeatures.get(i);
+							if (f.isNumeric()) ps.setFloat(3+i, ((float[]) dataForWell.get(f))[cellId]);
+							else ps.setString(3+i, ((String[]) dataForWell.get(f))[cellId]);
+						}
+						ps.addBatch();
+					}
+					ps.executeBatch();
+				}
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
 	private Well getWell(List<Well> wells, long well_id) {
 		return wells.stream().filter(w -> w.getId() == well_id).findAny().orElse(null);
 	}
 
-	private int getFeatureIndex(SubWellFeature feature) {
+	private Map<SubWellFeature, Integer> getFeatureMapping(ProtocolClass pc) {
+		Map<SubWellFeature, Integer> features = new HashMap<>();
+
 		// Get current mappings.
-		String sql = String.format("select feature_id, sequence_nr from %s.%s where protocolclass_id = %d", SCHEMA, MAPPING_TABLE, feature.getProtocolClass().getId());
+		String sql = String.format("select feature_id, sequence_nr from %s.%s where protocolclass_id = %d", SCHEMA, MAPPING_TABLE, pc.getId());
 		long[] mapping = select(sql, rs -> {
 			long[] m = new long[MAX_FEATURES];
 			while (rs.next()) m[rs.getInt(2)] = rs.getLong(1);
 			return m;
 		});
 		
-		// Find existing mapping for this feature.
-		for (int i = 0; i < mapping.length; i++) {
-			if (mapping[i] == feature.getId()) return i;
-		}
-		
-		// Create new mapping for this feature.
-		for (int i = 0; i < mapping.length; i++) {
-			//TODO Recycle old mappings. This will start failing after MAX_FEATURES.
-			if (mapping[i] == 0) {
-				createFeatureMapping(feature, i);
-				return i;
+		for (SubWellFeature f: pc.getSubWellFeatures()) {
+			int featureIndex = 0;
+			for (int i = 0; i < mapping.length; i++) {
+				if (mapping[i] == f.getId()) { featureIndex = i; break; }
 			}
+			if (featureIndex == 0) {
+				for (int i = 0; i < mapping.length; i++) {
+					if (mapping[i] == 0) { featureIndex = i; break; }
+				}
+				// Create new mapping for this feature.
+				//TODO Recycle old mappings. This will start failing after MAX_FEATURES.
+				createFeatureMapping(f, featureIndex);
+				mapping[featureIndex] = f.getId();
+			}
+			features.put(f, featureIndex);
 		}
 		
-		throw new RuntimeException("Failed to obtain a feature index mapping for " + feature);
+		return features;
 	}
 	
 	private void createFeatureMapping(SubWellFeature feature, int index) {
-		String queryString = String.format("insert into %s.%s (protocolclass_id,feature_id,sequence_nr) values (?,?,?)",
-				SCHEMA, DATA_TABLE, feature.getProtocolClass().getId(), feature.getId(), index);
+		String queryString = String.format("insert into %s.%s (protocolclass_id,feature_id,sequence_nr) values (%d,%d,%d)",
+				SCHEMA, MAPPING_TABLE, feature.getProtocolClass().getId(), feature.getId(), index);
 		try (Connection conn = getConnection()) {
 			try (Statement stmt = conn.createStatement()) {
-				stmt.executeQuery(queryString);
+				stmt.executeUpdate(queryString);
 			}
+			conn.commit();
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
@@ -265,9 +335,9 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 
-	private String getColNames(Collection<SubWellFeature> features) {
-		return  "well_id,cell_id," + features.stream()
-			.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", getFeatureIndex(f)))
+	private String getColNames(Map<SubWellFeature, Integer> featureMapping) {
+		return  "well_id,cell_id," + featureMapping.keySet().stream()
+			.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
 			.collect(Collectors.joining(","));	
 	}
 

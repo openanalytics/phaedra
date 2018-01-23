@@ -155,7 +155,7 @@ public class NIOInterface extends BaseFileServer {
 	}
 	
 	@Override
-	protected void doUpload(String path, InputStream input) throws IOException {
+	protected void doUpload(String path, InputStream input, long length) throws IOException {
 		StreamUtils.copyAndClose(input, new FileOutputStream(getNIOPath(path).toFile()));
 	}
 	
