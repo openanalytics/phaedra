@@ -28,7 +28,7 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 		
 		this.length = s3.getObjectMetadata(bucketName, key).getContentLength();
 		this.open = true;
-		seek(0);
+		seek(0, -1);
 	}
 	
 	@Override
@@ -68,10 +68,15 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 
 	@Override
 	public SeekableByteChannel position(long newPosition) throws IOException {
-		seek(newPosition);
+		seek(newPosition, -1);
 		return this;
 	}
 
+	public SeekableByteChannel position(long newPosition, long expectedRead) throws IOException {
+		seek(newPosition, expectedRead);
+		return this;
+	}
+	
 	@Override
 	public long size() throws IOException {
 		return length;
@@ -82,10 +87,11 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 		throw new IOException("S3 writes are not supported");
 	}
 	
-	private void seek(long newPos) throws IOException {
+	private void seek(long newPos, long expectedRead) throws IOException {
 		this.pos = newPos;
 		GetObjectRequest req = new GetObjectRequest(bucketName, key);
-		req.setRange(pos);
+		if (expectedRead == -1) req.setRange(pos);
+		else req.setRange(pos, pos + expectedRead);
 		if (currentObject != null) currentObject.close();
 		this.currentObject = s3.getObject(req);
 	}

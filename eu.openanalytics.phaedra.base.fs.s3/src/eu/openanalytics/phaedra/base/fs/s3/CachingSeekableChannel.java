@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 
+//TODO Need proper caching strategy.
 public class CachingSeekableChannel implements SeekableByteChannel {
 
 	private SeekableByteChannel delegate;
@@ -32,8 +33,12 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 	public int read(ByteBuffer dst) throws IOException {
 		if (cache == null) updateCache(defaultCacheSize);
 		
-		int reqRead = Math.min(dst.remaining(), (int) (size() - pos));
-		int cacheLeft = Math.max(0, (int) ((cachePos + cache.length) - pos));
+		// Integer overflow!!!
+		long bytesLeft = Math.min(size() - pos, Integer.MAX_VALUE);
+		int reqRead = Math.min(dst.remaining(), (int) bytesLeft);
+		
+		long cl = Math.max(0, Math.min((cachePos + cache.length) - pos, Integer.MAX_VALUE));
+		int cacheLeft = (int) cl;
 		if (pos < cachePos) cacheLeft = 0;
 		
 		if (pos == size()) {
@@ -82,8 +87,8 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 	private void updateCache(int minSize) throws IOException {
 		// Check current pos, make sure 'enough' bytes are cached
 		int cacheSize = Math.max(minSize, defaultCacheSize);
-		int bytesLeft = (int) (size() - pos);
-		cacheSize = Math.min(bytesLeft, cacheSize);
+		long bytesLeft = Math.min(size() - pos, Integer.MAX_VALUE);
+		cacheSize = Math.min((int) bytesLeft, cacheSize);
 		
 		// Optimization: initial cache shouldn't be too big.
 		// E.g. for ZIP files, the reader will immediately go to the TOC (at the end of the file) anyway.
@@ -92,7 +97,8 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 		cache = new byte[cacheSize];
 		cachePos = pos;
 		System.out.println(String.format("Filling cache with %d bytes at offset %d", cacheSize, cachePos));
-		delegate.position(cachePos);
+		if (delegate instanceof SeekableS3Channel) ((SeekableS3Channel) delegate).position(cachePos, cacheSize);
+		else delegate.position(cachePos);
 		
 		ByteBuffer bb = ByteBuffer.wrap(cache);
 		int totalBytesRead = 0;
