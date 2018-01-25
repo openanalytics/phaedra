@@ -22,6 +22,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
 import eu.openanalytics.phaedra.model.subwell.data.DataSourceFactory;
+import eu.openanalytics.phaedra.model.subwell.data.HDF5Datasource;
 import eu.openanalytics.phaedra.model.subwell.data.ISubWellDataSource;
 
 /**
@@ -53,6 +54,11 @@ public class SubWellService  {
 
 	public static SubWellService getInstance() {
 		return instance;
+	}
+
+	// Note: used by DC to determine which file store type to use
+	public boolean isHDF5DataSource() {
+		return dataSource instanceof HDF5Datasource;
 	}
 
 	/**

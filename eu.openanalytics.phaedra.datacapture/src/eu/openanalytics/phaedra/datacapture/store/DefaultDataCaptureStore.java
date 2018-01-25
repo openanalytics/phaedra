@@ -23,9 +23,14 @@ import eu.openanalytics.phaedra.datacapture.parser.model.ParsedModel;
 import eu.openanalytics.phaedra.datacapture.parser.model.ParsedPlate;
 import eu.openanalytics.phaedra.datacapture.parser.model.ParsedSubWellDataset;
 import eu.openanalytics.phaedra.datacapture.parser.model.ParsedWell;
-import eu.openanalytics.phaedra.datacapture.store.persist.DataPersistorFactory;
 import eu.openanalytics.phaedra.datacapture.store.persist.IDataPersistor;
+import eu.openanalytics.phaedra.datacapture.store.persist.ImageDataPersistor;
+import eu.openanalytics.phaedra.datacapture.store.persist.PlateDataPersistor;
+import eu.openanalytics.phaedra.datacapture.store.persist.SubWellDataPersistor;
+import eu.openanalytics.phaedra.datacapture.store.persist.SubWellHDF5DataPersistor;
+import eu.openanalytics.phaedra.datacapture.store.persist.WellDataPersistor;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.subwell.SubWellService;
 
 public class DefaultDataCaptureStore implements IDataCaptureStore {
 
@@ -42,7 +47,7 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	public void initialize(PlateReading reading) throws DataCaptureException {
 		try {
 			tempFolders = new HashSet<>();
-			store = FileStoreFactory.open(null, AccessMode.WRITE, null);
+			initializeFileStore();
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to create a temporary data capture store", e);
 		}
@@ -52,7 +57,7 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	public void finish(Plate plate) throws DataCaptureException {
 		try {
 			store.switchMode();
-			for (IDataPersistor persistor: DataPersistorFactory.createPersistors()) {
+			for (IDataPersistor persistor: getDataPersistors()) {
 				persistor.persist(store, plate);
 			}
 			cleanupTempFolders();
@@ -177,6 +182,25 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 		}
 	}
 	
+	private void initializeFileStore() throws IOException {
+		if (SubWellService.getInstance().isHDF5DataSource()) {
+			store = new HDF5FileStore();
+		} else {
+			store = FileStoreFactory.open(null, AccessMode.WRITE, null);			
+		}
+	}
+
+	private IDataPersistor[] getDataPersistors() {
+		IDataPersistor[] persistors = {
+				new PlateDataPersistor(),
+				new WellDataPersistor(),
+				new SubWellDataPersistor(),
+				new ImageDataPersistor()
+		};
+		if (SubWellService.getInstance().isHDF5DataSource()) persistors[2] = new SubWellHDF5DataPersistor();
+		return persistors;
+	}
+
 	private void cleanupTempFolders() {
 		if (tempFolders == null) return;
 		for (String file: tempFolders) {

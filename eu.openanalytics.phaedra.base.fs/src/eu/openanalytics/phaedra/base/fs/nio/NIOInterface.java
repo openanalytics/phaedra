@@ -127,7 +127,7 @@ public class NIOInterface extends BaseFileServer {
 				}
 			});			
 		} else {
-			Files.delete(p);
+			if (Files.exists(p)) Files.delete(p);
 		}
 	}
 	

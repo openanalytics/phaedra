@@ -8,6 +8,7 @@ Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
  eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.hdf5;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.console;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.seda;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
