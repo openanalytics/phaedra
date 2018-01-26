@@ -15,7 +15,9 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -33,8 +35,10 @@ import org.osgi.framework.Bundle;
 @SuppressWarnings("restriction")
 public class FileUtils {
 
-	public final static char[] ILLEGAL_FILENAME_CHARS = { '/','?','<','>','\\',':','*','|','"'};
+	public static final char[] ILLEGAL_FILENAME_CHARS = { '/','?','<','>','\\',':','*','|','"'};
 
+	private static final Set<String> TEMP_FOLDERS = new HashSet<>();
+	
 	/**
 	 * Extract the name of a file or directory from its full path.
 	 * 
@@ -256,21 +260,26 @@ public class FileUtils {
 	public static String generateTempFolder(boolean create) {
 		String tempFolder = getUserTempFolder() + "/" + UUID.randomUUID();
 		if (create) new File(tempFolder).mkdirs();
+		TEMP_FOLDERS.add(tempFolder);
 		return tempFolder;
 	}
 	
 	/**
-	 * Remove all contents from the temporary folder.
+	 * Remove all generated contents from the temporary folder.
 	 * This should only be called upon application exit.
 	 */
 	public static void clearTempFolder() {
-		String tempFolder = getUserTempFolder();
-		File[] contents = new File(tempFolder).listFiles();
-		if (contents != null) {
-			for (File file: contents) {
-				deleteRecursive(file);
-			}
+		for (String tmp: TEMP_FOLDERS) {
+			deleteRecursive(tmp);
 		}
+		TEMP_FOLDERS.clear();
+//		String tempFolder = getUserTempFolder();
+//		File[] contents = new File(tempFolder).listFiles();
+//		if (contents != null) {
+//			for (File file: contents) {
+//				deleteRecursive(file);
+//			}
+//		}
 	}
 	
 	private static String getUserTempFolder() {
