@@ -4,19 +4,26 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 
-//TODO Need proper caching strategy.
 public class CachingSeekableChannel implements SeekableByteChannel {
 
 	private SeekableByteChannel delegate;
-
-	private byte[] cache;
-	private long cachePos;
+	private CachingByteRange cachedRange;
 	private long pos;
-	private int defaultCacheSize;
 	
 	public CachingSeekableChannel(SeekableByteChannel delegate) {
 		this.delegate = delegate;
-		this.defaultCacheSize = 2 * 1024 * 1024;
+		try {
+			this.cachedRange = new CachingByteRange(size(), (o,l) -> {
+//				System.out.println(String.format("Fetching: %d bytes at position %d", l, o));
+				byte[] data = new byte[l];
+				if (delegate instanceof SeekableS3Channel) ((SeekableS3Channel) delegate).position(o, l);
+				else delegate.position(o);
+				delegate.read(ByteBuffer.wrap(data));
+				return data;
+			});
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -26,35 +33,22 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 
 	@Override
 	public void close() throws IOException {
+		cachedRange.clear();
 		delegate.close();
 	}
 
 	@Override
 	public int read(ByteBuffer dst) throws IOException {
-		if (cache == null) updateCache(defaultCacheSize);
+		if (pos >= size()) return -1;
 		
-		// Integer overflow!!!
-		long bytesLeft = Math.min(size() - pos, Integer.MAX_VALUE);
-		int reqRead = Math.min(dst.remaining(), (int) bytesLeft);
+		long bytesLeftInChannel = Math.min(size() - pos, Integer.MAX_VALUE);
+		int requestedRead = Math.min(dst.remaining(), (int) bytesLeftInChannel);
 		
-		long cl = Math.max(0, Math.min((cachePos + cache.length) - pos, Integer.MAX_VALUE));
-		int cacheLeft = (int) cl;
-		if (pos < cachePos) cacheLeft = 0;
+		byte[] data = cachedRange.getBytes(pos, requestedRead);
+		pos += data.length;
 		
-		if (pos == size()) {
-			return -1;
-		} else if (reqRead <= cacheLeft) {
-			// Cache is sufficient, return cached bytes
-			int offsetInCache = (int) (pos - cachePos);
-			dst.put(cache, offsetInCache, reqRead);
-			pos += reqRead;
-			return reqRead;
-		} else {
-			// Cache is insufficient, perform more reading
-			int missing = reqRead - cacheLeft;
-			updateCache(missing);
-			return read(dst);
-		}
+		dst.put(data);
+		return data.length;
 	}
 
 	@Override
@@ -70,7 +64,6 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 	@Override
 	public SeekableByteChannel position(long newPosition) throws IOException {
 		pos = newPosition;
-		if (pos < cachePos) updateCache(defaultCacheSize);
 		return this;
 	}
 
@@ -82,28 +75,5 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 	@Override
 	public SeekableByteChannel truncate(long size) throws IOException {
 		throw new IOException("This channel does not support writes");
-	}
-	
-	private void updateCache(int minSize) throws IOException {
-		// Check current pos, make sure 'enough' bytes are cached
-		int cacheSize = Math.max(minSize, defaultCacheSize);
-		long bytesLeft = Math.min(size() - pos, Integer.MAX_VALUE);
-		cacheSize = Math.min((int) bytesLeft, cacheSize);
-		
-		// Optimization: initial cache shouldn't be too big.
-		// E.g. for ZIP files, the reader will immediately go to the TOC (at the end of the file) anyway.
-		if (pos == 0) cacheSize = Math.min(cacheSize, 1024);
-		
-		cache = new byte[cacheSize];
-		cachePos = pos;
-		System.out.println(String.format("Filling cache with %d bytes at offset %d", cacheSize, cachePos));
-		if (delegate instanceof SeekableS3Channel) ((SeekableS3Channel) delegate).position(cachePos, cacheSize);
-		else delegate.position(cachePos);
-		
-		ByteBuffer bb = ByteBuffer.wrap(cache);
-		int totalBytesRead = 0;
-		while (totalBytesRead < cacheSize) {
-			totalBytesRead += delegate.read(bb);
-		}
 	}
 }

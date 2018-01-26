@@ -28,7 +28,8 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 		
 		this.length = s3.getObjectMetadata(bucketName, key).getContentLength();
 		this.open = true;
-		seek(0, -1);
+		this.pos = -1;
+//		seek(0, -1);
 	}
 	
 	@Override
@@ -44,16 +45,22 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 
 	@Override
 	public int read(ByteBuffer dst) throws IOException {
-		int len = dst.remaining();
-		if (len < 1) return len;
+		int requestedRead = dst.remaining();
+		if (requestedRead < 1) return requestedRead;
 		
-		byte[] bytes = new byte[len];
+		if (pos == -1) seek(0, requestedRead);
 		
-		len = currentObject.getObjectContent().read(bytes);
-		if (len < 1) return len;
+		byte[] bytes = new byte[requestedRead];
 		
-		dst.put(bytes, 0, len);
-		return len;
+		int totalRead = 0;
+		while (totalRead < requestedRead) {
+			int read = currentObject.getObjectContent().read(bytes, totalRead, bytes.length - totalRead);
+			if (read == -1) break;
+			totalRead += read;
+		}
+		
+		dst.put(bytes, 0, totalRead);
+		return totalRead;
 	}
 
 	@Override
@@ -88,10 +95,11 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 	}
 	
 	private void seek(long newPos, long expectedRead) throws IOException {
+		if (pos == newPos && expectedRead == 0) return;
 		this.pos = newPos;
 		GetObjectRequest req = new GetObjectRequest(bucketName, key);
 		if (expectedRead == -1) req.setRange(pos);
-		else req.setRange(pos, pos + expectedRead);
+		else req.setRange(pos, pos + expectedRead - 1);
 		if (currentObject != null) currentObject.close();
 		this.currentObject = s3.getObject(req);
 	}

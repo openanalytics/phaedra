@@ -230,6 +230,7 @@ public class SMBInterface extends BaseFileServer {
 			privateMount = System.getProperty("java.io.tmpdir") + "/mnt_" + UUID.randomUUID().toString();
 			new File(privateMount).mkdirs();
 			
+			//TODO Mount fails if password contains special characters
 			String smbPath = String.format("//%s;%s:%s@%s", auth.getDomain(), auth.getUsername(), auth.getPassword(), basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()));
 			String[] cmd = { "mount", "-t", "smbfs", smbPath, privateMount };
 			try {
