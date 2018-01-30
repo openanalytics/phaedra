@@ -10,6 +10,7 @@ public class DataCaptureTask {
 	private String configId;
 	private String source;
 	private String[] moduleFilter;
+	private boolean test;
 	
 	private Map<String, Object> parameters;
 	
@@ -19,6 +20,8 @@ public class DataCaptureTask {
 		
 		TargetExperiment,		// To capture into an existing experiment
 
+		PlateMapping,			// To capture into existing plates
+		
 		CreateMissingWellFeatures,
 		CreateMissingSubWellFeatures
 	};
@@ -65,6 +68,14 @@ public class DataCaptureTask {
 	
 	public void setModuleFilter(String[] moduleFilter) {
 		this.moduleFilter = moduleFilter;
+	}
+	
+	public boolean isTest() {
+		return test;
+	}
+	
+	public void setTest(boolean test) {
+		this.test = test;
 	}
 	
 	public Map<String, Object> getParameters() {

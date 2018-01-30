@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -101,8 +102,15 @@ public class DataCapturer {
 			mon.subTask("Uploading captured data");
 			ctx.setActiveModule(null);
 			for (PlateReading reading: ctx.getReadings()) {
-				ctx.getLogger().info(reading, "Uploading reading");
-				finish(reading, ctx);
+				if (task.isTest()) {
+					//TODO Store sourceId in fileName and use a pseudo id, for plateMapping (see finish() below)
+					reading.setFileName(ctx.getReadingSourceId(reading));
+					reading.setId(100000000L + (long)(Math.random()*10000000));
+					ctx.getStore(reading).rollback();
+				} else {
+					ctx.getLogger().info(reading, "Uploading reading");
+					finish(reading, ctx);
+				}
 			}
 			mon.worked(20);
 			
@@ -157,9 +165,19 @@ public class DataCapturer {
 					.orElse(createNewExperiment(experimentName, protocol, task.getUser()));
 		}
 		
-		//TODO Import to existing plates is not supported
-		int sequence = 1 + PlateService.getInstance().getPlates(experiment).stream().mapToInt(p -> p.getSequence()).max().orElse(0);
-		Plate plate = createNewPlate(reading, sequence, experiment);
+		@SuppressWarnings("unchecked")
+		Map<PlateReading, Plate> plateMapping = (Map<PlateReading, Plate>) task.getParameters().get(DataCaptureParameter.PlateMapping.name());
+		
+		Plate plate = null;
+		if (plateMapping == null) {
+			int sequence = 1 + PlateService.getInstance().getPlates(experiment).stream().mapToInt(p -> p.getSequence()).max().orElse(0);
+			plate = createNewPlate(reading, sequence, experiment);
+		} else {
+			String sourceId = ctx.getReadingSourceId(reading);
+			PlateReading key = plateMapping.keySet().stream().filter(r -> sourceId.equalsIgnoreCase(r.getFileName())).findAny().orElse(null);
+			if (key == null) throw new DataCaptureException("Cannot find plate: reading id mismatch");
+			plate = plateMapping.get(key);
+		}
 		
 		reading.setLinkStatus(-1);
 		reading.setLinkDate(new Date());

@@ -45,6 +45,9 @@ public class ImportJob extends Job {
 	private DataCaptureTask createCaptureTask() {
 
 		DataCaptureTask captureTask = DataCaptureService.getInstance().createTask(task.sourcePath, task.getCaptureConfigId());
+		if (captureTask.getConfigId() == null) {
+			throw new RuntimeException("No capture configuration found for protocol " + task.targetExperiment.getProtocol().getName());
+		}
 		
 		// Pass all import parameters as capture parameters, for the modules who might need it.
 		captureTask.getParameters().putAll(task.getParameters());
@@ -54,11 +57,11 @@ public class ImportJob extends Job {
 		boolean detectSubWellFeatures = Activator.getDefault().getPreferenceStore().getBoolean(Prefs.DETECT_SUBWELL_FEATURES);
 		captureTask.getParameters().put(DataCaptureParameter.CreateMissingWellFeatures.name(), detectWellFeatures);
 		captureTask.getParameters().put(DataCaptureParameter.CreateMissingSubWellFeatures.name(), detectSubWellFeatures);
-		
-		if (captureTask.getConfigId() == null) {
-			throw new RuntimeException("No capture configuration found for protocol " + task.targetExperiment.getProtocol().getName());
-		}
 
+		if (!task.createNewPlates) {
+			captureTask.getParameters().put(DataCaptureParameter.PlateMapping.name(), task.plateMapping);
+		}
+		
 		String[] filter = ImportUtils.createFilter(
 				task.getCaptureConfigId(),
 				task.importWellData,

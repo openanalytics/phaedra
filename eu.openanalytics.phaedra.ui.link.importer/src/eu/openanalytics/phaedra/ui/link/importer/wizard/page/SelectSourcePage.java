@@ -59,7 +59,7 @@ public class SelectSourcePage extends BaseStatefulWizardPage {
 		lbl.setText("Selected folder:");
 
 		selectedPathTxt = new Text(container, SWT.BORDER);
-		selectedPathTxt.setText("(none)");
+		selectedPathTxt.setMessage("(none)");
 		selectedPathTxt.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
