@@ -158,8 +158,8 @@ public class DataCapturer {
 		}
 		
 		//TODO Import to existing plates is not supported
-		//TODO Calculate sequence nr
-		Plate plate = createNewPlate(reading, 1, experiment);
+		int sequence = 1 + PlateService.getInstance().getPlates(experiment).stream().mapToInt(p -> p.getSequence()).max().orElse(0);
+		Plate plate = createNewPlate(reading, sequence, experiment);
 		
 		reading.setLinkStatus(-1);
 		reading.setLinkDate(new Date());
