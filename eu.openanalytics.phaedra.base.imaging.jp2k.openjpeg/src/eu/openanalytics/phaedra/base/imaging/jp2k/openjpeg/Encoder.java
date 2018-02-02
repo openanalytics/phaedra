@@ -121,8 +121,8 @@ public class Encoder implements IEncodeAPI {
 			parameters.precincts[2*i + 1] = Integer.parseInt(values[1]);
 		}
 		
-		// Required for performant region decoding with OpenJPEG.
-		parameters.tileSize = new int[] { 256, 256 };
+		// OpenJPEG 2.3.0 has been optimized, no longer requires tiles for performant region decoding.
+		//parameters.tileSize = new int[] { 256, 256 };
 		
 		parameters.psnr = config.psnr;
 		
