@@ -130,9 +130,9 @@ public class HDF5FileStore implements IFileStore {
 			String featureId = key.substring(DefaultDataCaptureStore.WELL_DATA_PREFIX.length());
 			return HDF5File.getWellDataPath(featureId);
 		} else if (key.startsWith(DefaultDataCaptureStore.WELL_SWDATA_PREFIX)) {
-			String[] k = key.substring(DefaultDataCaptureStore.WELL_SWDATA_PREFIX.length()).split("\\.");
-			int wellNr = Integer.parseInt(k[0]);
-			String featureId = k[1];
+			key = key.substring(DefaultDataCaptureStore.WELL_SWDATA_PREFIX.length());
+			int wellNr = Integer.parseInt(key.split("\\.")[0]);
+			String featureId = key.substring(key.indexOf('.') + 1);
 			return HDF5File.getSubWellDataPath(wellNr, featureId);
 		}
 		return "/";
