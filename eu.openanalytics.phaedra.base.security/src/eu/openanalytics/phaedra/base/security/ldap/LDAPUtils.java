@@ -87,7 +87,7 @@ public class LDAPUtils {
 	public static String lookupEmail(String username, DirContext ctx, LDAPConfig cfg) {
 		try {
 			String usernameAttribute = cfg.get(LDAPConfig.USERNAME_ATTRIBUTE);
-			if (usernameAttribute == null) usernameAttribute = DEFAULT_USERNAME_ATTR;
+			if (usernameAttribute == null || usernameAttribute.isEmpty()) usernameAttribute = DEFAULT_USERNAME_ATTR;
 			
 			SearchControls ctrl = new SearchControls();
 			ctrl.setReturningAttributes(new String[] { MAIL_ATTR });
@@ -112,7 +112,7 @@ public class LDAPUtils {
 		String groupPrefix = cfg.get(LDAPConfig.GROUP_PREFIX);
 		String groupFilter = cfg.get(LDAPConfig.GROUP_FILTER);
 		String usernameAttribute = cfg.get(LDAPConfig.USERNAME_ATTRIBUTE);
-		if (usernameAttribute == null) usernameAttribute = DEFAULT_USERNAME_ATTR;
+		if (usernameAttribute == null || usernameAttribute.isEmpty()) usernameAttribute = DEFAULT_USERNAME_ATTR;
 		
 		// If no group config is provided, treat all users as admins.
 		if (groupPrefix == null || groupPrefix.isEmpty()) {
