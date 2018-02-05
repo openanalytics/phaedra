@@ -17,7 +17,6 @@ import eu.openanalytics.phaedra.datacapture.DataCaptureTask.DataCaptureParameter
 import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem;
 import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem.LogItemSeverity;
 import eu.openanalytics.phaedra.datacapture.log.IDataCaptureLogListener;
-import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 
@@ -48,30 +47,37 @@ public class EmailNotifier implements IDataCaptureLogListener {
 		String body = loadTemplate("capture_complete.html");
 		if (body == null) return;
 		
-		List<PlateReading> readings = DataCaptureService.streamableList(DataCaptureService.getInstance().getSavedEvents(item.task.getId()))
+		Protocol protocol = null;
+		String experimentName  = null;
+		Experiment exp = (Experiment) item.task.getParameters().get(DataCaptureParameter.TargetExperiment.name());
+		if (exp == null) {
+			protocol = (Protocol) item.task.getParameters().get(DataCaptureParameter.TargetProtocol.name());
+			experimentName = (String) item.task.getParameters().get(DataCaptureParameter.TargetExperimentName.name());
+		} else {
+			protocol = exp.getProtocol();
+			experimentName = exp.getName();
+		}
+		
+		List<String> readings = DataCaptureService.streamableList(DataCaptureService.getInstance().getSavedEvents(item.task.getId()))
 			.stream()
 			.map(e -> e.getReading())
-			.map(id -> id.substring(id.indexOf('(') + 1, id.length() - 1))
-			.mapToLong(id -> Long.parseLong(id))
-			.mapToObj(id -> DataCaptureService.getInstance().getReading(id))
-			.sorted((r1, r2) -> r1.toString().compareTo(r2.toString()))
+			.filter(r -> r != null)
+			.map(id -> id.substring(0, id.lastIndexOf('(')).trim())
+			.sorted()
 			.collect(Collectors.toList());
-		
+
 		StringBuilder readingList = new StringBuilder();
 		readingList.append("<ul>");
-		for (PlateReading reading: readings) {
-			readingList.append("<li>" + reading.getBarcode() + "</li>");
+		for (String reading: readings) {
+			readingList.append("<li>" + reading + "</li>");
 		}
 		readingList.append("</ul>");
 		body = body.replace("${readingList}", readingList.toString());
 		body = body.replace("${readingCount}", String.valueOf(readings.size()));
-		body = body.replace("${protocolName}", readings.get(0).getProtocol());
-		body = body.replace("${experimentName}", readings.get(0).getExperiment());
+		body = body.replace("${protocolName}", protocol.getName());
+		body = body.replace("${experimentName}", experimentName);
 		
-		Protocol p = getTargetProtocol(item.task);
-		if (p == null) return;
-		String mailingList = PROTOCOL_LIST_PREFIX + p.getId();
-		
+		String mailingList = PROTOCOL_LIST_PREFIX + protocol.getId();
 		try {
 			sendMail(title, body.toString(), mailingList);
 		} catch (MailException e) {

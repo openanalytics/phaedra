@@ -158,11 +158,12 @@ public class DataCapturer {
 			if (protocol == null || experimentName == null) throw new DataCaptureException("Cannot create new experiment: target protocol and/or experiment name not set");
 			
 			Screening.getEnvironment().getEntityManager().refresh(protocol);
-			experiment = PlateService.getInstance().getExperiments(protocol).stream()
-					.map(e -> { Screening.getEnvironment().getEntityManager().refresh(e); return e; })
-					.filter(e -> e.getName().equalsIgnoreCase(experimentName))
-					.findAny()
-					.orElse(createNewExperiment(experimentName, protocol, task.getUser()));
+			List<Experiment> experiments = PlateService.getInstance().getExperiments(protocol);
+			for (Experiment e: experiments) {
+				Screening.getEnvironment().getEntityManager().refresh(e);
+				if (e.getName().equalsIgnoreCase(experimentName)) { experiment = e; break; }
+			}
+			if (experiment == null) experiment = createNewExperiment(experimentName, protocol, task.getUser());
 		}
 		
 		@SuppressWarnings("unchecked")
