@@ -53,7 +53,7 @@ public class PlateDataPersistor extends BaseDataPersistor {
 	}
 
 	private String getPropertyValue(String property, IFileStore store) throws IOException {
-		Object value = store.readValue(DefaultDataCaptureStore.PLATE_PROPERTY_PREFIX + property);
+		Object value = store.readStringValue(DefaultDataCaptureStore.PLATE_PROPERTY_PREFIX + property);
 		return (value == null) ? null : String.valueOf(value);
 	}
 	

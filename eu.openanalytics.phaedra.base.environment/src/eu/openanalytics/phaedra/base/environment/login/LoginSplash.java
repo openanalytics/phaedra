@@ -274,7 +274,7 @@ public class LoginSplash extends BasicSplashHandler {
 			} catch (AuthenticationException e) {
 				EclipseLog.warn("Authentication failure", e, Activator.getDefault());
 				loginFailed(e.getMessage(), false);
-			} catch (Exception e) {
+			} catch (Throwable e) {
 				String message = "An error occured connecting to the " + envName + " environment.";
 				message += "\nPlease contact an administrator.";
 				message += "\n\nCause:\n";
