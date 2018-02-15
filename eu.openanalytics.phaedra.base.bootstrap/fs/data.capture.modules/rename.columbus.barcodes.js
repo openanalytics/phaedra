@@ -11,6 +11,6 @@ forEachReading(function(reading) {
 		if (resolveVars("${barcode.append.meas.id}") == "true") newBC += " " + parseInt(store.getProperty("/", "MeasId"));
 		if (resolveVars("${barcode.append.meas.date}") == "true") newBC += " " + store.getProperty("/", "MeasDate").toString();
 		reading.setBarcode(newBC);
-		store.setProperty("/", "MeasId", matcher.group(2));
+		store.setProperty("MeasId", matcher.group(2));
 	}
 });
