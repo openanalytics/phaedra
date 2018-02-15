@@ -23,6 +23,7 @@ import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import jcifs.UniAddress;
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -249,15 +250,15 @@ public class SMBInterface extends BaseFileServer {
 	private synchronized void unmount() {
 		if (privateMount == null) return;
 		
-		if (ProcessUtils.isWindows()) {
-			try {
+		try {
+			if (ProcessUtils.isWindows()) {
 				ProcessUtils.execute(new String[] { "net", "use", privateMount, "/delete", "/yes" }, null, null, true, true);
-			} catch (Exception e) {}
-		} else if (ProcessUtils.isMac()) {
-			try {
+			} else if (ProcessUtils.isMac()) {
 				int retCode = ProcessUtils.execute(new String[] { "umount", privateMount }, null, null, true, true);
 				if (retCode == 0) FileUtils.deleteRecursive(privateMount);
-			} catch (Exception e) {}
+			}
+		} catch (Throwable e) {
+			EclipseLog.warn("Failed to unmount SMB share at " + privateMount, e, Activator.PLUGIN_ID);
 		}
 		
 		privateMount = null;
