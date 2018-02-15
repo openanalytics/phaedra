@@ -68,8 +68,10 @@ public class IMConverter {
 		cmd[0] = executable;
 		for (int i=0; i<args.length; i++) cmd[1+i] = args[i];
 		
+		boolean ignoreExitCode = Boolean.valueOf(System.getProperty("imconvert.ignore.exitcode"));
+
 		try {
-			ProcessUtils.execute(cmd, null, null, false, true);
+			ProcessUtils.execute(cmd, null, null, false, !ignoreExitCode);
 		} catch (InterruptedException e) {
 			throw new IOException("Convert interrupted", e);
 		}
