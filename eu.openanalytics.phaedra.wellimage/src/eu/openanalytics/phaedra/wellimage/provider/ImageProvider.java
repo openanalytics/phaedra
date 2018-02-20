@@ -69,6 +69,10 @@ public class ImageProvider implements AutoCloseable {
 		}
 	}
 
+	public Plate getPlate() {
+		return plate;
+	}
+	
 	public ProtocolClass getProtocolClass() {
 		return PlateUtils.getProtocolClass(plate);
 	}

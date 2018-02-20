@@ -2,6 +2,9 @@ package eu.openanalytics.phaedra.wellimage.provider;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
@@ -21,6 +24,8 @@ public class WellImageProvider {
 	private static final String WELL_IMG_SIZE_ = "WELL_IMG_SIZE_";
 
 	private ICache cache;
+	private ImageProvider activeProvider;
+	private DelayQueue<DelayedClose> autocloseQueue;
 
 	/**
 	 * <p>Should only be used by {@link ImageRenderService}.
@@ -29,6 +34,16 @@ public class WellImageProvider {
 	 */
 	public WellImageProvider(ICache cache) {
 		this.cache = cache;
+
+		this.autocloseQueue = new DelayQueue<>();
+		new Thread(() -> {
+			while (true) {
+				try {
+					DelayedClose c = autocloseQueue.take();
+					c.doClose();
+				} catch (InterruptedException e) {}
+			}
+		}, "WellImageProvider Autoclose").start();
 	}
 
 	/*
@@ -49,10 +64,8 @@ public class WellImageProvider {
 		Object o = cache.get(key);
 		if (o == null) {
 			int nr = PlateUtils.getWellNr(well);
-
-			try (ImageProvider imageProvider = new ImageProvider(well.getPlate())) {
-				imageProvider.open();
-				o = cache.put(key, imageProvider.getImageSize(nr-1));
+			try {
+				o = cache.put(key, getProvider(well.getPlate()).getImageSize(nr-1));
 			} catch (IOException e) {
 				o = cache.put(key, new Point(0, 0));
 			}
@@ -88,17 +101,12 @@ public class WellImageProvider {
 		Object key = getKey(well, scale, channels);
 		ImageData imageData = (ImageData) cache.get(key);
 		if (imageData == null) {
-			try (ImageProvider imageProvider = new ImageProvider(well.getPlate())) {
-				imageProvider.open();
+			ImageSettings currentSettings = ImageSettingsFactory.getSettings(well);
+			channels = checkChannels(channels, currentSettings);
+			int nr = PlateUtils.getWellNr(well);
 
-				ImageSettings currentSettings = ImageSettingsFactory.getSettings(well);
-				channels = checkChannels(channels, currentSettings);
-
-				int nr = PlateUtils.getWellNr(well);
-
-				imageData = imageProvider.render(currentSettings, scale, nr-1, channels);
-				cache.put(key, imageData);
-			}
+			imageData = getProvider(well.getPlate()).render(currentSettings, scale, nr-1, channels);
+			cache.put(key, imageData);
 		}
 		return imageData;
 	}
@@ -117,17 +125,12 @@ public class WellImageProvider {
 		Object key = getKey(well, w, h, channels);
 		ImageData imageData = (ImageData) cache.get(key);
 		if (imageData == null) {
-			try (ImageProvider imageProvider = new ImageProvider(well.getPlate())) {
-				imageProvider.open();
+			ImageSettings currentSettings = ImageSettingsFactory.getSettings(well);
+			channels = checkChannels(channels, currentSettings);
+			int nr = PlateUtils.getWellNr(well);
 
-				ImageSettings currentSettings = ImageSettingsFactory.getSettings(well);
-				channels = checkChannels(channels, currentSettings);
-
-				int nr = PlateUtils.getWellNr(well);
-
-				imageData = imageProvider.render(currentSettings, w, h, nr-1, channels);
-				cache.put(key, imageData);
-			}
+			imageData = getProvider(well.getPlate()).render(currentSettings, w, h, nr-1, channels);
+			cache.put(key, imageData);
 		}
 		return imageData;
 	}
@@ -146,17 +149,12 @@ public class WellImageProvider {
 		Object key = getKey(well, scale, channels, region);
 		ImageData imageData = (ImageData) cache.get(key);
 		if (imageData == null) {
-			try (ImageProvider imageProvider = new ImageProvider(well.getPlate())) {
-				imageProvider.open();
+			ImageSettings currentSettings = ImageSettingsFactory.getSettings(well);
+			channels = checkChannels(channels, currentSettings);
+			int nr = PlateUtils.getWellNr(well);
 
-				ImageSettings currentSettings = ImageSettingsFactory.getSettings(well);
-				channels = checkChannels(channels, currentSettings);
-
-				int nr = PlateUtils.getWellNr(well);
-
-				imageData = imageProvider.render(currentSettings, scale, region, nr-1, channels);
-				cache.put(key, imageData);
-			}
+			imageData = getProvider(well.getPlate()).render(currentSettings, scale, region, nr-1, channels);
+			cache.put(key, imageData);
 		}
 		return imageData;
 	}
@@ -208,4 +206,50 @@ public class WellImageProvider {
 		return channels;
 	}
 
+	private ImageProvider getProvider(Plate plate) throws IOException {
+		synchronized (this) {
+			if (activeProvider == null) {
+				activeProvider = new ImageProvider(plate);
+				activeProvider.open();
+			} else if (!plate.equals(activeProvider.getPlate())) {
+				activeProvider.close();
+				activeProvider = new ImageProvider(plate);
+				activeProvider.open();
+			}
+		}
+		
+		// (re)schedule the autoclose timer
+		autocloseQueue.clear();
+		autocloseQueue.put(new DelayedClose(System.currentTimeMillis() + 60*1000));
+
+		return activeProvider;
+	}
+
+	private class DelayedClose implements Delayed {
+
+		private long startTime;
+
+		public DelayedClose(long startTime) {
+			this.startTime = startTime;
+		}
+
+		@Override
+		public int compareTo(Delayed o) {
+			return (int) (this.startTime - ((DelayedClose) o).startTime);
+		}
+
+		@Override
+		public long getDelay(TimeUnit unit) {
+			long diff = startTime - System.currentTimeMillis();
+			return unit.convert(diff, TimeUnit.MILLISECONDS);
+		}
+
+		public void doClose() {
+			synchronized (WellImageProvider.this) {
+				if (activeProvider == null) return;
+				activeProvider.close();
+				activeProvider = null;
+			}
+		}
+	}
 }
