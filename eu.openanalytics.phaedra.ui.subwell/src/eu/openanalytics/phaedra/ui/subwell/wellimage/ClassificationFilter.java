@@ -123,6 +123,9 @@ public class ClassificationFilter {
 		SubWellFeature feature = getSelectedFeature();
 		if (feature == null) feature = SubWellService.getInstance().getSampleFeature(currentWell);
 
+		// Avoid loading data if nothing can be shown anyway.
+		if (!showRejected && !showAllClasses && (currentSelection == null || currentSelection.isEmpty())) return entityList;
+		
 		Object data = SubWellService.getInstance().getData(well, feature);
 		if (data == null) return (showSelectedClasses && currentSelection != null) ? currentSelection : entityList;
 
