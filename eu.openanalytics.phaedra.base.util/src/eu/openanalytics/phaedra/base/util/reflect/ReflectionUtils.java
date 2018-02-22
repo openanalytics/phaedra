@@ -137,12 +137,7 @@ public class ReflectionUtils {
 	}
 
 	public static <T> T getFieldObject(Object object, String fieldName, Class<T> clazz) {
-		Class<?> objectClass = object.getClass();
-		Field field = null;
-		while (field == null && objectClass != null) {
-			try { field = objectClass.getDeclaredField(fieldName); } catch (NoSuchFieldException e) {}
-			objectClass = objectClass.getSuperclass();
-		}
+		Field field = findField(object, fieldName);
 		if (field != null) {
 			try {
 				return getFieldObject(object, field, clazz);
@@ -166,4 +161,24 @@ public class ReflectionUtils {
 		return fieldValue;
 	}
 
+	public static void setFieldObject(Object object, String fieldName, Object value) throws IllegalAccessException {
+		Field field = findField(object, fieldName);
+		if (field != null) {
+			boolean accessible = field.isAccessible();
+			if (!accessible) field.setAccessible(true);
+			field.set(object, value);
+			if (!accessible) field.setAccessible(false);
+		}
+	}
+	
+	private static Field findField(Object object, String fieldName) {
+		Class<?> objectClass = object.getClass();
+		Field field = null;
+		while (field == null && objectClass != null) {
+			try { field = objectClass.getDeclaredField(fieldName); } catch (NoSuchFieldException e) {}
+			objectClass = objectClass.getSuperclass();
+		}
+		return field;
+	}
+	
 }

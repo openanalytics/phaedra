@@ -16,7 +16,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.ui.IViewPart;
 
+import eu.openanalytics.phaedra.base.ui.charting.v2.layer.AbstractChartLayer;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.LayerSettings;
+import eu.openanalytics.phaedra.base.ui.charting.v2.layer.SelectionChartLayer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.layer.GridState;
 import eu.openanalytics.phaedra.base.ui.gridviewer.layer.IGridLayer;
@@ -29,6 +31,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.ui.partsettings.decorator.SettingsDecorator;
 import eu.openanalytics.phaedra.ui.partsettings.vo.PartSettings;
 import eu.openanalytics.phaedra.ui.plate.Activator;
+import eu.openanalytics.phaedra.ui.subwell.chart.v2.view.SubWellView;
 
 public class ChartConfigDialog extends TitleAreaDialog implements ILayerConfigDialog {
 
@@ -158,9 +161,16 @@ public class ChartConfigDialog extends TitleAreaDialog implements ILayerConfigDi
 		IDecoratedPart decoratedView = (IDecoratedPart) view;
 		SettingsDecorator decorator = decoratedView.hasDecorator(SettingsDecorator.class);
 		PartSettings settings = decorator.getCurrentSettings().orElse(null);
-		if (settings != null) {
+
+		List<LayerSettings<Well, Well>> layerSettings = new ArrayList<>();
+		if (settings == null && view instanceof SubWellView) {
+			List<AbstractChartLayer<Well, Well>> layers = ((SubWellView) view).getChartView().getChartLayers();
+			for (AbstractChartLayer<Well, Well> layer: layers) {
+				if (layer instanceof SelectionChartLayer) continue;
+				layerSettings.add(new LayerSettings<>(layer));
+			}
+		} else if (settings != null) {
 			Properties properties = settings.getProperties();
-			List<LayerSettings<Well, Well>> layerSettings = new ArrayList<>();
 			for (int i = 1;; i++) {
 				if (properties.getProperty(String.valueOf(i)) == null) break;
 				try {
@@ -170,11 +180,11 @@ public class ChartConfigDialog extends TitleAreaDialog implements ILayerConfigDi
 					// Do nothing.
 				}
 			}
-			layer.getLayerSettings().clear();
-			layer.getLayerSettings().addAll(layerSettings);
 		}
+		layer.getLayerSettings().clear();
+		layer.getLayerSettings().addAll(layerSettings);
+		
 		GridState.saveValue(layer.getProtocolId(), layer.getId(), AbstractSubWellChartLayer.PROPERTY_CONFIG, layer.getLayerSettings());
-
 		layer.triggerLoadDataJob();
 	}
 

@@ -194,7 +194,7 @@ public class SubWellService  {
 	 * @param monitor A progress monitor that will be updated during the load (optional)
 	 */
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, IProgressMonitor monitor) {
-		long start = System.currentTimeMillis();
+//		long start = System.currentTimeMillis();
 		
 		Set<Well> wellsToLoad = new HashSet<>();
 		for (Well well: wells) {
@@ -204,8 +204,8 @@ public class SubWellService  {
 		}
 		if (!wellsToLoad.isEmpty()) dataSource.preloadData(new ArrayList<>(wellsToLoad), features, cache, monitor);
 
-		long duration = System.currentTimeMillis() - start;
-		EclipseLog.info(String.format("Data preload (%d wells, %d features): %d ms", wellsToLoad.size(), features.size(), duration), Activator.getContext().getBundle());
+//		long duration = System.currentTimeMillis() - start;
+//		EclipseLog.info(String.format("Data preload (%d wells, %d features): %d ms", wellsToLoad.size(), features.size(), duration), Activator.getContext().getBundle());
 	}
 	
 	/**

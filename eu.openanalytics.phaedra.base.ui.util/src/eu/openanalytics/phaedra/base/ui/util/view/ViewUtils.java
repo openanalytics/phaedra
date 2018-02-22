@@ -3,11 +3,14 @@ package eu.openanalytics.phaedra.base.ui.util.view;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
+
+import eu.openanalytics.phaedra.base.util.reflect.ReflectionUtils;
 
 public class ViewUtils {
 
@@ -28,9 +31,11 @@ public class ViewUtils {
 				IViewPart view = (IViewPart) o;
 
 				// Create a dummy viewsite.
-				//TODO Find a proper e4-compatible solution for this.
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 				IViewPart tempView = page.showView(element.getAttribute("id"));
+				try {
+					ReflectionUtils.setFieldObject(tempView.getViewSite().getActionBars(), "toolbarManager", new ToolBarManager(toolBar));
+				} catch (IllegalAccessException e) {}
 				view.init(tempView.getViewSite(), null);
 				view.createPartControl(composite);
 				page.setPartState(page.getReference(tempView), IWorkbenchPage.STATE_MINIMIZED);
