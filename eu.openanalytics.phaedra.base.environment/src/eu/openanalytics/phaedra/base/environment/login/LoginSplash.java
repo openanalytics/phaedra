@@ -118,7 +118,7 @@ public class LoginSplash extends BasicSplashHandler {
 		Label versionLabel = new Label(loginCmp, SWT.NONE);
 		versionLabel.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
 		versionLabel.setText("Version: " + VersionUtils.getPhaedraVersion());
-		GridDataFactory.fillDefaults().span(3, 1).hint(100, 80).indent(20, SWT.DEFAULT).applyTo(versionLabel);
+		GridDataFactory.fillDefaults().span(3, 1).hint(100, 60).indent(20, SWT.DEFAULT).applyTo(versionLabel);
 		
 		usernameLbl = new Label(loginCmp, SWT.NONE);
 		usernameLbl.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_WHITE));
