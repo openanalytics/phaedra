@@ -47,24 +47,31 @@ public class RServiManager {
 //				System.setSecurityManager(new SecurityManager());
 //			}
 			
+			int[] portRange = null;
+			try {
+				String portRangeSetting = System.getProperty("phaedra.r.portrange");
+				portRange = Arrays.stream(portRangeSetting.split("\\-")).mapToInt(p -> Integer.parseInt(p)).toArray();
+			} catch (Exception e) {
+				portRange = new int[] { 40100, 40120 };
+			}
+			
 			ERJContext context = new ERJContext();
 			List<String> libs = context.searchRJLibs(Arrays.asList(new String[] {
 					ServerUtils.RJ_SERVER_ID, ServerUtils.RJ_DATA_ID,
 					RServiUtil.RJ_SERVI_ID, RServiUtil.RJ_CLIENT_ID,
 					"org.eclipse.statet.rj.services.core" }));
 			System.setProperty("java.rmi.server.codebase", ServerUtils.concatCodebase(libs));
-
+			
 			PatchedRMIUtil.INSTANCE.setEmbeddedPrivateMode(true);
-			
-			//TODO Make port (default: 51234) configurable: PatchedRMIUtil.INSTANCE.setEmbeddedPrivatePort(port);
-			// But each node also opens 1 or 2 random ports! cfr UnicastRemoteObject.exportObject
-			
+			PatchedRMIUtil.INSTANCE.setEmbeddedPrivatePort(portRange[0]);
+
 			RMIRegistry registry = PatchedRMIUtil.INSTANCE.getEmbeddedPrivateRegistry(new NullProgressMonitor());
 			RServiNodeFactory nodeFactory = RServiImpl.createLocalNodeFactory(name, context);
 			RServiNodeConfig rConfig = new RServiNodeConfig();
 			rConfig.setRHome(rHome);
 			rConfig.setEnableVerbose(true);
 			rConfig.setEnableConsole(true);
+			rConfig.setJavaArgs(String.format("-Dorg.eclipse.statet.rj.server.TcpPortRange=%d-%d", portRange[0]+1, portRange[1]));
 			if (envVars != null) {
 				for (String envVar: envVars.keySet()) {
 					rConfig.getEnvironmentVariables().put(envVar, envVars.get(envVar));
