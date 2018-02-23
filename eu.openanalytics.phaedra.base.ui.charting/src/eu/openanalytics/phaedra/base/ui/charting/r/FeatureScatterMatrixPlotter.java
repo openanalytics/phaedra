@@ -6,12 +6,12 @@ import java.util.Map.Entry;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.statet.rj.servi.RServi;
+import org.eclipse.statet.rj.services.FunctionCall;
+import org.eclipse.statet.rj.services.util.Graphic;
+import org.eclipse.statet.rj.services.util.PngGraphic;
 import org.eclipse.swt.graphics.Image;
 
-import de.walware.rj.servi.RServi;
-import de.walware.rj.services.FunctionCall;
-import de.walware.rj.services.utils.Graphic;
-import de.walware.rj.services.utils.PngGraphic;
 import eu.openanalytics.phaedra.base.r.rservi.CairoSvgGraphic;
 import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;

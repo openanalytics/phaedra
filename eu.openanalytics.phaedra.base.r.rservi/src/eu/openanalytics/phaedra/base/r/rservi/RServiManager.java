@@ -1,23 +1,24 @@
 package eu.openanalytics.phaedra.base.r.rservi;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
-
-import de.walware.ecommons.net.RMIRegistry;
-import de.walware.rj.RjException;
-import de.walware.rj.server.srvext.ERJContext;
-import de.walware.rj.server.srvext.ServerUtil;
-import de.walware.rj.servi.RServi;
-import de.walware.rj.servi.RServiUtil;
-import de.walware.rj.servi.internal.PoolManager;
-import de.walware.rj.servi.pool.PoolConfig;
-import de.walware.rj.servi.pool.RServiImplE;
-import de.walware.rj.servi.pool.RServiNodeConfig;
-import de.walware.rj.servi.pool.RServiNodeFactory;
+import org.eclipse.statet.ecommons.rmi.core.RMIRegistry;
+import org.eclipse.statet.internal.rj.servi.PoolManager;
+import org.eclipse.statet.rj.RjException;
+import org.eclipse.statet.rj.server.osgi.ERJContext;
+import org.eclipse.statet.rj.server.util.ServerUtils;
+import org.eclipse.statet.rj.servi.RServi;
+import org.eclipse.statet.rj.servi.RServiUtil;
+import org.eclipse.statet.rj.servi.node.RServiImpl;
+import org.eclipse.statet.rj.servi.node.RServiNodeConfig;
+import org.eclipse.statet.rj.servi.node.RServiNodeFactory;
+import org.eclipse.statet.rj.servi.pool.PoolConfig;
 
 @SuppressWarnings("restriction")
 public class RServiManager {
@@ -47,8 +48,11 @@ public class RServiManager {
 //			}
 			
 			ERJContext context = new ERJContext();
-			String[] libs = context.searchRJLibs(new String[] { ServerUtil.RJ_SERVER_ID, RServiUtil.RJ_SERVI_ID, RServiUtil.RJ_CLIENT_ID });
-			System.setProperty("java.rmi.server.codebase", ServerUtil.concatCodebase(libs));
+			List<String> libs = context.searchRJLibs(Arrays.asList(new String[] {
+					ServerUtils.RJ_SERVER_ID, ServerUtils.RJ_DATA_ID,
+					RServiUtil.RJ_SERVI_ID, RServiUtil.RJ_CLIENT_ID,
+					"org.eclipse.statet.rj.services.core" }));
+			System.setProperty("java.rmi.server.codebase", ServerUtils.concatCodebase(libs));
 
 			PatchedRMIUtil.INSTANCE.setEmbeddedPrivateMode(true);
 			
@@ -56,7 +60,7 @@ public class RServiManager {
 			// But each node also opens 1 or 2 random ports! cfr UnicastRemoteObject.exportObject
 			
 			RMIRegistry registry = PatchedRMIUtil.INSTANCE.getEmbeddedPrivateRegistry(new NullProgressMonitor());
-			RServiNodeFactory nodeFactory = RServiImplE.createLocalNodeFactory(name, context);
+			RServiNodeFactory nodeFactory = RServiImpl.createLocalNodeFactory(name, context);
 			RServiNodeConfig rConfig = new RServiNodeConfig();
 			rConfig.setRHome(rHome);
 			rConfig.setEnableVerbose(true);

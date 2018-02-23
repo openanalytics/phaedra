@@ -5,21 +5,24 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.statet.rj.data.RCharacterStore;
+import org.eclipse.statet.rj.data.RDataFrame;
+import org.eclipse.statet.rj.data.RIntegerStore;
+import org.eclipse.statet.rj.data.RList;
+import org.eclipse.statet.rj.data.RNumericStore;
+import org.eclipse.statet.rj.data.RObject;
+import org.eclipse.statet.rj.data.RStore;
+import org.eclipse.statet.rj.data.RVector;
+import org.eclipse.statet.rj.data.impl.RCharacter32Store;
+import org.eclipse.statet.rj.data.impl.RDataFrame32Impl;
+import org.eclipse.statet.rj.data.impl.RInteger32Store;
+import org.eclipse.statet.rj.data.impl.RNumericB32Store;
+import org.eclipse.statet.rj.data.impl.RVectorImpl;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import de.walware.rj.data.RDataFrame;
-import de.walware.rj.data.RList;
-import de.walware.rj.data.RObject;
-import de.walware.rj.data.RStore;
-import de.walware.rj.data.RVector;
-import de.walware.rj.data.defaultImpl.RCharacterDataImpl;
-import de.walware.rj.data.defaultImpl.RDataFrameImpl;
-import de.walware.rj.data.defaultImpl.RIntegerDataImpl;
-import de.walware.rj.data.defaultImpl.RNumericDataBImpl;
-import de.walware.rj.data.defaultImpl.RVectorImpl;
 
 public class RUtils {
 
@@ -39,15 +42,15 @@ public class RUtils {
 	}
 
 	static public RObject makeStringRVector(String[] array) {
-		return new RVectorImpl<RCharacterDataImpl>(new RCharacterDataImpl(array));
+		return new RVectorImpl<RCharacterStore>(new RCharacter32Store(array));
 	}
 
 	static public RObject makeNumericRVector(double[] array) {
-		return new RVectorImpl<RNumericDataBImpl>(new RNumericDataBImpl(array));
+		return new RVectorImpl<RNumericStore>(new RNumericB32Store(array));
 	}
 
 	static public RObject makeNumericRVector(double[] array, int[] missingIndexArray) {
-		return new RVectorImpl<RNumericDataBImpl>(new RNumericDataBImpl(array, missingIndexArray));
+		return new RVectorImpl<RNumericStore>(new RNumericB32Store(array, missingIndexArray));
 	}
 	
 	static public RObject makeNumericRVector(Double[] array) {
@@ -63,15 +66,15 @@ public class RUtils {
 		for (int i = 0; i < array.length; i++) {
 			intArray[i] = array[i];
 		}
-		return new RVectorImpl<RIntegerDataImpl>(new RIntegerDataImpl(intArray));
+		return new RVectorImpl<RIntegerStore>(new RInteger32Store(intArray));
 	}
 	
 	static public RObject makeIntegerRVector(int[] array) {
-		return new RVectorImpl<RIntegerDataImpl>(new RIntegerDataImpl(array));
+		return new RVectorImpl<RIntegerStore>(new RInteger32Store(array));
 	}
 
 	static public RObject makeIntegerRVector(int[] array, int[] missingIndexArray) {
-		return new RVectorImpl<RIntegerDataImpl>(new RIntegerDataImpl(array, missingIndexArray));
+		return new RVectorImpl<RIntegerStore>(new RInteger32Store(array, missingIndexArray));
 	}
 
 	static public RDataFrame makeDoubleRDataFrame(String[] columnNames, double[][] array2D) {
@@ -88,13 +91,13 @@ public class RUtils {
 			for (double value : array2D[i]) {
 				data[arrayIndex++] = value;
 
-				vectors[i] = new RVectorImpl<RStore>(new RNumericDataBImpl(data));
+				vectors[i] = new RVectorImpl<RStore<?>>(new RNumericB32Store(data));
 			}
 		}
 
 		RObject[] robjArray = vectors;
 
-		RDataFrame df = new RDataFrameImpl(robjArray, "data.frame", columnNames, null);
+		RDataFrame df = new RDataFrame32Impl(robjArray, "data.frame", columnNames, null);
 		return df;
 	}
 	
@@ -102,7 +105,7 @@ public class RUtils {
 		double[][] doubleArray2D = new double[(int) rDataFrame.getColumnCount()][(int) rDataFrame.getRowCount()];
 		
 		for (int i = 0; i < rDataFrame.getColumnCount(); i++) {
-			RStore column = rDataFrame.getColumn(i);
+			RStore<?> column = rDataFrame.getColumn(i);
 			for (int j = 0; j < rDataFrame.getRowCount(); j++) {
 				doubleArray2D[i][j] = column.getNum(j);
 			}			

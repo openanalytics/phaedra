@@ -15,10 +15,9 @@ import java.io.OutputStream;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-
-import de.walware.rj.services.FunctionCall;
-import de.walware.rj.services.RService;
-import de.walware.rj.services.utils.Graphic;
+import org.eclipse.statet.rj.services.FunctionCall;
+import org.eclipse.statet.rj.services.RService;
+import org.eclipse.statet.rj.services.util.Graphic;
 
 
 public class CairoPdfGraphic extends Graphic {

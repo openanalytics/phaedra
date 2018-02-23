@@ -9,15 +9,15 @@ import java.util.concurrent.Semaphore;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.statet.rj.eclient.graphics.comclient.ERClientGraphicActionsFactory;
+import org.eclipse.statet.rj.eclient.graphics.comclient.ERGraphicFactory;
+import org.eclipse.statet.rj.server.RjsComConfig;
+import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.ui.PlatformUI;
 
-import de.walware.rj.eclient.graphics.comclient.ERClientGraphicActionsFactory;
-import de.walware.rj.eclient.graphics.comclient.ERGraphicFactory;
-import de.walware.rj.rsetups.RSetup;
-import de.walware.rj.rsetups.RSetupUtil;
-import de.walware.rj.server.RjsComConfig;
-import de.walware.rj.servi.RServi;
 import eu.openanalytics.phaedra.base.environment.prefs.Prefs;
+import eu.openanalytics.phaedra.base.r.rservi.setup.RSetup;
+import eu.openanalytics.phaedra.base.r.rservi.setup.RSetupUtil;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 

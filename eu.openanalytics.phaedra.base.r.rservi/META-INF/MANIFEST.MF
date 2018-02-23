@@ -7,14 +7,16 @@ Bundle-Activator: eu.openanalytics.phaedra.base.r.rservi.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- de.walware.rj.data;bundle-version="1.1.0";visibility:=reexport,
- de.walware.rj.server;bundle-version="1.1.0",
- de.walware.rj.servi;bundle-version="1.1.1";visibility:=reexport,
- de.walware.ecommons.coremisc;bundle-version="1.2.0",
- de.walware.rj.eclient.graphics;bundle-version="1.1.0",
  eu.openanalytics.phaedra.base.hook;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.ui.trafficlight;bundle-version="1.0.0"
+ eu.openanalytics.phaedra.base.ui.trafficlight;bundle-version="1.0.0",
+ org.eclipse.statet.rj.data;bundle-version="3.0.0",
+ org.eclipse.statet.rj.server;bundle-version="3.0.0",
+ org.eclipse.statet.rj.servi;bundle-version="3.0.0";visibility:=reexport,
+ org.eclipse.statet.rj.eclient.graphics;bundle-version="3.0.0",
+ org.eclipse.statet.ecommons.coremisc;bundle-version="1.7.0",
+ org.eclipse.statet.ecommons.rmi.core;bundle-version="1.5.0",
+ org.eclipse.statet.jcommons.util;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.r.rservi

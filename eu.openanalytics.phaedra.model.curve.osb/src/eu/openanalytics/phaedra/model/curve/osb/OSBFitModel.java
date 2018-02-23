@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.statet.rj.data.RDataFrame;
+import org.eclipse.statet.rj.data.RList;
+import org.eclipse.statet.rj.data.RObject;
+import org.eclipse.statet.rj.servi.RServi;
+import org.eclipse.statet.rj.services.FunctionCall;
+import org.eclipse.statet.rj.services.util.Graphic;
 
-import de.walware.rj.data.RDataFrame;
-import de.walware.rj.data.RList;
-import de.walware.rj.data.RObject;
-import de.walware.rj.servi.RServi;
-import de.walware.rj.services.FunctionCall;
-import de.walware.rj.services.utils.Graphic;
 import eu.openanalytics.phaedra.base.r.rservi.CairoPdfGraphic;
 import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;

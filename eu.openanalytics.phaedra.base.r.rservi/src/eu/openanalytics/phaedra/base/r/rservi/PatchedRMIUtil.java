@@ -32,11 +32,10 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-
-import de.walware.ecommons.ECommons;
-import de.walware.ecommons.IDisposable;
-import de.walware.ecommons.net.RMIAddress;
-import de.walware.ecommons.net.RMIRegistry;
+import org.eclipse.statet.ecommons.rmi.core.RMIAddress;
+import org.eclipse.statet.ecommons.rmi.core.RMIRegistry;
+import org.eclipse.statet.ecommons.runtime.core.ECommonsRuntime;
+import org.eclipse.statet.jcommons.lang.Disposable;
 
 
 /**
@@ -154,7 +153,7 @@ public class PatchedRMIUtil {
 				catch (final IllegalArgumentException e) {
 					embeddedPortFrom = EMBEDDED_PORT_FROM_DEFAULT;
 					embeddedPortTo = EMBEDDED_PORT_TO_DEFAULT;
-					ECommons.getEnv().log(new Status(IStatus.ERROR, ECommons.PLUGIN_ID,
+					ECommonsRuntime.getEnv().log(new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID,
 							"The value of the Java property 'de.walware.ecommons.net.rmi.eRegistryPortrange' is invalid.", e ));
 				}
 			}
@@ -162,7 +161,7 @@ public class PatchedRMIUtil {
 	}
 	
 	protected void initDispose() {
-		ECommons.getEnv().addStoppingListener(new IDisposable() {
+		ECommonsRuntime.getEnv().addStoppingListener(new Disposable() {
 			public void dispose() {
 				PatchedRMIUtil.this.dispose();
 			}
@@ -287,7 +286,7 @@ public class PatchedRMIUtil {
 					}
 					catch (final Exception e) {
 						if (!(e.getCause() instanceof BindException)) {
-							status = new Status(IStatus.ERROR, ECommons.PLUGIN_ID,
+							status = new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID,
 									"An unknown exception was thrown when starting the embedded registry.", e);
 						}
 					}
@@ -365,12 +364,12 @@ public class PatchedRMIUtil {
 								this.registries.put(key, r);
 							}
 						}
-						return new Status(IStatus.INFO, ECommons.PLUGIN_ID,
+						return new Status(IStatus.INFO, ECommonsRuntime.BUNDLE_ID,
 								MessageFormat.format("RegistryAlreadyStarted", address.getPort()) );
 					}
 					catch (final RemoteException e) {}
 				}
-				return new Status(IStatus.ERROR, ECommons.PLUGIN_ID,
+				return new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID,
 						MessageFormat.format("RegistryStartFailedPortAlreadyUsed", address.getPort()) );
 			}
 			catch (final RemoteException e) {}
@@ -407,14 +406,14 @@ public class PatchedRMIUtil {
 			process = Runtime.getRuntime().exec(command.toArray(new String[command.size()]));
 		}
 		catch (final Exception e) {
-			return new Status(IStatus.ERROR, ECommons.PLUGIN_ID, MessageFormat.format("RegistryStartFailed", address.getPort()), e);
+			return new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID, MessageFormat.format("RegistryStartFailed", address.getPort()), e);
 		}
 		
 		RemoteException lastException = null;
 		for (int i = 1; ; i++) {
 			try {
 				final int exit = process.exitValue();
-				return new Status(IStatus.ERROR, ECommons.PLUGIN_ID, MessageFormat.format("RegistryStartFailedWithExitValue", address.getPort(), exit));
+				return new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID, MessageFormat.format("RegistryStartFailedWithExitValue", address.getPort(), exit));
 			}
 			catch (final IllegalThreadStateException e) {
 			}
@@ -443,7 +442,7 @@ public class PatchedRMIUtil {
 			}
 			if (i >= 25) {
 				process.destroy();
-				return new Status(IStatus.ERROR, ECommons.PLUGIN_ID, MessageFormat.format("RegistryStartFailed", address.getPort()), lastException);
+				return new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID, MessageFormat.format("RegistryStartFailed", address.getPort()), lastException);
 			}
 			try {
 				Thread.sleep(50);
@@ -469,7 +468,7 @@ public class PatchedRMIUtil {
 		synchronized (this) {
 			r = this.registries.get(key);
 			if (r == null || r.process == null) {
-				return new Status(IStatus.ERROR, ECommons.PLUGIN_ID, MessageFormat.format("RegistryStopFailedNotFound", port));
+				return new Status(IStatus.ERROR, ECommonsRuntime.BUNDLE_ID, MessageFormat.format("RegistryStopFailedNotFound", port));
 			}
 			this.registries.remove(key);
 		}
