@@ -42,8 +42,8 @@ public class LabelComponent extends BaseComponentType {
 		int alpha = params[5];
 		for (int i=0; i<sourcePixels.length; i++) {
 			int overlayValue = sourcePixels[i];
-			// Labels 0 and 1 are reserved for background (i.e. transparent).
-			if ((overlayValue & 0xFF) < 2) continue;
+			// Label 0 is reserved for background (i.e. transparent).
+			if ((overlayValue & 0xFF) < 1) continue;
 			// Skip transparent pixels.
 			if (source.alphaData != null && source.alphaData[i] != (byte)255) continue;
 
