@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.ui.curve.grid.provider;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -52,6 +53,7 @@ import eu.openanalytics.phaedra.base.util.misc.Properties;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.base.util.threading.ThreadPool;
 import eu.openanalytics.phaedra.base.util.threading.ThreadUtils;
+import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.model.curve.Activator;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
@@ -66,13 +68,17 @@ import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.compound.CompoundInfoService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 import eu.openanalytics.phaedra.ui.curve.MultiploCompound;
 import eu.openanalytics.phaedra.ui.curve.grid.GridColumnGroup;
 import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.EntityStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class CompoundContentProvider extends RichColumnAccessor<Compound> implements ISelectionDataColumnAccessor<Compound> {
 
@@ -88,7 +94,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	private int imageX = 100;
 	private int imageY = 100;
 
-	private CurvePreLoader preLoader;
+	private DataPreLoader preLoader;
 	private Map<Compound, ImageData> smilesImages;
 
 	private ConcentrationFormat concFormat;
@@ -107,9 +113,9 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, null, c -> c.getPlate().getExperiment().getName()));
 		columnSpecList.add(new ColumnSpec("Plate", null, 85, null, null, c -> (getMultiploCompound(c) == null) ? c.getPlate().getBarcode() : "<Multiplo>"));
 		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, null, c -> c.getPlate().getValidationStatus(),
-				c -> PlateValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString()));
+				c -> PlateValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString(), false));
 		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, null, c -> c.getValidationStatus(),
-				c -> CompoundValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString()));
+				c -> CompoundValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString(), false));
 		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, null, c -> c.getType()));
 		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, null, c -> c.getNumber()));
 		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, null, c -> c.getSaltform()));
@@ -146,7 +152,10 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 				return CurveFitService.getInstance().getCurveImage(curve.getId(), imageX, imageY);
 			}));
 			
-			int indexStart = columnSpecList.size() - (params.length + 1);
+			//TODO eMax is an OSB-specific parameter.
+			columnSpecList.add(new ColumnSpec("eMax Image", null, 100, feature, null, c -> getEMaxImage(feature, c), null, true));
+			
+			int indexStart = columnSpecList.size() - (params.length + 2);
 			columnGroupList.add(new GridColumnGroup(feature.getDisplayName(), IntStream.range(indexStart, columnSpecList.size()).toArray()));
 		}
 		
@@ -156,7 +165,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 	public void preLoad(NatTable table) {
 		if (preLoader != null) preLoader.cancel();
-		preLoader = new CurvePreLoader(table);
+		preLoader = new DataPreLoader(table);
 		preLoader.setUser(true);
 		preLoader.schedule();
 	}
@@ -175,25 +184,26 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		return concFormat;
 	}
 
-	public void setCurveSize(int x, int y) {
+	public void setImageSize(int x, int y) {
 		imageX = x;
 		imageY = y;
 	}
 
-	public int getCurveWidth() {
+	public int getImageWidth() {
 		return imageX;
 	}
 
-	public int getCurveHeight() {
+	public int getImageHeight() {
 		return imageY;
 	}
 
 	public int[] getCurveColumns() {
-		List<Integer> indices = new ArrayList<>();
-		for (int i = 0; i < columnSpecs.length; i++) {
-			if (columnSpecs[i].name.equals("Curve")) indices.add(i);
-		}
-		return indices.stream().mapToInt(i -> i).toArray();
+		return IntStream.range(0, columnSpecs.length).filter(i -> columnSpecs[i].name.equals("Curve")).toArray();
+	}
+	
+	public int[] getImageColumns() {
+		return IntStream.range(0, columnSpecs.length).filter(i -> 
+			columnSpecs[i].name.equals("Curve") || columnSpecs[i].name.contains("Image")).toArray();
 	}
 
 	public int getStructureColumn() {
@@ -336,13 +346,16 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	public List<Integer> getDefaultHiddenColumns() {
 		List<Integer> indices = new ArrayList<Integer>();
 		indices.add(getStructureColumn());
+		for (int i=0; i<columnSpecs.length; i++) {
+			if (columnSpecs[i].defaultHidden) indices.add(i);
+		}
 		return indices;
 	}
 
 	public void saveSettings(Properties properties) {
 		properties.addProperty("ACTIVE_STRATEGY", concFormat);
-		properties.addProperty(CURVE_WIDTH, getCurveWidth());
-		properties.addProperty(CURVE_HEIGHT, getCurveHeight());
+		properties.addProperty(CURVE_WIDTH, getImageWidth());
+		properties.addProperty(CURVE_HEIGHT, getImageHeight());
 	}
 
 	public void loadSettings(Properties properties) {
@@ -354,9 +367,9 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		} else if (o instanceof ConcentrationFormat) {
 			setConcFormat((ConcentrationFormat) o);
 		}
-		int curveWidth = properties.getProperty(CURVE_WIDTH, getCurveWidth());
-		int curveHeight = properties.getProperty(CURVE_HEIGHT, getCurveHeight());
-		setCurveSize(curveWidth, curveHeight);
+		int curveWidth = properties.getProperty(CURVE_WIDTH, getImageWidth());
+		int curveHeight = properties.getProperty(CURVE_HEIGHT, getImageHeight());
+		setImageSize(curveWidth, curveHeight);
 	}
 
 	/*
@@ -400,12 +413,30 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		return null;
 	}
 
-	private class CurvePreLoader extends Job {
+	private ImageData getEMaxImage(Feature feature, Compound c) {
+		Function<Well, Double> fvMapper = w -> CalculationService.getInstance()
+				.getAccessor(w.getPlate())
+				.getNumericValue(w, feature, feature.getNormalization());
+		Well eMaxWell = new ArrayList<>(c.getWells()).stream().max((w1,w2) -> Double.compare(fvMapper.apply(w1), fvMapper.apply(w2))).orElse(null);
+		if (eMaxWell == null) return null;
+		
+		List<ImageChannel> channels = ProtocolUtils.getProtocolClass(eMaxWell).getImageSettings().getImageChannels();
+		boolean[] channelFilter = new boolean[channels.size()];
+		for (int j = 0; j < channelFilter.length; j++) channelFilter[j] = channels.get(j).isShowInPlateView();
+		
+		try {
+			return ImageRenderService.getInstance().getWellImageData(eMaxWell, imageX, imageY, channelFilter);
+		} catch (IOException e) {
+			return null;
+		}
+	}
+	
+	private class DataPreLoader extends Job {
 
 		private NatTable table;
 
-		public CurvePreLoader(NatTable table) {
-			super("Loading Curves");
+		public DataPreLoader(NatTable table) {
+			super("Loading Curve Data");
 			this.table = table;
 		}
 
@@ -472,13 +503,14 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		public Definition paramDefinition;
 		public Function<Compound, Object> valueRenderer;
 		public Function<Compound, String> tooltipRenderer;
+		public boolean defaultHidden;
 		
 		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition, Function<Compound, Object> valueRenderer) {
-			this(name, tooltip, width, feature, paramDefinition, valueRenderer, null);
+			this(name, tooltip, width, feature, paramDefinition, valueRenderer, null, false);
 		}
 		
 		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition,
-				Function<Compound, Object> valueRenderer, Function<Compound, String> tooltipRenderer) {
+				Function<Compound, Object> valueRenderer, Function<Compound, String> tooltipRenderer, boolean defaultHidden) {
 			super();
 			this.name = name;
 			this.tooltip = tooltip;
@@ -487,6 +519,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 			this.paramDefinition = paramDefinition;
 			this.valueRenderer = valueRenderer;
 			this.tooltipRenderer = tooltipRenderer;
+			this.defaultHidden = defaultHidden;
 		}
 	}
 }

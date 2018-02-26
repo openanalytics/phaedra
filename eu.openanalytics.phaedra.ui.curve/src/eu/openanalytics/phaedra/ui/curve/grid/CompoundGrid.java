@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.ui.curve.grid;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.jface.action.MenuManager;
@@ -9,9 +8,7 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.nebula.widgets.nattable.NatTable;
 import org.eclipse.nebula.widgets.nattable.command.VisualRefreshCommand;
-import org.eclipse.nebula.widgets.nattable.hideshow.command.MultiColumnShowCommand;
 import org.eclipse.nebula.widgets.nattable.hideshow.command.ShowAllColumnsCommand;
-import org.eclipse.nebula.widgets.nattable.layer.DataLayer;
 import org.eclipse.nebula.widgets.nattable.resize.command.InitializeAutoResizeColumnsCommand;
 import org.eclipse.nebula.widgets.nattable.util.GCFactory;
 import org.eclipse.swt.SWT;
@@ -39,7 +36,7 @@ import eu.openanalytics.phaedra.ui.curve.grid.tooltip.CompoundToolTip;
 
 public class CompoundGrid extends Composite {
 
-	private static final String[] compoundListCurveSizes = new String[] { "100 x 100", "150 x 150", "200 x 200", "250 x 250" };
+	private static final String[] compoundListCurveSizes = new String[] { "100 x 100", "150 x 150", "200 x 200", "250 x 250", "300 x 300" };
 
 	private NatTable table;
 	private FullFeaturedColumnHeaderLayerStack<Compound> columnHeaderLayer;
@@ -50,7 +47,7 @@ public class CompoundGrid extends Composite {
 	private boolean isShowSelectedOnly;
 
 	private enum FilterState {
-		SHOW_ALL, CURVES_ONLY, HIDE_CURVES, SHOW_STRUCTURES, HIDE_STRUCTURES
+		DEFAULT_COLUMNS, SHOW_ALL, CURVES_ONLY
 	};
 
 	public CompoundGrid(Composite parent, List<Compound> compounds, List<Feature> features, MenuManager menuMgr) {
@@ -114,7 +111,7 @@ public class CompoundGrid extends Composite {
 	}
 
 	public void setCurveSize(int x, int y) {
-		columnAccessor.setCurveSize(x, y);
+		columnAccessor.setImageSize(x, y);
 		setGridCellWidth(x);
 		setGridCellHeight(y);
 		columnAccessor.preLoad(table);
@@ -137,8 +134,8 @@ public class CompoundGrid extends Composite {
 
 					// First, show all to undo previous filter state
 					table.doCommand(new ShowAllColumnsCommand());
-					setGridCellWidth(columnAccessor.getCurveWidth());
-					setGridCellHeight(columnAccessor.getCurveHeight());
+					setGridCellWidth(columnAccessor.getImageWidth());
+					setGridCellHeight(columnAccessor.getImageHeight());
 
 					if (isStructHidden) {
 						// Structure was hidden, keep it that way.
@@ -146,6 +143,10 @@ public class CompoundGrid extends Composite {
 					}
 
 					switch (state) {
+					case DEFAULT_COLUMNS:
+						int[] filter = columnAccessor.getDefaultHiddenColumns().stream().mapToInt(i -> i).toArray();
+						NatTableUtils.hideColumns(table, filter);
+						break;
 					case CURVES_ONLY:
 						int[] indices = columnAccessor.getCurveColumns();
 						int colCount = columnAccessor.getColumnCount();
@@ -165,16 +166,6 @@ public class CompoundGrid extends Composite {
 						}
 						NatTableUtils.hideColumns(table, colIndexes);
 						break;
-					case HIDE_CURVES:
-						colIndexes = columnAccessor.getCurveColumns();
-						NatTableUtils.hideColumns(table, colIndexes);
-						if (isStructHidden) {
-							setGridCellHeight(DataLayer.DEFAULT_ROW_HEIGHT);
-						} else {
-							// The structure is enabled and needs space.
-							setGridCellHeight(100);
-						}
-						break;
 					default:
 						// Do nothing.
 					}
@@ -182,39 +173,9 @@ public class CompoundGrid extends Composite {
 			}
 		});
 
+		item.addRadioItem("Show Default Columns", null, FilterState.DEFAULT_COLUMNS);
 		item.addRadioItem("Show All Columns", null, FilterState.SHOW_ALL);
 		item.addRadioItem("Curves Only", null, FilterState.CURVES_ONLY);
-		item.addRadioItem("Hide Curves", null, FilterState.HIDE_CURVES);
-
-		item = new DropDown(toolbar, null, IconManager.getIconImage("benzene.gif"));
-		item.setTooltipText("Filter Smiles");
-		item.setItemSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				MenuItem item = (MenuItem) e.widget;
-				if (item.getSelection()) {
-					FilterState state = (FilterState) item.getData();
-					int index = columnAccessor.getStructureColumn();
-					switch (state) {
-					case SHOW_STRUCTURES:
-						table.doCommand(new MultiColumnShowCommand(Arrays.asList(index)));
-						setGridCellWidth(columnAccessor.getCurveWidth());
-						setGridCellHeight(columnAccessor.getCurveHeight());
-						break;
-					case HIDE_STRUCTURES:
-						NatTableUtils.hideColumn(table, index);
-						break;
-					default:
-						// Do nothing.
-					}
-				}
-			}
-		});
-
-		int colIndex = columnHeaderLayer.getSelectionLayer().getColumnPositionByIndex(columnAccessor.getStructureColumn());
-		item.addRadioItem("Show Structures", null, FilterState.SHOW_STRUCTURES);
-		item.addRadioItem("Hide Structures", null, FilterState.HIDE_STRUCTURES);
-		item.select(colIndex < 0 ? 1 : 0, false);
 
 		item = new DropDown(toolbar, null, IconManager.getIconImage("channel_magnify.png"));
 		item.setTooltipText("Curve Size");
@@ -231,7 +192,7 @@ public class CompoundGrid extends Composite {
 			}
 		});
 
-		String currentCurveSize = columnAccessor.getCurveWidth() + " x " + columnAccessor.getCurveHeight();
+		String currentCurveSize = columnAccessor.getImageWidth() + " x " + columnAccessor.getImageHeight();
 		for (int i = 0; i < compoundListCurveSizes.length; i++) {
 			String curveSize = compoundListCurveSizes[i];
 			item.addRadioItem(curveSize, null, null);
@@ -277,7 +238,7 @@ public class CompoundGrid extends Composite {
 		toolItem.setToolTipText("Auto Resize All Columns");
 		toolItem.addListener(SWT.Selection, e -> {
 			GCFactory gc = new GCFactory(table);
-			int[] curveColumns = columnAccessor.getCurveColumns();
+			int[] curveColumns = columnAccessor.getImageColumns();
 			for (int column = 1; column < columnAccessor.getColumnCount(); column++) {
 				if (CollectionUtils.find(curveColumns, column - 1) == -1) {
 					InitializeAutoResizeColumnsCommand command = new InitializeAutoResizeColumnsCommand(table, column, table.getConfigRegistry(), gc);
@@ -296,7 +257,7 @@ public class CompoundGrid extends Composite {
 	}
 
 	private void setGridCellWidth(int width) {
-		int[] colIndexes = columnAccessor.getCurveColumns();
+		int[] colIndexes = columnAccessor.getImageColumns();
 		NatTableUtils.resizeColumns(table, colIndexes, width);
 		NatTableUtils.resizeColumn(table, columnAccessor.getStructureColumn(), width);
 	}
