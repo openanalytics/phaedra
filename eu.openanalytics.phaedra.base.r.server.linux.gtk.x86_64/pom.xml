@@ -4,7 +4,8 @@
 	<groupId>eu.openanalytics.phaedra</groupId>
 	<artifactId>eu.openanalytics.phaedra.base.r.server.linux.gtk.x86_64</artifactId>
 	<packaging>eclipse-plugin</packaging>
-
+	<version>1.0.2-SNAPSHOT</version>
+	
 	<parent>
 		<groupId>eu.openanalytics.phaedra</groupId>
 		<artifactId>eu.openanalytics.phaedra.build</artifactId>
