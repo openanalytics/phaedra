@@ -218,8 +218,19 @@ function createThumb(imageData) {
 	var rect = new org.eclipse.swt.graphics.Rectangle(100, 100, 500, 500);
 	rect.width = Math.min(500, imageData.width - 100);
 	rect.height = Math.min(500, imageData.height - 100);
-	var thumb = API.get("ImageUtils").crop(imageData, rect);
+	var thumb = crop(imageData, rect);
 	return thumb;
+}
+
+function crop(img, r) {
+	var cropped = new org.eclipse.swt.graphics.ImageData(r.width, r.height, img.depth, img.palette);
+	var IntArray = Java.type("int[]");
+	for (var y=0; y<r.height; y++) {
+		var pixels = new IntArray(r.width);
+		img.getPixels(r.x, r.y + y, r.width, pixels, 0);
+		cropped.setPixels(0, y, pixels.length, pixels, 0);
+	}
+	return cropped;
 }
 
 function createChannel(name, depth, isOverlay, source, montage, rgb) {
