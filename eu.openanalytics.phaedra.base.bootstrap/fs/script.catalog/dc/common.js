@@ -266,7 +266,7 @@ function parseCSV(filePath) {
  * @returns The contents of the file, as a string.
  */
 function readFile(filePath) {
-	var input = API.get("StreamUtils").readAll(inputFilePath);
+	var input = API.get("StreamUtils").readAll(filePath);
 	return new java.lang.String(input);
 }
 
