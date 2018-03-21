@@ -56,7 +56,7 @@ public class SMBInterface extends BaseFileServer {
 		// Authentication information
 		p.setProperty("jcifs.smb.client.username", userName.contains("\\") ? userName.substring(userName.indexOf('\\') + 1) : userName);
 		p.setProperty("jcifs.smb.client.password", pw);
-		p.setProperty("jcifs.smb.client.domain", userName.contains("\\") ? userName.substring(0, userName.indexOf('\\')) : null);
+		p.setProperty("jcifs.smb.client.domain", userName.contains("\\") ? userName.substring(0, userName.indexOf('\\')) : "");
 		
 		// Increase buffer sizes from default 65kb to 1mb.
 		p.setProperty("jcifs.smb.client.rcv_buf_size", "1048576");
