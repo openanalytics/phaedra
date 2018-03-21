@@ -13,7 +13,7 @@ public class CachingByteRange {
 	public CachingByteRange(long size, DataFetcher dataFetcher) {
 		this.ranges = new ArrayList<>();
 		this.dataFetcher = dataFetcher;
-		this.defaultBlockSize = 2*1024*1024;
+		this.defaultBlockSize = 100*1024; //2*1024*1024;
 		clear();
 	}
 	
