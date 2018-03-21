@@ -14,8 +14,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.eclipse.jface.preference.IPreferenceStore;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
@@ -25,18 +29,18 @@ import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
-import jcifs.UniAddress;
+import jcifs.CIFSContext;
+import jcifs.config.PropertyConfiguration;
+import jcifs.context.BaseContext;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbFile;
-import jcifs.smb.SmbSession;
 
 public class SMBInterface extends BaseFileServer {
 
-	private UniAddress domain;
-	private NtlmPasswordAuthentication auth;
-	
 	private String basePath;
 	private String privateMount;
+	
+	private CIFSContext context;
 	
 	@Override
 	public boolean isCompatible(String fsPath, String userName) {
@@ -47,21 +51,24 @@ public class SMBInterface extends BaseFileServer {
 	public void initialize(String fsPath, String userName, String pw) throws IOException {
 		basePath = SMBHelper.toSMBNotation(fsPath);
 		
-		// Set timeouts based on user preferences.
-		int smbSocketTimeout = Activator.getDefault().getPreferenceStore().getInt(Prefs.SMB_SOCKET_TIMEOUT);
-		int smbResponseTimeout = Activator.getDefault().getPreferenceStore().getInt(Prefs.SMB_RESPONSE_TIMEOUT);
-		jcifs.Config.setProperty("jcifs.smb.client.soTimeout", "" + smbSocketTimeout); // Default: 35000
-		jcifs.Config.setProperty("jcifs.smb.client.responseTimeout", "" + smbResponseTimeout); // Default: 30000
+		Properties p = new Properties();
+
+		// Authentication information
+		p.setProperty("jcifs.smb.client.username", userName.contains("\\") ? userName.substring(userName.indexOf('\\') + 1) : userName);
+		p.setProperty("jcifs.smb.client.password", pw);
+		p.setProperty("jcifs.smb.client.domain", userName.contains("\\") ? userName.substring(0, userName.indexOf('\\')) : null);
 		
 		// Increase buffer sizes from default 65kb to 1mb.
-		jcifs.Config.setProperty("jcifs.smb.client.rcv_buf_size", "1048576");
-		jcifs.Config.setProperty("jcifs.smb.client.snd_buf_size", "1048576");
-		jcifs.Config.setProperty("jcifs.smb.client.transaction_buf_size", "1048576");
+		p.setProperty("jcifs.smb.client.rcv_buf_size", "1048576");
+		p.setProperty("jcifs.smb.client.snd_buf_size", "1048576");
+		p.setProperty("jcifs.smb.client.transaction_buf_size", "1048576");
+
+		// Set timeouts as given in the user's preferences.
+		IPreferenceStore prefs = Activator.getDefault().getPreferenceStore();
+		p.setProperty("jcifs.smb.client.soTimeout", String.valueOf(prefs.getInt(Prefs.SMB_SOCKET_TIMEOUT))); // Default: 35000
+		p.setProperty("jcifs.smb.client.responseTimeout", String.valueOf(prefs.getInt(Prefs.SMB_RESPONSE_TIMEOUT))); // Default: 30000
 		
-		// Use WINS servers if the file server is in a different subnet.
-//		if (wins != null && !wins.isEmpty()) jcifs.Config.setProperty("jcifs.netbios.wins", wins);
-		
-		login(getHostname(), userName, pw);
+		context = new BaseContext(new PropertyConfiguration(p));
 	}
 	
 	@Override
@@ -111,7 +118,7 @@ public class SMBInterface extends BaseFileServer {
 		if (!path.endsWith("/")) path += "/";
 		SmbFile sFile = getFile(path, false);
 		String[] children = sFile.list();
-		return Arrays.asList(children);
+		return Arrays.asList(children).stream().map(c -> c.endsWith("/") ? c.substring(0, c.length()-1) : c).collect(Collectors.toList());
 	}
 	
 	@Override
@@ -182,12 +189,6 @@ public class SMBInterface extends BaseFileServer {
 	 * **********
 	 */
 	
-	private void login(String address, String userName, String pw) throws IOException {
-		domain = UniAddress.getByName(address);
-		auth = new NtlmPasswordAuthentication(address, userName, pw);
-		SmbSession.logon(domain, auth);
-	}
-	
 	private String getFullPath(String path) {
 		if (!path.startsWith("/") && !path.startsWith("\\")) path = "/" + path;
 		if (basePath.endsWith("/") || basePath.endsWith("\\")) return basePath + path;
@@ -195,7 +196,7 @@ public class SMBInterface extends BaseFileServer {
 	}
 	
 	private SmbFile getFile(String path, boolean lock) throws MalformedURLException {
-		return SMBHelper.getFile(getFullPath(path), auth, lock);
+		return new SmbFile(getFullPath(path), context);
 	}
 	
 	private String getHostname() {
@@ -209,6 +210,7 @@ public class SMBInterface extends BaseFileServer {
 	
 	private synchronized void mount() {
 		if (privateMount != null) return;
+		NtlmPasswordAuthentication auth = (NtlmPasswordAuthentication) context.getCredentials();
 		
 		if (ProcessUtils.isWindows()) {
 			// Mapping won't work if another mapping exists to the same server!
@@ -232,7 +234,7 @@ public class SMBInterface extends BaseFileServer {
 			new File(privateMount).mkdirs();
 			
 			//TODO Mount fails if password contains special characters
-			String smbPath = String.format("//%s;%s:%s@%s", auth.getDomain(), auth.getUsername(), auth.getPassword(), basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()));
+			String smbPath = String.format("//%s;%s:%s@%s", auth.getUserDomain(), auth.getUsername(), auth.getPassword(), basePath.substring(SMBHelper.SMB_PROTOCOL_PREFIX.length()));
 			String[] cmd = { "mount", "-t", "smbfs", smbPath, privateMount };
 			try {
 				ProcessUtils.execute(cmd, null, null, true, true);

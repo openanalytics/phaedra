@@ -3,16 +3,17 @@ package eu.openanalytics.phaedra.base.fs;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbFile;
+import jcifs.CIFSContext;
+import jcifs.context.SingletonContext;
 
 public class SMBHelper {
 
 	public static final String SMB_PROTOCOL_PREFIX = "smb://";
-	public final static String UNC_PROTOCOL_PREFIX = "\\\\";
+	public static final String UNC_PROTOCOL_PREFIX = "\\\\";
+	
+	private static final CIFSContext GUEST_CTX = SingletonContext.getInstance().withGuestCrendentials();
 	
 	public static boolean isSMBPath(String path) {
 		return path != null && (path.startsWith(SMB_PROTOCOL_PREFIX) || path.startsWith(UNC_PROTOCOL_PREFIX));
@@ -23,16 +24,8 @@ public class SMBHelper {
 		if (ProcessUtils.isWindows()) {
 			return new FileInputStream(toUNCNotation(path));
 		} else {
-			SmbFile file = getFile(path, null, false);
-			return file.getInputStream();
+			return GUEST_CTX.get(path).openInputStream();
 		}
-	}
-	
-	public static SmbFile getFile(String path, NtlmPasswordAuthentication auth, boolean lock) throws MalformedURLException {
-		int sharing = SmbFile.FILE_SHARE_READ;
-		if (!lock) sharing = sharing | SmbFile.FILE_SHARE_WRITE | SmbFile.FILE_SHARE_DELETE;
-		
-		return new SmbFile(toSMBNotation(path), auth, sharing);
 	}
 	
 	public static String toUNCNotation(String smbPath) {
