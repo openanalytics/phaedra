@@ -140,6 +140,7 @@ public class CaptureUtils {
 		Pattern pattern = Pattern.compile(regex);
 		File parentFile = new File(parentPath);
 		File[] children = parentFile.listFiles();
+		if (children == null) return null;
 		for (File child: children) {
 			Matcher matcher = pattern.matcher(child.getName());
 			if (matcher.matches()) {
