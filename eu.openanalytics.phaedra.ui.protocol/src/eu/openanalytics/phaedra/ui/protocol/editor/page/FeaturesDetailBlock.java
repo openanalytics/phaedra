@@ -559,6 +559,11 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		sectionCurveSettings.setDescription("Set the properties below to perform curve fitting on this feature.");
 		sectionCurveSettings.setText("Curve Section");
 
+//		ExpandableComposite ec = toolkit.createExpandableComposite(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
+//		ec.setText("sdasdasd");
+//		toolkit.adapt(ec);
+//		GridDataFactory.fillDefaults().grab(true,true).applyTo(ec);
+		
 		ImageHyperlink curveIcon = toolkit.createImageHyperlink(sectionCurveSettings, SWT.TRANSPARENT);
 		curveIcon.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -570,11 +575,12 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		curveIcon.setToolTipText(sectionCurveSettings.getDescription());
 		sectionCurveSettings.setTextClient(curveIcon);
 		toolkit.paintBordersFor(curveIcon);
-
+		
 		final Composite compositeCurve = toolkit.createComposite(sectionCurveSettings, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(compositeCurve);
 		GridLayoutFactory.fillDefaults().spacing(10, 5).numColumns(2).applyTo(compositeCurve);
-		sectionCurveSettings.setClient(compositeCurve);
 		toolkit.paintBordersFor(compositeCurve);
+		sectionCurveSettings.setClient(compositeCurve);
 
 		curveSettingsCmp = new Composite(compositeCurve, SWT.NONE);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(curveSettingsCmp);
@@ -730,8 +736,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		for (Control child: curveSettingsCmp.getChildren()) child.dispose();
 		Composite cmp = CurveUIFactory.createFields(curveSettingsCmp, feature, null, m_bindingContext, dirtyListener);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(cmp);
-		curveSettingsCmp.layout();
-		sectionCurveSettings.pack(); // To prevent issue with curveSettingsCmp ending up too small.
+		cmp.requestLayout();
 	}
 	
 	private void fillWellTypeCombos() {

@@ -59,6 +59,12 @@ public class CurveUIFactory {
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(modelCmb);
 		
 		lbl = new Label(area, SWT.NONE);
+		lbl.setText("Description:");
+		
+		Label modelDescriptionLbl = new Label(area, SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(modelDescriptionLbl);
+		
+		lbl = new Label(area, SWT.NONE);
 		lbl.setText("Grouping:");
 		
 		Composite groupingCmp = new Composite(area, SWT.NONE);
@@ -125,8 +131,12 @@ public class CurveUIFactory {
 				for (Control child: additionParamCmp.getChildren()) child.dispose();
 				
 				String selectedModelId = modelCmb.getText();
-				if (!selectedModelId.isEmpty()) {
+				if (selectedModelId.isEmpty()) {
+					modelDescriptionLbl.setText("");
+				} else {
 					ICurveFitModel model = CurveFitService.getInstance().getModel(selectedModelId);
+					modelDescriptionLbl.setText(model.getDescription());
+					
 					for (CurveParameter.Definition param: model.getInputParameters()) {
 						Label lbl = new Label(additionParamCmp, SWT.NONE);
 						lbl.setText(param.name + ":");
@@ -157,6 +167,7 @@ public class CurveUIFactory {
 									txt.addModifyListener(event -> CurveParameter.setValueFromString(value, txt.getText()));
 								}
 							}
+							txt.requestLayout();
 						} else {
 							String[] allowedValues = param.valueRestriction.getAllowedValues();
 							CCombo cmb = new CCombo(additionParamCmp, SWT.BORDER | SWT.READ_ONLY);
@@ -172,10 +183,10 @@ public class CurveUIFactory {
 									cmb.addModifyListener(event -> CurveParameter.setValueFromString(value, cmb.getText()));
 								}
 							}
+							cmb.requestLayout();
 						}
 					}
 				}
-				additionParamCmp.layout();
 			};
 		};
 		modelCmb.addSelectionListener(onModelSelection);

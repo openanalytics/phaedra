@@ -68,13 +68,15 @@ public class OSBFitModel extends AbstractCurveFitModel {
 	};
 	
 	private String modelId;
+	private String description;
 	
 	public OSBFitModel() {
 		// Default constructor
 	}
 	
-	public OSBFitModel(String modelId) {
+	public OSBFitModel(String modelId, String description) {
 		this.modelId = modelId;
+		this.description = description;
 	}
 	
 	@Override
@@ -85,7 +87,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 	
 	@Override
 	public String getDescription() {
-		return "This model performs One-Site-Binding curve fitting.";
+		return description;
 	}
 
 	@Override
