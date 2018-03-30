@@ -23,6 +23,7 @@ import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYDifferenceRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
@@ -37,6 +38,7 @@ import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer;
 import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer.CurveAnnotation;
 import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer.CurveBand;
 import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer.CurveDomainInterval;
+import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer.CurveRendererType;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.ui.curve.Activator;
 import eu.openanalytics.phaedra.ui.curve.prefs.Prefs;
@@ -70,9 +72,15 @@ public class CrcChartFactory {
 		List<XYSeriesCollection> curveBandSeries = new ArrayList<>();
 		CurveBand[] curveBands = null;
 		
+		XYLineAndShapeRenderer curveRenderer = new XYLineAndShapeRenderer(true, false);
+		
 		if (curve != null) {
 			CurveFitInput input = CurveFitService.getInstance().getInput(curve);
 			ICurveRenderer renderer = CurveFitService.getInstance().getRenderer(curve.getModelId());
+			
+			if (renderer.getCurveRendererType(curve, input) == CurveRendererType.Spline) {
+				curveRenderer = new XYSplineRenderer(10);
+			}
 			
 			double[] weights = renderer.getPointWeights(curve, input);
 			for (int i = 0; i < input.getValues().length; i++) {
@@ -194,7 +202,6 @@ public class CrcChartFactory {
 		pointRenderer.setSeriesPaint(1, getColor(Prefs.CRC_POINT_COLOR_REJECTED));
 
 		// Curve
-		XYLineAndShapeRenderer curveRenderer = new XYLineAndShapeRenderer(true, false);
 		int thickness = prefStore.getInt(Prefs.CRC_CURVE_THICKNESS);
 		curveRenderer.setSeriesStroke(0, new BasicStroke(thickness, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
 		curveRenderer.setSeriesPaint(0, getColor(Prefs.CRC_CURVE_COLOR));

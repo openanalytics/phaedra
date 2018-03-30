@@ -39,6 +39,11 @@ public class OSBCurveRenderer implements ICurveRenderer {
 	}
 	
 	@Override
+	public CurveRendererType getCurveRendererType(Curve curve, CurveFitInput input) {
+		return CurveRendererType.Line;
+	}
+	
+	@Override
 	public double[] getPointWeights(Curve curve, CurveFitInput input) {
 		Value weightValue = CurveParameter.find(curve.getOutputParameters(), "Weights");
 		if (weightValue == null) return null;

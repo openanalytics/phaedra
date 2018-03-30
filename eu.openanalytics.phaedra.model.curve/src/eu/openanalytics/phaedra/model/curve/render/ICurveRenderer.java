@@ -13,6 +13,8 @@ public interface ICurveRenderer {
 	
 	public double[][] getCurveSamples(Curve curve, CurveFitInput input);
 	
+	public CurveRendererType getCurveRendererType(Curve curve, CurveFitInput input);
+	
 	public double[] getPointWeights(Curve curve, CurveFitInput input);
 	
 	public double[] getPlotRange(Curve curve, CurveFitInput input);
@@ -66,5 +68,10 @@ public interface ICurveRenderer {
 			this.x1 = x1;
 			this.x2 = x2;
 		}
+	}
+	
+	public static enum CurveRendererType {
+		Line,
+		Spline
 	}
 }
