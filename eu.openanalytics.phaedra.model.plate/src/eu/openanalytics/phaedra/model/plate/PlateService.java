@@ -482,10 +482,13 @@ public class PlateService extends BaseJPAService {
 	 * @param plate The plate to delete.
 	 */
 	public void deletePlate(Plate plate) {
-		PlateActionHookManager.preAction(plate, ModelEventType.ObjectRemoved);
-
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_DELETE, plate);
 
+		PlateActionHookManager.preAction(plate, ModelEventType.ObjectRemoved);
+
+		// Delete the plate object (cascades to wells, compounds, feature values and curve results)
+		delete(plate);
+		
 		// Delete the plate files (image and subwell data)
 		String plateFSPath = null;
 		try {
@@ -495,9 +498,6 @@ public class PlateService extends BaseJPAService {
 			Activator.getDefault().getLog().log(new Status(IStatus.ERROR, Activator.PLUGIN_ID,
 					"Failed to clean up plate files at " + plateFSPath, e));
 		}
-
-		// Delete the plate object (cascades to wells, compounds, feature values and curve results)
-		delete(plate);
 
 		PlateActionHookManager.postAction(plate, ModelEventType.ObjectRemoved);
 	}
