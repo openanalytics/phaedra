@@ -35,8 +35,8 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
 import eu.openanalytics.phaedra.ui.protocol.ImageSettingsService;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 import eu.openanalytics.phaedra.wellimage.component.ComponentTypeFactory;
-import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
 
 public class ImageSettingsPanel extends Composite {
 
@@ -332,35 +332,35 @@ public class ImageSettingsPanel extends Composite {
 	}
 
 	private void loadHistogram() {
-			if (currentWell != null && currentWell.getPlate().isImageAvailable() && currentChannel != null) {
-				try (ImageProvider ip = new ImageProvider(currentWell.getPlate())) {
-					ip.open();
-					
-					histogramInfoLbl.setText(currentChannel.getName()
-							+ " @ Well " + NumberUtils.getWellCoordinate(currentWell.getRow(), currentWell.getColumn()));
-	
-					// -4 is to make up for the Canvas border.
-					int w = histogramCanvas.getSize().x - 4;
-					int h = histogramCanvas.getSize().y - 4;
-	
-					int nr = NumberUtils.getWellNr(currentWell.getRow(), currentWell.getColumn(), currentWell.getPlate().getColumns());
-					ImageData wellImage = ip.getDecoder().renderImage(400, 400, nr-1, currentChannel.getSequence());
-					Image histogram = ColorHistogramFactory.createHistogram(w, h, wellImage, currentChannel,
-							((float)currentSettings.getGamma())/10, histogramLogBtn.getSelection());
-					if (currentHistogram != null) currentHistogram.dispose();
-					currentHistogram = histogram;
-					histogramCanvas.redraw();
-				} catch (IOException e) {
-					MessageDialog.openError(Display.getDefault().getActiveShell(),
-							"Image Error", "The JP2K file could not be opened: " + e.getMessage());
-				}
-			} else {
-				// Blank out the histogram.
-				histogramInfoLbl.setText("No image data available");
+		if (currentWell != null && currentWell.getPlate().isImageAvailable() && currentChannel != null) {
+			try {
+				histogramInfoLbl.setText(
+						currentChannel.getName() + " @ Well " + NumberUtils.getWellCoordinate(currentWell.getRow(), currentWell.getColumn()));
+
+				// -4 is to make up for the Canvas border.
+				int w = histogramCanvas.getSize().x - 4;
+				int h = histogramCanvas.getSize().y - 4;
+
+				boolean[] channels = new boolean[currentChannel.getImageSettings().getImageChannels().size()];
+				channels[currentChannel.getSequence()] = true;
+				ImageData wellImage = ImageRenderService.getInstance().getWellImageData(currentWell, 400, 400, channels);
+				
+				Image histogram = ColorHistogramFactory.createHistogram(w, h, wellImage, currentChannel,
+						((float)currentSettings.getGamma())/10, histogramLogBtn.getSelection());
 				if (currentHistogram != null) currentHistogram.dispose();
-				currentHistogram = null;
+				currentHistogram = histogram;
 				histogramCanvas.redraw();
+			} catch (IOException e) {
+				MessageDialog.openError(Display.getDefault().getActiveShell(),
+						"Image Error", "The JP2K file could not be opened: " + e.getMessage());
 			}
+		} else {
+			// Blank out the histogram.
+			histogramInfoLbl.setText("No image data available");
+			if (currentHistogram != null) currentHistogram.dispose();
+			currentHistogram = null;
+			histogramCanvas.redraw();
+		}
 	}
 
 	private void drawHistogram(GC gc) {

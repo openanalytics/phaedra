@@ -16,31 +16,24 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
-import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
-import eu.openanalytics.phaedra.wellimage.provider.ImageProvider.ImageRenderSettings;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
+import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequest;
+import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequestFactory;
 
 public class CellMeasurer implements AutoCloseable {
 	
-	private ImageProvider imageProvider;
 	private ImageSettings imageSettings;
 	
 	public CellMeasurer(Plate plate) throws IOException {
-		this.imageProvider = new ImageProvider(plate);
-		this.imageProvider.open();
 		this.imageSettings = PlateUtils.getProtocolClass(plate).getImageSettings();
 	}
 
 	@Override
 	public void close() {
-		if (imageProvider != null) imageProvider.close();
-	}
-	
-	public ImageProvider getImageProvider() {
-		return imageProvider;
+		// Nothing to close.
 	}
 	
 	public CellMeasurement measure(Well well, PathData cellPath) throws IOException {
-		int imageNr = PlateUtils.getWellNr(well) - 1;
 		Rectangle boundingBox = ImageUtils.getBoundingBox(cellPath);
 		
 		// Inspect all the RAW channels
@@ -54,17 +47,19 @@ public class CellMeasurer implements AutoCloseable {
 		meas.cogY = center.y;
 		meas.area = SWTUtils.getSurface(cellPath);
 		
-		ImageRenderSettings renderSettings = new ImageRenderSettings();
-		renderSettings.applyGamma = false;
-		renderSettings.blend = false;
-		renderSettings.scale = 1.0f;
-		renderSettings.region = boundingBox;
+		ImageRenderRequest req = ImageRenderRequestFactory.forWell(well)
+				.withRegion(boundingBox)
+				.withApplyBlend(false)
+				.withApplyGamma(false)
+				.withScale(1.0f)
+				.build();
 		
 		for (int i=0; i<channels.length; i++) {
 			int channel = channels[i];
-			boolean[] enabledComponents = new boolean[imageSettings.getImageChannels().size()];
-			enabledComponents[channel] = true;
-			ImageData img = imageProvider.render(imageSettings, renderSettings, imageNr, enabledComponents);
+			req.components = new boolean[imageSettings.getImageChannels().size()];
+			req.components[channel] = true;
+			ImageData img = ImageRenderService.getInstance().getImageData(req);
+			
 			int[] pixels = ImageUtils.applyBitMask(img, cellPath);
 			int totalIntensity = Arrays.stream(pixels).sum();
 			int maxIntensity = Arrays.stream(pixels).max().orElse(0);

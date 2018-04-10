@@ -33,14 +33,13 @@ import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
-import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.ImageSettingsService;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
 import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 import eu.openanalytics.phaedra.ui.wellimage.Activator;
 import eu.openanalytics.phaedra.ui.wellimage.preferences.Prefs;
-import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 /**
  * A Canvas that renders a region of a Well's image.
@@ -52,14 +51,12 @@ public class JP2KImageCanvas extends Canvas {
 	private static final double ARROW_KEY_MOVEMENT = 0.01;
 
 	private Well currentWell;
-	private ImageProvider imageProvider;
 	private Image cachedImg;
 
 	private Point imageOffset;
 	private Point totalImageSize;
 
 	private float currentScale;
-	private ImageSettings currentSettings;
 
 	private boolean draggingEnabled;
 	private boolean dragging;
@@ -121,7 +118,6 @@ public class JP2KImageCanvas extends Canvas {
 
 		addListener(SWT.Dispose, e -> {
 			clearCacheValues();
-			if (imageProvider != null) imageProvider.close();
 			ProtocolUIService.getInstance().removeUIEventListener(imageSettingsListener);
 		});
 
@@ -191,14 +187,7 @@ public class JP2KImageCanvas extends Canvas {
 		boolean restoredView = (currentWell == null && currentScale != 1.0f);
 
 		try {
-
-			if (currentWell == null || imageProvider == null || !well.getPlate().equals(currentWell.getPlate())) {
-				// A different plate is selected: close the current JP2K file, if any.
-				if (imageProvider != null) {
-					imageProvider.close();
-					imageProvider = null;
-				}
-
+			if (currentWell == null || !well.getPlate().equals(currentWell.getPlate())) {
 				// If a well without image is selected, show a blank screen.
 				if (!well.getPlate().isImageAvailable()) {
 					redraw();
@@ -206,30 +195,25 @@ public class JP2KImageCanvas extends Canvas {
 					return;
 				}
 
-				// Open the new JP2K file.
-				imageProvider = new ImageProvider(well.getPlate());
-				imageProvider.open();
 				currentWell = well; // currentWell must not be null during onFileChange.
 				listenerManager.onFileChange();
 			}
 
 			// Load information about the new well image.
 			currentWell = well;
-			currentSettings = ImageSettingsService.getInstance().getCurrentSettings(well);
-			int nr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), well.getPlate().getColumns());
-			totalImageSize = imageProvider.getImageSize(nr-1);
+			totalImageSize = ImageRenderService.getInstance().getWellImageSize(well, 1.0f);
 			// If the protocol class changed and the canvas is not linked to another canvas, apply the protocol class' default scale.
 			if (!restoredView && !samePClass && !LinkedImageManager.getInstance().isLinked(this)) {
+				ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(well);
 				changeScale(1f/currentSettings.getZoomRatio());
 			}
 			// The new image may have a size different from the previous. Verify the offsets.
 			checkOffsetLimits();
 			listenerManager.onOffsetChange(imageOffset.x, imageOffset.y);
 
-		} catch (IOException e) {
+		} catch (Exception e) {
 			MessageDialog.openError(Display.getDefault().getActiveShell(),
 					"Image Error", "The JP2K file could not be opened: " + e.getMessage());
-			imageProvider = null;
 		}
 
 		clearCacheValues();
@@ -247,11 +231,11 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	public void closeImageProvider() {
-		imageProvider.close();
+		//TODO remove
 	}
 
 	public void openImageProvider() throws IOException {
-		imageProvider.open();
+		//TODO remove
 	}
 
 	public float getCurrentScale() {
@@ -317,11 +301,10 @@ public class JP2KImageCanvas extends Canvas {
 
 				String wellPos = NumberUtils.getWellCoordinate(currentWell.getRow(), currentWell.getColumn());
 				String fileName = "Well_" + wellPos + ".png";
-				int nr = PlateUtils.getWellNr(currentWell);
 
 				Image img = null;
 				try {
-					ImageData data = imageProvider.render(currentSettings, currentScale, nr-1, oldEnabledChannels);
+					ImageData data = ImageRenderService.getInstance().getWellImageData(currentWell, currentScale, oldEnabledChannels);
 					img = new Image(null, data);
 					new SaveImageCmd().execute(fileName, img, null);
 				} catch (Exception ex) {
@@ -362,15 +345,6 @@ public class JP2KImageCanvas extends Canvas {
 		manager.add(action);
 	}
 
-	/**
-	 * <p> Note: only for use by image overlays!</p>
-	 *
-	 * @return
-	 */
-	public ImageProvider getImageProvider() {
-		return imageProvider;
-	}
-
 	/*
 	 * Non-public
 	 * **********
@@ -381,11 +355,7 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	private void updateImageSettings() {
-		ProtocolClass newPClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
-		ProtocolClass currentPClass = PlateUtils.getProtocolClass(currentWell);
-		// Ignore settings if they are related to another protocol class.
-		if (!newPClass.equals(currentPClass)) return;
-		currentSettings = ImageSettingsService.getInstance().getCurrentSettings(currentWell);
+		if (!PlateUtils.isSameProtocolClass(currentWell, ProtocolUIService.getInstance().getCurrentProtocolClass())) return;
 		clearCacheValues();
 		forceRedraw();
 	}
@@ -401,30 +371,26 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	private void zoomFit() {
-		if (currentWell == null || imageProvider == null) return;
-		try {
-			int nr = PlateUtils.getWellNr(currentWell);
-			Point imageSize = imageProvider.getImageSize(nr-1);
-			Rectangle clientArea = getClientArea();
+		if (currentWell == null) return;
+		
+		Point imageSize = ImageRenderService.getInstance().getWellImageSize(currentWell, 1.0f);
+		Rectangle clientArea = getClientArea();
 
-			float scale = 1.0f;
-			while (imageSize.x > clientArea.width || imageSize.y > clientArea.height) {
-				// If image is too big, zoom out
-				scale = scale / 2;
-				imageSize.x = imageSize.x / 2;
-				imageSize.y = imageSize.y / 2;
-			}
-			while (imageSize.x*2 <= clientArea.width && imageSize.y*2 <= clientArea.height) {
-				// If image is too small, zoom in
-				scale = scale * 2;
-				imageSize.x = imageSize.x * 2;
-				imageSize.y = imageSize.y * 2;
-			}
-
-			changeScale(scale);
-		} catch (IOException e) {
-			// Zoom failed, keep current zoom.
+		float scale = 1.0f;
+		while (imageSize.x > clientArea.width || imageSize.y > clientArea.height) {
+			// If image is too big, zoom out
+			scale = scale / 2;
+			imageSize.x = imageSize.x / 2;
+			imageSize.y = imageSize.y / 2;
 		}
+		while (imageSize.x*2 <= clientArea.width && imageSize.y*2 <= clientArea.height) {
+			// If image is too small, zoom in
+			scale = scale * 2;
+			imageSize.x = imageSize.x * 2;
+			imageSize.y = imageSize.y * 2;
+		}
+
+		changeScale(scale);
 	}
 
 	private void setPanned() {
@@ -432,7 +398,7 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	private void drawImage(GC gc) {
-		if (imageProvider == null || currentWell == null) return;
+		if (currentWell == null) return;
 
 		if (!hasPanned && cachedImg != null && !cachedImg.isDisposed()) {
 			gc.drawImage(cachedImg, 0, 0);
@@ -443,7 +409,6 @@ public class JP2KImageCanvas extends Canvas {
 			Rectangle cachedRect = new Rectangle(oldOffset.x, oldOffset.y, oldWidth, oldHeight);
 
 			// Find out which part of the image to render.
-			int nr = NumberUtils.getWellNr(currentWell.getRow(), currentWell.getColumn(), currentWell.getPlate().getColumns());
 			Rectangle clientArea = getClientArea();
 			int w = (int) Math.ceil(clientArea.width/currentScale);
 			int h = (int) Math.ceil(clientArea.height/currentScale);
@@ -479,6 +444,7 @@ public class JP2KImageCanvas extends Canvas {
 			}
 
 			// Determine which channels to render.
+			ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(currentWell);
 			List<ImageChannel> channels = currentSettings.getImageChannels();
 			boolean[] enabledChannels = new boolean[channels.size()];
 			for (int i=0; i<channels.size(); i++) {
@@ -487,7 +453,7 @@ public class JP2KImageCanvas extends Canvas {
 
 			for (Slice slice : subtract(cachedRect, targetRect)) {
 				// Draw leftover on cachedImage
-				ImageData data = imageProvider.render(currentSettings, currentScale, slice.bounds, nr-1, enabledChannels);
+				ImageData data = ImageRenderService.getInstance().getWellImageData(currentWell, currentScale, slice.bounds, enabledChannels);
 				Image leftoverImage = new Image(null, data);
 
 				GC imageGC = new GC(cachedImg);

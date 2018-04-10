@@ -123,8 +123,7 @@ public class ImageSettingsService implements IUIEventListener, IModelEventListen
 	 */
 	private void cleanCache() {
 		ProtocolClass pClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
-		ImageRenderService.getInstance().clearWellImageCache(pClass);
-		ImageRenderService.getInstance().clearSubWellImageCache(pClass);
+		ImageRenderService.getInstance().clearCache(pClass);
 	}
 
 }

@@ -17,10 +17,9 @@ import org.eclipse.swt.graphics.Transform;
 
 import eu.openanalytics.phaedra.base.util.misc.ColorStore;
 import eu.openanalytics.phaedra.calculation.ClassificationService;
-import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
-import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class LabelImageFactory {
 
@@ -29,15 +28,8 @@ public class LabelImageFactory {
 		
 		monitor.beginTask("Creating label image", 10);
 		
-		// Open the existing image to find the image size.
-		int imageNr = PlateUtils.getWellNr(well) - 1;
-		int channelCount = PlateUtils.getProtocolClass(well).getImageSettings().getImageChannels().size();
-		
-		ImageProvider ip = new ImageProvider(well.getPlate());
-		ip.open();
-		
-		Point size = ip.getImageSize(imageNr);
-		int depth = ip.getDecoder().getBitDepth(imageNr, channelNr);
+		Point size = ImageRenderService.getInstance().getWellImageSize(well, 1.0f);
+		int depth = ImageRenderService.getInstance().getWellImageDepth(well, channelNr);
 
 		monitor.subTask("Drawing labels");
 
@@ -108,9 +100,8 @@ public class LabelImageFactory {
 		
 		// Obtain the current label image, which will be merged with the new one.
 		monitor.subTask("Merging label image with existing image");
-		ImageData currentLabelImage = ip.getDecoder().renderImage(drawSize.x, drawSize.y, imageNr, channelNr);
+		ImageData currentLabelImage = ImageRenderService.getInstance().getWellImageData(well, drawSize.x, drawSize.y, null); 
 		currentLabelImage = currentLabelImage.scaledTo(size.x, size.y);
-		ip.close();
 		
 		monitor.worked(2);
 		

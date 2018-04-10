@@ -61,6 +61,7 @@ import eu.openanalytics.phaedra.model.subwell.SubWellSelection;
 import eu.openanalytics.phaedra.ui.subwell.SubWellClassificationSupport;
 import eu.openanalytics.phaedra.ui.wellimage.util.LabelImageFactory;
 import eu.openanalytics.phaedra.validation.ValidationUtils;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class DrawRegionPaletteTool extends AbstractPaletteTool {
 
@@ -305,9 +306,11 @@ public class DrawRegionPaletteTool extends AbstractPaletteTool {
 			InputStream input = Screening.getEnvironment().getFileServer().getContents(imagePath);
 			compressor.updateCodestreamFile(input, codestreams, newImagePath, new SubProgressMonitor(monitor, 5));
 		}
-			
+		
+		ImageRenderService.getInstance().releaseDecoders(plate);
 		String relativeImagePath = PlateService.getInstance().getImageFSPath(plate);
 		Screening.getEnvironment().getFileServer().safeReplace(relativeImagePath, new File(newImagePath));
+		ImageRenderService.getInstance().clearCache(plate);
 		monitor.worked(5);
 
 		monitor.done();

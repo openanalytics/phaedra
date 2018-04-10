@@ -31,4 +31,8 @@ public class ImageKey extends CacheKey {
 	public long getProtocolClassId() {
 		return (Long) getKeyPart(0);
 	}
+	
+	public long getWellId() {
+		return (Long) getKeyPart(1);
+	}
 }

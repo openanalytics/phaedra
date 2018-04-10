@@ -43,7 +43,6 @@ import org.eclipse.ui.IWorkbenchPart;
 import eu.openanalytics.phaedra.base.imaging.overlay.JP2KOverlay;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -57,9 +56,9 @@ import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 import eu.openanalytics.phaedra.ui.wellimage.Activator;
 import eu.openanalytics.phaedra.ui.wellimage.preferences.Prefs;
 import eu.openanalytics.phaedra.ui.wellimage.util.ImageControlPanel;
-import eu.openanalytics.phaedra.ui.wellimage.util.JP2KImageCanvas;
 import eu.openanalytics.phaedra.ui.wellimage.util.ImageControlPanel.ImageControlListener;
-import eu.openanalytics.phaedra.wellimage.provider.ImageProvider;
+import eu.openanalytics.phaedra.ui.wellimage.util.JP2KImageCanvas;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class ImageThumbOverlay extends JP2KOverlay {
 
@@ -285,10 +284,8 @@ public class ImageThumbOverlay extends JP2KOverlay {
 	private void generateImage() {
 		if (!enabled || currentWell == null) return;
 		if (currentImage != null && !currentImage.isDisposed()) currentImage.dispose();
-		int wellNr = NumberUtils.getWellNr(currentWell.getRow(), currentWell.getColumn(), currentWell.getPlate().getColumns());
 		try {
-			ImageProvider ip = ((JP2KImageCanvas)getCanvas()).getImageProvider();
-			Point imSize = ip.getImageSize(wellNr - 1);
+			Point imSize = ImageRenderService.getInstance().getWellImageSize(currentWell, 1.0f);
 			int w = imSize.x;
 			int h = imSize.y;
 
@@ -307,7 +304,8 @@ public class ImageThumbOverlay extends JP2KOverlay {
 			
 			int scaledW = (int) (currentScale * w);
 			int scaledH = (int) (currentScale * h);
-			currentImage = new Image(null, ip.render(scaledW, scaledH, wellNr - 1, enabledChannels));
+			ImageData data = ImageRenderService.getInstance().getWellImageData(currentWell, scaledW, scaledH, enabledChannels);
+			currentImage = new Image(null, data);
 			size = getCanvas().getSize();
 		} catch (IOException e) {
 			EclipseLog.error(e.getMessage(), e, Activator.getDefault());

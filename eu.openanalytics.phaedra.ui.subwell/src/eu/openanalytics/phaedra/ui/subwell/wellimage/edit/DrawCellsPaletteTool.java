@@ -72,7 +72,10 @@ import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
 import eu.openanalytics.phaedra.ui.wellimage.overlay.CellMeasurer;
 import eu.openanalytics.phaedra.ui.wellimage.overlay.CellMeasurer.CellMeasurement;
+import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 import eu.openanalytics.phaedra.wellimage.component.ComponentTypeFactory;
+import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequest;
+import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequestFactory;
 
 public class DrawCellsPaletteTool extends AbstractPaletteTool {
 
@@ -260,7 +263,8 @@ public class DrawCellsPaletteTool extends AbstractPaletteTool {
 						Image img = imageCache.get(c);
 						if (img == null) {
 							Rectangle bbox = ImageUtils.getBoundingBox(c.path);
-							ImageData data = measurer.getImageProvider().render(bbox, PlateUtils.getWellNr(getCurrentWell())-1);
+							ImageRenderRequest req = ImageRenderRequestFactory.forWell(getCurrentWell()).withRegion(bbox).build();
+							ImageData data = ImageRenderService.getInstance().getImageData(req);
 							img = new Image(null, data);
 							imageCache.put(c, img);
 						}
