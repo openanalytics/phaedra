@@ -18,6 +18,11 @@ public class BaseCurveRenderer implements ICurveRenderer {
 	}
 
 	@Override
+	public CurveRendererType getCurveRendererType(Curve curve, CurveFitInput input) {
+		return CurveRendererType.Line;
+	}
+	
+	@Override
 	public double[] getPointWeights(Curve curve, CurveFitInput input) {
 		// Point weights are not known.
 		return null;
