@@ -14,7 +14,7 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 		this.delegate = delegate;
 		try {
 			this.cachedRange = new CachingByteRange(size(), (o,l) -> {
-//				System.out.println(String.format("Fetching: %d bytes at position %d", l, o));
+				System.out.println(String.format("Fetching: %d bytes at position %d [%s]", l, o, Thread.currentThread().getName()));
 				byte[] data = new byte[l];
 				if (delegate instanceof SeekableS3Channel) ((SeekableS3Channel) delegate).position(o, l);
 				else delegate.position(o);
@@ -26,6 +26,10 @@ public class CachingSeekableChannel implements SeekableByteChannel {
 		}
 	}
 
+	public void setBlockSize(int blockSize) {
+		cachedRange.setBlockSize(blockSize);
+	}
+	
 	@Override
 	public boolean isOpen() {
 		return delegate.isOpen();

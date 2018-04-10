@@ -8,13 +8,17 @@ public class CachingByteRange {
 
 	private List<CacheRange> ranges;
 	private DataFetcher dataFetcher;
-	private int defaultBlockSize;
+	private int blockSize;
 	
 	public CachingByteRange(long size, DataFetcher dataFetcher) {
 		this.ranges = new ArrayList<>();
 		this.dataFetcher = dataFetcher;
-		this.defaultBlockSize = 100*1024; //2*1024*1024;
+		this.blockSize = 200*1024;
 		clear();
+	}
+	
+	public void setBlockSize(int blockSize) {
+		this.blockSize = blockSize;
 	}
 	
 	public byte[] getBytes(long offset, int size) throws IOException {
@@ -40,7 +44,7 @@ public class CachingByteRange {
 					fetched = fetch(globalPos, processedSize);
 				} else {
 					// Fetch (part of) the missing piece between here and the next cr.
-					processedSize = Math.min(diffAsInt(next.start, globalPos), Math.max(defaultBlockSize, size));
+					processedSize = Math.min(diffAsInt(next.start, globalPos), Math.max(blockSize, size));
 					fetched = fetch(globalPos, processedSize);
 					processedSize = Math.min(diffAsInt(next.start, globalPos), size - pos);
 				}
