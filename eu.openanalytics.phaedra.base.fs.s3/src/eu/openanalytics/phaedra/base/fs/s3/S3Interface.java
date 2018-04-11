@@ -21,7 +21,6 @@ import com.amazonaws.services.s3.model.S3Object;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
-import eu.openanalytics.phaedra.base.util.io.SeekableS3Channel;
 import eu.openanalytics.phaedra.base.util.io.CachingByteRange.DataFetcher;
 
 public class S3Interface extends BaseFileServer {
