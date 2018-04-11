@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.fs.s3;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +20,9 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
+import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
+import eu.openanalytics.phaedra.base.util.io.SeekableS3Channel;
+import eu.openanalytics.phaedra.base.util.io.CachingByteRange.DataFetcher;
 
 public class S3Interface extends BaseFileServer {
 
@@ -134,7 +138,17 @@ public class S3Interface extends BaseFileServer {
 	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
 		if (mode.toLowerCase().contains("w")) throw new IOException("S3 interface does not support writable channels");
-		return new CachingSeekableChannel(new SeekableS3Channel(s3, bucketName, getKey(path)));
+		return new CachingSeekableChannel(new SeekableS3Channel(s3, bucketName, getKey(path))) {
+			@Override
+			protected DataFetcher createDataFetcher(SeekableByteChannel delegate) {
+				return (o,l) -> {
+					byte[] data = new byte[l];
+					((SeekableS3Channel) delegate).position(o, l);
+					delegate.read(ByteBuffer.wrap(data));
+					return data;
+				};
+			}
+		};
 	}
 
 	@Override

@@ -7,6 +7,7 @@ Bundle-Activator: eu.openanalytics.phaedra.base.fs.s3.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.base.fs,
+ eu.openanalytics.phaedra.base.util,
  com.amazon.aws;bundle-version="1.11.107"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

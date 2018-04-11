@@ -1,4 +1,4 @@
-package eu.openanalytics.phaedra.base.fs.s3;
+package eu.openanalytics.phaedra.base.util.io;
 
 import java.io.IOException;
 import java.util.ArrayList;
