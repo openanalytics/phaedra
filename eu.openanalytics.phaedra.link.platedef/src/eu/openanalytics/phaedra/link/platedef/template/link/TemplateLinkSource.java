@@ -21,7 +21,9 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 public class TemplateLinkSource extends AbstractDefinitionSource {
 
@@ -87,6 +89,34 @@ public class TemplateLinkSource extends AbstractDefinitionSource {
 		if (test) return;
 		
 		Plate plate = settings.getPlate();
+		
+		Function<Well,WellTemplate> templateGetter = well -> {
+			int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), template.getColumns());
+			WellTemplate wellTemplate = template.getWells().get(wellNr);
+			return wellTemplate;
+		};
+		
+		// First (before modifying the plate in any way), check if any new welltypes should be created.
+		List<WellType> knownTypes = new ArrayList<>(ProtocolService.getInstance().getWellTypes());
+		for (Well well: plate.getWells()) {
+			WellTemplate wellTemplate = templateGetter.apply(well);
+			if (wellTemplate == null || wellTemplate.isSkip()) continue;
+			
+			String type = wellTemplate.getWellType();
+			if (type == null || type.isEmpty()) continue;
+			
+			WellType typeMatch = knownTypes.stream().filter(t -> t.getCode().equals(type)).findAny().orElse(null);
+			if (typeMatch == null) {
+				typeMatch = ProtocolService.getInstance().createWellType(type);
+				knownTypes.add(typeMatch);
+			}
+		}
+		
+		AnnotationService.getInstance().applyAnnotations(plate,
+				well -> templateGetter.apply(well).getAnnotations().keySet(),
+				(well, ann) -> templateGetter.apply(well).getAnnotations().get(ann)
+		);
+		
 		String plateInfo = plate.getInfo();
 		if (plateInfo == null) {
 			plateInfo = "Linked with " + template.getId();
@@ -103,17 +133,6 @@ public class TemplateLinkSource extends AbstractDefinitionSource {
 		}
 		plateInfo = StringUtils.trim(plateInfo, 100);
 		plate.setInfo(plateInfo);
-		
-		Function<Well,WellTemplate> templateGetter = well -> {
-			int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), template.getColumns());
-			WellTemplate wellTemplate = template.getWells().get(wellNr);
-			return wellTemplate;
-		};
-		
-		AnnotationService.getInstance().applyAnnotations(plate,
-				well -> templateGetter.apply(well).getAnnotations().keySet(),
-				(well, ann) -> templateGetter.apply(well).getAnnotations().get(ann)
-		);
 		
 		List<Compound> compounds = new ArrayList<>(plate.getCompounds());
 		boolean compoundsModified = false;

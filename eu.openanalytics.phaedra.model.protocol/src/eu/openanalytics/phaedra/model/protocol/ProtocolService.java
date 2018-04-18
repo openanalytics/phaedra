@@ -81,6 +81,21 @@ public class ProtocolService extends BaseJPAService {
 	}
 
 	/**
+	 * Create a new well type, to be used in any protocol class.
+	 * 
+	 * @param code The welltype code (must be unique).
+	 * @return The new welltype.
+	 */
+	public WellType createWellType(String code) {
+		SecurityService.getInstance().checkWithException(Permissions.PROTOCOLCLASS_CREATE, null);
+		WellType wt = new WellType();
+		wt.setCode(code);
+		wt.setDescription(code);
+		save(wt);
+		return wt;
+	}
+	
+	/**
 	 * Get a list of all feature groups in the given protocol class of the given type.
 	 * 
 	 * @param pClass The parent protocol class.
