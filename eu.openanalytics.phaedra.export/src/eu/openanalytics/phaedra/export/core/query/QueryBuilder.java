@@ -133,7 +133,7 @@ public class QueryBuilder {
 	private void appendIfIncludes(Includes inc, ExportSettings settings, StringBuilder sb, String baseString, String propName, String colAlias) {
 		if (settings.includes.contains(inc)) {
 			String string = baseString;
-			if (propName != null) string = string.replace("${propertyName}", propName.replace(" ", "_"));
+			if (propName != null) string = string.replace("${propertyName}", propName);
 			if (colAlias != null) string = string.replace("${columnAlias}", colAlias.replace(" ", "_"));
 			sb.append(string);
 		}

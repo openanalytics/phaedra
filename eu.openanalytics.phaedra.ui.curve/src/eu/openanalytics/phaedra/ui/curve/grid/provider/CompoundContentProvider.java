@@ -278,7 +278,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 				for (int i = 0; i < columnSpecs.length; i++) {
 					Comparator<String> comp = null;
 					Definition def = columnSpecs[i].paramDefinition;
-					if (def != null && def.type == ParameterType.Concentration) {
+					if (def != null && def.type.isNumeric()) {
 						if (CurveParameter.isCensored(def)) comp = CurveComparators.CENSOR_COMPARATOR;
 						else if (def.type.isNumeric()) comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
 					}
