@@ -29,7 +29,7 @@ public class ConfigLoader {
 		return parseConfig(config);
 	}
 
-	private static InputStream openStream(String path) throws IOException {
+	public static InputStream openStream(String path) throws IOException {
 		if (SMBHelper.isSMBPath(path)) {
 			return SMBHelper.open(path);
 		} else if (new File(path).isFile()) {

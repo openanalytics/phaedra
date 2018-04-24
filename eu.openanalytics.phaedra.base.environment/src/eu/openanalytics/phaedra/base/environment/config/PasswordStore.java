@@ -2,14 +2,12 @@ package eu.openanalytics.phaedra.base.environment.config;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 
-import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.util.encrypt.AESEncryptor;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 
@@ -35,20 +33,15 @@ public class PasswordStore {
 	public String getPassword(String entry) throws IOException {
 		if (pwdPath == null) throw new IOException("Remote password retrieval is disabled for this environment");
 		
-		String filePath = pwdPath + File.separator + entry + ".aes";
+		String filePath = pwdPath + "/" + entry + ".aes";
+		InputStream in = ConfigLoader.openStream(filePath);
 		
-		InputStream in = null;
-		if (SMBHelper.isSMBPath(filePath)) in = SMBHelper.open(filePath);
-		else in = new FileInputStream(filePath);
-		
-		if (in != null) {
-			byte[] encrypted = StreamUtils.readAll(in);
-			if (encrypted != null) {
-				try {
-					return AESEncryptor.decrypt(encrypted);
-				} catch (GeneralSecurityException e) {
-					throw new IOException("Failed to decrypt password", e);
-				}
+		byte[] encrypted = StreamUtils.readAll(in);
+		if (encrypted != null) {
+			try {
+				return AESEncryptor.decrypt(encrypted);
+			} catch (GeneralSecurityException e) {
+				throw new IOException("Failed to decrypt password", e);
 			}
 		}
 		
