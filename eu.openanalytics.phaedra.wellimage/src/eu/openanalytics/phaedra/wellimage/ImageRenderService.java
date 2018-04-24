@@ -106,7 +106,7 @@ private static ImageRenderService instance = new ImageRenderService();
 			}
 			imageCache.put(key, size);
 		}
-		return size;
+		return new Point(size.x, size.y);
 	}
 	
 	/**
