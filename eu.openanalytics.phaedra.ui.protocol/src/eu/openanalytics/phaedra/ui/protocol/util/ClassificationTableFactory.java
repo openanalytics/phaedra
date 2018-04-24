@@ -20,8 +20,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
@@ -46,7 +44,6 @@ public class ClassificationTableFactory {
 	public static TableViewer createTableViewer(Composite parent, boolean editable, SelectionListener dirtyListener) {
 
 		final Map<String, Image> imageCache = new HashMap<>();
-		final Font font = new Font(null, new FontData[] { new FontData("Consolas", 8, SWT.NONE) });
 		TableViewer featureClassesViewer = new TableViewer(parent, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER);
 		
 		// Warning!!! Changing the order of the columns here, or adding new ones requires an update to the Comparator.
@@ -54,11 +51,9 @@ public class ClassificationTableFactory {
 		featureClassesViewer.setComparator(comparator);
 		
 		Table table = featureClassesViewer.getTable();
-		table.setFont(font);
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
 		table.addDisposeListener(e -> {
-			font.dispose();
 			for (Image i: imageCache.values()) i.dispose();
 		});
 
@@ -70,9 +65,9 @@ public class ClassificationTableFactory {
 		tvc.setLabelProvider(new ColumnLabelProvider());
 
 		tvc = new TableViewerColumn(featureClassesViewer, SWT.NONE);
-		tvc.getColumn().setText("Pattern");
+		tvc.getColumn().setText("Value");
 		tvc.getColumn().setWidth(80);
-		tvc.getColumn().setToolTipText("The pattern for this class");
+		tvc.getColumn().setToolTipText("The value for this class");
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
 				FeatureClass fc = (FeatureClass) element;
@@ -85,7 +80,7 @@ public class ClassificationTableFactory {
 		tvc = new TableViewerColumn(featureClassesViewer, SWT.NONE);
 		tvc.getColumn().setText("Type");
 		tvc.getColumn().setWidth(60);
-		tvc.getColumn().setToolTipText("The pattern type for this class");
+		tvc.getColumn().setToolTipText("The type of values for this class");
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
 				return PatternType.getType((FeatureClass) element).toString();
@@ -101,7 +96,6 @@ public class ClassificationTableFactory {
 		tvc = new TableViewerColumn(featureClassesViewer, SWT.NONE);
 		tvc.getColumn().setText("Color");
 		tvc.getColumn().setWidth(100);
-		tvc.getColumn().setToolTipText("Color for class");
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public Image getImage(Object element) {
@@ -133,7 +127,7 @@ public class ClassificationTableFactory {
 		tvc = new TableViewerColumn(featureClassesViewer, SWT.NONE);
 		tvc.getColumn().setText("Label");
 		tvc.getColumn().setWidth(120);
-		tvc.getColumn().setToolTipText("Label for class");
+		tvc.getColumn().setToolTipText("A label for this class");
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
 				FeatureClass fc = (FeatureClass) element;
@@ -143,6 +137,7 @@ public class ClassificationTableFactory {
 		tvc.getColumn().addSelectionListener(getSelectionAdapter(featureClassesViewer, tvc.getColumn(), comparator, sorting++));
 		if (editable) tvc.setEditingSupport(new LabelEditingSupport(featureClassesViewer, dirtyListener));
 
+		
 		tvc = new TableViewerColumn(featureClassesViewer, SWT.NONE);
 		tvc.getColumn().setText("Symbol");
 		tvc.getColumn().setWidth(75);
@@ -172,19 +167,6 @@ public class ClassificationTableFactory {
 		});
 		tvc.getColumn().addSelectionListener(getSelectionAdapter(featureClassesViewer, tvc.getColumn(), comparator, sorting++));
 		if (editable) tvc.setEditingSupport(new SymbolEditingSupport(featureClassesViewer, dirtyListener, imageCache));
-
-		tvc = new TableViewerColumn(featureClassesViewer, SWT.NONE);
-		tvc.getColumn().setText("Description");
-		tvc.getColumn().setWidth(250);
-		tvc.getColumn().setToolTipText("Description for class");
-		tvc.setLabelProvider(new ColumnLabelProvider() {
-			public String getText(Object element) {
-				FeatureClass fc = (FeatureClass) element;
-				return fc.getDescription();
-			}
-		});
-		tvc.getColumn().addSelectionListener(getSelectionAdapter(featureClassesViewer, tvc.getColumn(), comparator, sorting++));
-		if (editable) tvc.setEditingSupport(new DescriptionEditingSupport(featureClassesViewer, dirtyListener));
 
 		featureClassesViewer.setContentProvider(new ArrayContentProvider());
 		return featureClassesViewer;
@@ -448,29 +430,4 @@ public class ClassificationTableFactory {
 		}	
 	}
 
-	private static class DescriptionEditingSupport extends BaseEditingSupport {
-
-		public DescriptionEditingSupport(TableViewer viewer, SelectionListener dirtyListener) {
-			super(viewer, dirtyListener);
-		}
-
-		@Override
-		protected CellEditor getCellEditor(Object element) {
-			return new TextCellEditor(((TableViewer)getViewer()).getTable());
-		}
-
-		@Override
-		protected Object getValue(Object element) {
-			FeatureClass fc = (FeatureClass) element;
-			return fc.getDescription();
-		}
-
-		@Override
-		protected void setValue(Object element, Object value) {
-			FeatureClass fc = (FeatureClass) element;
-			String valueToSet = String.valueOf(value);
-			fc.setDescription(valueToSet);
-			super.setValue(element, valueToSet);
-		}
-	}
 }

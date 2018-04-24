@@ -54,9 +54,9 @@ public class ClassificationTableComparator extends ViewerComparator {
 		case 4:
 			rc = fc1.getSymbol().compareTo(fc2.getSymbol());
 			break;
-		case 5:
-			rc = fc1.getDescription().compareTo(fc2.getDescription());
-			break;
+//		case 5:
+//			rc = fc1.getDescription().compareTo(fc2.getDescription());
+//			break;
 		default:
 			rc = 0;
 		}

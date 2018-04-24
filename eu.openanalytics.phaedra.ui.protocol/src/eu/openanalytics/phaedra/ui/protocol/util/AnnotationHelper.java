@@ -39,6 +39,7 @@ public class AnnotationHelper {
 		
 		Table table = annotationTableViewer.getTable();
 		table.setLinesVisible(true);
+		table.setHeaderVisible(true);
 		
 		TableViewerColumn tvc = new TableViewerColumn(annotationTableViewer, SWT.NONE);
 		tvc.getColumn().setText("Name");
@@ -51,7 +52,7 @@ public class AnnotationHelper {
 		});
 		
 		tvc = new TableViewerColumn(annotationTableViewer, SWT.NONE);
-		tvc.getColumn().setText("Value");
+		tvc.getColumn().setText("Values");
 		tvc.getColumn().setWidth(250);
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			@Override
@@ -99,7 +100,7 @@ public class AnnotationHelper {
 				String[] items = null;
 				if (((Feature) element).isClassificationRestricted()) {
 					items = ProtocolService.streamableList(((Feature) element).getFeatureClasses()).stream()
-							.map(fc -> fc.getLabel()).toArray(i -> new String[i]);
+							.map(fc -> fc.getPattern()).toArray(i -> new String[i]);
 				}
 				return items;
 			}
