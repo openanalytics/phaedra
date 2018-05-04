@@ -27,8 +27,6 @@ public class SecureFileServer {
 	
 	public SecureFileServer(FileServerConfig cfg) {
 		String fsPath = cfg.get(FileServerConfig.PATH);
-		String userName = cfg.get(FileServerConfig.USERNAME);
-		String password = cfg.getEncrypted(FileServerConfig.PASSWORD);
 		
 		IConfigurationElement[] elements = Platform.getExtensionRegistry().getConfigurationElementsFor(EXT_PT_ID);
 		Function<IConfigurationElement, Integer> priority = e -> {
@@ -38,12 +36,12 @@ public class SecureFileServer {
 		fsInterface = Arrays.stream(elements)
 				.sorted((e1, e2) -> priority.apply(e2) - priority.apply(e1))
 				.map(e -> ExtensionUtils.createInstance(e, ATTR_CLASS, FSInterface.class))
-				.filter(fs -> fs.isCompatible(fsPath, userName))
+				.filter(fs -> fs.isCompatible(cfg))
 				.findFirst()
 				.orElseThrow(() -> new RuntimeException("No handler found for file server type " + fsPath));
 		
 		try {
-			fsInterface.initialize(fsPath, userName, password);
+			fsInterface.initialize(cfg);
 			EclipseLog.info("Using " + fsInterface.getClass().getName(), Activator.getDefault());
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to connect to file server " + fsPath, e);

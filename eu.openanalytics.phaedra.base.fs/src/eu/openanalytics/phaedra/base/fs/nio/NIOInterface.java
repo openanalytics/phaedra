@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
+import eu.openanalytics.phaedra.base.fs.FileServerConfig;
 import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
@@ -30,7 +31,10 @@ public class NIOInterface extends BaseFileServer {
 	private String basePath;
 	
 	@Override
-	public boolean isCompatible(String fsPath, String userName) {
+	public boolean isCompatible(FileServerConfig cfg) {
+		String fsPath = cfg.get(FileServerConfig.PATH);
+		String userName = cfg.get(FileServerConfig.USERNAME);
+		
 		if (ProcessUtils.isWindows() && SMBHelper.isSMBPath(fsPath)) {
 			String fsUser = userName.substring(userName.indexOf("\\") + 1);
 			String currentUser = System.getProperty("user.name");
@@ -49,7 +53,8 @@ public class NIOInterface extends BaseFileServer {
 	}
 	
 	@Override
-	public void initialize(String fsPath, String userName, String pw) throws IOException {
+	public void initialize(FileServerConfig cfg) throws IOException {
+		String fsPath = cfg.get(FileServerConfig.PATH);
 		if (fsPath.startsWith(SMBHelper.SMB_PROTOCOL_PREFIX)) fsPath = SMBHelper.toUNCNotation(fsPath);
 		basePath = fsPath;
 	}

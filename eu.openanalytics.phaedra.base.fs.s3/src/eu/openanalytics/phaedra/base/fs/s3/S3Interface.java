@@ -20,6 +20,7 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
+import eu.openanalytics.phaedra.base.fs.FileServerConfig;
 import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
 import eu.openanalytics.phaedra.base.util.io.CachingByteRange.DataFetcher;
 
@@ -29,12 +30,17 @@ public class S3Interface extends BaseFileServer {
 	private String bucketName;
 	
 	@Override
-	public boolean isCompatible(String fsPath, String userName) {
+	public boolean isCompatible(FileServerConfig cfg) {
+		String fsPath = cfg.get(FileServerConfig.PATH);
 		return fsPath.startsWith("https://");
 	}
 
 	@Override
-	public void initialize(String fsPath, String userName, String pw) throws IOException {
+	public void initialize(FileServerConfig cfg) throws IOException {
+		String fsPath = cfg.get(FileServerConfig.PATH);
+		String userName = cfg.get(FileServerConfig.USERNAME);
+		String pw = cfg.getEncrypted(FileServerConfig.PASSWORD);
+		
 		bucketName = getLocalName(fsPath);
 		fsPath = fsPath.substring(0, fsPath.lastIndexOf("/"));
 		

@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface FSInterface {
 
-	public boolean isCompatible(String fsPath, String userName);
-	public void initialize(String fsPath, String userName, String pw) throws IOException;
+	public boolean isCompatible(FileServerConfig config);
+	public void initialize(FileServerConfig config) throws IOException;
 
 	public long getFreeSpace() throws IOException;
 	public long getTotalSpace() throws IOException;

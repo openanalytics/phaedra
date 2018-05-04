@@ -23,6 +23,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import eu.openanalytics.phaedra.base.fs.Activator;
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
+import eu.openanalytics.phaedra.base.fs.FileServerConfig;
 import eu.openanalytics.phaedra.base.fs.SMBHelper;
 import eu.openanalytics.phaedra.base.fs.preferences.Prefs;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
@@ -43,12 +44,17 @@ public class SMBInterface extends BaseFileServer {
 	private CIFSContext context;
 	
 	@Override
-	public boolean isCompatible(String fsPath, String userName) {
+	public boolean isCompatible(FileServerConfig cfg) {
+		String fsPath = cfg.get(FileServerConfig.PATH);
 		return SMBHelper.isSMBPath(fsPath);
 	}
 	
 	@Override
-	public void initialize(String fsPath, String userName, String pw) throws IOException {
+	public void initialize(FileServerConfig cfg) throws IOException {
+		String fsPath = cfg.get(FileServerConfig.PATH);
+		String userName = cfg.get(FileServerConfig.USERNAME);
+		String pw = cfg.getEncrypted(FileServerConfig.PASSWORD);
+		
 		basePath = SMBHelper.toSMBNotation(fsPath);
 		
 		Properties p = new Properties();
