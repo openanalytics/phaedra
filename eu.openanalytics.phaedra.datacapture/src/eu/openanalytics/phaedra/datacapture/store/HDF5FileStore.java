@@ -47,7 +47,10 @@ public class HDF5FileStore implements IFileStore {
 		List<String> keys = new ArrayList<>();
 		
 		String[] attributes = hdf5File.getAttributes("/");
-		for (String attr: attributes) keys.add(getKeyForAttribute(attr));
+		for (String attr: attributes) {
+			if (attr.startsWith(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX)) continue;
+			keys.add(getKeyForAttribute(attr));
+		}
 		
 		List<String> wellFeatures = hdf5File.getWellFeatures();
 		for (String wf: wellFeatures) keys.add(DefaultDataCaptureStore.WELL_DATA_PREFIX + wf);
@@ -73,22 +76,26 @@ public class HDF5FileStore implements IFileStore {
 	
 	@Override
 	public String[] readStringArray(String key) throws IOException {
-		return hdf5File.getStringData1D(getPath(key));
+		if (hdf5File.exists(getPath(key))) return hdf5File.getStringData1D(getPath(key));
+		else return null;
 	}
 	
 	@Override
 	public float[] readNumericArray(String key) throws IOException {
-		return hdf5File.getNumericData1D(getPath(key));
+		if (hdf5File.exists(getPath(key))) return hdf5File.getNumericData1D(getPath(key));
+		else return null;
 	}
 	
 	@Override
 	public byte[] readBinaryValue(String key) throws IOException {
-		return StreamUtils.readAll(hdf5File.getBinaryData(getPath(key)));
+		if (hdf5File.exists(getPath(key))) return StreamUtils.readAll(hdf5File.getBinaryData(getPath(key)));
+		else return null;
 	}
 	
 	@Override
 	public Object readValue(String key) throws IOException {
-		return hdf5File.getAnyData1D(getPath(key), 0);
+		if (hdf5File.exists(getPath(key))) return hdf5File.getAnyData1D(getPath(key), 0);
+		else return null;
 	}
 	
 	@Override
@@ -134,6 +141,10 @@ public class HDF5FileStore implements IFileStore {
 			int wellNr = Integer.parseInt(key.split("\\.")[0]);
 			String featureId = key.substring(key.indexOf('.') + 1);
 			return HDF5File.getSubWellDataPath(wellNr, featureId);
+		} else if (key.startsWith(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX)) {
+			String layoutProperty = key.substring(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX.length());
+			if (layoutProperty.equals("rows") || layoutProperty.equals("columns")) return "/";
+			return "/" + key;
 		}
 		return "/";
 	}

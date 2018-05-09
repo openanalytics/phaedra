@@ -14,6 +14,7 @@ public interface IDataCaptureStore {
 	public void saveModel(ParsedModel model) throws DataCaptureException;
 	public void saveImage(String imagePath) throws DataCaptureException;
 	public void setProperty(String name, Object value) throws DataCaptureException;
+	public void setLayoutProperty(String name, Object value) throws DataCaptureException;
 	
 	public String[] getWellFeatures() throws DataCaptureException;
 	public String[] getSubWellFeatures() throws DataCaptureException;

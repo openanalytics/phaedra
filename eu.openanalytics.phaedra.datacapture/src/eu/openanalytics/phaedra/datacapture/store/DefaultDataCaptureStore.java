@@ -38,6 +38,7 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	private Set<String> tempFolders;
 	
 	public static final String PLATE_PROPERTY_PREFIX = "plate.properties.";
+	public static final String PLATE_LAYOUT_PREFIX = "plate.layout.";
 	public static final String WELL_PROPERTY_PREFIX = "well.properties.";
 	public static final String WELL_DATA_PREFIX = "plate.welldata.";
 	public static final String WELL_SWDATA_PREFIX = "well.subwelldata.";
@@ -146,6 +147,15 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	public void setProperty(String name, Object value) throws DataCaptureException {
 		try {
 			store.writeValue(PLATE_PROPERTY_PREFIX + name, value);
+		} catch (IOException e) {
+			throw new DataCaptureException("Failed to save property " + name, e);
+		}
+	}
+	
+	@Override
+	public void setLayoutProperty(String name, Object value) throws DataCaptureException {
+		try {
+			store.writeValue(PLATE_LAYOUT_PREFIX + name, value);
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to save property " + name, e);
 		}

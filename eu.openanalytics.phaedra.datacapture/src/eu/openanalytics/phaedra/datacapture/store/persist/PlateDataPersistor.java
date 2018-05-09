@@ -19,7 +19,6 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 public class PlateDataPersistor extends BaseDataPersistor {
 
 	// Note: do not modify: these names are used in DC scripts that capture layout data.
-	private static final String PLATE_LAYOUT_PREFIX = "plate.layout";
 	private static final String PROP_WELL_TYPES = "WellTypes";
 	private static final String PROP_WELL_CONCS = "WellConcentrations";
 	private static final String PROP_COMP_TYPES = "CompoundTypes";
@@ -61,18 +60,19 @@ public class PlateDataPersistor extends BaseDataPersistor {
 		String rows = null;
 		String columns = null;
 		try {
-			rows = store.readStringValue(PLATE_LAYOUT_PREFIX + PROP_ROWS);
-			columns = store.readStringValue(PLATE_LAYOUT_PREFIX + PROP_COLUMNS);
+			rows = store.readStringValue(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX + PROP_ROWS);
+			columns = store.readStringValue(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX + PROP_COLUMNS);
 		} catch (IOException e) {}
 		if (rows == null || columns == null) return null;
 		
 		PlateTemplate template = new PlateTemplate();
 		template.fillBlank((int) Double.parseDouble(rows), (int) Double.parseDouble(columns));
+		template.setId("Imported Layout");
 
-		applyWellTypes(template, store.readStringArray(PLATE_LAYOUT_PREFIX + PROP_WELL_TYPES));
-		applyConcentrations(template, store.readStringArray(PLATE_LAYOUT_PREFIX + PROP_WELL_CONCS));
-		applyCompTypes(template, store.readStringArray(PLATE_LAYOUT_PREFIX + PROP_COMP_TYPES));
-		applyCompNrs(template, store.readStringArray(PLATE_LAYOUT_PREFIX + PROP_COMP_NRS));
+		applyWellTypes(template, store.readStringArray(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX + PROP_WELL_TYPES));
+		applyConcentrations(template, store.readStringArray(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX + PROP_WELL_CONCS));
+		applyCompTypes(template, store.readStringArray(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX + PROP_COMP_TYPES));
+		applyCompNrs(template, store.readStringArray(DefaultDataCaptureStore.PLATE_LAYOUT_PREFIX + PROP_COMP_NRS));
 
 		return template;
 	}
