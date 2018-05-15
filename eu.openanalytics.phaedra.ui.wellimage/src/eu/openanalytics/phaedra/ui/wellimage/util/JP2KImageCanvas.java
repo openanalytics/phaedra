@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.eclipse.core.commands.common.EventManager;
 import org.eclipse.jface.action.Action;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.ToolBar;
 
 import eu.openanalytics.phaedra.base.imaging.overlay.JP2KOverlay;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -50,32 +52,33 @@ public class JP2KImageCanvas extends Canvas {
 
 	private static final double ARROW_KEY_MOVEMENT = 0.01;
 
+	private JP2KOverlay[] overlays;
+	
 	private Well currentWell;
-	private Image cachedImg;
-
-	private Point imageOffset;
-	private Point totalImageSize;
+	
+	private Image currentImage;
+	private Point currentImageFullSize;
+	private Rectangle currentRenderArea;
+	private boolean[] currentImageChannels;
 
 	private float currentScale;
-
+	private Point currentOffset;
+	
+	// Dragging and panning
 	private boolean draggingEnabled;
 	private boolean dragging;
 	private Cursor dragCursor;
 	private Point previousDragPoint;
-
-	private ListenerManager listenerManager;
-	private IUIEventListener imageSettingsListener;
-
-	private JP2KOverlay[] overlays;
-	private int oldWidth;
-	private int oldHeight;
 	private boolean hasPanned;
-	private Point oldOffset;
-	private boolean[] oldEnabledChannels;
 
+	// Scrolling
 	private int lastYScrollBarInteration;
 	private boolean isYScrollBarCorrection;
 	private int lastScrollBarPosition;
+	
+	// Listeners
+	private ListenerManager listenerManager;
+	private IUIEventListener imageSettingsListener;
 
 	public JP2KImageCanvas(Composite parent, int style) {
 		super(parent, style | SWT.DOUBLE_BUFFERED | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -93,11 +96,11 @@ public class JP2KImageCanvas extends Canvas {
 
 		draggingEnabled = true;
 		clearCacheValues();
-		imageOffset = new Point(0,0);
-		totalImageSize = new Point(0,0);
+		currentOffset = new Point(0,0);
+		currentImageFullSize = new Point(0,0);
 		currentScale = 1.0f;
 		dragCursor = Display.getDefault().getSystemCursor(SWT.CURSOR_SIZEALL);
-		listenerManager.onOffsetChange(imageOffset.x, imageOffset.y);
+		listenerManager.onOffsetChange(currentOffset.x, currentOffset.y);
 
 		getHorizontalBar().addListener(SWT.Selection, e -> scrollX());
 		getVerticalBar().addListener(SWT.Selection, e -> {
@@ -158,16 +161,16 @@ public class JP2KImageCanvas extends Canvas {
 		addListener(SWT.KeyDown, e -> {
 			switch (e.keyCode) {
 			case SWT.ARROW_LEFT:
-				changeImageOffset((int) (imageOffset.x - (totalImageSize.x * ARROW_KEY_MOVEMENT)), imageOffset.y);
+				changeImageOffset((int) (currentOffset.x - (currentImageFullSize.x * ARROW_KEY_MOVEMENT)), currentOffset.y);
 				break;
 			case SWT.ARROW_RIGHT:
-				changeImageOffset((int) (imageOffset.x + (totalImageSize.x * ARROW_KEY_MOVEMENT)), imageOffset.y);
+				changeImageOffset((int) (currentOffset.x + (currentImageFullSize.x * ARROW_KEY_MOVEMENT)), currentOffset.y);
 				break;
 			case SWT.ARROW_UP:
-				changeImageOffset(imageOffset.x, (int) (imageOffset.y - (totalImageSize.y * ARROW_KEY_MOVEMENT)));
+				changeImageOffset(currentOffset.x, (int) (currentOffset.y - (currentImageFullSize.y * ARROW_KEY_MOVEMENT)));
 				break;
 			case SWT.ARROW_DOWN:
-				changeImageOffset(imageOffset.x, (int) (imageOffset.y + (totalImageSize.y * ARROW_KEY_MOVEMENT)));
+				changeImageOffset(currentOffset.x, (int) (currentOffset.y + (currentImageFullSize.y * ARROW_KEY_MOVEMENT)));
 				break;
 			}
 		});
@@ -201,7 +204,7 @@ public class JP2KImageCanvas extends Canvas {
 
 			// Load information about the new well image.
 			currentWell = well;
-			totalImageSize = ImageRenderService.getInstance().getWellImageSize(well, 1.0f);
+			currentImageFullSize = ImageRenderService.getInstance().getWellImageSize(well, 1.0f);
 			// If the protocol class changed and the canvas is not linked to another canvas, apply the protocol class' default scale.
 			if (!restoredView && !samePClass && !LinkedImageManager.getInstance().isLinked(this)) {
 				ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(well);
@@ -209,7 +212,7 @@ public class JP2KImageCanvas extends Canvas {
 			}
 			// The new image may have a size different from the previous. Verify the offsets.
 			checkOffsetLimits();
-			listenerManager.onOffsetChange(imageOffset.x, imageOffset.y);
+			listenerManager.onOffsetChange(currentOffset.x, currentOffset.y);
 
 		} catch (Exception e) {
 			MessageDialog.openError(Display.getDefault().getActiveShell(),
@@ -243,7 +246,7 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	public Point getImageOffset() {
-		return imageOffset;
+		return currentOffset;
 	}
 
 	public Well getCurrentWell() {
@@ -251,17 +254,17 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	public Point getCurrentImageSize() {
-		return totalImageSize;
+		return currentImageFullSize;
 	}
 
 	// All in one solution for Reporting
 	public void changeScaleAndImageOffset(float newScale, int x, int y) {
 		currentScale = newScale;
-		imageOffset.x = x;
-		imageOffset.y = y;
+		currentOffset.x = x;
+		currentOffset.y = y;
 		checkOffsetLimits();
 		listenerManager.onScaleChange(currentScale);
-		listenerManager.onOffsetChange(imageOffset.x, imageOffset.y);
+		listenerManager.onOffsetChange(currentOffset.x, currentOffset.y);
 		updateScrollbars();
 		clearCacheValues();
 		update();
@@ -276,15 +279,15 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	public void changeImageOffset(int x, int y) {
-		int oldX = imageOffset.x;
-		int oldY = imageOffset.y;
+		int oldX = currentOffset.x;
+		int oldY = currentOffset.y;
 		if (oldX == x && oldY == y) return;
-		imageOffset.x = x;
-		imageOffset.y = y;
+		currentOffset.x = x;
+		currentOffset.y = y;
 		checkOffsetLimits();
 		// Prevents endless loop if new offset is outside legal range.
-		if (imageOffset.x == oldX && imageOffset.y == oldY) return;
-		listenerManager.onOffsetChange(imageOffset.x, imageOffset.y);
+		if (currentOffset.x == oldX && currentOffset.y == oldY) return;
+		listenerManager.onOffsetChange(currentOffset.x, currentOffset.y);
 		updateScrollbars();
 		update();
 	}
@@ -304,7 +307,7 @@ public class JP2KImageCanvas extends Canvas {
 
 				Image img = null;
 				try {
-					ImageData data = ImageRenderService.getInstance().getWellImageData(currentWell, currentScale, oldEnabledChannels);
+					ImageData data = ImageRenderService.getInstance().getWellImageData(currentWell, currentScale, currentImageChannels);
 					img = new Image(null, data);
 					new SaveImageCmd().execute(fileName, img, null);
 				} catch (Exception ex) {
@@ -361,13 +364,11 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	private void clearCacheValues() {
-		oldWidth = 0;
-		oldHeight = 0;
-		oldOffset = new Point(0,0);
 		hasPanned = false;
-		oldEnabledChannels = null;
-		if (cachedImg != null) cachedImg.dispose();
-		cachedImg = null;
+		currentRenderArea = new Rectangle(0, 0, 0, 0);
+		currentImageChannels = null;
+		if (currentImage != null) currentImage.dispose();
+		currentImage = null;
 	}
 
 	private void zoomFit() {
@@ -400,86 +401,75 @@ public class JP2KImageCanvas extends Canvas {
 	private void drawImage(GC gc) {
 		if (currentWell == null) return;
 
-		if (!hasPanned && cachedImg != null && !cachedImg.isDisposed()) {
-			gc.drawImage(cachedImg, 0, 0);
+		if (!hasPanned && currentImage != null && !currentImage.isDisposed()) {
+			gc.drawImage(currentImage, 0, 0);
 			return;
 		}
 
 		try {
-			Rectangle cachedRect = new Rectangle(oldOffset.x, oldOffset.y, oldWidth, oldHeight);
-
-			// Find out which part of the image to render.
+			// Find out which area of the image to render.
 			Rectangle clientArea = getClientArea();
-			int w = (int) Math.ceil(clientArea.width/currentScale);
-			int h = (int) Math.ceil(clientArea.height/currentScale);
-			if (w > totalImageSize.x) w = totalImageSize.x;
-			if (h > totalImageSize.y) h = totalImageSize.y;
+			Rectangle targetRenderArea = new Rectangle(currentOffset.x, currentOffset.y,
+					(int) Math.ceil(clientArea.width/currentScale),
+					(int) Math.ceil(clientArea.height/currentScale));
+			
+			// If the client area is bigger than the image area, reduce image area a bit.
+			if (targetRenderArea.width > currentImageFullSize.x) targetRenderArea.width = currentImageFullSize.x;
+			if (targetRenderArea.height > currentImageFullSize.y) targetRenderArea.height = currentImageFullSize.y;
 
-			int needed = (int)(currentScale*(totalImageSize.x - imageOffset.x));
-			int available = getClientArea().width;
-			if (needed < available && imageOffset.x > 0) {
-				// We need to reduce offset
-				imageOffset.x = Math.max(0, totalImageSize.x - (int)(available/currentScale));
-				for (JP2KOverlay o: overlays) o.setOffset(imageOffset);
+			// If the right edge of the image is reached, go back left a bit.
+			int widthNeeded = (int)(currentScale*(currentImageFullSize.x - currentOffset.x));
+			int widthAvailable = getClientArea().width;
+			if (widthNeeded < widthAvailable && currentOffset.x > 0) {
+				currentOffset.x = Math.max(0, currentImageFullSize.x - (int)(widthAvailable/currentScale));
+				for (JP2KOverlay o: overlays) o.setOffset(currentOffset);
 			}
 
-			Rectangle targetRect = new Rectangle(imageOffset.x, imageOffset.y, w, h);
-			int deltaX = oldOffset.x - imageOffset.x;
-			int deltaY = oldOffset.y - imageOffset.y;
-			deltaX *= currentScale;
-			deltaY *= currentScale;
-
-			// Pan cachedImage
-			if (cachedImg != null){
-				Image buffer = cachedImg;
-				cachedImg = new Image(getDisplay(), clientArea.width, clientArea.height);
-
-				GC imageGC = new GC(cachedImg);
-				imageGC.drawImage(buffer, deltaX, deltaY);
+			Image newImage = new Image(getDisplay(), clientArea.width, clientArea.height);
+			
+			// Reuse the part of the current image that is still on-screen (if any)
+			if (currentImage != null) {
+				int deltaX = (int) (currentScale * (currentRenderArea.x - currentOffset.x));
+				int deltaY = (int) (currentScale * (currentRenderArea.y - currentOffset.y));
+				
+				GC imageGC = new GC(newImage);
+				imageGC.drawImage(currentImage, deltaX, deltaY);
 				imageGC.dispose();
 
-				buffer.dispose();
-			} else {
-				cachedImg = new Image(getDisplay(), clientArea.width, clientArea.height);
+				currentImage.dispose();
 			}
 
-			// Determine which channels to render.
-			ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(currentWell);
-			List<ImageChannel> channels = currentSettings.getImageChannels();
+			// Determine the channels to render.
+			List<ImageChannel> channels = ImageSettingsService.getInstance().getCurrentSettings(currentWell).getImageChannels();
 			boolean[] enabledChannels = new boolean[channels.size()];
-			for (int i=0; i<channels.size(); i++) {
-				enabledChannels[i] = isChannelEnabled(channels.get(i).getSequence());
-			}
+			IntStream.range(0, channels.size()).forEach(i -> enabledChannels[i] = isChannelEnabled(channels.get(i).getSequence()));
 
-			for (Slice slice : subtract(cachedRect, targetRect)) {
-				// Draw leftover on cachedImage
+			// Calculate missing parts between current and target area
+			for (Slice slice : subtract(currentRenderArea, targetRenderArea)) {
 				ImageData data = ImageRenderService.getInstance().getWellImageData(currentWell, currentScale, slice.bounds, enabledChannels);
-				Image leftoverImage = new Image(null, data);
-
-				GC imageGC = new GC(cachedImg);
-				slice.drawOnGC(imageGC, leftoverImage, clientArea);
+				Image sliceImage = new Image(null, data);
+				GC imageGC = new GC(newImage);
+				slice.drawOnGC(imageGC, sliceImage, clientArea);
 				imageGC.dispose();
-				leftoverImage.dispose();
+				sliceImage.dispose();
 			}
+			gc.drawImage(newImage, 0, 0);
 
-			if (cachedImg != null) gc.drawImage(cachedImg, 0, 0);
+			// Update cached values
+			currentImage = newImage;
+			currentRenderArea = targetRenderArea;
 
-			// Update cache values
-			oldOffset = new Point(imageOffset.x, imageOffset.y);
-			oldWidth = w;
-			oldHeight = h;
-			if (oldEnabledChannels != null && !Arrays.equals(oldEnabledChannels, enabledChannels)) {
+			if (currentImageChannels != null && !Arrays.equals(currentImageChannels, enabledChannels)) {
 				clearCacheValues();
 				updateScrollbars();
 				forceRedraw();
 			} else {
 				hasPanned = false;
 			}
-
-			oldEnabledChannels = enabledChannels;
-
+			currentImageChannels = enabledChannels;
+			
 		} catch (Exception e) {
-			// Didn't work.
+			EclipseLog.error("Failed to render image", e, Activator.PLUGIN_ID);
 		}
 	}
 
@@ -560,8 +550,8 @@ public class JP2KImageCanvas extends Canvas {
 	}
 
 	private void updateScrollbars() {
-		int scaledImageX = (int)(totalImageSize.x*currentScale);
-		int scaledImageY = (int)(totalImageSize.y*currentScale);
+		int scaledImageX = (int)(currentImageFullSize.x*currentScale);
+		int scaledImageY = (int)(currentImageFullSize.y*currentScale);
 
 		ScrollBar hBar = getHorizontalBar();
 		ScrollBar vBar = getVerticalBar();
@@ -572,8 +562,8 @@ public class JP2KImageCanvas extends Canvas {
 		vBar.setThumb(Math.min(scaledImageY, client.height));
 		hBar.setPageIncrement(hBar.getThumb());
 		vBar.setPageIncrement(vBar.getThumb());
-		int xVal = (int)(scaledImageX*((double)imageOffset.x/totalImageSize.x));
-		int yVal = (int)(scaledImageY*((double)imageOffset.y/totalImageSize.y));
+		int xVal = (int)(scaledImageX*((double)currentOffset.x/currentImageFullSize.x));
+		int yVal = (int)(scaledImageY*((double)currentOffset.y/currentImageFullSize.y));
 		hBar.setSelection(xVal);
 		vBar.setSelection(yVal);
 		lastScrollBarPosition = yVal;
@@ -586,14 +576,14 @@ public class JP2KImageCanvas extends Canvas {
 		ScrollBar hBar = getHorizontalBar();
 		int hSelection = hBar.getSelection();
 		int offX = (int)(hSelection/currentScale);
-		changeImageOffset(offX, imageOffset.y);
+		changeImageOffset(offX, currentOffset.y);
 	}
 
 	private void scrollY() {
 		ScrollBar vBar = getVerticalBar();
 		int vSelection = vBar.getSelection();
 		int offY = (int)(vSelection/currentScale);
-		changeImageOffset(imageOffset.x, offY);
+		changeImageOffset(currentOffset.x, offY);
 	}
 
 	private void changeScale(int direction, int x, int y) {
@@ -605,8 +595,8 @@ public class JP2KImageCanvas extends Canvas {
 		if (zoomIn && currentScale >= maxScale) return;
 		if (!zoomIn && currentScale <= minScale) return;
 
-		int centerX = imageOffset.x + (int)(x / currentScale);
-		int centerY = imageOffset.y + (int)(y / currentScale);
+		int centerX = currentOffset.x + (int)(x / currentScale);
+		int centerY = currentOffset.y + (int)(y / currentScale);
 
 		float newScale = currentScale / 2;
 		if (zoomIn) newScale = currentScale * 2;
@@ -624,8 +614,8 @@ public class JP2KImageCanvas extends Canvas {
 		boolean moveCursor = Activator.getDefault().getPreferenceStore().getBoolean(Prefs.AUTO_MOVE_CURSOR);
 		if (moveCursor && x > 0 && x < getClientArea().width && y > 0 && y < getClientArea().height) {
 			// Move the mouse to the position in which the user scrolled.
-			int newX = (int) ((centerX - imageOffset.x) * currentScale);
-			int newY = (int) ((centerY - imageOffset.y) * currentScale);
+			int newX = (int) ((centerX - currentOffset.x) * currentScale);
+			int newY = (int) ((centerY - currentOffset.y) * currentScale);
 			if (newX < getClientArea().width && newY < getClientArea().height) {
 				// Only move the cursor when it would be inside the visible area.
 				Point location = toDisplay(newX, newY);
@@ -648,21 +638,21 @@ public class JP2KImageCanvas extends Canvas {
 				if (offY > 0) scaledOffY = 1;
 				if (offY < 0) scaledOffY = -1;
 			}
-			changeImageOffset(imageOffset.x - scaledOffX, imageOffset.y - scaledOffY);
+			changeImageOffset(currentOffset.x - scaledOffX, currentOffset.y - scaledOffY);
 		}
 		previousDragPoint = new Point(x, y);
 	}
 
 	private void checkOffsetLimits() {
 		// Verify offset is within bounds.
-		imageOffset.x = Math.max(imageOffset.x, 0);
-		imageOffset.y = Math.max(imageOffset.y, 0);
-		int maxOffsetX = totalImageSize.x - (int)(getClientArea().width/currentScale);
-		int maxOffsetY = totalImageSize.y - (int)(getClientArea().height/currentScale);
-		if (maxOffsetX > 0) imageOffset.x = Math.min(imageOffset.x, maxOffsetX);
-		else imageOffset.x = 0;
-		if (maxOffsetY > 0) imageOffset.y = Math.min(imageOffset.y, maxOffsetY);
-		else imageOffset.y = 0;
+		currentOffset.x = Math.max(currentOffset.x, 0);
+		currentOffset.y = Math.max(currentOffset.y, 0);
+		int maxOffsetX = currentImageFullSize.x - (int)(getClientArea().width/currentScale);
+		int maxOffsetY = currentImageFullSize.y - (int)(getClientArea().height/currentScale);
+		if (maxOffsetX > 0) currentOffset.x = Math.min(currentOffset.x, maxOffsetX);
+		else currentOffset.x = 0;
+		if (maxOffsetY > 0) currentOffset.y = Math.min(currentOffset.y, maxOffsetY);
+		else currentOffset.y = 0;
 	}
 
 	/*
