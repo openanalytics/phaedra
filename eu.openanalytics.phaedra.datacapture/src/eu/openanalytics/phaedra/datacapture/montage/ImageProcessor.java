@@ -97,14 +97,12 @@ public class ImageProcessor {
 			int fieldCount = uniqueFields.size();
 			if (fieldLayout == null) fieldLayout = FieldLayoutSourceRegistry.getInstance().getLayout(reading, fieldCount, montageConfig, context);
 			
-			String imageReaderClass = CaptureUtils.getImageReaderClass(context);
-			
 			MTExecutor<String> threadPool = createThreadPool();
 			for (String wellId: idSet) {
 				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false, context,
 						Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 				MTCallable<String> task = new MTCallable<>();
-				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile, imageReaderClass));
+				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile));
 				threadPool.queue(task);
 			}
 			threadPool.run(mon.split(95));
@@ -136,14 +134,12 @@ public class ImageProcessor {
 		private int fieldCount;
 		private Map<String,String> inputFileMap;
 		private String outputFile;
-		private String imageReaderClass;
 		
-		public MontageWellCallable(String wellId, int fieldCount, Map<String,String> inputFileMap, String outputFile, String imageReaderClass) {
+		public MontageWellCallable(String wellId, int fieldCount, Map<String,String> inputFileMap, String outputFile) {
 			this.wellId = wellId;
 			this.fieldCount = fieldCount;
 			this.inputFileMap = inputFileMap;
 			this.outputFile = outputFile;
-			this.imageReaderClass = imageReaderClass;
 		}
 		
 		@Override
@@ -169,7 +165,7 @@ public class ImageProcessor {
 			}
 			
 			try {
-				Montage.montage(inputFiles, (fieldLayout == null) ? null : fieldLayout.getLayoutString(), montageConfig.padding, outputFile, imageReaderClass);
+				Montage.montage(inputFiles, (fieldLayout == null) ? null : fieldLayout.getLayoutString(), montageConfig.padding, outputFile);
 			} catch (IOException e) {
 				throw new DataCaptureException("Failed to montage images", e);
 			}

@@ -375,10 +375,6 @@ public class CaptureUtils {
 		return new FeatureDefinition(name);
 	}
 	
-	public static String getImageReaderClass(DataCaptureContext context) {
-		return (String) VariableResolver.get("image.reader.class", context);
-	}
-	
 	private static String escapeRegexChars(String value) {
 		char[] charsToReplace = new char[]{'(',')','.','-'};
 		for (char c: charsToReplace) {

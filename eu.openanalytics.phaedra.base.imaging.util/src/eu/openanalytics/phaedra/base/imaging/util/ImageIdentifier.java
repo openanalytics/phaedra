@@ -2,11 +2,9 @@ package eu.openanalytics.phaedra.base.imaging.util;
 
 import java.io.IOException;
 
-import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
-import loci.formats.in.TiffReader;
 
 /**
  * Use one of the available image codecs to identify an image file.
@@ -22,11 +20,9 @@ public class ImageIdentifier {
 	 */
 	public static int[] identify(String input) throws IOException {
 		int[] size = new int[4];
-		IFormatReader reader = null;
-		String extension = FileUtils.getExtension(input).toLowerCase();
-		// Otherwise Bioformats uses some weird MIASReader that fails with a NumberFormatException.
-		if (extension.equals("tif") || extension.equals("tiff")) reader = new TiffReader();
-		else reader = new ImageReader();
+		
+		IFormatReader reader = TIFFCodec.getReader(input);
+		if (reader == null) reader = new ImageReader();
 		
 		try {
 			reader.setGroupFiles(false);

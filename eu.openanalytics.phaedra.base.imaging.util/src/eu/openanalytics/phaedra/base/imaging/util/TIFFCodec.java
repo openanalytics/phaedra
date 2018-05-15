@@ -2,12 +2,14 @@ package eu.openanalytics.phaedra.base.imaging.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.ImageLoader;
 import org.eclipse.swt.graphics.PaletteData;
 
+import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import loci.common.services.ServiceFactory;
 import loci.formats.CoreMetadata;
 import loci.formats.FormatException;
@@ -15,6 +17,7 @@ import loci.formats.FormatTools;
 import loci.formats.IFormatReader;
 import loci.formats.ImageReader;
 import loci.formats.MetadataTools;
+import loci.formats.in.CellomicsReader;
 import loci.formats.in.TiffReader;
 import loci.formats.meta.IMetadata;
 import loci.formats.out.TiffWriter;
@@ -35,6 +38,8 @@ import loci.formats.tiff.IFD;
  */
 public class TIFFCodec {
 
+	public static final String PROP_READER_CLASS = "bioformats.reader.class";
+	
 	/**
 	 * Attempt to read image data from the given file.
 	 * 
@@ -43,11 +48,7 @@ public class TIFFCodec {
 	 * @throws IOException If the file cannot be parsed for any reason.
 	 */
 	public static ImageData[] read(String inputFile) throws IOException {
-		return read(inputFile, (String) null);
-	}
-	
-	public static ImageData[] read(String inputFile, String readerClass) throws IOException {
-		IFormatReader reader = getReader(inputFile, readerClass);
+		IFormatReader reader = getReader(inputFile);
 		if (reader == null) {
 			return new ImageLoader().load(inputFile);
 		} else {
@@ -104,28 +105,29 @@ public class TIFFCodec {
 		}
 	}
 
-	public static IFormatReader getReader(String inputFile, String readerClass) throws IOException {
-		if (readerClass != null && !readerClass.isEmpty()) {
+	public static IFormatReader getReader(String inputFile) throws IOException {
+		String preferredReader = System.getProperty(PROP_READER_CLASS);
+		if (preferredReader != null && !preferredReader.isEmpty()) {
 			try {
-				return (IFormatReader) Class.forName(readerClass).newInstance();
+				return (IFormatReader) Class.forName(preferredReader).newInstance();
 			} catch (Exception e) {
-				throw new IOException("Failed to load reader class: " + readerClass, e);
+				throw new IOException("Failed to load reader class: " + preferredReader, e);
 			}
 		}
 		
+		String fileExt = FileUtils.getExtension(inputFile).toLowerCase();
+		
 		// TIFF reader
-		String[] tiffExtensions = { ".tif", ".tiff", ".flex" };
-		for (String ext: tiffExtensions) {
-			if (inputFile.toLowerCase().endsWith(ext)) return new TiffReader();
-		}
+		String[] tiffExtensions = { "tif", "tiff", "flex" };
+		if (Arrays.stream(tiffExtensions).anyMatch(e -> e.equals(fileExt))) return new TiffReader();
 		
-		// null: use SWT ImageLoader instead (faster than Bioformats)
-		String[] swtExtensions = { ".bmp", ".gif", ".png", ".jpg", ".jpeg" };
-		for (String ext: swtExtensions) {
-			if (inputFile.toLowerCase().endsWith(ext)) return null;
-		}
+		if (fileExt.equals("c01")) return new CellomicsReader();
 		
-		// Generic reader
+		// Common image formats: return null, so SWT ImageLoader can be used instead (faster than Bioformats)
+		String[] swtExtensions = { "bmp", "gif", "png", "jpg", "jpeg" };
+		if (Arrays.stream(swtExtensions).anyMatch(e -> e.equals(fileExt))) return null;
+		
+		// Generic BioFormats reader
 		return new ImageReader();
 	}
 	

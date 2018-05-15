@@ -10,10 +10,6 @@ import org.eclipse.swt.graphics.PaletteData;
 public class Montage {
 
 	public static void montage(String[] inputFiles, String layout, int padding, String outputFile) throws IOException {
-		montage(inputFiles, layout, padding, outputFile, null);
-	}
-	
-	public static void montage(String[] inputFiles, String layout, int padding, String outputFile, String readerClass) throws IOException {
 		// Note: layout must be zero-based!
 		
 		// Analyze the layout (or use the default layout).
@@ -50,7 +46,7 @@ public class Montage {
 			}
 		}
 		
-		montageInternal(orderedInputFiles, rowCount, columnCount, padding, outputFile, readerClass);
+		montageInternal(orderedInputFiles, rowCount, columnCount, padding, outputFile);
 	}
 	
 	public static String appendFrameNr(String fileName, int frameNr) {
@@ -70,7 +66,7 @@ public class Montage {
 		return fileName.substring(0, frameIndex);
 	}
 	
-	private static void montageInternal(String[] orderedInputFiles, int rows, int columns, int padding, String outputFile, String readerClass) throws IOException {
+	private static void montageInternal(String[] orderedInputFiles, int rows, int columns, int padding, String outputFile) throws IOException {
 		//TODO Support for the padding argument
 		
 		int[] imageSize = null;
@@ -99,7 +95,7 @@ public class Montage {
 				if (frameNr == -1) frameNr = 0;
 				fileName = removeFrameNr(fileName);
 				
-				ImageData[] image = TIFFCodec.read(fileName, readerClass);
+				ImageData[] image = TIFFCodec.read(fileName);
 				if (image.length <= frameNr) continue;
 				ImageData imageToAdd = image[frameNr];
 				
