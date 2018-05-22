@@ -34,7 +34,10 @@ public class ScriptedChartLayer extends PlatesLayer {
 
 	@Override
 	protected void doInitialize() {
-		config = new ScriptedChartConfig(getId());
+		if (config == null) {
+			config = new ScriptedChartConfig();
+			config.loadState(getId());
+		}
 	}
 
 	@Override
@@ -61,6 +64,11 @@ public class ScriptedChartLayer extends PlatesLayer {
 	public IGridCellRenderer createRenderer() {
 		renderer = new ScriptedChartRenderer();
 		return renderer;
+	}
+	
+	@Override
+	public boolean isRendering() {
+		return renderer.isRendering();
 	}
 
 	public void update() {
@@ -95,6 +103,7 @@ public class ScriptedChartLayer extends PlatesLayer {
 			if (well == null) return null;
 			List<Well> wells = Collections.singletonList(well);
 			String scriptSrc = config.scriptSrc;
+			if (scriptSrc == null) return null;
 			
 			return new ConcurrentTask() {
 				@Override
@@ -112,13 +121,7 @@ public class ScriptedChartLayer extends PlatesLayer {
 		
 		private static final long serialVersionUID = -5464631725491759670L;
 
-		private String layerId;
 		private String scriptSrc;
-		
-		public ScriptedChartConfig(String layerId) {
-			this.layerId = layerId;
-			this.scriptSrc = GridState.getStringValue(GridState.ALL_PROTOCOLS, layerId, "scriptSrc");
-		}
 		
 		public String getScriptSrc() {
 			return scriptSrc;
@@ -126,8 +129,14 @@ public class ScriptedChartLayer extends PlatesLayer {
 		
 		public void setScriptSrc(String scriptSrc) {
 			this.scriptSrc = scriptSrc;
-			GridState.saveValue(GridState.ALL_PROTOCOLS, layerId, "scriptSrc", scriptSrc);
 		}
 		
+		public void loadState(String layerId) {
+			this.scriptSrc = GridState.getStringValue(GridState.ALL_PROTOCOLS, layerId, "scriptSrc");
+		}
+		
+		public void saveState(String layerId) {
+			GridState.saveValue(GridState.ALL_PROTOCOLS, layerId, "scriptSrc", scriptSrc);
+		}
 	}
 }

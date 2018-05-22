@@ -47,11 +47,13 @@ public class ValueConfig implements Serializable {
 	}
 
 	public ValueKey getValueKey(int index) {
+		if (valueKeys == null) valueKeys = new ValueKey[3];
 		if (valueKeys[index] == null) valueKeys[index] = ValueKey.fromIdString(valueKeyIds[index]);
 		return valueKeys[index];
 	}
 	
 	public void setValueKey(int index, ValueKey key, String layerId) {
+		if (valueKeys == null) valueKeys = new ValueKey[3];
 		valueKeys[index] = key;
 		valueKeyIds[index] = key.toIdString();
 		

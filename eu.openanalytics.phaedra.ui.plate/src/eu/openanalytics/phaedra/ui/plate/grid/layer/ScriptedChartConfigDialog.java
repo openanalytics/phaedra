@@ -67,6 +67,7 @@ public class ScriptedChartConfigDialog extends TitleAreaDialog implements ILayer
 	@Override
 	protected void okPressed() {
 		config.setScriptSrc(scriptSrcCmb.getText());
+		config.saveState(layer.getId());
 		layer.update();
 		super.okPressed();
 	}
