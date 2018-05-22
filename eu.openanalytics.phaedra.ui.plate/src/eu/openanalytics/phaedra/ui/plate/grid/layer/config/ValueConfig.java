@@ -69,4 +69,14 @@ public class ValueConfig implements Serializable {
 		this.fontColor = fontColor;
 		GridState.saveValue(GridState.ALL_PROTOCOLS, layerId, SETTING_FONT_COLOR, ""+fontColor);
 	}
+	
+	// Note: below methods are for XML serialization only. Do not use!
+	
+	public String[] getValueKeyIds() {
+		return valueKeyIds;
+	}
+	
+	public void setValueKeyIds(String[] valueKeyIds) {
+		this.valueKeyIds = valueKeyIds;
+	}
 }
