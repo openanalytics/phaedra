@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.ui.plate.grid.layer;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
@@ -107,8 +108,10 @@ public class ScriptedChartLayer extends PlatesLayer {
 		}
 	}
 	
-	public static class ScriptedChartConfig {
+	public static class ScriptedChartConfig implements Serializable {
 		
+		private static final long serialVersionUID = -5464631725491759670L;
+
 		private String layerId;
 		private String scriptSrc;
 		
