@@ -3361,6 +3361,14 @@
             id="eu.openanalytics.phaedra.ui.plate.chart.v2.grid.correlationmatrix.WellHistogram1DLayer"
             position="100">
       </gridLayer>
+      <gridLayer
+            class="eu.openanalytics.phaedra.ui.plate.grid.layer.ScriptedChartLayer"
+            defaultEnabled="false"
+            gridId="hca.well.grid"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_line.png"
+            id="eu.openanalytics.phaedra.ui.plate.grid.layer.ScriptedChartLayer"
+            position="101">
+      </gridLayer>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">

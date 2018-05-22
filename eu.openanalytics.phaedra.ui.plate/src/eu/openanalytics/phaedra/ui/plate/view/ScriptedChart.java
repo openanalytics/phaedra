@@ -3,14 +3,17 @@ package eu.openanalytics.phaedra.ui.plate.view;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.script.ScriptException;
 
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -32,6 +35,9 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
+import eu.openanalytics.phaedra.model.plate.PlateService;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.partsettings.decorator.SettingsDecorator;
 import eu.openanalytics.phaedra.ui.plate.Activator;
@@ -44,6 +50,7 @@ public class ScriptedChart extends DecoratedView {
 	
 	private ISelectionListener selectionListener;
 	private Protocol currentProtocol;
+	private List<Well> currentWells;
 	private ImageData currentChart;
 	private String errorMsg;
 	
@@ -74,6 +81,12 @@ public class ScriptedChart extends DecoratedView {
 		selectionListener = (p, s) -> {
 			Protocol protocol = SelectionUtils.getFirstObject(s, Protocol.class);
 			if (protocol != null) currentProtocol = protocol;
+			
+			List<Well> wells = getWells(s);
+			if (!wells.equals(currentWells)) {
+				currentWells = wells;
+				createChart();
+			}
 		};
 		getSite().getPage().addSelectionListener(selectionListener);
 		SelectionUtils.triggerActiveSelection(selectionListener);
@@ -101,17 +114,22 @@ public class ScriptedChart extends DecoratedView {
 		super.dispose();
 	}
 
-	public static ImageData createChart(String scriptSrc, int w, int h) throws ScriptException {
+	public static ImageData createChart(String scriptSrc, List<Well> wells, int w, int h) throws ScriptException {
 		if (scriptSrc == null || scriptSrc.isEmpty()) return null;
+		if (wells == null) wells = new ArrayList<>();
 		
 		Map<String, Object> args = new HashMap<>();
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		args.put("output", bos);
-		args.put("width", Math.max(w, 100));
-		args.put("height", Math.max(h, 100));
+		args.put("width", w); //Math.max(w, 100));
+		args.put("height", h); //Math.max(h, 100));
+		args.put("wells", wells.toArray());
+		
 		ScriptService.getInstance().getCatalog().run(scriptSrc, args);
 		
 		byte[] img = bos.toByteArray();
+		if (img.length == 0) return null;
+		
 		ImageLoader loader = new ImageLoader();
 		ImageData[] data = loader.load(new ByteArrayInputStream(img));
 		return data[0];
@@ -124,7 +142,7 @@ public class ScriptedChart extends DecoratedView {
 			String scriptSrc = scriptSrcCmb.getText();
 			int w = chartCanvas.getBounds().width;
 			int h = chartCanvas.getBounds().height;
-			currentChart = createChart(scriptSrc, w, h);
+			currentChart = createChart(scriptSrc, currentWells, w, h);
 		} catch (Exception e) {
 			errorMsg = StringUtils.getStackTrace(e);
 		}
@@ -157,5 +175,19 @@ public class ScriptedChart extends DecoratedView {
 		String scriptSrc = (String) properties.getProperty("scriptSrc");
 		if (scriptSrc != null) scriptSrcCmb.setText(scriptSrc);
 		createChart();
+	}
+	
+	private List<Well> getWells(ISelection selection) {
+		List<Well> wells = new ArrayList<>();
+		if (selection.isEmpty()) return wells;
+		
+		wells = SelectionUtils.getObjects(selection, Well.class);
+		if (wells.isEmpty()) {
+			wells = SelectionUtils.getObjects(selection, Plate.class).stream()
+					.flatMap(p -> PlateService.streamableList(p.getWells()).stream())
+					.collect(Collectors.toList());
+		}
+		
+		return wells;
 	}
 }
