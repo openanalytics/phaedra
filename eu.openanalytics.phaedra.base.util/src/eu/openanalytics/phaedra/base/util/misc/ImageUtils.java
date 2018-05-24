@@ -67,6 +67,18 @@ public class ImageUtils {
 
 		return scaled;
 	}
+	
+	public static ImageData crop(ImageData data, int x, int y, int width, int height) {
+		width = Math.min(width, data.width - x);
+		height = Math.min(height, data.height - y);
+		ImageData cropped = new ImageData(width, height, data.depth, data.palette);
+		int[] lineBuffer = new int[width];
+		for (int yLine=0; yLine < height; yLine++) {
+			data.getPixels(x, yLine + y, lineBuffer.length, lineBuffer, 0);
+			cropped.setPixels(0, yLine, lineBuffer.length, lineBuffer, 0);
+		}
+		return cropped;
+	}
 
 	/**
 	 * Add transparency to an image by setting alpha to zero for a target color value (e.g. white).

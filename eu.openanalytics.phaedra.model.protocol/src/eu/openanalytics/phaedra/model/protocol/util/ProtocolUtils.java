@@ -14,6 +14,8 @@ import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
+import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
+import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
@@ -280,4 +282,12 @@ public class ProtocolUtils {
 		return rgb;
 	}
 
+	public static boolean[] getEnabledChannels(ImageSettings settings, boolean detailedView) {
+		List<ImageChannel> channels = settings.getImageChannels();
+		boolean[] enabledChannels = new boolean[channels.size()];
+		for (int i = 0; i < enabledChannels.length; i++) {
+			enabledChannels[i] = detailedView ? channels.get(i).isShowInWellView() : channels.get(i).isShowInPlateView();
+		}
+		return enabledChannels;
+	}
 }

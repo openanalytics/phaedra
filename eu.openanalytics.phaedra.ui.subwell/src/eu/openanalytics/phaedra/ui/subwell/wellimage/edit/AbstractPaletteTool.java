@@ -110,26 +110,21 @@ public abstract class AbstractPaletteTool implements IPaletteTool {
 				"Do you want to save the changes made to " + getDrawnObjects().size() + " well(s)?");
 		if (!confirmed) return;
 		
-		// Closing the image provider during save will result in much faster JP2K update.
-		getHost().getCanvas().closeImageProvider();
+		//TODO Closing the image provider during save will result in much faster JP2K update.
+		Shell shell = Display.getCurrent().getActiveShell();
 		try {
-			Shell shell = Display.getCurrent().getActiveShell();
-			try {
-				new ProgressMonitorDialog(shell).run(true, false,
-					(monitor) -> {
-						try {
-							doSave(monitor);
-						} catch (IOException e) {
-							throw new InvocationTargetException(e);
-						}
-				});
-			} catch (Exception e) {
-				IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to save image ROIs", e);
-				Activator.getDefault().getLog().log(status);
-				ErrorDialog.openError(shell, "Error while saving", "Failed to save changes", status);
-			}
-		} finally {
-			try { getHost().getCanvas().openImageProvider(); } catch (IOException e) {}
+			new ProgressMonitorDialog(shell).run(true, false,
+				(monitor) -> {
+					try {
+						doSave(monitor);
+					} catch (IOException e) {
+						throw new InvocationTargetException(e);
+					}
+			});
+		} catch (Exception e) {
+			IStatus status = new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to save image ROIs", e);
+			Activator.getDefault().getLog().log(status);
+			ErrorDialog.openError(shell, "Error while saving", "Failed to save changes", status);
 		}
 		
 		host.toggleDrawMode(false);

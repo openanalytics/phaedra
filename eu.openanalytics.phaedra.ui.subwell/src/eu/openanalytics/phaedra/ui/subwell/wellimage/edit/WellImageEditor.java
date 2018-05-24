@@ -142,7 +142,7 @@ public class WellImageEditor extends EditorPart {
 		imageControlPanel.addImageControlListener(new ImageControlListener() {
 			@Override
 			public void componentToggled(int component, boolean state) {
-				imageCanvas.forceRedraw();
+				imageCanvas.changeChannels(imageControlPanel.getButtonStates());
 				thumbnailTableViewer.getTable().redraw();
 			}
 		});
@@ -151,12 +151,7 @@ public class WellImageEditor extends EditorPart {
 		Button toggleClassificationBtn = new Button(imageControlPanel, SWT.CHECK);
 		toggleClassificationBtn.setText("Show classification symbols");
 
-		imageCanvas = new JP2KImageCanvas(imageComposite, SWT.NONE) {
-			@Override
-			protected boolean isChannelEnabled(int nr) {
-				return !imageControlPanel.isDisabled(nr);
-			}
-		};
+		imageCanvas = new JP2KImageCanvas(imageComposite, SWT.NONE);
 		JP2KImageCanvasListener imageCanvasListener = new JP2KImageCanvasListener() {
 			@Override
 			public void onFileChange() {
