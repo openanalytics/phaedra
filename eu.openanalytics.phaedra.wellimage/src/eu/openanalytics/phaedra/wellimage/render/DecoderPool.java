@@ -44,7 +44,8 @@ public class DecoderPool extends GenericKeyedObjectPool<Plate, IDecodeAPI> {
 			if (imageChannels == null || imageChannels.isEmpty()) throw new IOException("Cannot render image: no image channels configured for protocol class" + pClass);
 
 			String imagePath = PlateService.getInstance().getImageFSPath(plate);
-			SeekableByteChannel byteChannel = Screening.getEnvironment().getFileServer().getChannel(imagePath, "r");
+			SeekableByteChannel byteChannel = null;
+			if (imagePath != null) byteChannel = Screening.getEnvironment().getFileServer().getChannel(imagePath, "r");
 			if (byteChannel == null) throw new IOException("Cannot render image: plate " + plate + " has no image data available");
 			
 			IDecodeAPI decoder = CodecFactory.getDecoder(byteChannel, PlateUtils.getWellCount(plate), imageChannels.size());
