@@ -5,11 +5,9 @@ import java.util.Arrays;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.nebula.widgets.nattable.NatTable;
 import org.eclipse.nebula.widgets.nattable.config.AbstractRegistryConfiguration;
-import org.eclipse.nebula.widgets.nattable.config.CellConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.config.DefaultComparator;
 import org.eclipse.nebula.widgets.nattable.config.IConfigRegistry;
 import org.eclipse.nebula.widgets.nattable.config.IConfiguration;
-import org.eclipse.nebula.widgets.nattable.data.convert.DefaultDisplayConverter;
 import org.eclipse.nebula.widgets.nattable.sort.SortConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.events.MouseAdapter;
@@ -18,14 +16,12 @@ import org.eclipse.ui.PlatformUI;
 
 import com.google.common.base.Strings;
 
-import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.IRichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.RichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.search.AbstractQueryEditorSupport;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
-import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.FeatureValue;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 import eu.openanalytics.phaedra.ui.plate.cmd.BrowseWells;
@@ -78,9 +74,12 @@ public class FeatureValueQueryEditorSupport extends AbstractQueryEditorSupport {
 			case 5:
 				return rowObject.getFeature().getNormalization();
 			case 6:
-				return rowObject;
+				return Formatters.getInstance().format(rowObject.getNormalizedValue(), rowObject.getFeature());
 			case 7:
-				return rowObject;
+				if (Strings.isNullOrEmpty(rowObject.getRawStringValue())) {
+					return Formatters.getInstance().format(rowObject.getRawNumericValue(), rowObject.getFeature());
+				}
+				return rowObject.getRawStringValue();
 			default:
 				break;
 			}
@@ -141,48 +140,7 @@ public class FeatureValueQueryEditorSupport extends AbstractQueryEditorSupport {
 			return new AbstractRegistryConfiguration() {
 				@Override
 				public void configureRegistry(IConfigRegistry configRegistry) {
-					// Register custom display converters
-					NormFeatureValueDisplayConverter normFeatureValueDisplayConverter = new NormFeatureValueDisplayConverter();
-					RawFeatureValueDisplayConverter rawFeatureValueDisplayConverter = new RawFeatureValueDisplayConverter();
-					configRegistry.registerConfigAttribute(
-							CellConfigAttributes.DISPLAY_CONVERTER
-							, normFeatureValueDisplayConverter
-							, DisplayMode.NORMAL
-							, columns[6]
-					);
-					configRegistry.registerConfigAttribute(
-							CellConfigAttributes.DISPLAY_CONVERTER
-							, rawFeatureValueDisplayConverter
-							, DisplayMode.NORMAL
-							, columns[7]
-					);
-
-					NatTableUtils.applyAdvancedFilter(configRegistry, 6, normFeatureValueDisplayConverter, (o1, o2) -> {
-						String filterValue = o2.toString();
-						if (o1 instanceof FeatureValue && NumberUtils.isDouble(filterValue)) {
-							FeatureValue fv = ((FeatureValue) o1);
-							String fv1 = Formatters.getInstance().format(fv.getNormalizedValue(), fv.getFeature());
-							String fv2 = Formatters.getInstance().format(Double.valueOf(filterValue), fv.getFeature());
-							return DefaultComparator.getInstance().compare(Double.valueOf(fv1), Double.valueOf(fv2));
-						}
-						return 0;
-					});
-					NatTableUtils.applyAdvancedFilter(configRegistry, 7, rawFeatureValueDisplayConverter, (o1, o2) -> {
-						if (o1 instanceof FeatureValue) {
-							FeatureValue fv = ((FeatureValue) o1);
-							String filterValue = o2.toString();
-							if (fv.getFeature().isNumeric() && Strings.isNullOrEmpty(fv.getRawStringValue())) {
-								if (!NumberUtils.isDouble(filterValue)) return 0;
-								String fv1 = Formatters.getInstance().format(fv.getRawNumericValue(), fv.getFeature());
-								String fv2 = Formatters.getInstance().format(Double.valueOf(filterValue), fv.getFeature());
-								return DefaultComparator.getInstance().compare(Double.valueOf(fv1), Double.valueOf(fv2));
-							}
-							return filterValue.compareTo(fv.getRawStringValue());
-						}
-						return 0;
-					});
-
-					// Register custom comparator
+					// Register custom comparators
 					configRegistry.registerConfigAttribute(
 							SortConfigAttributes.SORT_COMPARATOR
 							, (String s1, String s2) -> StringUtils.compareToNumericStrings(s1, s2)
@@ -191,13 +149,21 @@ public class FeatureValueQueryEditorSupport extends AbstractQueryEditorSupport {
 					);
 					configRegistry.registerConfigAttribute(
 							SortConfigAttributes.SORT_COMPARATOR
-							, PlateUtils.NORMALIZED_FEATURE_VALUE_SORTER
+							, (String v1, String v2) -> {
+								return DefaultComparator.getInstance().compare(Double.valueOf(v1), Double.valueOf(v2));
+							}
 							, DisplayMode.NORMAL
 							, columns[6]
 					);
 					configRegistry.registerConfigAttribute(
 							SortConfigAttributes.SORT_COMPARATOR
-							, PlateUtils.RAW_FEATURE_VALUE_SORTER
+							, (String v1, String v2) -> {
+								if (NumberUtils.isDouble(v1) && NumberUtils.isDouble(v2)) {
+									return DefaultComparator.getInstance().compare(Double.valueOf(v1), Double.valueOf(v2));
+								} else {
+									return v1.compareTo(v2);
+								}
+							}
 							, DisplayMode.NORMAL
 							, columns[7]
 					);
@@ -205,34 +171,5 @@ public class FeatureValueQueryEditorSupport extends AbstractQueryEditorSupport {
 			};
 		}
 	};
-
-	private class NormFeatureValueDisplayConverter extends DefaultDisplayConverter {
-
-		@Override
-		public Object canonicalToDisplayValue(Object canonicalValue) {
-			if (canonicalValue instanceof FeatureValue) {
-				FeatureValue fv = ((FeatureValue) canonicalValue);
-				return Formatters.getInstance().format(fv.getNormalizedValue(), fv.getFeature());
-			}
-			return canonicalValue;
-		}
-
-	}
-
-	private class RawFeatureValueDisplayConverter extends DefaultDisplayConverter {
-
-		@Override
-		public Object canonicalToDisplayValue(Object canonicalValue) {
-			if (canonicalValue instanceof FeatureValue) {
-				FeatureValue fv = ((FeatureValue) canonicalValue);
-				if (Strings.isNullOrEmpty(fv.getRawStringValue())) {
-					return Formatters.getInstance().format(fv.getRawNumericValue(), fv.getFeature());
-				}
-				return fv.getRawStringValue();
-			}
-			return canonicalValue;
-		}
-
-	}
 
 }
