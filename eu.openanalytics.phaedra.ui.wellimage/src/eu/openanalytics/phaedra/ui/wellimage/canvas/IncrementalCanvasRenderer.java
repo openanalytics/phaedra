@@ -16,6 +16,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.ui.wellimage.Activator;
+import eu.openanalytics.phaedra.ui.wellimage.util.ImageRegionGrid;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class IncrementalCanvasRenderer implements ICanvasRenderer {
@@ -26,7 +27,10 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	
 	private float lqScale;
 	private ImageData lqFullImage;
+	private ImageRegionGrid imageRegionGrid;
 	private Map<Rectangle, ImageData> highResRegions;
+	
+	private static final Point GRID_CELL_SIZE = new Point(512, 512);
 	
 	@Override
 	public void initialize(ICanvasRenderCallback callback) {
@@ -43,6 +47,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		try {
 			if (lqFullImage == null || canvasState.wellChanged(currentCanvasState) || canvasState.channelsChanged(currentCanvasState)) {
 					lqFullImage = ImageRenderService.getInstance().getWellImageData(canvasState.getWell(), lqScale, canvasState.getChannels());
+					imageRegionGrid = new ImageRegionGrid(canvasState.getFullImageSize(), GRID_CELL_SIZE);
 					highResRegions.clear();
 			}
 			
@@ -50,6 +55,8 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 			
 			//TODO Check highResRegions and use any regions that apply
 			Rectangle hqArea = new Rectangle(0, 0, canvasState.getFullImageSize().x, canvasState.getFullImageSize().y);
+			
+			
 			if (highResRegions.isEmpty()) {
 				RenderJob hqRenderJob = new RenderJob(canvasState.copy(), hqArea, data -> {
 					highResRegions.put(hqArea, data);
