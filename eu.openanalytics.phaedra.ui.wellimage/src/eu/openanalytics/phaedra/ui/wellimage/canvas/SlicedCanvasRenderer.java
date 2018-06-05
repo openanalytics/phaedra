@@ -30,13 +30,14 @@ public class SlicedCanvasRenderer implements ICanvasRenderer {
 
 		//TODO If the clientArea changes but the canvas state doesn't, we still should render new pixels.
 		// If there are no changes in the state, just redraw the current image.
-		if (!canvasState.anyChanged(currentCanvasState) && currentImage != null && !currentImage.isDisposed()) {
+		if (currentCanvasState != null && !canvasState.anyChanged(currentCanvasState) && currentImage != null && !currentImage.isDisposed()) {
 			gc.drawImage(currentImage, 0, 0);
 			return;
 		}
 		
 		// If the image contents change, the current image must be disposed.
-		boolean shouldDispose = canvasState.isForceChange() 
+		boolean shouldDispose = currentCanvasState == null 
+				|| canvasState.isForceChange() 
 				|| canvasState.wellChanged(currentCanvasState)
 				|| canvasState.scaleChanged(currentCanvasState)
 				|| canvasState.channelsChanged(currentCanvasState);

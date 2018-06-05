@@ -1,7 +1,9 @@
 package eu.openanalytics.phaedra.ui.wellimage.canvas;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,9 +16,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.ui.wellimage.Activator;
-import eu.openanalytics.phaedra.ui.wellimage.util.ImageRegionGrid;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class IncrementalCanvasRenderer implements ICanvasRenderer {
@@ -35,8 +35,8 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	@Override
 	public void initialize(ICanvasRenderCallback callback) {
 		this.renderCallback = callback;
-		this.executor = Executors.newSingleThreadExecutor();
-		this.highResRegions = new HashMap<>();
+		this.executor = Executors.newFixedThreadPool(4);
+		this.highResRegions = Collections.synchronizedMap(new HashMap<>());
 		this.lqScale = 0.1f;
 	}
 	
@@ -45,29 +45,39 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		if (canvasState.getWell() == null) return;
 		
 		try {
-			if (lqFullImage == null || canvasState.wellChanged(currentCanvasState) || canvasState.channelsChanged(currentCanvasState)) {
+			boolean stateChanged = currentCanvasState == null
+					|| canvasState.isForceChange() 
+					|| canvasState.wellChanged(currentCanvasState)
+					|| canvasState.channelsChanged(currentCanvasState)
+					|| canvasState.scaleChanged(currentCanvasState);
+			
+			if (lqFullImage == null || stateChanged) {
 					lqFullImage = ImageRenderService.getInstance().getWellImageData(canvasState.getWell(), lqScale, canvasState.getChannels());
 					imageRegionGrid = new ImageRegionGrid(canvasState.getFullImageSize(), GRID_CELL_SIZE);
 					highResRegions.clear();
 			}
 			
-			ImageData imageData = null;
+			// Find out which area of the image to render.
+			Rectangle targetRenderArea = new Rectangle(
+					canvasState.getOffset().x,
+					canvasState.getOffset().y,
+					(int) Math.ceil(clientArea.width / canvasState.getScale()),
+					(int) Math.ceil(clientArea.height / canvasState.getScale()));
+			List<Rectangle> cellAreas = imageRegionGrid.getCells(targetRenderArea);
 			
-			//TODO Check highResRegions and use any regions that apply
-			Rectangle hqArea = new Rectangle(0, 0, canvasState.getFullImageSize().x, canvasState.getFullImageSize().y);
-			
-			
-			if (highResRegions.isEmpty()) {
-				RenderJob hqRenderJob = new RenderJob(canvasState.copy(), hqArea, data -> {
-					highResRegions.put(hqArea, data);
-					renderCallback.requestRenderUpdate();
-				});
-				executor.execute(hqRenderJob);
-				imageData = getScaledImage(lqFullImage, lqScale, canvasState, clientArea);
-			} else {
-				imageData = getScaledImage(highResRegions.values().iterator().next(), 1.0f, canvasState, clientArea);
+			// Submit render jobs for any missing cells.
+			for (Rectangle cellArea: cellAreas) {
+				if (!highResRegions.containsKey(cellArea)) {
+					highResRegions.put(cellArea, null); // To prevent duplicate render jobs.
+					RenderJob hqRenderJob = new RenderJob(canvasState.copy(), cellArea, data -> {
+						highResRegions.put(cellArea, data);
+						renderCallback.requestRenderUpdate();
+					});
+					executor.execute(hqRenderJob);
+				}
 			}
-			
+
+			ImageData imageData = imageRegionGrid.render(targetRenderArea, lqFullImage, highResRegions, canvasState);
 			Image img = new Image(null, imageData);
 			gc.drawImage(img, 0, 0);
 			img.dispose();
@@ -82,28 +92,6 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		// Nothing to dispose
 	}
 
-	private ImageData getScaledImage(ImageData fullImage, float fullImageScale, CanvasState canvasState, Rectangle clientArea) {
-		float scaleFactor = canvasState.getScale() / fullImageScale;
-		
-		Point lqFullImageSize = new Point(
-				(int) Math.ceil(canvasState.getFullImageSize().x * fullImageScale),
-				(int) Math.ceil(canvasState.getFullImageSize().y * fullImageScale));
-		
-		Rectangle lqRenderArea = new Rectangle(
-				(int) Math.ceil(canvasState.getOffset().x * fullImageScale),
-				(int) Math.ceil(canvasState.getOffset().y * fullImageScale),
-				Math.min(lqFullImageSize.x, (int) Math.ceil(clientArea.width / scaleFactor)),
-				Math.min(lqFullImageSize.y, (int) Math.ceil(clientArea.height / scaleFactor)));
-		
-		ImageData lqData = ImageUtils.crop(fullImage, lqRenderArea.x, lqRenderArea.y, lqRenderArea.width, lqRenderArea.height);
-
-		Point scaledSize = new Point(
-				(int) (lqRenderArea.width * scaleFactor),
-				(int) (lqRenderArea.height * scaleFactor));
-		ImageData scaledData = lqData.scaledTo(scaledSize.x, scaledSize.y);
-		return scaledData;
-	}
-	
 	private static class RenderJob implements Runnable {
 		
 		private CanvasState state;
@@ -124,7 +112,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 			try {
 				ImageData data = ImageRenderService.getInstance().getWellImageData(
 						state.getWell(),
-						1.0f,
+						state.getScale(),
 						region,
 						state.getChannels());
 				if (cancelled) return;
