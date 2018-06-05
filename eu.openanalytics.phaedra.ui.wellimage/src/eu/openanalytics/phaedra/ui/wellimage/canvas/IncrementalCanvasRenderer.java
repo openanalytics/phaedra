@@ -63,6 +63,10 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 					canvasState.getOffset().y,
 					(int) Math.ceil(clientArea.width / canvasState.getScale()),
 					(int) Math.ceil(clientArea.height / canvasState.getScale()));
+			// Ensure the render area does not exceed the image dimensions.
+			targetRenderArea.width = Math.min(targetRenderArea.width, canvasState.getFullImageSize().x - targetRenderArea.x);
+			targetRenderArea.height = Math.min(targetRenderArea.height, canvasState.getFullImageSize().y - targetRenderArea.y);
+			
 			List<Rectangle> cellAreas = imageRegionGrid.getCells(targetRenderArea);
 			
 			// Submit render jobs for any missing cells.

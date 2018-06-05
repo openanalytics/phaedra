@@ -80,6 +80,10 @@ public class ImageUtils {
 		return cropped;
 	}
 
+	public static ImageData crop(ImageData data, Rectangle region) {
+		return crop(data, region.x, region.y, region.width, region.height);
+	}
+	
 	/**
 	 * Add transparency to an image by setting alpha to zero for a target color value (e.g. white).
 	 * The original image's alpha, if any, will be replaced.

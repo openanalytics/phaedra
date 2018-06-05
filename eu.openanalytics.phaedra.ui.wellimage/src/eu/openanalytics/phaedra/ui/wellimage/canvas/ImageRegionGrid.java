@@ -9,6 +9,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
 import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
+import eu.openanalytics.phaedra.base.util.misc.SWTUtils;
 
 public class ImageRegionGrid {
 
@@ -31,80 +32,67 @@ public class ImageRegionGrid {
 	}
 	
 	public ImageData render(Rectangle targetRenderArea, ImageData lqFullImage, Map<Rectangle, ImageData> highResRegions, CanvasState canvasState) {
-		Point clientAreaSize = new Point((int) (targetRenderArea.width * canvasState.getScale()), (int) (targetRenderArea.height * canvasState.getScale()));
-		ImageData data = new ImageData(clientAreaSize.x, clientAreaSize.y, lqFullImage.depth, lqFullImage.palette);
+		float renderScale = canvasState.getScale();
+		Point renderAreaSize = SWTUtils.scale(targetRenderArea.width, targetRenderArea.height, renderScale);
+		
+		ImageData renderData = new ImageData(renderAreaSize.x, renderAreaSize.y, lqFullImage.depth, lqFullImage.palette);
 		ImageData lqCropScaled = null;
 		
-		Point startPoint = new Point(targetRenderArea.x, targetRenderArea.y);
 		List<Rectangle> cells = getCells(targetRenderArea);
+		Point cellStartPoint = new Point(targetRenderArea.x, targetRenderArea.y);
 		
 		for (Rectangle cell: cells) {
 			ImageData cellImageData = highResRegions.get(cell);
-			Rectangle cellRenderArea = new Rectangle(startPoint.x, startPoint.y, cell.width - (startPoint.x - cell.x), cell.height - (startPoint.y - cell.y));
-			Rectangle cellRenderAreaScaled = new Rectangle(
-					(int) (canvasState.getScale() * cellRenderArea.x),
-					(int) (canvasState.getScale() * cellRenderArea.y),
-					(int) (canvasState.getScale() * cellRenderArea.width),
-					(int) (canvasState.getScale() * cellRenderArea.height));
-
+			Point cellRenderSize = new Point(cell.width - (cellStartPoint.x - cell.x), cell.height - (cellStartPoint.y - cell.y));
+			Point cellRenderSizeScaled = SWTUtils.scale(cellRenderSize, renderScale);
+			
 			if (cellImageData == null) {
 				if (lqCropScaled == null) {
-					float lqScale = ((float) lqFullImage.width) / canvasState.getFullImageSize().x;
-					lqCropScaled = ImageUtils.crop(lqFullImage,
-							(int) (targetRenderArea.x * lqScale),
-							(int) (targetRenderArea.y * lqScale),
-							(int) (targetRenderArea.width * lqScale),
-							(int) (targetRenderArea.height * lqScale)).scaledTo(clientAreaSize.x, clientAreaSize.y);
+					// First time accessing the lq data: get the cropped, scaled pixels
+					float lqFullImageScale = ((float) lqFullImage.width) / canvasState.getFullImageSize().x;
+					Rectangle lqRegion = SWTUtils.scale(targetRenderArea, lqFullImageScale);
+					lqCropScaled = ImageUtils.crop(lqFullImage, lqRegion).scaledTo(renderAreaSize.x, renderAreaSize.y);
 				}
-				
-				for (int y = 0; y < cellRenderAreaScaled.height; y++) {
-					int[] line = new int[cellRenderAreaScaled.width];
-					
-					int offsetX = (int) (canvasState.getScale() * (startPoint.x - targetRenderArea.x));
-					int offsetY = y + (int) (canvasState.getScale() * (startPoint.y - targetRenderArea.y));
-					int putWidth = Math.min(line.length, lqCropScaled.width - offsetX);
-					if (offsetY >= lqCropScaled.height) break;
-					lqCropScaled.getPixels(offsetX, offsetY, putWidth, line, 0);
-					
-					offsetX = (int) (canvasState.getScale() * (startPoint.x - targetRenderArea.x));
-					offsetY = y + (int) (canvasState.getScale() * (startPoint.y - targetRenderArea.y));
-					
-					if (offsetY >= data.height) break;
-					putWidth = Math.min(line.length, data.width - offsetX);
-					data.setPixels(offsetX, offsetY, putWidth, line, 0);
-				}
+				Point readOffset = SWTUtils.scale(cellStartPoint.x - targetRenderArea.x, cellStartPoint.y - targetRenderArea.y, renderScale);
+				copyPixels(lqCropScaled, renderData, readOffset, readOffset, cellRenderSizeScaled);
 			} else {
-				for (int y = 0; y < cellRenderAreaScaled.height; y++) {
-					int[] line = new int[cellRenderAreaScaled.width];
-					
-					int offsetX = (int) (canvasState.getScale() * (startPoint.x - cell.x));
-					int offsetY = y + (int) (canvasState.getScale() * (startPoint.y - cell.y));
-					cellImageData.getPixels(offsetX, offsetY, line.length, line, 0);
-					
-					offsetX = (int) (canvasState.getScale() * (startPoint.x - targetRenderArea.x));
-					offsetY = y + (int) (canvasState.getScale() * (startPoint.y - targetRenderArea.y));
-					
-					if (offsetY >= data.height) break;
-					int putWidth = Math.min(line.length, data.width - offsetX);
-					data.setPixels(offsetX, offsetY, putWidth, line, 0);
-				}
+				Point readOffset = SWTUtils.scale(cellStartPoint.x - cell.x, cellStartPoint.y - cell.y, renderScale);
+				Point writeOffset = SWTUtils.scale(cellStartPoint.x - targetRenderArea.x, cellStartPoint.y - targetRenderArea.y, renderScale);
+				copyPixels(cellImageData, renderData, readOffset, writeOffset, cellRenderSizeScaled);
 			}
 			
+			// Move the cellStartPoint into the next cell.
 			int cellIndex = cells.indexOf(cell);
 			if (cellIndex + 1 < cells.size()) {
 				Rectangle nextCell = cells.get(cellIndex + 1);
 				if (nextCell.y == cell.y) {
 					// Next cell is to the right of this one.
-					startPoint.x += cellRenderArea.width;
+					cellStartPoint.x += cellRenderSize.x;
 				} else {
 					// Next cell is on the next row.
-					startPoint.x = targetRenderArea.x;
-					startPoint.y += cellRenderArea.height;
+					cellStartPoint.x = targetRenderArea.x;
+					cellStartPoint.y += cellRenderSize.y;
 				}
 			}
 		}
 		
-		return data;
+		return renderData;
+	}
+	
+	private void copyPixels(ImageData from, ImageData to, Point readOffset, Point writeOffset, Point maxSize) {
+		// Don't render beyond the render area (horizontally)
+		int readWidth = from.width - readOffset.x;
+		int writeWidth = to.width - writeOffset.x;
+		int lineWidth = Math.min(Math.min(readWidth, writeWidth), maxSize.x);
+		
+		int[] line = new int[lineWidth];
+		for (int y = 0; y < maxSize.y; y++) {
+			// Don't render beyond the render area (vertically)
+			if (y + writeOffset.y >= to.height) break;
+			
+			from.getPixels(readOffset.x, y + readOffset.y, lineWidth, line, 0);
+			to.setPixels(writeOffset.x, y + writeOffset.y, lineWidth, line, 0);
+		}
 	}
 	
 	private void calculateGrid() {
@@ -113,7 +101,9 @@ public class ImageRegionGrid {
 		int y = 0;
 		while (y < fullImageSize.y) {
 			while (x < fullImageSize.x) {
-				Rectangle cell = new Rectangle(x, y, cellSize.x, cellSize.y);
+				int width = Math.min(cellSize.x, fullImageSize.x - x);
+				int height = Math.min(cellSize.y, fullImageSize.y - y);
+				Rectangle cell = new Rectangle(x, y, width, height);
 				imageGrid.add(cell);
 				x += cellSize.x;
 			}
