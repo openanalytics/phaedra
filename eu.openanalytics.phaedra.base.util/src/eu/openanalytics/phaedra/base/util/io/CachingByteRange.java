@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO This class may consume significant heapspace, but isn't part of the caching framework.
+//TODO An endless loop may occur here, e.g. CacheRange: [381271981 - 381271980] [data: true]
 public class CachingByteRange {
 
 	private List<CacheRange> ranges;
