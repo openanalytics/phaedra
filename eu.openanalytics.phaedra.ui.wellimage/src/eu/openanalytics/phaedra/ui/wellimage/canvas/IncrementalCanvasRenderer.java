@@ -3,11 +3,13 @@ package eu.openanalytics.phaedra.ui.wellimage.canvas;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -29,6 +31,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	private ImageData lqFullImage;
 	private ImageRegionGrid imageRegionGrid;
 	private Map<Rectangle, ImageData> highResRegions;
+	private Set<RenderJob> runningRenderJobs;
 	
 	private static final Point GRID_CELL_SIZE = new Point(512, 512);
 	
@@ -36,6 +39,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	public void initialize(ICanvasRenderCallback callback) {
 		this.renderCallback = callback;
 		this.executor = Executors.newFixedThreadPool(4);
+		this.runningRenderJobs = Collections.synchronizedSet(new HashSet<>());
 		this.highResRegions = Collections.synchronizedMap(new HashMap<>());
 		this.lqScale = 0.1f;
 	}
@@ -51,11 +55,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 					|| canvasState.channelsChanged(currentCanvasState)
 					|| canvasState.scaleChanged(currentCanvasState);
 			
-			if (lqFullImage == null || stateChanged) {
-					lqFullImage = ImageRenderService.getInstance().getWellImageData(canvasState.getWell(), lqScale, canvasState.getChannels());
-					imageRegionGrid = new ImageRegionGrid(canvasState.getFullImageSize(), GRID_CELL_SIZE);
-					highResRegions.clear();
-			}
+			if (lqFullImage == null || stateChanged) resetState(canvasState);
 			
 			// Find out which area of the image to render.
 			Rectangle targetRenderArea = new Rectangle(
@@ -71,14 +71,8 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 			
 			// Submit render jobs for any missing cells.
 			for (Rectangle cellArea: cellAreas) {
-				if (!highResRegions.containsKey(cellArea)) {
-					highResRegions.put(cellArea, null); // To prevent duplicate render jobs.
-					RenderJob hqRenderJob = new RenderJob(canvasState.copy(), cellArea, data -> {
-						highResRegions.put(cellArea, data);
-						renderCallback.requestRenderUpdate();
-					});
-					executor.execute(hqRenderJob);
-				}
+				if (highResRegions.containsKey(cellArea)) continue;
+				scheduleRenderJob(cellArea, canvasState);
 			}
 
 			ImageData imageData = imageRegionGrid.render(targetRenderArea, lqFullImage, highResRegions, canvasState);
@@ -96,15 +90,37 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		// Nothing to dispose
 	}
 
+	private void scheduleRenderJob(Rectangle cellArea, CanvasState canvasState) {
+		// To prevent duplicate render jobs.
+		highResRegions.put(cellArea, null);
+		
+		RenderJob hqRenderJob = new RenderJob(canvasState.copy(), cellArea, (job, data) -> {
+			highResRegions.put(cellArea, data);
+			renderCallback.requestRenderUpdate();
+			runningRenderJobs.remove(job);
+		});
+		
+		runningRenderJobs.add(hqRenderJob);
+		executor.execute(hqRenderJob);
+	}
+	
+	private void resetState(CanvasState canvasState) throws IOException {
+		// Throw away any cached data and start with a fresh image grid.
+		lqFullImage = ImageRenderService.getInstance().getWellImageData(canvasState.getWell(), lqScale, canvasState.getChannels());
+		imageRegionGrid = new ImageRegionGrid(canvasState.getFullImageSize(), GRID_CELL_SIZE);
+		for (RenderJob job: runningRenderJobs) job.cancel();
+		highResRegions.clear();	
+	}
+	
 	private static class RenderJob implements Runnable {
 		
 		private CanvasState state;
 		private Rectangle region;
-		private Consumer<ImageData> callback;
+		private BiConsumer<RenderJob, ImageData> callback;
 		
 		private volatile boolean cancelled;
 		
-		public RenderJob(CanvasState state, Rectangle region, Consumer<ImageData> callback) {
+		public RenderJob(CanvasState state, Rectangle region, BiConsumer<RenderJob, ImageData> callback) {
 			this.state = state;
 			this.region = region;
 			this.callback = callback;
@@ -120,7 +136,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 						region,
 						state.getChannels());
 				if (cancelled) return;
-				callback.accept(data);
+				callback.accept(this, data);
 			} catch (IOException e) {
 				EclipseLog.error("Failed to render image", e, Activator.PLUGIN_ID);
 			}
