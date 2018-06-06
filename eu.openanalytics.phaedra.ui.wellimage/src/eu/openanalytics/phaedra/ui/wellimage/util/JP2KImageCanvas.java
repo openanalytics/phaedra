@@ -32,9 +32,9 @@ import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
 import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 import eu.openanalytics.phaedra.ui.wellimage.Activator;
+import eu.openanalytics.phaedra.ui.wellimage.canvas.CanvasRendererFactory;
 import eu.openanalytics.phaedra.ui.wellimage.canvas.CanvasState;
 import eu.openanalytics.phaedra.ui.wellimage.canvas.ICanvasRenderer;
-import eu.openanalytics.phaedra.ui.wellimage.canvas.IncrementalCanvasRenderer;
 import eu.openanalytics.phaedra.ui.wellimage.preferences.Prefs;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
@@ -83,7 +83,7 @@ public class JP2KImageCanvas extends Canvas {
 		};
 		ProtocolUIService.getInstance().addUIEventListener(imageSettingsListener);
 
-		ICanvasRenderer canvasRenderer = new IncrementalCanvasRenderer();
+		ICanvasRenderer canvasRenderer = CanvasRendererFactory.createRenderer();
 		canvasRenderer.initialize(() -> Display.getDefault().asyncExec(() -> redraw()));
 		addPaintListener(e -> canvasRenderer.drawImage(e.gc, getClientArea(), canvasState));
 		
