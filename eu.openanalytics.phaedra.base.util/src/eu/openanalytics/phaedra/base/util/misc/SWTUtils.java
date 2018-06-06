@@ -133,6 +133,13 @@ public class SWTUtils {
 	}
 	
 	/**
+	 * Create a copy of a point.
+	 */
+	public static Point copy(Point p) {
+		return new Point(p.x, p.y);
+	}
+	
+	/**
 	 * Calculate the center of a rectangle.
 	 */
 	public static Point getCenter(Rectangle rect) {
@@ -172,6 +179,34 @@ public class SWTUtils {
 	 */
 	public static int[] getPoints(Rectangle r) {
 		return new int[] { r.x, r.y, r.x + r.width, r.y + r.height };
+	}
+	
+	/**
+	 * Scale a 2D coordinate, rounding down.
+	 */
+	public static Point scale(int x, int y, float scale) {
+		return new Point((int) (x * scale), (int) (y * scale));
+	}
+
+	/**
+	 * Scale a 2D coordinate, rounding down.
+	 */
+	public static Point scale(Point p, float scale) {
+		return scale(p.x, p.y, scale);
+	}
+
+	/**
+	 * Scale a rectangle, rounding down.
+	 */
+	public static Rectangle scale(int x, int y, int w, int h, float scale) {
+		return new Rectangle((int) (x * scale), (int) (y * scale), (int) (w * scale), (int) (h * scale));
+	}
+
+	/**
+	 * Scale a rectangle, rounding down.
+	 */
+	public static Rectangle scale(Rectangle r, float scale) {
+		return scale(r.x, r.y, r.width, r.height, scale);
 	}
 	
 	/**

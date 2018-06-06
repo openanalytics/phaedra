@@ -248,7 +248,7 @@ public class ImageLayer extends PlatesLayer {
 				@Override
 				public void componentToggled(int component, boolean state) {
 					newEnabledComponents[component] = state;
-					imageCanvas.forceRedraw();
+					imageCanvas.changeChannels(newEnabledComponents);
 				}
 			});
 
@@ -264,12 +264,7 @@ public class ImageLayer extends PlatesLayer {
 			useCustomThumbnailBtn.addListener(SWT.Selection, e -> useCustomThumbnail = useCustomThumbnailBtn.getSelection());
 			useCustomThumbnailBtn.setSelection(useCustomThumbnail);
 
-			imageCanvas = new JP2KImageCanvas(offsetGroup, SWT.NONE) {
-				@Override
-				protected boolean isChannelEnabled(int nr) {
-					return !controlPanel.isDisabled(nr);
-				}
-			};
+			imageCanvas = new JP2KImageCanvas(offsetGroup, SWT.NONE);
 			GridDataFactory.fillDefaults().align(SWT.CENTER, SWT.CENTER).hint(lastW + 3, lastH + 3).applyTo(imageCanvas);
 
 			imageCanvas.addListener(new JP2KImageCanvasListener() {

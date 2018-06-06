@@ -78,7 +78,7 @@ public class WellImageView2 extends DecoratedView {
 		controlPanel.addImageControlListener(new ImageControlListener(){
 			@Override
 			public void componentToggled(int component, boolean state) {
-				imageCanvas.forceRedraw();
+				imageCanvas.changeChannels(controlPanel.getButtonStates());
 			}
 		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(controlPanel);
@@ -87,12 +87,7 @@ public class WellImageView2 extends DecoratedView {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(container);
 		GridLayoutFactory.fillDefaults().margins(2, 2).applyTo(container);
 
-		imageCanvas = new JP2KImageCanvas(container, SWT.NONE) {
-			@Override
-			protected boolean isChannelEnabled(int nr) {
-				return !controlPanel.isDisabled(nr);
-			}
-		};
+		imageCanvas = new JP2KImageCanvas(container, SWT.NONE);
 		JP2KImageCanvasListener imageCanvasListener = new JP2KImageCanvasListener() {
 			@Override
 			public void onFileChange() {
@@ -291,7 +286,6 @@ public class WellImageView2 extends DecoratedView {
 					}
 				});
 				for (JP2KOverlay overlay: overlays) overlay.createButtons(parent);
-				imageCanvas.createButtons(parent);
 			}
 			@Override
 			public boolean isDynamic() {
