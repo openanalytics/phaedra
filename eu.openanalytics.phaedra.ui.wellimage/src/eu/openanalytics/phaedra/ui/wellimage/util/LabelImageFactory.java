@@ -18,8 +18,11 @@ import org.eclipse.swt.graphics.Transform;
 import eu.openanalytics.phaedra.base.util.misc.ColorStore;
 import eu.openanalytics.phaedra.calculation.ClassificationService;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
+import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequest;
+import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequestFactory;
 
 public class LabelImageFactory {
 
@@ -100,7 +103,15 @@ public class LabelImageFactory {
 		
 		// Obtain the current label image, which will be merged with the new one.
 		monitor.subTask("Merging label image with existing image");
-		ImageData currentLabelImage = ImageRenderService.getInstance().getWellImageData(well, drawSize.x, drawSize.y, null); 
+		boolean[] enabledChannels = new boolean[ProtocolUtils.getProtocolClass(well).getImageSettings().getImageChannels().size()];
+		enabledChannels[channelNr] = true;
+		ImageRenderRequest req = ImageRenderRequestFactory.forWell(well)
+				.withSize(drawSize)
+				.withComponents(enabledChannels)
+				.withApplyBlend(false)
+				.withApplyGamma(false)
+				.build();
+		ImageData currentLabelImage = ImageRenderService.getInstance().getImageData(req);
 		currentLabelImage = currentLabelImage.scaledTo(size.x, size.y);
 		
 		monitor.worked(2);
