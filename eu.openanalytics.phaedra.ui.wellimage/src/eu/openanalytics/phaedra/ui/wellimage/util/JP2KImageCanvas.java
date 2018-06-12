@@ -84,7 +84,9 @@ public class JP2KImageCanvas extends Canvas {
 		ProtocolUIService.getInstance().addUIEventListener(imageSettingsListener);
 
 		ICanvasRenderer canvasRenderer = CanvasRendererFactory.createRenderer();
-		canvasRenderer.initialize(() -> Display.getDefault().asyncExec(() -> redraw()));
+		canvasRenderer.initialize(() -> Display.getDefault().asyncExec(() -> {
+			if (!isDisposed()) redraw();
+		}));
 		addPaintListener(e -> canvasRenderer.drawImage(e.gc, getClientArea(), canvasState));
 		
 		getHorizontalBar().addListener(SWT.Selection, e -> {
@@ -176,17 +178,18 @@ public class JP2KImageCanvas extends Canvas {
 				canvasState.setWell(well, new Point(0, 0));
 			} else if (currentWell == null || !well.getPlate().equals(currentWell.getPlate())) {
 				// A well from a different plate is selected
-				canvasState.clearState();
-				canvasState.setWell(well, ImageRenderService.getInstance().getWellImageSize(well, 1.0f));
-				listenerManager.onFileChange();
-				
 				boolean isSamePClass = PlateUtils.isSameProtocolClass(well, currentWell);
 				boolean isRestoredView = (currentWell == null && canvasState.getScale() != 1.0f);
-				if (!isSamePClass && !isRestoredView && !LinkedImageManager.getInstance().isLinked(this)) {
+				if (isSamePClass || isRestoredView || LinkedImageManager.getInstance().isLinked(this)) {
+					canvasState.setWell(well, ImageRenderService.getInstance().getWellImageSize(well, 1.0f));
+				} else {
+					canvasState.clearState();
+					canvasState.setWell(well, ImageRenderService.getInstance().getWellImageSize(well, 1.0f));
 					ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(well);
 					canvasState.setChannels(ProtocolUtils.getEnabledChannels(currentSettings, true));
 					changeScale(1f / currentSettings.getZoomRatio());
 				}
+				listenerManager.onFileChange();
 			} else {
 				// A different well from the same plate is selected
 				canvasState.setWell(well, ImageRenderService.getInstance().getWellImageSize(well, 1.0f));

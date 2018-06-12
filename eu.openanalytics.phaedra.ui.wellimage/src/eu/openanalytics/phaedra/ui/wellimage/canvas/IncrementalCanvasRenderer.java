@@ -108,7 +108,9 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		// Throw away any cached data and start with a fresh image grid.
 		lqFullImage = ImageRenderService.getInstance().getWellImageData(canvasState.getWell(), lqScale, canvasState.getChannels());
 		imageRegionGrid = new ImageRegionGrid(canvasState.getFullImageSize(), GRID_CELL_SIZE);
-		for (RenderJob job: runningRenderJobs) job.cancel();
+		synchronized (runningRenderJobs) {
+			for (RenderJob job: runningRenderJobs) job.cancel();
+		}
 		highResRegions.clear();	
 	}
 	
