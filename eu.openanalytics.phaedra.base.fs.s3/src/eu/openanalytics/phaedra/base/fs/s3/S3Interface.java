@@ -28,6 +28,7 @@ public class S3Interface extends BaseFileServer {
 
 	private AmazonS3 s3;
 	private String bucketName;
+	private boolean enableSSE;
 	
 	@Override
 	public boolean isCompatible(FileServerConfig cfg) {
@@ -43,6 +44,8 @@ public class S3Interface extends BaseFileServer {
 		
 		bucketName = getLocalName(fsPath);
 		fsPath = fsPath.substring(0, fsPath.lastIndexOf("/"));
+		
+		enableSSE = Boolean.valueOf(cfg.get("enable.sse"));
 		
 		BasicAWSCredentials credentials = new BasicAWSCredentials(userName, pw);
 		EndpointConfiguration endpointConfiguration = new EndpointConfiguration(fsPath, null);
@@ -172,6 +175,7 @@ public class S3Interface extends BaseFileServer {
 	@Override
 	protected void doUpload(String path, InputStream input, long length) throws IOException {
 		ObjectMetadata metadata = new ObjectMetadata();
+		if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
 		if (length > 0) metadata.setContentLength(length);
 		s3.putObject(bucketName, getKey(path), input, metadata);
 	}
