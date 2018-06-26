@@ -85,7 +85,9 @@ public class ZippedFileStore implements IFileStore {
 	
 	@Override
 	public String readStringValue(String key) throws IOException {
-		return parseEntry(key, String.class);
+		Object value = readValue(key);
+		if (value == null) return null;
+		return String.valueOf(value);
 	}
 
 	@Override
