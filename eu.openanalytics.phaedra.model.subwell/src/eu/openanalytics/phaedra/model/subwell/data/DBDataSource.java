@@ -18,7 +18,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 
 import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.event.ModelEventService;
+import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
@@ -26,16 +29,21 @@ import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.Activator;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
 
-//TODO delete rows when plate is deleted
 public class DBDataSource implements ISubWellDataSource {
 
 	private static final String SCHEMA = "phaedra";
 	private static final String DATA_TABLE = "hca_subwelldata";
-	private static final String MAPPING_TABLE = "hca_sw_feature_map";
+	private static final String MAPPING_TABLE = "hca_subwelldata_feature";
 	
-	private static final int MAX_FEATURES = 750;
+	private static final int MAX_FEATURES = 1500;
+	private static final int MAX_ROWS_PER_WELL = 10000;
 	
 	public DBDataSource() {
+		ModelEventService.getInstance().addEventListener(event -> {
+			if (event.type == ModelEventType.ObjectRemoved && event.source instanceof Plate) {
+				deletePlateData((Plate) event.source);
+			}
+		});
 		try {
 			checkTables();
 		} catch (SQLException e) {
@@ -62,7 +70,7 @@ public class DBDataSource implements ISubWellDataSource {
 		int featureIndex = getFeatureMapping(feature.getProtocolClass()).get(feature);
 		String sql = String.format("select f%d_num_val from %s.%s where well_id = %d order by cell_id asc", featureIndex, SCHEMA, DATA_TABLE, well.getId());
 		return select(sql, rs -> {
-			float[] values = new float[10000];
+			float[] values = new float[MAX_ROWS_PER_WELL];
 			int i=0;
 			while (rs.next()) values[i++] = rs.getFloat(1);
 			return Arrays.copyOf(values, i);
@@ -74,7 +82,7 @@ public class DBDataSource implements ISubWellDataSource {
 		int featureIndex = getFeatureMapping(feature.getProtocolClass()).get(feature);
 		String sql = String.format("select f%d_str_val from %s.%s where well_id = %d order by cell_id asc", featureIndex, SCHEMA, DATA_TABLE, well.getId());
 		return select(sql, rs -> {
-			String[] values = new String[10000];
+			String[] values = new String[MAX_ROWS_PER_WELL];
 			int i=0;
 			while (rs.next()) values[i++] = rs.getString(1);
 			return Arrays.copyOf(values, i);
@@ -266,6 +274,16 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 	
+	private void deletePlateData(Plate plate) {
+		String stmt = String.format("delete from %s.%s where well_id in (select well_id from %s.%s where plate_id = %d)",
+				SCHEMA, DATA_TABLE, SCHEMA, "hca_plate_well", plate.getId());
+		try (Connection conn = getConnection()) {
+			executeStatement(stmt, conn);
+		} catch (SQLException e) {
+			EclipseLog.error(String.format("Failed to delete subwelldata for %s", plate), e, Platform.getBundle(Activator.class.getPackage().getName()));
+		}
+	}
+	
 	private Well getWell(List<Well> wells, long well_id) {
 		return wells.stream().filter(w -> w.getId() == well_id).findAny().orElse(null);
 	}
@@ -338,7 +356,7 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private String getColNames(Map<SubWellFeature, Integer> featureMapping) {
 		return  "well_id,cell_id," + featureMapping.keySet().stream()
-			.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
+			.map(f -> String.format("f%d_num_val", featureMapping.get(f)))
 			.collect(Collectors.joining(","));	
 	}
 
@@ -352,37 +370,37 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private void checkTables() throws SQLException {
 		try (Connection conn = getConnection()) {
-			try {
+//			try {
 				executeStatement(String.format("select * from %s.%s limit 1", SCHEMA, DATA_TABLE), conn);
-			} catch (SQLException e) {
-				conn.rollback();
-
-				//TODO this requires table creation privileges
-				StringBuilder sql = new StringBuilder();
-				sql.append(String.format("create table %s.%s (", SCHEMA, DATA_TABLE));
-				sql.append("well_id bigint, cell_id bigint, ");
-				for (int i = 0; i < MAX_FEATURES; i++) {
-					sql.append(String.format("f%d_num_val float, f%d_str_val varchar(100),", i, i));
-				}
-				sql.deleteCharAt(sql.length() - 1);
-				sql.append(") tablespace phaedra_d");
-				executeStatement(sql.toString(), conn);
-				
-				sql = new StringBuilder();
-				sql.append(String.format("create table %s.%s (", SCHEMA, MAPPING_TABLE));
-				sql.append("protocolclass_id bigint, feature_id bigint, sequence_nr integer) tablespace phaedra_d");
-				executeStatement(sql.toString(), conn);
-				conn.commit();
-				
-				executeStatement(String.format("alter table %s.%s add constraint %s_pk primary key (well_id, cell_id) using index tablespace phaedra_i", SCHEMA, DATA_TABLE, DATA_TABLE), conn);
-				executeStatement(String.format("alter table %s.%s add constraint %s_fk_well foreign key (well_id) references %s.hca_plate_well(well_id) on delete cascade", SCHEMA, DATA_TABLE, DATA_TABLE, SCHEMA), conn);
-				
-				executeStatement(String.format("grant INSERT, UPDATE, DELETE on %s.%s to phaedra_role_crud", SCHEMA, DATA_TABLE), conn);
-				executeStatement(String.format("grant SELECT on %s.%s to phaedra_role_read", SCHEMA, DATA_TABLE), conn);
-				executeStatement(String.format("grant INSERT, UPDATE, DELETE on %s.%s to phaedra_role_crud", SCHEMA, MAPPING_TABLE), conn);
-				executeStatement(String.format("grant SELECT on %s.%s to phaedra_role_read", SCHEMA, MAPPING_TABLE), conn);
-				conn.commit();
-			}
+//			} catch (SQLException e) {
+//				conn.rollback();
+//
+//				//TODO this requires table creation privileges
+//				StringBuilder sql = new StringBuilder();
+//				sql.append(String.format("create table %s.%s (", SCHEMA, DATA_TABLE));
+//				sql.append("well_id bigint, cell_id bigint, ");
+//				for (int i = 0; i < MAX_FEATURES; i++) {
+//					sql.append(String.format("f%d_num_val float, f%d_str_val varchar(100),", i, i));
+//				}
+//				sql.deleteCharAt(sql.length() - 1);
+//				sql.append(") tablespace phaedra_d");
+//				executeStatement(sql.toString(), conn);
+//				
+//				sql = new StringBuilder();
+//				sql.append(String.format("create table %s.%s (", SCHEMA, MAPPING_TABLE));
+//				sql.append("protocolclass_id bigint, feature_id bigint, sequence_nr integer) tablespace phaedra_d");
+//				executeStatement(sql.toString(), conn);
+//				conn.commit();
+//				
+//				executeStatement(String.format("alter table %s.%s add constraint %s_pk primary key (well_id, cell_id) using index tablespace phaedra_i", SCHEMA, DATA_TABLE, DATA_TABLE), conn);
+//				executeStatement(String.format("alter table %s.%s add constraint %s_fk_well foreign key (well_id) references %s.hca_plate_well(well_id) on delete cascade", SCHEMA, DATA_TABLE, DATA_TABLE, SCHEMA), conn);
+//				
+//				executeStatement(String.format("grant INSERT, UPDATE, DELETE on %s.%s to phaedra_role_crud", SCHEMA, DATA_TABLE), conn);
+//				executeStatement(String.format("grant SELECT on %s.%s to phaedra_role_read", SCHEMA, DATA_TABLE), conn);
+//				executeStatement(String.format("grant INSERT, UPDATE, DELETE on %s.%s to phaedra_role_crud", SCHEMA, MAPPING_TABLE), conn);
+//				executeStatement(String.format("grant SELECT on %s.%s to phaedra_role_read", SCHEMA, MAPPING_TABLE), conn);
+//				conn.commit();
+//			}
 		}
 	}
 }
