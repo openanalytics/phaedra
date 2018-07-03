@@ -58,7 +58,8 @@ public class SMBInterface extends BaseFileServer {
 		basePath = SMBHelper.toSMBNotation(fsPath);
 		
 		Properties p = new Properties();
-
+		if (Boolean.valueOf(cfg.get("enable.smb2"))) p.setProperty("jcifs.smb.client.enableSMB2", "true");
+		
 		// Authentication information
 		p.setProperty("jcifs.smb.client.username", userName.contains("\\") ? userName.substring(userName.indexOf('\\') + 1) : userName);
 		p.setProperty("jcifs.smb.client.password", pw);
