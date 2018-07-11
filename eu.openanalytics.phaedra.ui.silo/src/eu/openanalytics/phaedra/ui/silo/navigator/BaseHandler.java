@@ -9,7 +9,6 @@ import eu.openanalytics.phaedra.base.ui.navigator.model.IElement;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.silo.cmd.CreateSilo;
-import eu.openanalytics.phaedra.ui.silo.cmd.CreateSiloGroup;
 
 public class BaseHandler extends BaseElementHandler {
 
@@ -20,24 +19,11 @@ public class BaseHandler extends BaseElementHandler {
 				ProtocolClass pClass = null;
 				if (element.getData() instanceof ProtocolClass) pClass = (ProtocolClass) element.getData();
 				GroupType type = GroupType.WELL;
-				if (element.getParent().getId().startsWith(SiloProvider.SUBWELL_SILOS)) type = GroupType.SUBWELL;
+				if (element.getParent().getId().equals(SiloProvider.GROUP_ID_SW_SILOS)) type = GroupType.SUBWELL;
 				CreateSilo.execute(null, pClass, type);
 			}
 		};
 		action.setImageDescriptor(IconManager.getIconDescriptor("silo_add.png"));
-		mgr.add(action);
-		
-		action = new Action("Create New Silo Group", Action.AS_PUSH_BUTTON) {
-			@Override
-			public void run() {
-				ProtocolClass pClass = null;
-				if (element.getData() instanceof ProtocolClass) pClass = (ProtocolClass) element.getData();
-				GroupType type = GroupType.WELL;
-				if (element.getParent().getId().startsWith(SiloProvider.SUBWELL_SILOS)) type = GroupType.SUBWELL;
-				CreateSiloGroup.execute(null, pClass, type);
-			}
-		};
-		action.setImageDescriptor(IconManager.getIconDescriptor("folder_add.png"));
 		mgr.add(action);
 	}
 }

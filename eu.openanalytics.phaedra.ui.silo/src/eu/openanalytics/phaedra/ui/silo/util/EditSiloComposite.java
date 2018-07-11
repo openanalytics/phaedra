@@ -23,40 +23,35 @@ import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
-import eu.openanalytics.phaedra.silo.vo.SiloGroup;
+import eu.openanalytics.phaedra.silo.vo.Silo;
 
-public class SiloGroupComposite extends Composite {
+public class EditSiloComposite extends Composite {
 
 	private Text nameTxt;
 	private Text descriptionTxt;
 	private Combo sharingCombo;
 	private Combo pClassCombo;
-	private Button exampleButton;
 	private Button wellTypeRadio;
 	private Button subwellTypeRadio;
-
-	private SiloGroup siloGroup;
 
 	private ModifyListener modifyListener;
 	private SelectionListener selectionListener;
 
-	public SiloGroupComposite(Composite parent, int style, SiloGroup siloGroupObj, boolean hasChildren) {
+	public EditSiloComposite(Composite parent, int style, Silo silo, boolean allowEditType, boolean allowEditPClass, boolean allowEditAccess) {
 		super(parent, style);
-		GridLayoutFactory.fillDefaults().numColumns(2).margins(5, 5).applyTo(this);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(this);
-
-		this.siloGroup = siloGroupObj;
+		GridLayoutFactory.fillDefaults().numColumns(2).margins(5, 5).applyTo(this);
 
 		Label lbl = new Label(this, SWT.NONE);
 		lbl.setText("Name:");
 
 		nameTxt = new Text(this, SWT.BORDER);
-		nameTxt.setText(siloGroup.getName());
+		nameTxt.setText(silo.getName());
 		nameTxt.setTextLimit(100);
 		nameTxt.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
-				siloGroup.setName(nameTxt.getText());
+				silo.setName(nameTxt.getText());
 				if (modifyListener != null) {
 					modifyListener.modifyText(e);
 				}
@@ -69,33 +64,32 @@ public class SiloGroupComposite extends Composite {
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
 
 		descriptionTxt = new Text(this, SWT.BORDER | SWT.MULTI | SWT.WRAP);
-		descriptionTxt.setText(siloGroup.getDescription() != null ? siloGroup.getDescription() :  "");
+		descriptionTxt.setText(silo.getDescription() != null ? silo.getDescription() :  "");
 		descriptionTxt.setTextLimit(200);
 		descriptionTxt.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
-				siloGroup.setDescription(descriptionTxt.getText());
+				silo.setDescription(descriptionTxt.getText());
 			}
 		});
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(descriptionTxt);
 
-		// Group has children, do not allowing editing advanced options.
-		if (!hasChildren) {
+		if (allowEditType) {
 			lbl = new Label(this, SWT.NONE);
 			lbl.setText("Data type:");
 			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
-			
+
 			Composite typeContainer = new Composite(this, SWT.NONE);
 			GridDataFactory.fillDefaults().applyTo(typeContainer);
 			GridLayoutFactory.fillDefaults().numColumns(2).applyTo(typeContainer);
 
 			wellTypeRadio = new Button(typeContainer, SWT.RADIO);
 			wellTypeRadio.setText("Well data");
-			wellTypeRadio.setSelection(siloGroup.getType() == GroupType.WELL.getType());
+			wellTypeRadio.setSelection(silo.getType() == GroupType.WELL.getType());
 			wellTypeRadio.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					siloGroup.setType(GroupType.WELL.getType());
+					silo.setType(GroupType.WELL.getType());
 					if (selectionListener != null) {
 						selectionListener.widgetSelected(e);
 					}
@@ -104,89 +98,71 @@ public class SiloGroupComposite extends Composite {
 
 			subwellTypeRadio = new Button(typeContainer, SWT.RADIO);
 			subwellTypeRadio.setText("Subwell data");
-			subwellTypeRadio.setSelection(siloGroup.getType() == GroupType.SUBWELL.getType());
+			subwellTypeRadio.setSelection(silo.getType() == GroupType.SUBWELL.getType());
 			subwellTypeRadio.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
-					siloGroup.setType(GroupType.SUBWELL.getType());
-					if (selectionListener != null) {
-						selectionListener.widgetSelected(e);
-					}
-				}
-			});
-
-			if (siloGroup.getProtocolClass() == null) {
-				lbl = new Label(this, SWT.NONE);
-				lbl.setText("Protocol Class:");
-
-				final List<ProtocolClass> pClasses = ProtocolService.getInstance().getProtocolClasses();
-				Collections.sort(pClasses, ProtocolUtils.PROTOCOLCLASS_NAME_SORTER);
-				String[] pClassNames = new String[pClasses.size()];
-				int index = 0;
-				for (ProtocolClass pClass : pClasses) {
-					pClassNames[index++] = pClass.getName();
-				}
-				pClassCombo = new Combo(this, SWT.NONE);
-				pClassCombo.setItems(pClassNames);
-				pClassCombo.select(0);
-				pClassCombo.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						ProtocolClass pClass =  pClasses.get(pClassCombo.getSelectionIndex());
-						siloGroup.setProtocolClass(pClass);
-						if (selectionListener != null) {
-							selectionListener.widgetSelected(e);
-						}
-					}
-				});
-				GridDataFactory.fillDefaults().grab(true, false).applyTo(pClassCombo);
-				new ComboAutoCompleteField(pClassCombo);
-
-				siloGroup.setProtocolClass(pClasses.get(0));
-			}
-			
-			lbl = new Label(this, SWT.NONE);
-			lbl.setText("Sharing:");
-			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
-
-			sharingCombo = new Combo(this, SWT.CHECK);
-			sharingCombo.setItems(AccessScope.getScopeNames());
-			sharingCombo.select(AccessScope.getScopeIndex(siloGroup.getAccessScope()));
-			sharingCombo.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					int selected = sharingCombo.getSelectionIndex();
-					AccessScope scope = AccessScope.values()[selected];
-					siloGroup.setAccessScope(scope);
-					// If AccessScope is not public, do not allow Example.
-					exampleButton.setEnabled(scope.isPublicScope());
-					// If AccessScope is not public, set false, else maintain current value.
-					exampleButton.setSelection(scope.isPublicScope() && exampleButton.getSelection());
-					if (selectionListener != null) {
-						selectionListener.widgetSelected(e);
-					}
-				}
-			});
-			GridDataFactory.fillDefaults().grab(true, false).applyTo(sharingCombo);
-
-			lbl = new Label(this, SWT.NONE);
-			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
-
-			exampleButton = new Button(this, SWT.CHECK);
-			exampleButton.setText("Example Silo");
-			exampleButton.setToolTipText("When checked this Silo will be shown as an Example.");
-			exampleButton.setEnabled(siloGroup.getAccessScope().isPublicScope());
-			exampleButton.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					siloGroup.setExample(exampleButton.getSelection());
+					silo.setType(GroupType.SUBWELL.getType());
 					if (selectionListener != null) {
 						selectionListener.widgetSelected(e);
 					}
 				}
 			});
 		}
+		
+		if (allowEditPClass) {
+			List<ProtocolClass> pClasses = ProtocolService.getInstance().getProtocolClasses();
+			Collections.sort(pClasses, ProtocolUtils.PROTOCOLCLASS_NAME_SORTER);
+			if (silo.getProtocolClass() == null) silo.setProtocolClass(pClasses.get(0));
+			
+			String[] pClassNames = new String[pClasses.size()];
+			int pClassIndex = 0;
+			for (int i = 0; i < pClassNames.length; i++) {
+				pClassNames[i] = pClasses.get(i).getName();
+				if (pClasses.get(i).getId() == silo.getProtocolClass().getId()) pClassIndex = i;
+			}
 
+			lbl = new Label(this, SWT.NONE);
+			lbl.setText("Protocol Class:");
+			
+			pClassCombo = new Combo(this, SWT.NONE);
+			pClassCombo.setItems(pClassNames);
+			pClassCombo.select(pClassIndex);
+			pClassCombo.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					ProtocolClass pClass =  pClasses.get(pClassCombo.getSelectionIndex());
+					silo.setProtocolClass(pClass);
+					if (selectionListener != null) {
+						selectionListener.widgetSelected(e);
+					}
+				}
+			});
+			GridDataFactory.fillDefaults().grab(true, false).applyTo(pClassCombo);
+			new ComboAutoCompleteField(pClassCombo);
+		}
+		
+		if (allowEditAccess) {
+			lbl = new Label(this, SWT.NONE);
+			lbl.setText("Sharing:");
+			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(lbl);
+
+			sharingCombo = new Combo(this, SWT.CHECK);
+			sharingCombo.setItems(AccessScope.getScopeNames());
+			sharingCombo.select(AccessScope.getScopeIndex(silo.getAccessScope()));
+			sharingCombo.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					int selected = sharingCombo.getSelectionIndex();
+					AccessScope scope = AccessScope.values()[selected];
+					silo.setAccessScope(scope);
+					if (selectionListener != null) {
+						selectionListener.widgetSelected(e);
+					}
+				}
+			});
+			GridDataFactory.fillDefaults().grab(true, false).applyTo(sharingCombo);
+		}
 	}
 
 	/**

@@ -15,10 +15,11 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
+import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 import eu.openanalytics.phaedra.ui.silo.dialog.AddJEPColumnDialog;
 
@@ -27,13 +28,11 @@ public class AddJEPColumn extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
-		SiloStructure struct = SelectionUtils.getFirstObject(selection, SiloStructure.class);
-		if (struct == null) return null;
-		
-		final SiloStructure group = struct.isDataset() ? struct.getParent() : struct;
+		SiloDataset dataset = SelectionUtils.getFirstObject(selection, SiloDataset.class);
+		if (dataset == null) return null;
 		
 		Shell shell = Display.getDefault().getActiveShell();
-		AddJEPColumnDialog dialog = new AddJEPColumnDialog(shell, group);
+		AddJEPColumnDialog dialog = new AddJEPColumnDialog(shell, dataset);
 		int retCode = dialog.open();
 		if (retCode == Window.CANCEL) return null;
 		
@@ -41,11 +40,10 @@ public class AddJEPColumn extends AbstractHandler {
 		String formula = dialog.getFormula();
 		
 		try {
-			Object evaluateArray = JEPCalculation.evaluateArray(formula, group);
-			
-			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(group.getSilo());
-			accessor.addColumn(group.getFullName(), newColumnName);
-			accessor.replaceColumn(group.getFullName(), newColumnName, evaluateArray);
+			Object evaluatedData = JEPCalculation.evaluateArray(formula, dataset);
+			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(dataset.getSilo());
+			accessor.createColumn(dataset.getName(), newColumnName, SiloDataType.Float);
+			accessor.updateValues(dataset.getName(), newColumnName, evaluatedData);
 		} catch (SiloException e) {
 			String msg = "Failed to add new column";
 			ErrorDialog.openError(shell, "Cannot Add Column", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));

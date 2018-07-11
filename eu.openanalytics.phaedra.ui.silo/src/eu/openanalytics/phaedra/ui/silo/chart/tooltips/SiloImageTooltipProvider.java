@@ -16,6 +16,7 @@ import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
+import eu.openanalytics.phaedra.model.subwell.SubWellItem;
 import eu.openanalytics.phaedra.ui.silo.chart.data.SiloDataProvider;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 import uk.ac.starlink.ttools.plot.Tooltip;
@@ -30,7 +31,6 @@ public class SiloImageTooltipProvider implements ITooltipProvider {
 	public static final boolean[] DEFAULT_CHANNELS = null;
 
 	private SiloDataProvider dataProvider;
-	private float[] cellIndex;
 
 	private float scale = DEFAULT_SCALE;
 	private boolean[] channels = DEFAULT_CHANNELS;
@@ -41,27 +41,29 @@ public class SiloImageTooltipProvider implements ITooltipProvider {
 
 	@Override
 	public void starting() {
-		cellIndex = dataProvider.getCellIndexColumn();
+		// Do nothing.
 	}
 
 	@Override
 	public Point getTooltipSize(int index) {
-		Well w = SelectionUtils.getAsClass(dataProvider.getRowObject(index), Well.class);
-		if (cellIndex != null && cellIndex.length > index) {
-			int currentCellIndex = (int) cellIndex[index];
-			Rectangle rect = ImageRenderService.getInstance().getSubWellImageBounds(w, currentCellIndex, scale);
-			return new Point(rect.width, rect.height);
-		} else {
-			org.eclipse.swt.graphics.Point size = ImageRenderService.getInstance().getWellImageSize(w, scale);
+		Well well = SelectionUtils.getAsClass(dataProvider.getRowObject(index), Well.class);
+		SubWellItem item = dataProvider.getSubwellItem(index);
+		if (item == null) {
+			org.eclipse.swt.graphics.Point size = ImageRenderService.getInstance().getWellImageSize(well, scale);
 			return new Point(size.x, size.y);
+		} else {
+			int currentCellIndex = item.getIndex();
+			Rectangle rect = ImageRenderService.getInstance().getSubWellImageBounds(well, currentCellIndex, scale);
+			return new Point(rect.width, rect.height);
 		}
 	}
 
 	@Override
 	public Tooltip getTooltip(int index) throws IOException {
-		Well w = SelectionUtils.getAsClass(dataProvider.getRowObject(index), Well.class);
-
-		ImageSettings currentSettings = PlateUtils.getProtocolClass(w).getImageSettings();
+		Well well = SelectionUtils.getAsClass(dataProvider.getRowObject(index), Well.class);
+		SubWellItem item = dataProvider.getSubwellItem(index);
+		
+		ImageSettings currentSettings = PlateUtils.getProtocolClass(well).getImageSettings();
 
 		List<ImageChannel> imageChannels = currentSettings.getImageChannels();
 		if (channels == null || imageChannels.size() != channels.length) {
@@ -71,22 +73,22 @@ public class SiloImageTooltipProvider implements ITooltipProvider {
 			}
 		}
 
-		if (cellIndex != null && cellIndex.length > index) {
-			int currentCellIndex = (int) cellIndex[index];
-			ImageData imageData = ImageRenderService.getInstance().getSubWellImageData(w, currentCellIndex, scale, channels);
+		if (item == null) {
+			ImageData imageData = ImageRenderService.getInstance().getWellImageData(well, scale, channels);
 			Image tmpImage = new Image(null, imageData);
 			try {
 				BufferedImage awtImage = AWTImageConverter.convert(tmpImage);
-				return new Tooltip(awtImage, "Cell " + currentCellIndex + " @ Well " + PlateUtils.getWellCoordinate(w));
+				return new Tooltip(awtImage, "Well " + PlateUtils.getWellCoordinate(well));
 			} finally {
 				tmpImage.dispose();
 			}
 		} else {
-			ImageData imageData = ImageRenderService.getInstance().getWellImageData(w, scale, channels);
+			int currentCellIndex = item.getIndex();
+			ImageData imageData = ImageRenderService.getInstance().getSubWellImageData(well, currentCellIndex, scale, channels);
 			Image tmpImage = new Image(null, imageData);
 			try {
 				BufferedImage awtImage = AWTImageConverter.convert(tmpImage);
-				return new Tooltip(awtImage, "Well " + PlateUtils.getWellCoordinate(w));
+				return new Tooltip(awtImage, "Cell " + currentCellIndex + " @ Well " + PlateUtils.getWellCoordinate(well));
 			} finally {
 				tmpImage.dispose();
 			}

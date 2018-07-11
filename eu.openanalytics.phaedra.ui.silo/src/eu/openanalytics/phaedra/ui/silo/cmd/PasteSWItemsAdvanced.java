@@ -30,7 +30,7 @@ public class PasteSWItemsAdvanced extends PasteSWItems {
 	}
 
 	@Override
-	protected boolean asNewGroup() {
+	protected boolean asNewDataset() {
 		return settings.isNewGroup();
 	}
 

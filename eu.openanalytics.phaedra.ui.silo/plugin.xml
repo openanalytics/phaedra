@@ -9,9 +9,9 @@
             name="Create New Silo">
       </command>
       <command
-            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.CreateSiloGroup"
-            id="eu.openanalytics.phaedra.ui.silo.cmd.CreateSiloGroup"
-            name="Create New Silo Group">
+            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.CreateDataset"
+            id="eu.openanalytics.phaedra.ui.silo.cmd.CreateDataset"
+            name="Create New Dataset">
       </command>
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.AddColumn"
@@ -44,9 +44,9 @@
             name="Paste Wells Advanced">
       </command>
       <command
-            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.DeleteGroups"
-            id="eu.openanalytics.phaedra.ui.silo.cmd.DeleteGroups"
-            name="Delete Group(s)">
+            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
+            id="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
+            name="Delete Dataset(s)">
       </command>
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItemsAsNewGroup"
@@ -68,11 +68,6 @@
             id="eu.openanalytics.phaedra.ui.silo.cmd.DeleteRows"
             name="Delete Row(s)">
       </command>
-      <command
-            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.DownloadHDF5FileCommand"
-            id="eu.openanalytics.phaedra.ui.silo.cmd.DownloadHDF5FileCommand"
-            name="Download as HDF5 File">
-      </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -88,15 +83,6 @@
       <menuContribution
             allPopups="false"
             locationURI="popup:eu.openanalytics.phaedra.ui.navigator.Navigator?after=siloChartMenu">
-         <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DownloadHDF5FileCommand"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/drive_disk.png"
-               style="push">
-         </command>
-         <separator
-               name="eu.openanalytics.phaedra.ui.silo.separator2"
-               visible="true">
-         </separator>
          <menu
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
                label="Charts">
@@ -185,7 +171,7 @@
             </command>
          </menu>
          <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteGroups"
+               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_delete.png"
                style="push">
          </command>
@@ -304,7 +290,7 @@
             </command>
          </menu>
          <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteGroups"
+               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_delete.png"
                style="push">
          </command>
@@ -531,9 +517,6 @@
       </elementHandler>
       <elementHandler
             class="eu.openanalytics.phaedra.ui.silo.navigator.SiloHandler">
-      </elementHandler>
-      <elementHandler
-            class="eu.openanalytics.phaedra.ui.silo.navigator.GroupHandler">
       </elementHandler>
    </extension>
    <extension

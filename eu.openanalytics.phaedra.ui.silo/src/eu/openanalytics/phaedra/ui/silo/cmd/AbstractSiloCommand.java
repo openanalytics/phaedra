@@ -10,27 +10,27 @@ import eu.openanalytics.phaedra.silo.vo.Silo;
 
 public abstract class AbstractSiloCommand extends AbstractHandler {
 
-	public final static String VAR_ACTIVE_SILO = "activeSilo";
-	public final static String VAR_ACTIVE_SILO_GROUP = "activeSiloDataGroup";
+	private static final String VAR_ACTIVE_SILO = "activeSilo";
+	private static final String VAR_ACTIVE_SILO_DATASET = "activeSiloDataset";
 	
 	protected Silo getActiveSilo(ExecutionEvent event) {
-		return (Silo)getContextVar(VAR_ACTIVE_SILO, event);
+		return (Silo) getContextVar(VAR_ACTIVE_SILO, event);
 	}
 	
-	protected String getActiveSiloGroup(ExecutionEvent event) {
-		return (String)getContextVar(VAR_ACTIVE_SILO_GROUP, event);
+	protected String getActiveSiloDataset(ExecutionEvent event) {
+		return (String) getContextVar(VAR_ACTIVE_SILO_DATASET, event);
 	}
 	
 	public static void setActiveSilo(Silo silo) {
 		setContextVar(VAR_ACTIVE_SILO, silo);
 	}
 	
-	public static void setActiveSiloGroup(String group) {
-		setContextVar(VAR_ACTIVE_SILO_GROUP, group);
+	public static void setActiveSiloDataset(String group) {
+		setContextVar(VAR_ACTIVE_SILO_DATASET, group);
 	}
 	
 	private static void setContextVar(String name, Object value) {
-		IEvaluationContext ctx = ((IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class)).getCurrentState();
+		IEvaluationContext ctx = ((IEvaluationService) PlatformUI.getWorkbench().getService(IEvaluationService.class)).getCurrentState();
 		if (value == null) ctx.getParent().removeVariable(name);
 		else ctx.getParent().addVariable(name, value);
 	}

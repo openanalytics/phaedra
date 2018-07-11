@@ -17,8 +17,10 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
+import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 
 public class AddColumn extends AbstractHandler {
@@ -26,16 +28,14 @@ public class AddColumn extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		ISelection selection = (ISelection)HandlerUtil.getCurrentSelection(event);
-		SiloStructure struct = SelectionUtils.getFirstObject(selection, SiloStructure.class);
-		if (struct == null) return null;
-		
-		final SiloStructure group = struct.isDataset() ? struct.getParent() : struct;
+		SiloDataset dataset = SelectionUtils.getFirstObject(selection, SiloDataset.class);
+		if (dataset == null) return null;
 		
 		IInputValidator validator = new IInputValidator() {
 			@Override
 			public String isValid(String newText) {
-				for (SiloStructure child: group.getChildren()) {
-					if (child.isDataset() && child.getName().equals(newText)) return "A column with this name already exists";
+				for (SiloDatasetColumn column: dataset.getColumns()) {
+					if (column.getName().equals(newText)) return "A column with this name already exists";
 				}
 				return null;
 			}
@@ -48,8 +48,8 @@ public class AddColumn extends AbstractHandler {
 		String newColumnName = dialog.getValue();
 		
 		try {
-			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(group.getSilo());
-			accessor.addColumn(group.getFullName(), newColumnName);
+			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(dataset.getSilo());
+			accessor.createColumn(dataset.getName(), newColumnName, SiloDataType.Float);
 		} catch (SiloException e) {
 			String msg = "Failed to add new column";
 			ErrorDialog.openError(shell, "Cannot Add Column", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));

@@ -4,44 +4,58 @@ import java.util.Iterator;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
+import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 
 public interface ISiloAccessor<T> {
 
 	public Silo getSilo();
+	public boolean isDirty();
+	
+	public SiloDataset createDataset(String datasetName) throws SiloException;
+	public void removeDataset(String datasetName) throws SiloException;
+	
+	public SiloDatasetColumn createColumn(String datasetName, String columnName, SiloDataType dataType) throws SiloException;
+	public void removeColumn(String datasetName, String columnName) throws SiloException;
+	public SiloDataType getColumnDataType(String datasetName, String columnName) throws SiloException;
+	
+	public int getRowCount(String datasetName) throws SiloException;
+	public T getRowObject(String datasetName, int rowIndex) throws SiloException;
+	public int getIndexOfRow(String datasetName, T rowObject) throws SiloException;
+	public Iterator<T> getRowIterator(String datasetName) throws SiloException;
 
-	public SiloStructure getSiloStructure() throws SiloException;
+	public void addRows(String datasetName, T[] rows) throws SiloException;
+	public void removeRows(String datasetName, int[] rows) throws SiloException;
 
-	public String[] getDataGroups() throws SiloException;
-	public String[] getColumns(String dataGroup) throws SiloException;
+	public float[] getFloatValues(String datasetName, String columnName) throws SiloException;
+	public long[] getLongValues(String datasetName, String columnName) throws SiloException;
+	public String[] getStringValues(String datasetName, String columnName) throws SiloException;
 
-	public int getRowCount(String dataGroup) throws SiloException;
-	public T getRow(String dataGroup, int rowIndex) throws SiloException;
-	public int getRow(String dataGroup, T object) throws SiloException;
-	public Iterator<T> getRowIterator(String dataGroup) throws SiloException;
+	/**
+	 * Update the contents of a dataset column.
+	 * The data must be an array, with its size matching the row count of the dataset.
+	 * 
+	 * @param datasetName The name of the dataset to update a column in.
+	 * @param columnName The name of the column to update.
+	 * @param newData The data array to place in the column.
+	 * @throws SiloException If the column cannot be updated for any reason.
+	 */
+	public void updateValues(String datasetName, String columnName, Object newData) throws SiloException;
 
-	public SiloDataType getDataType(String dataGroup, int column) throws SiloException;
-
-	public float[] getFloatValues(String dataGroup, int column) throws SiloException;
-	public String[] getStringValues(String dataGroup, int column) throws SiloException;
-	public int[] getIntValues(String dataGroup, int column) throws SiloException;
-	public long[] getLongValues(String dataGroup, int column) throws SiloException;
-	public double[] getDoubleValues(String dataGroup, int column) throws SiloException;
-
-	public void addRows(String dataGroup, T[] rows, SiloStructure siloStructure) throws SiloException;
-	public void addRows(String dataGroup, T[] rows) throws SiloException;
-	public void removeRows(String dataGroup, int[] rows) throws SiloException;
-
-	public void addColumn(String dataGroup, String columnName) throws SiloException;
-	public void replaceColumn(String dataGroup, String columnName, Object data) throws SiloException;
-
-	public boolean isEditable(String columnName);
-	public String[] getMandatoryColumns();
-
+	/**
+	 * Save any changes made into the silo.
+	 * 
+	 * @param monitor An optional progress monitor.
+	 * @throws SiloException If the changes cannot be saved for any reason.
+	 */
 	public void save(IProgressMonitor monitor) throws SiloException;
-	public void revert() throws SiloException;
+	
+	/**
+	 * Revert any changes made, so that this accessor reflects the current saved state of the silo.
+	 */
+	public void revert();
 
 }

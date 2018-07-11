@@ -15,16 +15,16 @@ import eu.openanalytics.phaedra.silo.Activator;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
 import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
 
-public class WellFeatureSiloScanner extends BaseScanner<SiloStructure> {
+public class WellFeatureSiloScanner extends BaseScanner<SiloDataset> {
 
 	private final static char VAR_SIGN = '#';
 
 	@Override
 	protected boolean isValidObject(Object obj) {
-		return obj instanceof SiloStructure;
+		return obj instanceof SiloDataset;
 	}
 
 	@Override
@@ -33,28 +33,27 @@ public class WellFeatureSiloScanner extends BaseScanner<SiloStructure> {
 	}
 
 	@Override
-	protected Object getValueForRef(String scope, String[] fieldNames, SiloStructure group) {
-		ProtocolClass pClass = group.getSilo().getProtocolClass();
+	protected Object getValueForRef(String scope, String[] fieldNames, SiloDataset dataset) {
+		ProtocolClass pClass = dataset.getSilo().getProtocolClass();
 		Feature feature = ProtocolUtils.getFeatureByName(fieldNames[0], pClass);
 
 		if (feature == null || !feature.isNumeric()) {
 			throw new CalculationException("Feature is null or not numeric: " + fieldNames[0]);
 		}
 
-		return getValueFor(feature, group, scope);
+		return getValueFor(feature, dataset, scope);
 	}
 
-	private Object getValueFor(Feature feature, SiloStructure group, String scope) {
-		Silo silo = group.getSilo();
-		String dataGroup = group.getFullName();
+	private Object getValueFor(Feature feature, SiloDataset dataset, String scope) {
+		Silo silo = dataset.getSilo();
 		ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(silo);
 
 		try {
-			int rows = accessor.getRowCount(dataGroup);
+			int rows = accessor.getRowCount(dataset.getName());
 			if (silo.getType() == GroupType.WELL.getType()) {
 				float[] featureData = new float[rows];
 				for (int i = 0; i < rows; i++) {
-					Object row = accessor.getRow(dataGroup, i);
+					Object row = accessor.getRowObject(dataset.getName(), i);
 					if (row instanceof Well) {
 						Well well = (Well) row;
 						PlateDataAccessor plateAccessor = CalculationService.getInstance().getAccessor(well.getPlate());
@@ -65,7 +64,7 @@ public class WellFeatureSiloScanner extends BaseScanner<SiloStructure> {
 			} else if (silo.getType() == GroupType.SUBWELL.getType()) {
 				float[] featureData = new float[rows];
 				for (int i = 0; i < rows; i++) {
-					Object row = accessor.getRow(dataGroup, i);
+					Object row = accessor.getRowObject(dataset.getName(), i);
 					if (row instanceof SubWellItem) {
 						SubWellItem swItem = (SubWellItem) row;
 						PlateDataAccessor plateAccessor = CalculationService.getInstance().getAccessor(swItem.getWell().getPlate());

@@ -8,7 +8,7 @@ public class SilosHandler extends BaseHandler {
 
 	@Override
 	public boolean matches(IElement element) {
-		return (element.getId().equals(SiloProvider.SILOS) || element.getId().startsWith(SiloProvider.PCLASS));
+		return (element.getId().equals(SiloProvider.GROUP_ID_SILOS) || element.getId().startsWith(SiloProvider.GROUP_PREFIX_PCLASS));
 	}
 
 	@Override

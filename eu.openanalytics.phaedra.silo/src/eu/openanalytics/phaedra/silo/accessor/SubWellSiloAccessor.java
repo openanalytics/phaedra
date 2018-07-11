@@ -1,116 +1,101 @@
 package eu.openanalytics.phaedra.silo.accessor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
-import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellItem;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
-import eu.openanalytics.phaedra.silo.SiloConstants;
-import eu.openanalytics.phaedra.silo.SiloDataService;
 import eu.openanalytics.phaedra.silo.SiloException;
-import eu.openanalytics.phaedra.silo.util.ColumnDescriptor;
+import eu.openanalytics.phaedra.silo.dao.SiloDatasetData;
+import eu.openanalytics.phaedra.silo.dao.SiloDatasetData.SiloDatapoint;
+import eu.openanalytics.phaedra.silo.dao.SiloDatasetData.SiloDatasetColumnData;
+import eu.openanalytics.phaedra.silo.util.SiloUtils;
 import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 
-public class SubWellSiloAccessor extends BaseSiloAccessor<SubWellItem> {
-
-	private final static String DS_WELL_ID = SiloConstants.WELL_COL;
-	private final static String DS_SUBWELL_INDEX = SiloConstants.INDEX_COL;
+public class SubWellSiloAccessor extends AbstractSiloAccessor<SubWellItem> {
 
 	public SubWellSiloAccessor(Silo silo) {
 		super(silo);
 	}
 
 	@Override
-	public String[] getMandatoryColumns() {
-		return new String[] { DS_WELL_ID, DS_SUBWELL_INDEX };
-	}
-
-	@Override
-	protected List<SubWellItem> loadGroup(String dataGroup) throws SiloException {
+	protected List<SubWellItem> loadRowObjects(String datasetName) throws SiloException {
 		List<SubWellItem> rows = new ArrayList<>();
 
-		boolean isNewGroup = !getSiloStructure().getDataGroups().contains(dataGroup);
-		if (isNewGroup) return rows;
+		SiloDataset ds = SiloUtils.getDataset(getSilo(), datasetName);
+		if (ds == null) return rows;
 
-		long[] wellIds = getWellIds(dataGroup);
-		if (wellIds == null) throw new SiloException("Invalid silo format: no " + DS_WELL_ID + " vector found.");
-		int[] subWellIds = getSubWellIds(dataGroup);
-		if (subWellIds == null) throw new SiloException("Invalid silo format: no " + DS_SUBWELL_INDEX + " vector found.");
+		SiloDatasetData dsData = getWorkingCopyData(datasetName);
+		if (dsData == null) return rows;
+		
+		SiloDatapoint[] points = dsData.getDataPoints();
+		if (points == null || points.length == 0) return rows;
 
-		// Obtain a set of unique well ids and retrieve their Well objects.
-		Set<Long> uniqueWellIds = new HashSet<>();
-		for (long wellId: wellIds) uniqueWellIds.add(wellId);
-		long[] uniqueIdArray = new long[uniqueWellIds.size()];
-		Iterator<Long> it = uniqueWellIds.iterator();
-		for (int i = 0; i < uniqueIdArray.length; i++) uniqueIdArray[i] = it.next();
-		List<Well> wells = queryWells(uniqueIdArray);
+		SiloDatapoint[] distinctWellPoints = Arrays.stream(points).filter(distinctByKey(p -> p.getWellId())).toArray(i -> new SiloDatapoint[i]);
+		List<Well> wells = queryWells(distinctWellPoints);
 
-		for (int i = 0; i < subWellIds.length; i++) {
+		for (int i = 0; i < points.length; i++) {
 			SubWellItem item = new SubWellItem();
+			item.setIndex((int) points[i].getSubwellId());
 			for (Well well: wells) {
-				if (well.getId() == wellIds[i]) {
+				if (well.getId() == points[i].getWellId()) {
 					item.setWell(well);
 					break;
 				}
 			}
-			item.setIndex(subWellIds[i]);
 			rows.add(item);
 		}
-
 		return rows;
 	}
 
+	private static Predicate<SiloDatapoint> distinctByKey(Function<? super SiloDatapoint, ?> keyExtractor) {
+	    Set<Object> seen = ConcurrentHashMap.newKeySet();
+	    return t -> seen.add(keyExtractor.apply(t));
+	}
+	
 	@Override
-	protected void rowsAdded(String dataGroup, List<SubWellItem> rows) throws SiloException {
-		// Update mandatory columns.
-		long[] wellIds = getWellIds(dataGroup);
-		int[] subWellIds = getSubWellIds(dataGroup);
-		if (wellIds == null) wellIds = new long[rows.size()];
-		if (subWellIds == null) subWellIds = new int[rows.size()];
-
-		int offset = wellIds.length - rows.size();
-		for (int i = offset; i < wellIds.length; i++) {
-			wellIds[i] = rows.get(i-offset).getWell().getId();
-			subWellIds[i] = rows.get(i-offset).getIndex();
-		}
-
-		replaceColumn(dataGroup, DS_WELL_ID, wellIds);
-		replaceColumn(dataGroup, DS_SUBWELL_INDEX, subWellIds);
+	protected SiloDatapoint createDataPoint(SubWellItem row) {
+		SiloDatapoint dp = new SiloDatapoint();
+		dp.setWellId(row.getWell().getId());
+		dp.setSubwellId(row.getIndex());
+		return dp;
 	}
 
 	@Override
-	protected void insertDefaultValue(SubWellItem row, Object array, int index, ColumnDescriptor columnDescriptor) throws SiloException {
-		SubWellFeature feature = (SubWellFeature)columnDescriptor.feature;
-		if (feature.isNumeric()) {
-			float[] numericData = SubWellService.getInstance().getNumericData(row.getWell(), feature);
-			float numVal = (numericData == null) ? Float.NaN : numericData[row.getIndex()];
-			if (columnDescriptor.normalization != null) {
-				numVal = (float)NormalizationService.getInstance().getNormalizedValue(row.getWell(), row.getIndex(), feature, columnDescriptor.normalization);
+	protected void setDefaultValues(SiloDatasetColumn column, SiloDatasetColumnData columnData, List<SubWellItem> newRows) throws SiloException {
+		SubWellFeature feature = SiloUtils.getSubWellFeature(column);
+		if (feature == null) return;
+
+		// If no rows were specified, update the whole column.
+		if (newRows == null) newRows = getRows(columnData.getColumn().getDataset().getName());
+		
+		for (int i = 0; i < newRows.size(); i++) {
+			SubWellItem item = newRows.get(i);
+			float[] numericData = feature.isNumeric() ? SubWellService.getInstance().getNumericData(item.getWell(), feature) : null;
+			String[] stringData = feature.isNumeric() ? null : SubWellService.getInstance().getStringData(item.getWell(), feature);
+			switch (column.getType()) {
+			case Float:
+				float[] fData = columnData.getFloatData();
+				fData[fData.length - newRows.size()] = numericData[item.getIndex()];
+				break;
+			case Long:
+				long[] lData = columnData.getLongData();
+				lData[lData.length - newRows.size()] = (long) numericData[item.getIndex()];
+			case String:
+				String[] sData = columnData.getStringData();
+				sData[sData.length - newRows.size()] = stringData[item.getIndex()];
+			default:
+				// Nothing to set.
 			}
-
-			if (array instanceof float[]) ((float[])array)[index] = numVal;
-			else if (array instanceof int[]) ((int[])array)[index] = (int)numVal;
-			else if (array instanceof long[]) ((long[])array)[index] = (long)numVal;
-			else if (array instanceof double[]) ((double[])array)[index] = numVal;
-		} else {
-			String[] stringData = SubWellService.getInstance().getStringData(row.getWell(), feature);
-			String stringVal = (stringData == null) ? "" : stringData[row.getIndex()];
-			if (array instanceof String[]) ((String[])array)[index] = stringVal;
 		}
 	}
-
-	private long[] getWellIds(String dataGroup) throws SiloException {
-		return SiloDataService.getInstance().readLongData(getSilo(), dataGroup, DS_WELL_ID);
-	}
-
-	private int[] getSubWellIds(String dataGroup) throws SiloException {
-		return SiloDataService.getInstance().readIntData(getSilo(), dataGroup, DS_SUBWELL_INDEX);
-	}
-
 }

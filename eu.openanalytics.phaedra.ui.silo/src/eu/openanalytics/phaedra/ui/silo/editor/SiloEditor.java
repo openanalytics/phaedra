@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.ui.silo.editor;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -14,7 +13,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -67,7 +65,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Widget;
@@ -84,7 +81,6 @@ import ca.odell.glazedlists.GlazedLists;
 import ca.odell.glazedlists.SortedList;
 import ca.odell.glazedlists.matchers.Matcher;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
-import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.SecurityService.Action;
@@ -115,20 +111,17 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.base.util.threading.JobUtils;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
-import eu.openanalytics.phaedra.silo.SiloDataService;
-import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.ColumnDescriptor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
-import eu.openanalytics.phaedra.silo.util.SiloStructureUtils;
+import eu.openanalytics.phaedra.silo.util.SiloUtils;
 import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
 import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
@@ -142,7 +135,8 @@ import eu.openanalytics.phaedra.ui.wellimage.util.ImageControlPanel.ImageControl
 abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeature> extends DecoratedEditor {
 
 	private static final int IMAGE_COLUMN_INDEX = 0;
-
+	private static final String IMAGE_COLUMN_NAME = "Image";
+	
 	private final Matcher<Integer> selectedFilter = new SelectedMatcher();
 	private final ViewerFilter selectionFilter = new SelectionFilter();
 
@@ -172,9 +166,8 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 	private NatTable table;
 	private ThumbnailViewer thumbnailViewer;
 
-	private Silo silo;
 	private ISiloAccessor<ENTITY> accessor;
-	private String dataGroup;
+	private String currentDatasetName;
 
 	// Image settings.
 	private ImageControlPanel imageControlPanel;
@@ -193,7 +186,8 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
-		this.silo = SelectionUtils.getFirstAsClass(((VOEditorInput)input).getValueObjects(), Silo.class);
+		
+		Silo silo = SelectionUtils.getFirstAsClass(((VOEditorInput)input).getValueObjects(), Silo.class);
 		this.accessor = SiloService.getInstance().getSiloAccessor(silo);
 		this.scale = getDefaultScale();
 		List<ImageChannel> imageSettings = silo.getProtocolClass().getImageSettings().getImageChannels();
@@ -207,11 +201,12 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					int rowCount = accessor.getRowCount(dataGroup);
+					int rowCount = accessor.getRowCount(currentDatasetName);
 					monitor.beginTask("Images done: " + 0, rowCount);
 					for (int i = 0; i < rowCount; i++) {
 						if (monitor.isCanceled()) return Status.CANCEL_STATUS;
-						ENTITY entity = accessor.getRow(dataGroup, i);
+						ENTITY entity = accessor.getRowObject(currentDatasetName, i);
+						if (entity == null) continue;
 						imageBounds[i] = getImageBounds(entity, scale);
 						monitor.setTaskName("Images done: " + i);
 						monitor.worked(1);
@@ -246,7 +241,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(toolBarContainer);
 
 		imageControlPanel = new ImageControlPanel(toolBarContainer, SWT.NONE, true, false);
-		imageControlPanel.setImage(silo.getProtocolClass());
+		imageControlPanel.setImage(accessor.getSilo().getProtocolClass());
 		imageControlPanel.addImageControlListener(new ImageControlListener() {
 			@Override
 			public void componentToggled(int component, boolean state) {
@@ -277,25 +272,19 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		treeViewer = new TreeViewer(treeContainer);
 		treeViewer.setContentProvider(new SiloTreeContentProvider());
 		treeViewer.setLabelProvider(new SiloTreeLabelProvider());
-		treeViewer.setInput(silo);
+		treeViewer.setInput(accessor.getSilo());
 		treeViewer.addSelectionChangedListener(event -> {
-			final SiloStructure struct = SelectionUtils.getFirstObject(event.getSelection(), SiloStructure.class);
-			if (struct == null || struct.isDataset()) return;
-			if (struct.getFullName().equals(dataGroup)) return;
-			Job job = new Job("Load Silo Data") {
-				@Override
-				protected IStatus run(IProgressMonitor monitor) {
-					monitor.beginTask("Loading Silo Data", IProgressMonitor.UNKNOWN);
-					try {
-						loadGroup(struct.getFullName());
-					} catch (IOException e) {
-						EclipseLog.warn(e.getMessage(), e, Activator.getDefault());
-						return Status.CANCEL_STATUS;
-					}
-					return Status.OK_STATUS;
-				}
-			};
-			job.schedule();
+			SiloDataset ds = SelectionUtils.getFirstObject(event.getSelection(), SiloDataset.class);
+			if (ds == null) return;
+			if (ds.getName().equals(currentDatasetName)) return;
+			
+			// Clear Current Selections.
+			thumbnailViewer.setSelection(new StructuredSelection());
+			natTableSelectionProvider.setSelection(new StructuredSelection());
+			// Clear List.
+			eventList.clear();
+			currentDatasetName = ds.getName();
+			setInput(true);
 		});
 		createTreeContextMenu();
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(treeViewer.getControl());
@@ -331,12 +320,12 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 				currentThumbnailSelection = super.getSelectionFromWidget();
 				List<Object> entities = new ArrayList<>();
 				try {
-					int rows = accessor.getRowCount(dataGroup);
+					int rows = accessor.getRowCount(currentDatasetName);
 					for (Object o : currentThumbnailSelection) {
 						if (o instanceof Integer) {
 							int rowIndex = (int) o;
 							if (rowIndex < rows) {
-								entities.add(accessor.getRow(dataGroup, rowIndex));
+								entities.add(accessor.getRowObject(currentDatasetName, rowIndex));
 							}
 						}
 					}
@@ -373,7 +362,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 		new ThumbnailTooltip(thumbnailViewer, data -> {
 			try {
-				return accessor.getRow(dataGroup, (int) data);
+				return accessor.getRowObject(currentDatasetName, (int) data);
 			} catch (Exception e) {}
 			return null;
 		}, createToolTipLabelProvider());
@@ -398,29 +387,30 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			}
 			@Override
 			public void cutAction(ISelection selection) {
-				try {
-					List<SiloStructure> siloStructures = SelectionUtils.getObjects(selection, SiloStructure.class);
-					String cutGroup;
-					// Check if the cut was done in another group of this Silo.
-					if (siloStructures.isEmpty()) {
-						cutGroup = dataGroup;
-					} else {
-						cutGroup = siloStructures.get(0).getFullName();
-					}
-					List<ENTITY> rowsToDelete = getSelectedEntities(selection);
-					int[] rows = new int[rowsToDelete.size()];
-					for (int i=0; i<rows.length; i++) {
-						rows[i] = accessor.getRow(cutGroup, rowsToDelete.get(i));
-					}
-					accessor.removeRows(cutGroup, rows);
-					if (dataGroup.equals(cutGroup))	{
-						selectionProvider.setSelection(new StructuredSelection(rowsToDelete));
-					}
-				} catch (SiloException e) {
-					Shell shell = Display.getDefault().getActiveShell();
-					String msg = "Failed to delete rows";
-					ErrorDialog.openError(shell, "Cannot Delete Rows", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
-				}
+				//TODO
+//				try {
+//					List<SiloStructure> siloStructures = SelectionUtils.getObjects(selection, SiloStructure.class);
+//					String cutGroup;
+//					// Check if the cut was done in another group of this Silo.
+//					if (siloStructures.isEmpty()) {
+//						cutGroup = currentDatasetName;
+//					} else {
+//						cutGroup = siloStructures.get(0).getFullName();
+//					}
+//					List<ENTITY> rowsToDelete = getSelectedEntities(selection);
+//					int[] rows = new int[rowsToDelete.size()];
+//					for (int i=0; i<rows.length; i++) {
+//						rows[i] = accessor.getRowObject(cutGroup, rowsToDelete.get(i));
+//					}
+//					accessor.removeRows(cutGroup, rows);
+//					if (currentDatasetName.equals(cutGroup))	{
+//						selectionProvider.setSelection(new StructuredSelection(rowsToDelete));
+//					}
+//				} catch (SiloException e) {
+//					Shell shell = Display.getDefault().getActiveShell();
+//					String msg = "Failed to delete rows";
+//					ErrorDialog.openError(shell, "Cannot Delete Rows", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
+//				}
 			}
 		});
 		initDecorators(parent, thumbnailViewer.getControl());
@@ -440,7 +430,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		// Create table.
 		Integer[] rowNrs = new Integer[0];
 		try {
-			rowNrs = new Integer[accessor.getRowCount(dataGroup)];
+			rowNrs = new Integer[accessor.getRowCount(currentDatasetName)];
 			for (int i = 0; i < rowNrs.length; i++) {
 				rowNrs[i] = i;
 			}
@@ -558,10 +548,11 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 				List<Object> entities = new ArrayList<>();
 				try {
 					for (int rowIndex : list) {
-						entities.add(accessor.getRow(dataGroup, rowIndex));
+						entities.add(accessor.getRowObject(currentDatasetName, rowIndex));
 					}
-					SiloStructure siloStructure = SiloStructureUtils.findDataGroup(SiloDataService.getInstance().getSiloStructure(silo), dataGroup);
-					entities.add(siloStructure);
+					//TODO
+//					SiloStructure siloStructure = SiloStructureUtils.findDataGroup(SiloDataService.getInstance().getSiloStructure(silo), currentDatasetName);
+//					entities.add(siloStructure);
 				} catch (SiloException e) {
 					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 				}
@@ -576,26 +567,25 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 	private IColumnPropertyAccessor<Integer> createColumnAccessor() {
 		return new IColumnPropertyAccessor<Integer>() {
-			// We forcefully add an Image column. Hence the +1/-1.
-			private static final String IMAGE_COLUMN = "Image";
-
 			@Override
 			public Object getDataValue(Integer rowObject, int columnIndex) {
 				try {
-					if (columnIndex == IMAGE_COLUMN_INDEX) return getImageData(accessor.getRow(dataGroup, rowObject), scale, enabledChannels);
-
-					SiloDataType type = accessor.getDataType(dataGroup, columnIndex-1);
-					switch (type) {
+					if (columnIndex == IMAGE_COLUMN_INDEX) {
+						return getImageData(accessor.getRowObject(currentDatasetName, rowObject), scale, enabledChannels);
+					}
+					
+					SiloDataset ds = SiloUtils.getDataset(accessor.getSilo(), currentDatasetName);
+					SiloDatasetColumn col = ds.getColumns().get(columnIndex - 1);
+					switch (col.getType()) {
 					case Float:
-						return accessor.getFloatValues(dataGroup, columnIndex-1)[rowObject];
+						float[] floatValues = accessor.getFloatValues(currentDatasetName, col.getName());
+						return (floatValues == null) ? Float.NaN : floatValues[rowObject];
 					case String:
-						return accessor.getStringValues(dataGroup, columnIndex-1)[rowObject];
-					case Integer:
-						return accessor.getIntValues(dataGroup, columnIndex-1)[rowObject];
+						String[] stringValues = accessor.getStringValues(currentDatasetName, col.getName());
+						return (stringValues == null) ? null : stringValues[rowObject];
 					case Long:
-						return accessor.getLongValues(dataGroup, columnIndex-1)[rowObject];
-					case Double:
-						return accessor.getDoubleValues(dataGroup, columnIndex-1)[rowObject];
+						long[] longValues = accessor.getLongValues(currentDatasetName, col.getName());
+						return (longValues == null) ? null : longValues[rowObject];
 					default:
 						break;
 					}
@@ -606,41 +596,33 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			}
 
 			@Override
-			public void setDataValue(Integer rowObject, int columnIndex, Object newValue) {
+			public void setDataValue(Integer rowIndex, int columnIndex, Object newValue) {
 				try {
 					if (columnIndex == IMAGE_COLUMN_INDEX) return;
-
+					
+					SiloDataset ds = SiloUtils.getDataset(accessor.getSilo(), currentDatasetName);
+					SiloDatasetColumn column = ds.getColumns().get(columnIndex - 1);
+					
 					String stringValue = newValue != null ? newValue.toString() : "";
 					Object columnData = null;
-					SiloDataType type = accessor.getDataType(dataGroup, columnIndex-1);
-
-					switch (type) {
+					switch (column.getType()) {
 					case Float:
-						columnData = accessor.getFloatValues(dataGroup, columnIndex-1);
-						((float[])columnData)[rowObject] = Float.parseFloat(stringValue);
+						columnData = accessor.getFloatValues(currentDatasetName, column.getName());
+						((float[]) columnData)[rowIndex] = Float.parseFloat(stringValue);
 						break;
 					case String:
-						columnData = accessor.getStringValues(dataGroup, columnIndex-1);
-						((String[])columnData)[rowObject] = stringValue;
-						break;
-					case Integer:
-						columnData = accessor.getIntValues(dataGroup, columnIndex-1);
-						((int[])columnData)[rowObject] = Integer.parseInt(stringValue);
+						columnData = accessor.getStringValues(currentDatasetName, column.getName());
+						((String[]) columnData)[rowIndex] = stringValue;
 						break;
 					case Long:
-						columnData = accessor.getLongValues(dataGroup, columnIndex-1);
-						((long[])columnData)[rowObject] = Long.parseLong(stringValue);
-						break;
-					case Double:
-						columnData = accessor.getDoubleValues(dataGroup, columnIndex-1);
-						((double[])columnData)[rowObject] = Double.parseDouble(stringValue);
+						columnData = accessor.getLongValues(currentDatasetName, column.getName());
+						((long[]) columnData)[rowIndex] = Long.parseLong(stringValue);
 						break;
 					default:
 						break;
 					}
-
-					// Values have been changed. Trigger event and make Editor dirty.
-					setDirty(true);
+					
+					if (columnData != null) accessor.updateValues(currentDatasetName, column.getName(), columnData);
 				} catch (SiloException e) {
 					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 				}
@@ -648,39 +630,24 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 			@Override
 			public int getColumnCount() {
-				try {
-					return accessor.getColumns(dataGroup).length + 1;
-				} catch (SiloException e) {
-					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
-				}
-				return 0;
+				SiloDataset ds = getDataset();
+				return (ds == null) ? 0 : ds.getColumns().size() + 1;
 			}
 
 			@Override
 			public String getColumnProperty(int columnIndex) {
-				try {
-					if (columnIndex == IMAGE_COLUMN_INDEX) return IMAGE_COLUMN;
-					else return accessor.getColumns(dataGroup)[columnIndex-1];
-				} catch (SiloException e) {
-					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
-				}
-				return null;
+				if (columnIndex == IMAGE_COLUMN_INDEX) return IMAGE_COLUMN_NAME;
+				else return getColumn(columnIndex).getName();
 			}
 
 			@Override
 			public int getColumnIndex(String propertyName) {
-				try {
-					if (propertyName.equals(IMAGE_COLUMN)) return 0;
-					String[] columns = accessor.getColumns(dataGroup);
-					for (int i = 0; i < columns.length; i++) {
-						if (columns[i].equals(propertyName)) {
-							return i+1;
-						}
-					}
-				} catch (SiloException e) {
-					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
+				if (propertyName.equals(IMAGE_COLUMN_NAME)) return 0;
+				List<SiloDatasetColumn> cols = getDataset().getColumns();
+				for (int i = 0; i < cols.size(); i++) {
+					if (cols.get(i).getName().equals(propertyName)) return i + 1;
 				}
-				return 0;
+				return -1;
 			}
 		};
 	}
@@ -689,31 +656,20 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		return new IDataValidator() {
 			@Override
 			public boolean validate(int columnIndex, int rowIndex, Object newValue) {
-				try {
-					SiloDataType dataType = accessor.getDataType(dataGroup, columnIndex-1);
-					switch (dataType) {
-					case Double:
-					case Float:
-						if (NumberUtils.isDouble(newValue.toString())) {
-							return true;
-						} else {
-							throw new ValidationFailedException("The value should be a decimal number (e.g. 45.6).");
-						}
-					case Integer:
-					case Long:
-						if (NumberUtils.isDigit(newValue.toString())) {
-							return true;
-						} else {
-							throw new ValidationFailedException("The value should be a number (e.g. 45).");
-						}
-					default:
-						break;
-					}
-				} catch (SiloException e) {
-					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
+				SiloDatasetColumn col = getColumn(columnIndex);
+				switch (col.getType()) {
+				case Float:
+					if (NumberUtils.isDouble(newValue.toString())) return true;
+					else throw new ValidationFailedException("The value should be a decimal number (e.g. 45.6).");
+				case Long:
+					if (NumberUtils.isDigit(newValue.toString())) return true;
+					else throw new ValidationFailedException("The value should be a number (e.g. 45).");
+				default:
+					break;
 				}
 				return true;
 			}
+			
 			@Override
 			public boolean validate(ILayerCell cell, IConfigRegistry configRegistry, Object newValue) {
 				// If the Cell is part of the Filter Row always return true since the Row Index is 0 for this Cell as well.
@@ -729,14 +685,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		return new EditableRule() {
 			@Override
 			public boolean isEditable(int columnIndex, int rowIndex) {
-				if (columnIndex == 0) return false;
-				try {
-					String[] columns = accessor.getColumns(dataGroup);
-					return accessor.isEditable(columns[columnIndex-1]);
-				} catch (SiloException e) {
-					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
-				}
-				return false;
+				return (columnIndex > 0);
 			}
 		};
 	}
@@ -749,14 +698,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		ProtocolUIService.getInstance().removeUIEventListener(imageSettingListener);
 		Display.getDefault().removeFilter(SWT.KeyDown, keyListeners[0]);
 		Display.getDefault().removeFilter(SWT.KeyUp, keyListeners[1]);
-		if (isDirty) {
-			try {
-				// Revert the changes.
-				accessor.revert();
-			} catch (SiloException e) {
-				EclipseLog.error(e.getMessage(), e, Activator.getDefault());
-			}
-		}
+		if (isDirty) accessor.revert();
 		super.dispose();
 	}
 
@@ -789,7 +731,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 	@Override
 	public boolean isSaveAsAllowed() {
-		return SecurityService.getInstance().checkPersonalObject(Action.UPDATE, silo);
+		return SecurityService.getInstance().checkPersonalObject(Action.UPDATE, accessor.getSilo());
 	}
 
 	@Override
@@ -799,12 +741,20 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
-		AbstractSiloCommand.setActiveSilo(silo);
-		AbstractSiloCommand.setActiveSiloGroup(dataGroup);
+		AbstractSiloCommand.setActiveSilo(accessor.getSilo());
+		AbstractSiloCommand.setActiveSiloDataset(currentDatasetName);
 		super.fillContextMenu(manager);
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
+	protected SiloDataset getDataset() {
+		return SiloUtils.getDataset(accessor.getSilo(), currentDatasetName);
+	}
+	
+	protected SiloDatasetColumn getColumn(int columnIndex) {
+		return getDataset().getColumns().get(columnIndex - 1);
+	}
+	
 	protected float getDefaultScale() {
 		return 1f;
 	}
@@ -813,12 +763,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 	protected abstract Rectangle getImageBounds(ENTITY entity, float scale);
 	protected abstract boolean isImageReady(ENTITY entity, float scale, boolean[] channels);
 
-	/**
-	 * Converts the given Selection to a List<ENTITY>.
-	 *
-	 * @param selection
-	 * @return
-	 */
 	protected abstract List<ENTITY> getSelectedEntities(ISelection selection);
 
 	protected abstract boolean selectFeatures(ProtocolClass pClass, List<FEATURE> selectedFeatures, List<String> selectedNormalizations);
@@ -851,11 +795,10 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 						if (monitor.isCanceled()) return Status.CANCEL_STATUS;
 						FEATURE f = selectedFeatures.get(i);
 						monitor.subTask("Adding column " + (i+1) + "/" + selectedFeatures.size() + ": " + f.getName() + "");
+						//TODO support normalization
 						String norm = selectedNormalizations.get(i);
-						String colName = ColumnDescriptor.createColumnName(f, norm);
-						if (!CollectionUtils.contains(accessor.getColumns(dataGroup), colName)) {
-							accessor.addColumn(dataGroup, colName);
-						}
+						String colName = f.getName();
+						accessor.createColumn(currentDatasetName, colName, SiloUtils.getDataType(f));
 						monitor.worked(1);
 					}
 				} catch (SiloException e) {
@@ -872,12 +815,12 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 	@SuppressWarnings("unchecked")
 	protected void addEntitySelection(List<ENTITY> selections) {
-		if (dataGroup == null) {
+		if (currentDatasetName == null) {
 			MessageDialog.openInformation(Display.getDefault().getActiveShell(), "No group selected", "Cannot paste items: no group selected.");
 			return;
 		}
 		try {
-			accessor.addRows(dataGroup, (ENTITY[]) selections.toArray(new PlatformObject[selections.size()]));
+			accessor.addRows(currentDatasetName, (ENTITY[]) selections.toArray(new PlatformObject[selections.size()]));
 			// Rows are added, consider it dirty.
 			setDirty(true);
 			setInput(false);
@@ -900,11 +843,11 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		try {
 			List<ENTITY> entities = getSelectedEntities(selection);
 			for (ENTITY entity : entities) {
-				int row = accessor.getRow(dataGroup, entity);
+				int row = accessor.getIndexOfRow(currentDatasetName, entity);
 				if (row > -1) list.add(row);
 			}
 		} catch (SiloException e) {
-			EclipseLog.error(e.getMessage(), e, Activator.getDefault());
+			EclipseLog.warn("Failed to retrieve row index", e, Activator.PLUGIN_ID);
 		}
 		return list;
 	}
@@ -935,9 +878,9 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		saveItem.addListener(SWT.Selection, e -> doSave(null));
 
 		ToolItem item = new ToolItem(toolbar, SWT.PUSH);
-		item.setImage(IconManager.getIconImage((silo.getType() == GroupType.WELL.getType()) ? "tag_blue.png" : "tag_red.png"));
+		item.setImage(IconManager.getIconImage((accessor.getSilo().getType() == GroupType.WELL.getType()) ? "tag_blue.png" : "tag_red.png"));
 		item.setToolTipText("Select which Features should be included in the Silo");
-		item.addListener(SWT.Selection, e -> configureFeatures(accessor, dataGroup));
+		item.addListener(SWT.Selection, e -> configureFeatures(accessor, currentDatasetName));
 
 		item = new ToolItem(toolbar, SWT.PUSH);
 		item.setImage(IconManager.getIconImage("table.png"));
@@ -970,8 +913,8 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		MenuManager menuMgr = new MenuManager("#Popup");
 		menuMgr.setRemoveAllWhenShown(true);
 		menuMgr.addMenuListener(manager -> {
-			AbstractSiloCommand.setActiveSilo(silo);
-			AbstractSiloCommand.setActiveSiloGroup(dataGroup);
+			AbstractSiloCommand.setActiveSilo(accessor.getSilo());
+			AbstractSiloCommand.setActiveSiloDataset(currentDatasetName);
 			manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 		});
 		Menu menu = menuMgr.createContextMenu(treeViewer.getControl());
@@ -983,7 +926,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		// Update rows for NatTable.
 		try {
 			int currentSize = eventList.size();
-			final int rowCount = accessor.getRowCount(dataGroup);
+			final int rowCount = accessor.getRowCount(currentDatasetName);
 
 			imageBoundsJob.cancel();
 			imageBounds = new Rectangle[rowCount];
@@ -1012,7 +955,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			// Update columns for NatTable if needed.
 			if (newColumns) {
 				// Add Column specific display converters.
-				registerDisplayConverters(accessor, dataGroup, table.getConfigRegistry());
+				if (currentDatasetName != null) registerDisplayConverters(accessor, currentDatasetName, table.getConfigRegistry());
 				table.refresh();
 			}
 		} catch (SiloException e) {
@@ -1024,18 +967,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		table.setVisible(!eventList.isEmpty());
 		thumbnailViewer.setInput(eventList);
 	}
-
-	private void loadGroup(final String path) throws IOException {
-		Display.getDefault().syncExec(() -> {
-			// Clear Current Selections.
-			thumbnailViewer.setSelection(new StructuredSelection());
-			natTableSelectionProvider.setSelection(new StructuredSelection());
-			// Clear List.
-			eventList.clear();
-			dataGroup = path;
-			setInput(true);
-		});
-	};
 
 	private void updateImages(boolean resize) {
 		if (resize) {
@@ -1057,7 +988,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					@Override
 					public ImageData getImageData(Object o) {
 						try {
-							ENTITY row = accessor.getRow(dataGroup, (int) o);
+							ENTITY row = accessor.getRowObject(currentDatasetName, (int) o);
 							return SiloEditor.this.getImageData(row, scale, enabledChannels);
 						} catch (SiloException e) {
 							EclipseLog.error(e.getMessage(), e, Activator.getDefault());
@@ -1071,7 +1002,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					@Override
 					public boolean isImageReady(Object o) {
 						try {
-							ENTITY row = accessor.getRow(dataGroup, (int) o);
+							ENTITY row = accessor.getRowObject(currentDatasetName, (int) o);
 							return SiloEditor.this.isImageReady(row, scale, enabledChannels);
 						} catch (SiloException e) {
 							EclipseLog.error(e.getMessage(), e, Activator.getDefault());
@@ -1108,10 +1039,8 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		};
 		getSite().getPage().addSelectionListener(selectionListener);
 		modelListener = event -> {
-			if (event.source instanceof SiloStructure) {
-				final SiloStructure struct = (SiloStructure)event.source;
-				if (!struct.getSilo().equals(silo)) return;
-				refreshCurrentSilo(struct, event);
+			if (event.source instanceof Silo) {
+				if (((Silo) event.source).equals(accessor.getSilo())) refreshCurrentSilo();
 			}
 		};
 		ModelEventService.getInstance().addEventListener(modelListener);
@@ -1123,15 +1052,10 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		ProtocolUIService.getInstance().addUIEventListener(imageSettingListener);
 	}
 
-	private void refreshCurrentSilo(SiloStructure struct, ModelEvent event) {
-		JobUtils.runBackgroundJob(monitor -> {
-			Display.getDefault().asyncExec(() -> {
-				setDirty(event.status == 0); // Status 1 means the silo was saved.
-				treeViewer.refresh();
-				String structGroup = struct.isDataset() ? struct.getParent().getFullName() : struct.getFullName();
-				if (structGroup.equals(dataGroup)) setInput(true);
-			});
-		}, SiloEditor.this.toString(), null, 1000);
+	private void refreshCurrentSilo() {
+		setDirty(accessor.isDirty());
+		treeViewer.refresh();
+		setInput(true);
 	}
 
 	private void createSelectionProvider() {
@@ -1176,7 +1100,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 						for (int i = 0; i < rows.length; i++) {
 							rows[i] = rowsList.get(i);
 						}
-						accessor.removeRows(dataGroup, rows);
+						accessor.removeRows(currentDatasetName, rows);
 					} catch (SiloException e) {
 						EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 					}
@@ -1203,12 +1127,12 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					if (!selections.isEmpty()) {
 						// Only allow a drop if it's from the correct ProtocolClass.
 						ProtocolClass pClass = (ProtocolClass) selections.get(0).getAdapter(ProtocolClass.class);
-						ProtocolClass currentPClass = silo.getProtocolClass();
+						ProtocolClass currentPClass = accessor.getSilo().getProtocolClass();
 						if (currentPClass.equals(pClass)) {
 							// It's from the same ProtocolClass, check if it has new selected items.
 							boolean isNewSelection = false;
 							try {
-								Iterator<ENTITY> iter = accessor.getRowIterator(dataGroup);
+								Iterator<ENTITY> iter = accessor.getRowIterator(currentDatasetName);
 								while (iter.hasNext()) {
 									ENTITY next = iter.next();
 									if (!selections.contains(next)) {
@@ -1304,7 +1228,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					if (isImageObject(dataValue)) {
 						Integer rowIndex = natTableSelectionProvider.getRowDataProvider().getRowObject(cell.getRowIndex());
 						try {
-							ENTITY row = accessor.getRow(dataGroup, rowIndex);
+							ENTITY row = accessor.getRowObject(currentDatasetName, rowIndex);
 							return labelProvider.getImage(row);
 						} catch (SiloException e) {
 							EclipseLog.error(e.getMessage(), e, Activator.getDefault());
@@ -1323,7 +1247,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					if (isImageObject(dataValue)) {
 						Integer rowIndex = natTableSelectionProvider.getRowDataProvider().getRowObject(cell.getRowIndex());
 						try {
-							ENTITY row = accessor.getRow(dataGroup, rowIndex);
+							ENTITY row = accessor.getRowObject(currentDatasetName, rowIndex);
 							text = labelProvider.getText(row);
 						} catch (SiloException e) {
 							EclipseLog.error(e.getMessage(), e, Activator.getDefault());
@@ -1345,7 +1269,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					if (isImageObject(dataValue)) {
 						Integer rowIndex = natTableSelectionProvider.getRowDataProvider().getRowObject(cell.getRowIndex());
 						try {
-							ENTITY row = accessor.getRow(dataGroup, rowIndex);
+							ENTITY row = accessor.getRowObject(currentDatasetName, rowIndex);
 							super.fillAdvancedControls(parent, row, update);
 						} catch (SiloException e) {}
 					}

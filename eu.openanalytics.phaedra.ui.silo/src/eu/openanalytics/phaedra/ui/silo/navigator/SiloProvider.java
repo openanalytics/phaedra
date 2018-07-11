@@ -20,92 +20,51 @@ import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.vo.Silo;
-import eu.openanalytics.phaedra.silo.vo.SiloGroup;
 
 public class SiloProvider implements IElementProvider {
 
-	public static final String SILO = "silo-";
-	public static final String GROUP = "group-";
+	public static final String GROUP_ID_SILOS = "silos";
+	public static final String GROUP_ID_WELL_SILOS = "wellSilos";
+	public static final String GROUP_ID_SW_SILOS = "swSilos";
+	public static final String GROUP_ID_PUBLIC_SILOS = "publicSilos";
+	public static final String GROUP_ID_PRIVATE_SILOS = "privateSilos";
+	
+	public static final String GROUP_PREFIX_PCLASS = "pClass-";
 
-	protected static final String SILOS = "silos";
-	protected static final String PCLASS = "pClass-";
-	protected static final String WELL_SILOS = "wSilos";
-	protected static final String SUBWELL_SILOS = "swSilos";
-
-	private static final String PUBLIC_SILOS = "publicSilos";
-	private static final String PRIVATE_SILOS = "privateSilos";
-	private static final String EXAMPLE_SILOS = "exampleSilos";
+	public static final String ELEMENT_PREFIX_SILO = "silo-";
 
 	private Map<String, List<Silo>> tempCache = new HashMap<>();
-	private Map<String, List<SiloGroup>> tempGroupCache = new HashMap<>();
 
 	@Override
 	public IElement[] getChildren(IGroup parent) {
 		if (parent == NavigatorContentProvider.ROOT_GROUP) {
 			IElement[] elements = new IElement[1];
-			elements[0] = new Group("Silos", SILOS, parent.getId());
+			elements[0] = new Group("Silos", GROUP_ID_SILOS, parent.getId());
 			return elements;
-		}
-		if (parent.getId().equals(SILOS)) {
+		} else if (parent.getId().equals(GROUP_ID_SILOS)) {
 			// Clear cached Silos.
 			tempCache.clear();
 
-			Group mySilosGroup = new Group("My Silos", PRIVATE_SILOS, SILOS);
+			Group mySilosGroup = new Group("My Silos", GROUP_ID_PRIVATE_SILOS, GROUP_ID_SILOS);
 			mySilosGroup.setImageDescriptor(IconManager.getIconDescriptor("user.png"));
-			Group publicSilosGroup = new Group("Public Silos", PUBLIC_SILOS, SILOS);
+			Group publicSilosGroup = new Group("Public Silos", GROUP_ID_PUBLIC_SILOS, GROUP_ID_SILOS);
 			publicSilosGroup.setImageDescriptor(IconManager.getIconDescriptor("group.png"));
-			Group exampleSilosGroup = new Group("Example Silos", EXAMPLE_SILOS, SILOS);
-			exampleSilosGroup.setImageDescriptor(IconManager.getIconDescriptor("user_comment.png"));
-			return new IElement[] { mySilosGroup, publicSilosGroup, exampleSilosGroup };
-		}
-		if (parent.getId().equals(PRIVATE_SILOS)
-				|| parent.getId().equals(PUBLIC_SILOS)
-				|| parent.getId().equals(EXAMPLE_SILOS)) {
+			return new IElement[] { mySilosGroup, publicSilosGroup };
+		} else if (parent.getId().equals(GROUP_ID_PRIVATE_SILOS) || parent.getId().equals(GROUP_ID_PUBLIC_SILOS)) {
 			return getDataTypeGroups(parent.getId());
-		}
-		if (parent.getId().startsWith(WELL_SILOS)) {
+		} else if (parent.getId().equals(GROUP_ID_WELL_SILOS)) {
 			return getProtocolClasses(parent, GroupType.WELL);
-		}
-		if (parent.getId().startsWith(SUBWELL_SILOS)) {
+		} else if (parent.getId().equals(GROUP_ID_SW_SILOS)) {
 			return getProtocolClasses(parent, GroupType.SUBWELL);
-		}
-
-		if (parent.getId().startsWith(PCLASS)) {
-			if (parent.getParentId().startsWith(WELL_SILOS)) {
+		} else if (parent.getId().startsWith(GROUP_PREFIX_PCLASS)) {
+			if (parent.getParentId().equals(GROUP_ID_WELL_SILOS)) {
 				return getSilos(parent, GroupType.WELL);
-			}
-			if (parent.getParentId().startsWith(SUBWELL_SILOS)) {
+			} else if (parent.getParentId().equals(GROUP_ID_SW_SILOS)) {
 				return getSilos(parent, GroupType.SUBWELL);
 			}
 		}
 
-		if (parent.getId().startsWith(GROUP)) {
-			return getSilosByGroup(parent);
-		}
-
 		return null;
-	}
-
-	private IElement[] getSilosByGroup(IGroup parent) {
-		SiloGroup group = (SiloGroup) parent.getData();
-		Set<Silo> silos = group.getSilos();
-
-		ImageDescriptor icon;
-		if (group.getType() == GroupType.WELL.getType()) {
-			icon = IconManager.getIconDescriptor("silo_well.png");
-		} else {
-			icon = IconManager.getIconDescriptor("silo_subwell.png");
-		}
-
-		int index = 0;
-		IElement[] elements = new IElement[silos.size()];
-		for (Silo s : silos) {
-			elements[index] = new Element(s.getName(), SILO + s.getId(), parent.getId(), icon);
-			((Element)elements[index]).setData(s);
-			index++;
-		}
-
-		return elements;
 	}
 
 	private IElement[] getSilos(IGroup parent, GroupType type) {
@@ -121,9 +80,6 @@ public class SiloProvider implements IElementProvider {
 		List<Silo> allSilos = getSilos(superParent, type);
 		List<Silo> silos = new ArrayList<>();
 
-		List<SiloGroup> allSiloGroups = getSiloGroups(superParent, type);
-		List<SiloGroup> siloGroups = new ArrayList<>();
-
 		if (allSilos != null) {
 			for (int i = 0; i<allSilos.size(); i++) {
 				Silo s = allSilos.get(i);
@@ -133,24 +89,10 @@ public class SiloProvider implements IElementProvider {
 			}
 		}
 
-		if (allSiloGroups != null) {
-			for (int i = 0; i<allSiloGroups.size(); i++) {
-				SiloGroup s = allSiloGroups.get(i);
-				if (s.getProtocolClass().equals(parent.getData())) {
-					siloGroups.add(s);
-				}
-			}
-		}
-
 		int index = 0;
-		IElement[] elements = new IElement[silos.size() + siloGroups.size()];
-		for (SiloGroup g : siloGroups) {
-			elements[index] = new Group(g.getName(), GROUP + g.getId(), parent.getId());
-			((Group)elements[index]).setData(g);
-			index++;
-		}
+		IElement[] elements = new IElement[silos.size()];
 		for (Silo s : silos) {
-			elements[index] = new Element(s.getName(), SILO + s.getId(), parent.getId(), icon);
+			elements[index] = new Element(s.getName(), ELEMENT_PREFIX_SILO + s.getId(), parent.getId(), icon);
 			((Element)elements[index]).setData(s);
 			index++;
 		}
@@ -170,19 +112,10 @@ public class SiloProvider implements IElementProvider {
 
 		}
 
-		List<SiloGroup> siloGroups = getSiloGroups(superParent, type);
-		if (silos != null) {
-			for (int i = 0; i<siloGroups.size(); i++) {
-				SiloGroup s = siloGroups.get(i);
-				pClasses.add(s.getProtocolClass());
-			}
-
-		}
-
 		int index = 0;
 		IElement[] elements = new IElement[pClasses.size()];
 		for (ProtocolClass pClass : pClasses) {
-			elements[index] = new Group(pClass.getName(), PCLASS + pClass.getId(), parent.getId());
+			elements[index] = new Group(pClass.getName(), GROUP_PREFIX_PCLASS + pClass.getId(), parent.getId());
 			((Group)elements[index]).setData(pClass);
 			((Group)elements[index]).setImageDescriptor(IconManager.getIconDescriptor("struct.png"));
 			index++;
@@ -190,79 +123,37 @@ public class SiloProvider implements IElementProvider {
 		return elements;
 	}
 
-	private List<SiloGroup> getSiloGroups(String superParent, GroupType type) {
-		List<SiloGroup> siloGroups = new ArrayList<>();
-		if (superParent.equals(PRIVATE_SILOS)) {
-			siloGroups = tempGroupCache.get(PRIVATE_SILOS + type);
-		}
-		if (superParent.equals(PUBLIC_SILOS)) {
-			siloGroups = tempGroupCache.get(PUBLIC_SILOS + type);
-		}
-		if (superParent.equals(EXAMPLE_SILOS)) {
-			siloGroups = tempGroupCache.get(EXAMPLE_SILOS + type);
-		}
-		return siloGroups;
-	}
-
 	private List<Silo> getSilos(String superParent, GroupType type) {
 		List<Silo> silos = new ArrayList<>();
-		if (superParent.equals(PRIVATE_SILOS)) {
-			silos = tempCache.get(PRIVATE_SILOS + type);
+		if (superParent.equals(GROUP_ID_PRIVATE_SILOS)) {
+			silos = tempCache.get(GROUP_ID_PRIVATE_SILOS + type);
 		}
-		if (superParent.equals(PUBLIC_SILOS)) {
-			silos = tempCache.get(PUBLIC_SILOS + type);
+		if (superParent.equals(GROUP_ID_PUBLIC_SILOS)) {
+			silos = tempCache.get(GROUP_ID_PUBLIC_SILOS + type);
 		}
-		if (superParent.equals(EXAMPLE_SILOS)) {
-			silos = tempCache.get(EXAMPLE_SILOS + type);
-		}
-
 		return silos;
 	}
 
 	private IElement[] getDataTypeGroups(String parentId) {
 		boolean hasWell = false;
 		boolean hasSubWell = false;
-		if (parentId.equals(PRIVATE_SILOS)) {
+		
+		if (parentId.equals(GROUP_ID_PRIVATE_SILOS)) {
 			List<Silo> wellSilos = SiloService.getInstance().getPrivateSilos(GroupType.WELL);
 			List<Silo> subwellSilos = SiloService.getInstance().getPrivateSilos(GroupType.SUBWELL);
-			tempCache.put(PRIVATE_SILOS + GroupType.WELL, wellSilos);
-			tempCache.put(PRIVATE_SILOS + GroupType.SUBWELL, subwellSilos);
+			tempCache.put(GROUP_ID_PRIVATE_SILOS + GroupType.WELL, wellSilos);
+			tempCache.put(GROUP_ID_PRIVATE_SILOS + GroupType.SUBWELL, subwellSilos);
 
-			List<SiloGroup> wellSiloGroups = SiloService.getInstance().getMyPrivateSiloGroups(GroupType.WELL);
-			List<SiloGroup> subwellSiloGroups = SiloService.getInstance().getMyPrivateSiloGroups(GroupType.SUBWELL);
-			tempGroupCache.put(PRIVATE_SILOS + GroupType.WELL, wellSiloGroups);
-			tempGroupCache.put(PRIVATE_SILOS + GroupType.SUBWELL, subwellSiloGroups);
-
-			hasWell = !wellSilos.isEmpty() || !wellSiloGroups.isEmpty();
-			hasSubWell = !subwellSilos.isEmpty() || !subwellSiloGroups.isEmpty();
-		}
-		if (parentId.equals(PUBLIC_SILOS)) {
+			hasWell = !wellSilos.isEmpty();
+			hasSubWell = !subwellSilos.isEmpty();
+		} else if (parentId.equals(GROUP_ID_PUBLIC_SILOS)) {
 			List<Silo> wellSilos = SiloService.getInstance().getPublicSilos(GroupType.WELL);
 			List<Silo> subwellSilos = SiloService.getInstance().getPublicSilos(GroupType.SUBWELL);
-			tempCache.put(PUBLIC_SILOS + GroupType.WELL, wellSilos);
-			tempCache.put(PUBLIC_SILOS + GroupType.SUBWELL, subwellSilos);
+			tempCache.put(GROUP_ID_PUBLIC_SILOS + GroupType.WELL, wellSilos);
+			tempCache.put(GROUP_ID_PUBLIC_SILOS + GroupType.SUBWELL, subwellSilos);
 
-			List<SiloGroup> wellSiloGroups = SiloService.getInstance().getPublicSiloGroups(GroupType.WELL);
-			List<SiloGroup> subwellSiloGroups = SiloService.getInstance().getPublicSiloGroups(GroupType.SUBWELL);
-			tempGroupCache.put(PUBLIC_SILOS + GroupType.WELL, wellSiloGroups);
-			tempGroupCache.put(PUBLIC_SILOS + GroupType.SUBWELL, subwellSiloGroups);
-
-			hasWell = !wellSilos.isEmpty() || !wellSiloGroups.isEmpty();
-			hasSubWell = !subwellSilos.isEmpty() || !subwellSiloGroups.isEmpty();
-		}
-		if (parentId.equals(EXAMPLE_SILOS)) {
-			List<Silo> wellSilos = SiloService.getInstance().getExampleSilos(GroupType.WELL);
-			List<Silo> subwellSilos = SiloService.getInstance().getExampleSilos(GroupType.SUBWELL);
-			tempCache.put(EXAMPLE_SILOS + GroupType.WELL, wellSilos);
-			tempCache.put(EXAMPLE_SILOS + GroupType.SUBWELL, subwellSilos);
-
-			List<SiloGroup> wellSiloGroups = SiloService.getInstance().getExampleSiloGroups(GroupType.WELL);
-			List<SiloGroup> subwellSiloGroups = SiloService.getInstance().getExampleSiloGroups(GroupType.SUBWELL);
-			tempGroupCache.put(EXAMPLE_SILOS + GroupType.WELL, wellSiloGroups);
-			tempGroupCache.put(EXAMPLE_SILOS + GroupType.SUBWELL, subwellSiloGroups);
-
-			hasWell = !wellSilos.isEmpty() || !wellSiloGroups.isEmpty();
-			hasSubWell = !subwellSilos.isEmpty() || !subwellSiloGroups.isEmpty();
+			hasWell = !wellSilos.isEmpty();
+			hasSubWell = !subwellSilos.isEmpty();
 		}
 
 		int size = 0;
@@ -270,8 +161,8 @@ public class SiloProvider implements IElementProvider {
 		if (hasWell) size++;
 
 		IElement[] elements = new IElement[size];
-		if (hasSubWell) elements[--size] = new Group("Subwell", SUBWELL_SILOS, parentId);
-		if (hasWell) elements[--size] = new Group("Well", WELL_SILOS, parentId);
+		if (hasSubWell) elements[--size] = new Group("Subwell", GROUP_ID_SW_SILOS, parentId);
+		if (hasWell) elements[--size] = new Group("Well", GROUP_ID_WELL_SILOS, parentId);
 		return elements;
 	}
 

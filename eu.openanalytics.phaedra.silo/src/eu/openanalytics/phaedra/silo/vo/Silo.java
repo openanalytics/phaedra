@@ -2,8 +2,9 @@ package eu.openanalytics.phaedra.silo.vo;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -13,9 +14,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -68,17 +68,9 @@ public class Silo extends PlatformObject implements IOwnedPersonalObject, IValue
 	@Enumerated(EnumType.STRING)
 	private AccessScope accessScope;
 
-	@Column(name="is_example")
-	private boolean isExample;
-
 	@IgnoreSizeOf
-	@ManyToMany(fetch = FetchType.EAGER)
-	@JoinTable(name = "hca_silo_group_member"
-		, schema = "phaedra"
-		, joinColumns = { @JoinColumn(name = "silo_id") }
-		, inverseJoinColumns = { @JoinColumn(name = "group_id") }
-	)
-	private Set<SiloGroup> siloGroups;
+	@OneToMany(mappedBy="silo", cascade=CascadeType.ALL, orphanRemoval=true)
+	private List<SiloDataset> datasets;
 
 	/*
 	 * *****************
@@ -153,22 +145,14 @@ public class Silo extends PlatformObject implements IOwnedPersonalObject, IValue
 		this.accessScope = accessScope;
 	}
 
-	public boolean isExample() {
-		return isExample;
+	public List<SiloDataset> getDatasets() {
+		return datasets;
 	}
-
-	public void setExample(boolean isExample) {
-		this.isExample = isExample;
+	
+	public void setDatasets(List<SiloDataset> datasets) {
+		this.datasets = datasets;
 	}
-
-	public Set<SiloGroup> getSiloGroups() {
-		return siloGroups;
-	}
-
-	public void setSiloGroups(Set<SiloGroup> siloGroups) {
-		this.siloGroups = siloGroups;
-	}
-
+	
 	/*
 	 * *******************
 	 * Convenience methods

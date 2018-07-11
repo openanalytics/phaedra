@@ -14,7 +14,7 @@ import eu.openanalytics.phaedra.model.subwell.SubWellService;
 public class PasteSWItems extends AbstractPasteCommand<SubWellItem> {
 
 	@Override
-	protected boolean asNewGroup() {
+	protected boolean asNewDataset() {
 		return false;
 	}
 

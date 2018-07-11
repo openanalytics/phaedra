@@ -10,7 +10,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 public class PasteWells extends AbstractPasteCommand<Well> {
 
 	@Override
-	protected boolean asNewGroup() {
+	protected boolean asNewDataset() {
 		return false;
 	}
 	

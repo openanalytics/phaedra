@@ -10,58 +10,33 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.base.security.model.AccessScope;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.vo.Silo;
-import eu.openanalytics.phaedra.ui.silo.util.SiloComposite;
+import eu.openanalytics.phaedra.ui.silo.util.EditSiloComposite;
 
-public class SiloDialog extends TitleAreaDialog {
-
-	private String title;
-	private String operation;
+public class CreateSiloDialog extends TitleAreaDialog {
 
 	private Silo silo;
-	private boolean isExisting;
-	private boolean hasParent;
 
-	private String oldName;
-	private String oldDescription;
-	private AccessScope oldScope;
-	private boolean oldIsExample;
-
-	public SiloDialog(Shell parentShell, ProtocolClass pClass, GroupType type) {
-		super(parentShell);
+	public CreateSiloDialog(Shell parent, ProtocolClass pClass, GroupType type) {
+		super(parent);
 		if (type == null) type = GroupType.WELL;
 		this.silo = SiloService.getInstance().createSilo(pClass, type);
-	}
-
-	public SiloDialog(Shell parentShell, Silo silo) {
-		super(parentShell);
-
-		this.silo = silo;
-		this.isExisting = true;
-		this.hasParent = silo.getSiloGroups() != null && !silo.getSiloGroups().isEmpty();
-
-		this.oldName = silo.getName();
-		this.oldDescription = silo.getDescription();
-		this.oldScope = silo.getAccessScope();
-		this.oldIsExample = silo.isExample();
 	}
 
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		update();
-		newShell.setText(title);
+		newShell.setText("Create New Silo");
 		newShell.setSize(450, 400);
 	}
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite dialogArea = (Composite)super.createDialogArea(parent);
-		SiloComposite container = new SiloComposite(dialogArea, SWT.NONE, silo, isExisting, hasParent);
+		EditSiloComposite container = new EditSiloComposite(dialogArea, SWT.NONE, silo, true, true, true);
 		container.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -69,7 +44,7 @@ public class SiloDialog extends TitleAreaDialog {
 			}
 		});
 
-		setTitle(title);
+		setTitle("Create New Silo");
 		setMessage("Configure the properties of the new silo.");
 		return parent;
 	}
@@ -79,35 +54,13 @@ public class SiloDialog extends TitleAreaDialog {
 		try {
 			SiloService.getInstance().updateSilo(silo);
 		} catch (Exception e) {
-			MessageDialog.openError(getShell(), "Error", "Failed to " + operation + " silo:\n" + e.getMessage());
+			MessageDialog.openError(getShell(), "Error", "Failed to save silo:\n" + e.getMessage());
 			return;
 		}
 		super.okPressed();
 	}
 
-	@Override
-	protected void cancelPressed() {
-		if (isExisting) {
-			silo.setName(oldName);
-			silo.setDescription(oldDescription);
-			silo.setAccessScope(oldScope);
-			silo.setExample(oldIsExample);
-		}
-		super.cancelPressed();
-	}
-
 	public Silo getSilo() {
 		return silo;
 	}
-
-	private void update() {
-		if (isExisting) {
-			title = "Modify Silo";
-			operation = "modify";
-		} else {
-			title = "Create New Silo";
-			operation = "create";
-		}
-	}
-
 }

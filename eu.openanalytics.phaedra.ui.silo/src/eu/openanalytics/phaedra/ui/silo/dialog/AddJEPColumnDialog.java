@@ -14,13 +14,9 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
-import eu.openanalytics.phaedra.silo.SiloException;
-import eu.openanalytics.phaedra.silo.SiloService;
-import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
-import eu.openanalytics.phaedra.ui.silo.Activator;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 
 public class AddJEPColumnDialog extends JEPFormulaDialog {
 
@@ -29,12 +25,12 @@ public class AddJEPColumnDialog extends JEPFormulaDialog {
 	
 	private String columnName;
 	
-	private SiloStructure siloGroup;
+	private SiloDataset dataset;
 
-	public AddJEPColumnDialog(Shell parentShell, SiloStructure group) {
-		super(parentShell, group.getSilo().getProtocolClass());
+	public AddJEPColumnDialog(Shell parentShell, SiloDataset dataset) {
+		super(parentShell, dataset.getSilo().getProtocolClass());
 		setShellStyle(SWT.TITLE | SWT.RESIZE);
-		this.siloGroup = group;
+		this.dataset = dataset;
 	}
 	
 	@Override
@@ -68,8 +64,8 @@ public class AddJEPColumnDialog extends JEPFormulaDialog {
 					errorMessage.setText("Please enter a name for the new column");
 					return;
 				} else {
-					for (SiloStructure child: siloGroup.getChildren()) {
-						if (child.isDataset() && child.getName().equals(newText)) {
+					for (SiloDatasetColumn column: dataset.getColumns()) {
+						if (column.getName().equals(newText)) {
 							errorMessage.setText("A column with this name already exists");
 							return;
 						}
@@ -89,15 +85,10 @@ public class AddJEPColumnDialog extends JEPFormulaDialog {
 	@Override
 	protected void createTables(Composite container) {
 		final Table table = createTable(container, "Silo Columns:", 100, s -> "~" + s + "~");
-		try {
-			ISiloAccessor<?> siloAccessor = SiloService.getInstance().getSiloAccessor(siloGroup.getSilo());
-			for (String column : siloAccessor.getColumns(siloGroup.getFullName())) {
-				TableItem item = new TableItem(table, SWT.NONE);
-				item.setText(column);
-				item.setData("info", column);
-			}
-		} catch (SiloException e1) {
-			EclipseLog.error(e1.getMessage(), e1, Activator.getDefault());
+		for (SiloDatasetColumn column: dataset.getColumns()) {
+			TableItem item = new TableItem(table, SWT.NONE);
+			item.setText(column.getName());
+			item.setData("info", column);
 		}
 		super.createTables(container);
 	}

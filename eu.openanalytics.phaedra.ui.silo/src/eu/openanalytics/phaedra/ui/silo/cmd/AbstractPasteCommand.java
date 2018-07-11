@@ -23,9 +23,8 @@ import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
-import eu.openanalytics.phaedra.silo.util.SiloStructureUtils;
 import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 
 public abstract class AbstractPasteCommand<T extends PlatformObject> extends AbstractSiloCommand {
@@ -35,87 +34,77 @@ public abstract class AbstractPasteCommand<T extends PlatformObject> extends Abs
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		Shell shell = Display.getDefault().getActiveShell();
 
-		// First, look for the target group
-		ISelection structSelection = HandlerUtil.getCurrentSelection(event);
-		SiloStructure struct = SelectionUtils.getFirstObject(structSelection, SiloStructure.class);
-		if (struct == null) {
-			if (asNewGroup()) {
-				Silo silo = getActiveSilo(event);
-				try {
-					struct = SiloService.getInstance().getSiloAccessor(silo).getSiloStructure();
-				} catch (SiloException e) {}
-			} else {
-				MessageDialog.openInformation(shell, "No group selected", "Cannot paste items: no group selected.");
-			}
-		}
-		if (struct == null) return null;
-
-		// Then, look for the items to add
-		ISelection itemSelection = CopyItems.getCurrentSelectionFromClipboard();
-		List<T> items = getItems(itemSelection);
+		Silo silo = getActiveSilo(event);
+		
+		// Get a list of items to paste
+		List<T> items = getItems(CopyItems.getCurrentSelectionFromClipboard());
 		if (items.isEmpty()) {
 			MessageDialog.openInformation(shell, "No " + getObjectName() + "s in clipboard",
-					"Cannot paste " + getObjectName() + "s: there are currently no " + getObjectName() + "s in the clipboard.");
+					"Cannot paste items: there are currently no " + getObjectName() + "s in the clipboard.");
 			return null;
 		}
-		String lbl = getObjectName() + (items.size() > 1 ? "s" : "");
-
-		// See if this selection came from a (different) Silo
-		List<SiloStructure> siloStructures = SelectionUtils.getObjects(itemSelection, SiloStructure.class);
-		SiloStructure siloSource = siloStructures.isEmpty() ? null : siloStructures.get(0);
-
-		// Make sure the items are from the same Protocol Class
-		Silo silo = struct.getSilo();
-		ProtocolClass protocolClass = silo.getProtocolClass();
+		
+		// Make sure the items are from the same Protocol Class as the silo
 		for (T item : items) {
 			Object adapter = item.getAdapter(ProtocolClass.class);
-			if (!protocolClass.equals(adapter)) {
+			if (!silo.getProtocolClass().equals(adapter)) {
 				MessageDialog.openInformation(shell, "Different Protocol Class",
-						"Cannot paste " + getObjectName() + "s from a different Protocol Class.");
+						"Cannot paste items from a different Protocol Class.");
 				return null;
 			}
 		}
-
-		// Ask user for input/confirmation
-		String groupName = null;
-		if (asNewGroup()) {
-			final SiloStructure root = SiloStructureUtils.getRoot(struct);
+		
+		// Get a new or existing dataset to paste into
+		SiloDataset dataset = null;
+		if (asNewDataset()) {
 			IInputValidator validator = new IInputValidator() {
 				@Override
 				public String isValid(String newText) {
-					for (String group: root.getDataGroups()) {
-						if (group.equals("/" + newText)) return "A group with this name already exists";
+					for (SiloDataset ds: silo.getDatasets()) {
+						if (ds.getName().equals(newText)) return "A dataset with this name already exists";
 					}
 					return null;
 				}
 			};
-			InputDialog dialog = new InputDialog(shell, "Add Group", "Please enter a name for the new group:", "New Group", validator);
-			int retCode = dialog.open();
-			if (retCode == Window.CANCEL) return null;
-			groupName = "/" + dialog.getValue();
+			InputDialog dialog = new InputDialog(shell, "New Dataset", "Please enter a name for the new dataset:", "New Dataset", validator);
+			if (dialog.open() == Window.CANCEL) return null;
+			String datasetName = dialog.getValue();
+			try {
+				dataset = SiloService.getInstance().getSiloAccessor(silo).createDataset(datasetName);
+			} catch (SiloException e) {
+				String msg = "Failed to create new dataset";
+				ErrorDialog.openError(shell, msg, msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
+				return null;
+			}
 		} else {
-			groupName = struct.getFullName();
-			boolean confirmed = MessageDialog.openConfirm(shell, "Paste " + lbl, "Do you want to add " + items.size() + " " + lbl + " to " + groupName + "?");
+			ISelection selection = HandlerUtil.getCurrentSelection(event);
+			dataset = SelectionUtils.getFirstObject(selection, SiloDataset.class);
+			if (dataset == null) {
+				MessageDialog.openInformation(shell, "No Dataset Selected", "Cannot paste items: no dataset selected");
+				return null;
+			}
+			String lbl = getObjectName() + (items.size() > 1 ? "s" : "");
+			boolean confirmed = MessageDialog.openConfirm(shell, "Paste " + lbl, "Do you want to add " + items.size() + " " + lbl + " to " + dataset.getName() + "?");
 			if (!confirmed) return null;
 		}
+		
+		//TODO See if this selection came from a (different) Silo
+//		List<SiloStructure> siloStructures = SelectionUtils.getObjects(itemSelection, SiloStructure.class);
+//		SiloStructure siloSource = siloStructures.isEmpty() ? null : siloStructures.get(0);
 
-		// Insert the selection of items as new rows into the target group
+		// Insert the items as new rows into the target dataset
 		try {
 			ISiloAccessor<T> accessor = SiloService.getInstance().getSiloAccessor(silo);
-			if (siloSource != null) {
-				accessor.addRows(groupName, (T[])items.toArray(new PlatformObject[items.size()]), siloSource);
-			} else {
-				accessor.addRows(groupName, (T[])items.toArray(new PlatformObject[items.size()]));
-			}
+			accessor.addRows(dataset.getName(), (T[]) items.toArray(new PlatformObject[items.size()]));
 		} catch (SiloException e) {
-			String msg = "Failed to add " + lbl;
-			ErrorDialog.openError(shell, "Cannot add " + lbl, msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
+			String msg = "Failed to paste items";
+			ErrorDialog.openError(shell, "Failed to paste items", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
 		}
 
 		return null;
 	}
 
-	protected abstract boolean asNewGroup();
+	protected abstract boolean asNewDataset();
 
 	protected abstract String getObjectName();
 

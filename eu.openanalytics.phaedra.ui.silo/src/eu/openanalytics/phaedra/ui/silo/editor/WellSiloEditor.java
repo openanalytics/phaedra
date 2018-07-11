@@ -8,7 +8,6 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.nebula.widgets.nattable.config.CellConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.config.DefaultComparator;
 import org.eclipse.nebula.widgets.nattable.config.IConfigRegistry;
-import org.eclipse.nebula.widgets.nattable.data.convert.DefaultIntegerDisplayConverter;
 import org.eclipse.nebula.widgets.nattable.data.convert.DefaultLongDisplayConverter;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.graphics.ImageData;
@@ -23,13 +22,13 @@ import eu.openanalytics.phaedra.base.ui.util.tooltip.ToolTipLabelProvider;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
-import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
-import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
+import eu.openanalytics.phaedra.silo.util.SiloUtils;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 import eu.openanalytics.phaedra.ui.protocol.dialog.FeatureSelectionDialog;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 import eu.openanalytics.phaedra.ui.wellimage.tooltip.WellToolTipLabelProvider;
@@ -82,77 +81,51 @@ public class WellSiloEditor extends SiloEditor<Well, Feature> {
 
 	@Override
 	protected void registerDisplayConverters(ISiloAccessor<Well> accessor, String dataGroup, IConfigRegistry configRegistry) {
-		try {
-			String[] columns = accessor.getColumns(dataGroup);
-			for (int i = 0; i < columns.length; i++) {
-				IFeature f = ProtocolUtils.getFeatureByName(columns[i], accessor.getSilo().getProtocolClass());
-				if (f != null) {
-					String formatString = f.getFormatString();
-					FormattedDisplayConverter converter = new FormattedDisplayConverter(formatString, false);
+		SiloDataset ds = getDataset();
+		for (int i = 0; i < ds.getColumns().size(); i++) {
+			SiloDatasetColumn col = ds.getColumns().get(i);
+			IFeature f = SiloUtils.getWellFeature(col);
+			if (f != null) {
+				String formatString = f.getFormatString();
+				FormattedDisplayConverter converter = new FormattedDisplayConverter(formatString, false);
+				configRegistry.registerConfigAttribute(
+						CellConfigAttributes.DISPLAY_CONVERTER
+						, converter
+						, DisplayMode.NORMAL
+						, col.getName()
+				);
+				NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
+						, converter, converter.getFilterComparator());
+			} else {
+				switch (col.getType()) {
+				case Float:
+					FormattedDisplayConverter converter = new FormattedDisplayConverter(false);
 					configRegistry.registerConfigAttribute(
 							CellConfigAttributes.DISPLAY_CONVERTER
 							, converter
 							, DisplayMode.NORMAL
-							, columns[i]
+							, col.getName()
 					);
 					NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
 							, converter, converter.getFilterComparator());
-				} else {
-					SiloDataType dataType = accessor.getDataType(dataGroup, i);
-					switch (dataType) {
-					case Double:
-						FormattedDisplayConverter fpConverter = new FormattedDisplayConverter(true);
-						configRegistry.registerConfigAttribute(
-								CellConfigAttributes.DISPLAY_CONVERTER
-								, fpConverter
-								, DisplayMode.NORMAL
-								, columns[i]
-						);
-						NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
-								, fpConverter, fpConverter.getFilterComparator());
-						break;
-					case Float:
-						FormattedDisplayConverter converter = new FormattedDisplayConverter(false);
-						configRegistry.registerConfigAttribute(
-								CellConfigAttributes.DISPLAY_CONVERTER
-								, converter
-								, DisplayMode.NORMAL
-								, columns[i]
-						);
-						NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
-								, converter, converter.getFilterComparator());
-						break;
-					case Integer:
-						DefaultIntegerDisplayConverter intConverter = new DefaultIntegerDisplayConverter();
-						configRegistry.registerConfigAttribute(
-								CellConfigAttributes.DISPLAY_CONVERTER
-								, intConverter
-								, DisplayMode.NORMAL
-								, columns[i]
-						);
-						NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
-								, intConverter, new DefaultComparator());
-						break;
-					case Long:
-						DefaultLongDisplayConverter longConverter = new DefaultLongDisplayConverter();
-						configRegistry.registerConfigAttribute(
-								CellConfigAttributes.DISPLAY_CONVERTER
-								, longConverter
-								, DisplayMode.NORMAL
-								, columns[i]
-						);
-						NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
-								, longConverter, new DefaultComparator());
-						break;
-					case String:
-					case None:
-					default:
-						break;
-					}
+					break;
+				case Long:
+					DefaultLongDisplayConverter longConverter = new DefaultLongDisplayConverter();
+					configRegistry.registerConfigAttribute(
+							CellConfigAttributes.DISPLAY_CONVERTER
+							, longConverter
+							, DisplayMode.NORMAL
+							, col.getName()
+					);
+					NatTableUtils.applyAdvancedFilter(configRegistry, i + 1
+							, longConverter, new DefaultComparator());
+					break;
+				case String:
+				case None:
+				default:
+					break;
 				}
 			}
-		} catch (SiloException e) {
-			EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 		}
 	}
 

@@ -7,15 +7,15 @@ import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
 
-public class SiloScanner extends BaseScanner<SiloStructure> {
+public class SiloScanner extends BaseScanner<SiloDataset> {
 
 	private final static char VAR_SIGN = '~';
 	
 	@Override
 	protected boolean isValidObject(Object obj) {
-		return obj instanceof SiloStructure;
+		return obj instanceof SiloDataset;
 	}
 	
 	@Override
@@ -24,33 +24,24 @@ public class SiloScanner extends BaseScanner<SiloStructure> {
 	}
 
 	@Override
-	protected Object getValueForRef(String scope, String[] fieldNames, SiloStructure group) {
+	protected Object getValueForRef(String scope, String[] fieldNames, SiloDataset dataset) {
 		try {
-			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(group.getSilo());
-			String dataGroup = group.getFullName();
-			String[] columns = accessor.getColumns(dataGroup);
-			int columnIndex = 0;
-			while (columnIndex < columns.length && !fieldNames[0].equalsIgnoreCase(columns[columnIndex])) {
-				columnIndex++;
-			}
+			String columnName = fieldNames[0];
+			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(dataset.getSilo());
 
-			SiloDataType dataType = accessor.getDataType(dataGroup, columnIndex);
+			SiloDataType dataType = accessor.getColumnDataType(dataset.getName(), columnName);
 			switch (dataType) {
-			case Double:
-				return toVector(accessor.getDoubleValues(dataGroup, columnIndex));
 			case Float:
-				return toVector(accessor.getFloatValues(dataGroup, columnIndex));
-			case Integer:
-				return toVector(accessor.getIntValues(dataGroup, columnIndex));
+				return toVector(accessor.getFloatValues(dataset.getName(), columnName));
 			case Long:
-				return toVector(accessor.getLongValues(dataGroup, columnIndex));
+				return toVector(accessor.getLongValues(dataset.getName(), columnName));
 			case String:
-				return toVector(accessor.getStringValues(dataGroup, columnIndex));
+				return toVector(accessor.getStringValues(dataset.getName(), columnName));
 			default:
-				return toVector(new float[accessor.getRowCount(dataGroup)]);
+				return toVector(new float[accessor.getRowCount(dataset.getName())]);
 			}
 		} catch (SiloException e) {
-			EclipseLog.error(e.getMessage(), e, Activator.getDefault());
+			EclipseLog.error("", e, Activator.getDefault());
 		}
 		return toVector(new float[0]);
 	}

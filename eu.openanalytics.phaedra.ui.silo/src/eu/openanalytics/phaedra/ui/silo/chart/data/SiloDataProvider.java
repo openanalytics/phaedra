@@ -13,25 +13,26 @@ import org.eclipse.core.runtime.PlatformObject;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 
-import eu.openanalytics.phaedra.model.plate.vo.Well;
-import eu.openanalytics.phaedra.model.protocol.util.GroupType;
-import eu.openanalytics.phaedra.model.subwell.SubWellSelection;
-import eu.openanalytics.phaedra.silo.SiloConstants;
-import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
-import eu.openanalytics.phaedra.silo.SiloException;
-import eu.openanalytics.phaedra.silo.SiloService;
-import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.vo.Silo;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.density.Density2DChart;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.BaseDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.filter.IFilter;
 import eu.openanalytics.phaedra.base.ui.charting.v2.filter.MinMaxFilter;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-
+import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.GroupType;
+import eu.openanalytics.phaedra.model.subwell.SubWellItem;
+import eu.openanalytics.phaedra.model.subwell.SubWellSelection;
+import eu.openanalytics.phaedra.silo.SiloDataService.SiloDataType;
+import eu.openanalytics.phaedra.silo.SiloException;
+import eu.openanalytics.phaedra.silo.SiloService;
+import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
+import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
+import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 
-//TODO This is seriously broken for silos with multiple data groups.
+//TODO This is seriously broken for silos with multiple datasets.
 public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 
 	private static final String SPLITTER = " @ ";
@@ -69,10 +70,10 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 
 		if (siloType == GroupType.SUBWELL.getType()) {
 			Map<Well, SubWellSelection> wellMap = new HashMap<>();
-			float[] indexColumn = getCellIndexColumn();
 			for (int i = 0; i < getTotalRowCount(); i++) {
 				if (selectionBitSet.get(i)) {
-					int indexId = ((Number) indexColumn[i]).intValue();
+					SubWellItem item = getSubwellItem(i);
+					int indexId = item.getIndex();
 					Well w = getWell(i);
 					if (!wellMap.containsKey(w) ) {
 						SubWellSelection subwellSel = new SubWellSelection(w, new BitSet());
@@ -105,47 +106,30 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 	@Override
 	public BitSet createSelection(List<?> entities) {
 		BitSet selectionBitSet = new BitSet(getTotalRowCount());
+		if (entities.isEmpty()) return selectionBitSet;
+	
+		Object o = entities.get(0);
 
-		if (!entities.isEmpty()) {
-			Object o = entities.get(0);
-
-			if (o instanceof SubWellSelection) {
-				@SuppressWarnings("unchecked")
-				List<SubWellSelection> subwells = (List<SubWellSelection>) entities;
-
-				float[] wellIDColumn = getWellIDColumn();
-				float[] cellIndexColumn = getCellIndexColumn();
-				if (wellIDColumn != null) {
-					for (int i = 0; i < getTotalRowCount(); i++) {
-						long wellID = (long) wellIDColumn[i];
-						if (wellID == 0) continue;
-						for (SubWellSelection swSel : subwells) {
-							if (swSel.getWell().getId() == wellID) {
-								if (cellIndexColumn != null) {
-									int cellIndex = (int) cellIndexColumn[i];
-									if (swSel.getIndices().get(cellIndex)) selectionBitSet.set(i);
-								} else {
-									selectionBitSet.set(i);
-								}
-							}
-						}
-					}
+		if (o instanceof SubWellSelection) {
+			@SuppressWarnings("unchecked")
+			List<SubWellSelection> subwells = (List<SubWellSelection>) entities;
+			
+			for (int i = 0; i < getTotalRowCount(); i++) {
+				long wellID = getWell(i).getId();
+				int cellIndex = getSubwellItem(i).getIndex();
+				
+				for (SubWellSelection swSel : subwells) {
+					if (swSel.getWell().getId() == wellID && swSel.getIndices().get(cellIndex)) selectionBitSet.set(i);
 				}
 			}
+		} else if (o instanceof Well) {
+			@SuppressWarnings("unchecked")
+			List<Well> wells = (List<Well>) entities;
 
-			if (o instanceof Well) {
-				@SuppressWarnings("unchecked")
-				List<Well> wells = (List<Well>) entities;
-
-				float[] wellIDColumn = getWellIDColumn();
-				if (wellIDColumn != null) {
-					for (int i = 0; i < getTotalRowCount(); i++) {
-						long wellID = (long) wellIDColumn[i];
-						if (wellID == 0) continue;
-						for (Well well : wells) {
-							if (well.getId() == wellID) selectionBitSet.set(i);
-						}
-					}
+			for (int i = 0; i < getTotalRowCount(); i++) {
+				long wellID = getWell(i).getId();
+				for (Well well : wells) {
+					if (well.getId() == wellID) selectionBitSet.set(i);
 				}
 			}
 		}
@@ -188,21 +172,18 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 			int totalDataSize = 0;
 
 			// Loop the datasets.
-			String[] dataGroups = siloAccessor.getDataGroups();
-			for (String dataGroup : dataGroups) {
-				int dataSize = siloAccessor.getRowCount(dataGroup);
+			for (SiloDataset dataset: silo.getDatasets()) {
+				int dataSize = siloAccessor.getRowCount(dataset.getName());
 				int currentColSize = featureNames.size();
 
-				String[] columns = siloAccessor.getColumns(dataGroup);
-				for (int j = 0; j < columns.length; j++) {
-					String fieldName = columns[j];
-					String key = fieldName + SPLITTER + dataGroup;
+				for (SiloDatasetColumn column: dataset.getColumns()) {
+					String key = column.getName() + SPLITTER + dataset.getName();
 					featureNames.add(key);
 				}
 
 				totalDataSize = Math.max(dataSize, totalDataSize);
-				newDataSets.put(dataGroup, new ArrayList<String>());
-				newDataSets.get(dataGroup).addAll(featureNames.subList(currentColSize, featureNames.size()));
+				newDataSets.put(dataset.getName(), new ArrayList<String>());
+				newDataSets.get(dataset.getName()).addAll(featureNames.subList(currentColSize, featureNames.size()));
 			}
 
 			// Unit weight
@@ -234,31 +215,18 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 			Arrays.fill(filteredColumns, Float.NaN);
 			try {
 				String selectedFeature = getFeatures().get(col);
-				String dataGroup = getDataGroup(selectedFeature);
-				int column = dataSets.get(dataGroup).indexOf(selectedFeature);
+				String datasetName = getDatasetName(selectedFeature);
 
-				SiloDataType dataType = siloAccessor.getDataType(dataGroup, column);
+				SiloDataType dataType = siloAccessor.getColumnDataType(datasetName, selectedFeature);
 				switch (dataType) {
-				case Double:
-					double[] doubleValues = siloAccessor.getDoubleValues(dataGroup, column);
-					for (int i = 0; i < filteredColumns.length && i < doubleValues.length; i++) {
-						filteredColumns[i] = (float)doubleValues[i];
-					}
-					break;
 				case Float:
-					float[] floatValues = siloAccessor.getFloatValues(dataGroup, column);
+					float[] floatValues = siloAccessor.getFloatValues(datasetName, selectedFeature);
 					for (int i = 0; i < filteredColumns.length && i < floatValues.length; i++) {
 						filteredColumns[i] = floatValues[i];
 					}
 					break;
-				case Integer:
-					int[] intValues = siloAccessor.getIntValues(dataGroup, column);
-					for (int i = 0; i < filteredColumns.length && i < intValues.length; i++) {
-						filteredColumns[i] = intValues[i];
-					}
-					break;
 				case Long:
-					long[] longValues = siloAccessor.getLongValues(dataGroup, column);
+					long[] longValues = siloAccessor.getLongValues(datasetName, selectedFeature);
 					for (int i = 0; i < filteredColumns.length && i < longValues.length; i++) {
 						filteredColumns[i] = longValues[i];
 					}
@@ -268,7 +236,7 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 					stringPropertyValues.putIfAbsent(selectedFeature, new ArrayList<>());
 					List<String> uniqueValues = stringPropertyValues.get(selectedFeature);
 
-					String[] data = siloAccessor.getStringValues(dataGroup, column);
+					String[] data = siloAccessor.getStringValues(datasetName, selectedFeature);
 					for (int i = 0; i < filteredColumns.length && i < data.length; i++) {
 						if (monitor.isCanceled()) return filteredColumns;
 						String value = data[i];
@@ -302,54 +270,6 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 		setDataBounds(null);
 	}
 
-	public float[] getCellIndexColumn() {
-		int col = findColumn(SiloConstants.INDEX_COL);
-		if (col > -1) loadFeature(SiloConstants.INDEX_COL + SPLITTER + currentDataGroup, new NullProgressMonitor());
-		return getColumnData(col, 0);
-	}
-
-	public float[] getWellIDColumn() {
-		int col = findColumn(SiloConstants.WELL_COL);
-		// Make sure the column is loaded.
-		if (col > -1) loadFeature(SiloConstants.WELL_COL + SPLITTER + currentDataGroup, new NullProgressMonitor());
-		return getColumnData(col, 0);
-	}
-
-	public float[] getPlateIDColumn() {
-		int col = findColumn(SiloConstants.PLATE_COL);
-		if (col < 0) {
-			// No Plate column present, use well ID column.
-			float[] wellIDs = getWellIDColumn();
-			float[] plateIDs = new float[wellIDs.length];
-			for (int i = 0; i < wellIDs.length; i++) {
-				Well w = getWell(i);
-				if (w != null) plateIDs[i] = w.getPlate().getId();
-			}
-			return plateIDs;
-		} else {
-			// Make sure the column is loaded.
-			loadFeature(SiloConstants.WELL_COL + SPLITTER + currentDataGroup, new NullProgressMonitor());
-		}
-		return getColumnData(col, 0);
-	}
-
-	public String[] getWellTypeColumn() {
-		int col = findColumn(SiloConstants.WELL_TYPE_COL);
-		if (col > -1) {
-			// Make sure the column is loaded.
-			loadFeature(SiloConstants.WELL_TYPE_COL + SPLITTER + currentDataGroup, new NullProgressMonitor());
-		} else {
-			float[] wellIDs = getWellIDColumn();
-			String[] wellTypes = new String[wellIDs.length];
-			for (int i = 0; i < wellIDs.length; i++) {
-				Well w = getWell(i);
-				if (w != null) wellTypes[i] = w.getWellType();
-			}
-			return wellTypes;
-		}
-		return getColumnAsString(getFeatures().get(col));
-	}
-
 	public String[] getColumnAsString(String columnName) {
 		int col = getFeatureIndex(columnName);
 		if (col > -1) loadFeature(columnName, new NullProgressMonitor());
@@ -370,34 +290,36 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 		return columnStringData;
 	}
 
-	private Well getWell(int rowIndex) {
+	public Well getWell(int rowIndex) {
 		try {
-			String dataGroup = getDataGroup(getSelectedFeature(0));
-			return (Well) siloAccessor.getRow(dataGroup, rowIndex).getAdapter(Well.class);
+			String dataGroup = getDatasetName(getSelectedFeature(0));
+			return (Well) siloAccessor.getRowObject(dataGroup, rowIndex).getAdapter(Well.class);
 		} catch (SiloException e) {
 			EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 		}
 		return null;
 	}
 
-	private String getDataGroup(String featureName) {
-		String[] split = featureName.split(SPLITTER);
-		String dataGroup = split[1];
-		return dataGroup;
-	}
-
-	private int findColumn(String name) {
-		List<String> features = getFeatures();
-		for (int i=0; i < features.size(); i++) {
-			if (features.get(i).equals(name + SPLITTER + currentDataGroup)) return i;
+	public SubWellItem getSubwellItem(int rowIndex) {
+		try {
+			String dataGroup = getDatasetName(getSelectedFeature(0));
+			return (SubWellItem) siloAccessor.getRowObject(dataGroup, rowIndex).getAdapter(SubWellItem.class);
+		} catch (SiloException e) {
+			EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 		}
-		return -1;
+		return null;
+	}
+	
+	private String getDatasetName(String featureName) {
+		String[] split = featureName.split(SPLITTER);
+		String datasetName = split[1];
+		return datasetName;
 	}
 
 	private void loadDataGroup() {
 		List<String> selectedFeatures = getSelectedFeatures();
 		if (selectedFeatures == null || selectedFeatures.isEmpty()) return;
-		String newDataGroup = getDataGroup(selectedFeatures.get(0));
+		String newDataGroup = getDatasetName(selectedFeatures.get(0));
 		if (currentDataGroup != null && currentDataGroup.equals(newDataGroup)) return;
 		currentDataGroup = newDataGroup;
 	}

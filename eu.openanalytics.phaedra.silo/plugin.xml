@@ -9,9 +9,57 @@
                class="eu.openanalytics.phaedra.silo.vo.Silo">
          </entityClass>
          <entityClass
-               class="eu.openanalytics.phaedra.silo.vo.SiloGroup">
+               class="eu.openanalytics.phaedra.silo.vo.SiloDataset">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn">
          </entityClass>
       </persistenceModel>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="eu.openanalytics.phaedra.silo.vo.SiloDataset"
+            class="eu.openanalytics.phaedra.silo.util.AdapterFactory">
+         <adapter
+               type="eu.openanalytics.phaedra.silo.vo.Silo">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.base.security.model.IOwnedObject">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.base.security.model.IOwnedPersonalObject">
+         </adapter>
+      </factory>
+      <factory
+            adaptableType="eu.openanalytics.phaedra.silo.vo.Silo"
+            class="eu.openanalytics.phaedra.silo.util.AdapterFactory">
+         <adapter
+               type="eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass">
+         </adapter>
+      </factory>
+      <factory
+            adaptableType="eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn"
+            class="eu.openanalytics.phaedra.silo.util.AdapterFactory">
+         <adapter
+               type="eu.openanalytics.phaedra.silo.vo.SiloDataset">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.silo.vo.Silo">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.base.security.model.IOwnedObject">
+         </adapter>
+         <adapter
+               type="eu.openanalytics.phaedra.base.security.model.IOwnedPersonalObject">
+         </adapter>
+      </factory>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.base.scripting.jep.jepScanner">
@@ -32,5 +80,4 @@
             name="eu.openanalytics.phaedra.silo.jep.WellPropertySiloScanner">
       </jepScanner>
    </extension>
-
 </plugin>

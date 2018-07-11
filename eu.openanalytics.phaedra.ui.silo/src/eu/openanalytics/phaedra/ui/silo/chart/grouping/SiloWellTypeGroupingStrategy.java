@@ -37,24 +37,17 @@ public class SiloWellTypeGroupingStrategy extends DefaultGroupingStrategy<Silo, 
 		getGroups().clear();
 
 		SiloDataProvider siloDataProvider = (SiloDataProvider) dataProvider;
-		String[] wellTypeColumn = siloDataProvider.getWellTypeColumn();
 
-		// No Well ID Column.
 		int rowCount = dataProvider.getTotalRowCount();
-		if (wellTypeColumn == null) {
-			BitSet bitset = new BitSet(rowCount);
-			bitset.set(0, bitset.size());
-			getGroups().put(DEFAULT_GROUPING_NAME, bitset);
-		} else {
-			for (int i = 0; i < rowCount; i++) {
-				String key = wellTypeColumn[i];
-				if (!getGroups().containsKey(key)) {
-					BitSet bitSet = new BitSet(rowCount);
-					getGroups().put(key, bitSet);
-				}
-				BitSet bitSet = getGroups().get(key);
-				bitSet.set(i);
+		for (int i = 0; i < rowCount; i++) {
+			String key = siloDataProvider.getWell(i).getWellType();
+			
+			if (!getGroups().containsKey(key)) {
+				BitSet bitSet = new BitSet(rowCount);
+				getGroups().put(key, bitSet);
 			}
+			BitSet bitSet = getGroups().get(key);
+			bitSet.set(i);
 		}
 
 		BitsRowSubset[] subsets = new BitsRowSubset[getGroupCount()];

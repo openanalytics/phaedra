@@ -30,7 +30,7 @@ public class PasteWellsAdvanced extends PasteWells {
 	}
 
 	@Override
-	protected boolean asNewGroup() {
+	protected boolean asNewDataset() {
 		return settings.isNewGroup();
 	}
 

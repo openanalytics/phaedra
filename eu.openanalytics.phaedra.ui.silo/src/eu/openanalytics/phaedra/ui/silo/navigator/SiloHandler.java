@@ -18,13 +18,13 @@ import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.navigator.model.IElement;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.vo.Silo;
-import eu.openanalytics.phaedra.ui.silo.dialog.SiloDialog;
+import eu.openanalytics.phaedra.ui.silo.dialog.EditSiloDialog;
 
 public class SiloHandler extends BaseHandler {
 
 	@Override
 	public boolean matches(IElement element) {
-		return (element.getId().startsWith(SiloProvider.SILO));
+		return (element.getId().startsWith(SiloProvider.ELEMENT_PREFIX_SILO));
 	}
 
 	@Override
@@ -44,11 +44,11 @@ public class SiloHandler extends BaseHandler {
 		action.setImageDescriptor(IconManager.getIconDescriptor("silo_go.png"));
 		mgr.add(action);
 
-		action = new Action("Modify Silo", Action.AS_PUSH_BUTTON) {
+		action = new Action("Edit Silo", Action.AS_PUSH_BUTTON) {
 			@Override
 			public void run() {
 				Silo silo = (Silo) element.getData();
-				SiloDialog dialog = new SiloDialog(Display.getDefault().getActiveShell(), silo);
+				EditSiloDialog dialog = new EditSiloDialog(Display.getDefault().getActiveShell(), silo);
 				dialog.open();
 			}
 		};
@@ -59,8 +59,8 @@ public class SiloHandler extends BaseHandler {
 			@Override
 			public void run() {
 				Silo silo = (Silo) element.getData();
-				Silo siloCopy = SiloService.getInstance().duplicate(silo);
-				SiloDialog dialog = new SiloDialog(Display.getDefault().getActiveShell(), siloCopy);
+				Silo siloCopy = SiloService.getInstance().cloneSilo(silo);
+				EditSiloDialog dialog = new EditSiloDialog(Display.getDefault().getActiveShell(), siloCopy);
 				if (dialog.open() == Window.CANCEL) {
 					SiloService.getInstance().deleteSilo(siloCopy);
 				}

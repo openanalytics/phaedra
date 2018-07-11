@@ -21,24 +21,18 @@ public class SiloPlateGroupingStrategy extends DefaultGroupingStrategy<Silo, Sil
 		getGroups().clear();
 
 		SiloDataProvider siloDataProvider = (SiloDataProvider) dataProvider;
-		float[] plateIDColumn = siloDataProvider.getPlateIDColumn();
 
-		// No Plate ID Column.
 		int rowCount = dataProvider.getTotalRowCount();
-		if (plateIDColumn == null) {
-			BitSet bitset = new BitSet(rowCount);
-			bitset.set(0, bitset.size());
-			getGroups().put(DEFAULT_GROUPING_NAME, bitset);
-		} else {
-			for (int i = 0; i < rowCount; i++) {
-				String key = ((long) plateIDColumn[i]) + "";
-				if (!getGroups().containsKey(key)) {
-					BitSet bitSet = new BitSet(rowCount);
-					getGroups().put(key, bitSet);
-				}
-				BitSet bitSet = getGroups().get(key);
-				bitSet.set(i);
+		for (int i = 0; i < rowCount; i++) {
+			long plateId = siloDataProvider.getWell(i).getPlate().getId();
+			String key = String.valueOf(plateId);
+			
+			if (!getGroups().containsKey(key)) {
+				BitSet bitSet = new BitSet(rowCount);
+				getGroups().put(key, bitSet);
 			}
+			BitSet bitSet = getGroups().get(key);
+			bitSet.set(i);
 		}
 
 		BitsRowSubset[] subsets = new BitsRowSubset[getGroupCount()];

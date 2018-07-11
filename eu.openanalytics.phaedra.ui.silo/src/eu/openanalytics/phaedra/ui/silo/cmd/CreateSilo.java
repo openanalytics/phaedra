@@ -14,7 +14,7 @@ import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.silo.vo.Silo;
-import eu.openanalytics.phaedra.ui.silo.dialog.SiloDialog;
+import eu.openanalytics.phaedra.ui.silo.dialog.CreateSiloDialog;
 
 public class CreateSilo extends AbstractHandler {
 
@@ -31,7 +31,7 @@ public class CreateSilo extends AbstractHandler {
 		}
 
 		// Open the creation dialog for a Silo
-		SiloDialog dialog = new SiloDialog(Display.getDefault().getActiveShell(), pClass, type);
+		CreateSiloDialog dialog = new CreateSiloDialog(Display.getDefault().getActiveShell(), pClass, type);
 		int retCode = dialog.open();
 		Silo silo = dialog.getSilo();
 		if (retCode == Window.CANCEL || silo == null) return null;

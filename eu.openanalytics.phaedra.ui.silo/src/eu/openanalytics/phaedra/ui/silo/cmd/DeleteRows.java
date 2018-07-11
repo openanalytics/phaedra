@@ -19,8 +19,8 @@ import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
-import eu.openanalytics.phaedra.silo.util.SiloStructure;
 import eu.openanalytics.phaedra.silo.vo.Silo;
+import eu.openanalytics.phaedra.silo.vo.SiloDataset;
 import eu.openanalytics.phaedra.ui.silo.Activator;
 
 public class DeleteRows extends AbstractSiloCommand {
@@ -34,18 +34,18 @@ public class DeleteRows extends AbstractSiloCommand {
 		List<PlatformObject> objects = SelectionUtils.getObjects(selection, PlatformObject.class);
 		if (objects.isEmpty()) return null;
 
-		//TODO Properly ignore selections from the tree viewer.
 		List<PlatformObject> rowsToDelete = new ArrayList<>();
 		for (PlatformObject o : objects) {
-			if (!(o instanceof SiloStructure)) rowsToDelete.add(o);
+			if (o instanceof SiloDataset) continue;
+			rowsToDelete.add(o);
 		}
 		if (rowsToDelete.isEmpty()) return null;
 
 		//  Obtain the group to delete the rows from
 		Silo silo = getActiveSilo(event);
-		String dataGroup = getActiveSiloGroup(event);
-		if (silo == null || dataGroup == null) {
-			MessageDialog.openInformation(shell, "No group selected", "Cannot delete items: no group selected.");
+		String datasetName = getActiveSiloDataset(event);
+		if (silo == null || datasetName == null) {
+			MessageDialog.openInformation(shell, "No dataset selected", "Cannot delete items: no dataset selected.");
 			return null;
 		}
 
@@ -56,9 +56,9 @@ public class DeleteRows extends AbstractSiloCommand {
 			ISiloAccessor<PlatformObject> accessor = SiloService.getInstance().getSiloAccessor(silo);
 			int[] rows = new int[rowsToDelete.size()];
 			for (int i=0; i<rows.length; i++) {
-				rows[i] = accessor.getRow(dataGroup, rowsToDelete.get(i));
+				rows[i] = accessor.getIndexOfRow(datasetName, rowsToDelete.get(i));
 			}
-			accessor.removeRows(dataGroup, rows);
+			accessor.removeRows(datasetName, rows);
 		} catch (SiloException e) {
 			String msg = "Failed to delete rows";
 			ErrorDialog.openError(shell, "Cannot Delete Rows", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
