@@ -77,8 +77,8 @@ public class SiloDataDAO {
 			runBatch(sql, indices, (i, ps) -> {
 				SiloDatapoint p = data.getDataPoints()[i];
 				String strVal = colData.getStringData() == null ? null : colData.getStringData()[i];
-				Float floatVal = colData.getStringData() == null ? null : colData.getFloatData()[i];
-				Long longVal = colData.getStringData() == null ? null : colData.getLongData()[i];
+				Float floatVal = colData.getFloatData() == null ? null : colData.getFloatData()[i];
+				Long longVal = colData.getLongData() == null ? null : colData.getLongData()[i];
 				
 				ps.setLong(1, p.getDatapointId());
 				ps.setLong(2, colData.getColumn().getId());
