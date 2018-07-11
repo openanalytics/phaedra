@@ -71,21 +71,24 @@ public class SiloDataDAO {
 					+ " where column_id = " + colData.getColumn().getId()
 					+ " and datapoint_id in (select datapoint_id from phaedra.hca_silo_datapoint where dataset_id = " + datasetId + ")");
 			
-			sql = "insert into phaedra.hca_silo_datapoint_value(datapoint_id,column_id,str_value,float_value,long_value)"
-					+ " values (?,?,?,?,?)";
-			List<Integer> indices = IntStream.range(0, data.getDataPoints().length).mapToObj(i -> i).collect(Collectors.toList());
-			runBatch(sql, indices, (i, ps) -> {
-				SiloDatapoint p = data.getDataPoints()[i];
-				String strVal = colData.getStringData() == null ? null : colData.getStringData()[i];
-				Float floatVal = colData.getFloatData() == null ? null : colData.getFloatData()[i];
-				Long longVal = colData.getLongData() == null ? null : colData.getLongData()[i];
-				
-				ps.setLong(1, p.getDatapointId());
-				ps.setLong(2, colData.getColumn().getId());
-				ps.setString(3, strVal);
-				ps.setObject(4, floatVal);
-				ps.setObject(5, longVal);
-			});
+			boolean hasData = colData.getStringData() != null || colData.getFloatData() != null || colData.getLongData() != null;
+			if (hasData) {
+				sql = "insert into phaedra.hca_silo_datapoint_value(datapoint_id,column_id,str_value,float_value,long_value)"
+						+ " values (?,?,?,?,?)";
+				List<Integer> indices = IntStream.range(0, data.getDataPoints().length).mapToObj(i -> i).collect(Collectors.toList());
+				runBatch(sql, indices, (i, ps) -> {
+					SiloDatapoint p = data.getDataPoints()[i];
+					String strVal = colData.getStringData() == null ? null : colData.getStringData()[i];
+					Float floatVal = colData.getFloatData() == null ? null : colData.getFloatData()[i];
+					Long longVal = colData.getLongData() == null ? null : colData.getLongData()[i];
+					
+					ps.setLong(1, p.getDatapointId());
+					ps.setLong(2, colData.getColumn().getId());
+					ps.setString(3, strVal);
+					ps.setObject(4, floatVal);
+					ps.setObject(5, longVal);
+				});
+			}
 		}
 	}
 	

@@ -38,9 +38,11 @@ public class SiloTreeLabelProvider extends StyledCellLabelProvider {
 			ISiloAccessor<?> accessor = SiloService.getInstance().getSiloAccessor(ds.getSilo());
 			try {
 				int rowCount = accessor.getRowCount(ds.getName());
-				int colCount = ds.getColumns().size();
-				if (rowCount > 0) {
-					decoration = "[" + rowCount + " rows x " + colCount + " columns]";
+				if (rowCount == 0) {
+					decoration = "[empty]";
+					decorationStyler = StyledString.COUNTER_STYLER;
+				} else {
+					decoration = "[" + rowCount + " rows]";
 					decorationStyler = StyledString.COUNTER_STYLER;	
 				}
 			} catch (SiloException e) {

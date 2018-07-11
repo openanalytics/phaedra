@@ -955,7 +955,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			// Update columns for NatTable if needed.
 			if (newColumns) {
 				// Add Column specific display converters.
-				if (currentDatasetName != null) registerDisplayConverters(accessor, currentDatasetName, table.getConfigRegistry());
+				if (getDataset() != null) registerDisplayConverters(accessor, currentDatasetName, table.getConfigRegistry());
 				table.refresh();
 			}
 		} catch (SiloException e) {
