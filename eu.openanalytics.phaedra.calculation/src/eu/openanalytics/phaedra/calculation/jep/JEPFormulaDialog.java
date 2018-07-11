@@ -96,13 +96,7 @@ public class JEPFormulaDialog extends Dialog {
 		GridDataFactory.fillDefaults().grab(true, false).span(totalTables, 1).applyTo(subContainer);
 		GridLayoutFactory.fillDefaults().numColumns(2).equalWidth(false).applyTo(subContainer);
 
-		Label lbl = new Label(subContainer, SWT.NONE);
-		lbl.setText("Expression:");
-
-		formulaText = new Text(subContainer, SWT.BORDER | SWT.WRAP | SWT.SINGLE);
-		if (formula == null) formula = "";
-		formulaText.setText(formula);
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(formulaText);
+		createExpression(subContainer);
 
 		return parent;
 	}
