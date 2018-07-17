@@ -9,14 +9,14 @@
             name="Create New Silo">
       </command>
       <command
-            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.CreateDataset"
-            id="eu.openanalytics.phaedra.ui.silo.cmd.CreateDataset"
-            name="Create New Dataset">
-      </command>
-      <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.AddColumn"
             id="eu.openanalytics.phaedra.ui.silo.cmd.AddColumn"
             name="Add Column">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.AddFeatureColumns"
+            id="eu.openanalytics.phaedra.ui.silo.cmd.AddFeatureColumns"
+            name="Add Feature Columns">
       </command>
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.AddJEPColumn"
@@ -46,7 +46,7 @@
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
             id="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
-            name="Delete Dataset(s)">
+            name="Delete Dataset">
       </command>
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItemsAsNewGroup"
@@ -66,88 +66,11 @@
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.silo.cmd.DeleteRows"
             id="eu.openanalytics.phaedra.ui.silo.cmd.DeleteRows"
-            name="Delete Row(s)">
+            name="Delete Rows">
       </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
-      <menuContribution
-            allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.protocol.browser.ProtocolClassBrowser">
-         <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.CreateSilo"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/silo_add.png"
-               style="push">
-         </command>
-      </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.navigator.Navigator?after=siloChartMenu">
-         <menu
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
-               label="Charts">
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_scatter.png"
-                  label="Silo 2D Scatter Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloScatter2DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_3d.png"
-                  label="Silo 3D Scatter Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloScatter3DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_density.png"
-                  label="Silo 2D Density Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloDensity2DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
-                  label="Silo 1D Density Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloDensityWeka1DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_bar.png"
-                  label="Silo 1D Histogram Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloHistogram1DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_line.png"
-                  label="Silo Parallel Coordinates Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloParallelCoordinatesView">
-               </parameter>
-            </command>
-         </menu>
-      </menuContribution>
       <menuContribution
             allPopups="false"
             locationURI="popup:eu.openanalytics.phaedra.ui.silo.editor.WellSiloEditor.treeViewer?after=additions">
@@ -188,137 +111,18 @@
                   style="push">
             </command>
             <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddFeatureColumns"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
+                  style="push">
+            </command>
+            <command
                   commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddJEPColumn"
                   icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
                   style="push">
             </command>
          </menu>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteColumns"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_delete.png"
-               style="push">
-         </command>
          <separator
                name="eu.openanalytics.phaedra.ui.silo.separator2"
-               visible="true">
-         </separator>
-         <menu
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
-               label="Charts">
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_scatter.png"
-                  label="Silo 2D Scatter Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloScatter2DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_3d.png"
-                  label="Silo 3D Scatter Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloScatter3DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_density.png"
-                  label="Silo 2D Density Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloDensity2DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
-                  label="Silo 1D Density Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloDensityWeka1DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_bar.png"
-                  label="Silo 1D Histogram Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloHistogram1DView">
-               </parameter>
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_line.png"
-                  label="Silo Parallel Coordinates Plot"
-                  style="push">
-               <parameter
-                     name="org.eclipse.ui.views.showView.viewId"
-                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloParallelCoordinatesView">
-               </parameter>
-            </command>
-         </menu>
-      </menuContribution>
-      <menuContribution
-            allPopups="false"
-            locationURI="popup:eu.openanalytics.phaedra.ui.silo.editor.SubWellSiloEditor.treeViewer?after=additions">
-         <menu
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
-               label="Paste Subwell Items">
-            <command
-                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItems"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItemsAsNewGroup"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItemsAdvanced"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
-                  style="push">
-            </command>
-         </menu>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_delete.png"
-               style="push">
-         </command>
-         <separator
-               name="eu.openanalytics.phaedra.ui.silo.separator3"
-               visible="true">
-         </separator>
-         <menu
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
-               label="Add Column">
-            <command
-                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddColumn"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddJEPColumn"
-                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
-                  style="push">
-            </command>
-         </menu>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteColumns"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_delete.png"
-               style="push">
-         </command>
-         <separator
-               name="eu.openanalytics.phaedra.ui.silo.separator4"
                visible="true">
          </separator>
          <menu
@@ -394,6 +198,130 @@
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_delete.png"
                style="push">
          </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteColumns"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_delete.png"
+               style="push">
+         </command>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:eu.openanalytics.phaedra.ui.silo.editor.SubWellSiloEditor.treeViewer?after=additions">
+         <menu
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
+               label="Paste Subwell Items">
+            <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItems"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItemsAsNewGroup"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.PasteSWItemsAdvanced"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_add.png"
+                  style="push">
+            </command>
+         </menu>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteDatasets"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_delete.png"
+               style="push">
+         </command>
+         <separator
+               name="eu.openanalytics.phaedra.ui.silo.separator3"
+               visible="true">
+         </separator>
+         <menu
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
+               label="Add Column">
+            <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddColumn"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddFeatureColumns"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.ui.silo.cmd.AddJEPColumn"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_add.png"
+                  style="push">
+            </command>
+         </menu>
+         <separator
+               name="eu.openanalytics.phaedra.ui.silo.separator4"
+               visible="true">
+         </separator>
+         <menu
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
+               label="Charts">
+            <command
+                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_scatter.png"
+                  label="Silo 2D Scatter Plot"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloScatter2DView">
+               </parameter>
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_3d.png"
+                  label="Silo 3D Scatter Plot"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloScatter3DView">
+               </parameter>
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_density.png"
+                  label="Silo 2D Density Plot"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloDensity2DView">
+               </parameter>
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
+                  label="Silo 1D Density Plot"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloDensityWeka1DView">
+               </parameter>
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_bar.png"
+                  label="Silo 1D Histogram Plot"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloHistogram1DView">
+               </parameter>
+            </command>
+            <command
+                  commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
+                  icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_line.png"
+                  label="Silo Parallel Coordinates Plot"
+                  style="push">
+               <parameter
+                     name="org.eclipse.ui.views.showView.viewId"
+                     value="eu.openanalytics.phaedra.ui.silo.chart.view.SiloParallelCoordinatesView">
+               </parameter>
+            </command>
+         </menu>
       </menuContribution>
       <menuContribution
             allPopups="false"
@@ -401,6 +329,11 @@
          <command
                commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteRows"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_delete.png"
+               style="push">
+         </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.silo.cmd.DeleteColumns"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/dataframe_col_delete.png"
                style="push">
          </command>
       </menuContribution>

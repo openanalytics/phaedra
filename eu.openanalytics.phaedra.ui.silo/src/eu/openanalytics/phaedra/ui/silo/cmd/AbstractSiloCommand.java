@@ -12,6 +12,7 @@ public abstract class AbstractSiloCommand extends AbstractHandler {
 
 	private static final String VAR_ACTIVE_SILO = "activeSilo";
 	private static final String VAR_ACTIVE_SILO_DATASET = "activeSiloDataset";
+	private static final String VAR_ACTIVE_COLUMN = "activeColumns";
 	
 	protected Silo getActiveSilo(ExecutionEvent event) {
 		return (Silo) getContextVar(VAR_ACTIVE_SILO, event);
@@ -21,12 +22,20 @@ public abstract class AbstractSiloCommand extends AbstractHandler {
 		return (String) getContextVar(VAR_ACTIVE_SILO_DATASET, event);
 	}
 	
+	protected String[] getActiveColumns(ExecutionEvent event) {
+		return (String[]) getContextVar(VAR_ACTIVE_COLUMN, event);
+	}
+	
 	public static void setActiveSilo(Silo silo) {
 		setContextVar(VAR_ACTIVE_SILO, silo);
 	}
 	
 	public static void setActiveSiloDataset(String group) {
 		setContextVar(VAR_ACTIVE_SILO_DATASET, group);
+	}
+	
+	public static void setActiveColumns(String[] columnNames) {
+		setContextVar(VAR_ACTIVE_COLUMN, columnNames);
 	}
 	
 	private static void setContextVar(String name, Object value) {

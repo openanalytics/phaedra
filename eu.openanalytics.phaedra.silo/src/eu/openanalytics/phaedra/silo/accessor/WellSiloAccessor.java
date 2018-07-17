@@ -56,20 +56,21 @@ public class WellSiloAccessor extends AbstractSiloAccessor<Well> {
 		
 		for (int i = 0; i < newRows.size(); i++) {
 			Well well = newRows.get(i);
+			int dataIndex = getIndexOfRow(column.getDataset().getName(), well);
 			//TODO support normalized values
 			String normalization = null;
 			PlateDataAccessor dataAccessor = CalculationService.getInstance().getAccessor(well.getPlate());
 			switch (column.getType()) {
 			case Float:
 				float[] fData = columnData.getFloatData();
-				fData[fData.length - newRows.size()] = (float) dataAccessor.getNumericValue(well, feature, normalization);
+				fData[dataIndex] = (float) dataAccessor.getNumericValue(well, feature, normalization);
 				break;
 			case Long:
 				long[] lData = columnData.getLongData();
-				lData[lData.length - newRows.size()] = (long) dataAccessor.getNumericValue(well, feature, normalization);
+				lData[dataIndex] = (long) dataAccessor.getNumericValue(well, feature, normalization);
 			case String:
 				String[] sData = columnData.getStringData();
-				sData[sData.length - newRows.size()] = dataAccessor.getStringValue(well, feature);
+				sData[dataIndex] = dataAccessor.getStringValue(well, feature);
 			default:
 				// Nothing to set.
 			}

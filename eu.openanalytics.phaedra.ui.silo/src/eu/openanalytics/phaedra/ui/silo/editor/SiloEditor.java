@@ -1,8 +1,8 @@
 package eu.openanalytics.phaedra.ui.silo.editor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -16,7 +16,6 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
-import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.IBaseLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -44,26 +43,13 @@ import org.eclipse.nebula.widgets.nattable.sort.event.SortColumnEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CTabFolder;
 import org.eclipse.swt.custom.CTabItem;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DragSource;
-import org.eclipse.swt.dnd.DragSourceAdapter;
-import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.DragSourceListener;
-import org.eclipse.swt.dnd.DropTargetAdapter;
-import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.DropTargetListener;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
@@ -111,10 +97,8 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.model.protocol.util.GroupType;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
-import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.silo.SiloException;
 import eu.openanalytics.phaedra.silo.SiloService;
 import eu.openanalytics.phaedra.silo.accessor.ISiloAccessor;
@@ -156,14 +140,13 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 	private boolean isDirty;
 
-	private Listener[] keyListeners;
-
 	private SelectionProviderIntermediate selectionProvider;
 	private ISelectionListener selectionListener;
 	private IModelEventListener modelListener;
 	private IUIEventListener imageSettingListener;
 
 	private NatTable table;
+	private IColumnPropertyAccessor<Integer> tableColumnAccessor;
 	private ThumbnailViewer thumbnailViewer;
 
 	private ISiloAccessor<ENTITY> accessor;
@@ -304,7 +287,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		tableTab.setControl(tableContainer);
 
 		// Nat Table
-		createNatTable(false);
+		createNatTable();
 
 		imageContainer = new Composite(tabFolder, SWT.NONE);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(imageContainer);
@@ -341,21 +324,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		};
 		thumbnailViewer.setContentProvider(new ArrayContentProvider());
 		thumbnailViewer.setLabelProvider(getThumbnailLabelProvider());
-		thumbnailViewer.getThumbnail().addKeyListener(new KeyListener() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				if (e.keyCode == SWT.SHIFT) {
-					toggleDragSupport(false);
-				}
-			}
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == SWT.SHIFT && !thumbnailViewer.getThumbnail().isDragging()) {
-					toggleDragSupport(true);
-				}
-			}
-		});
-		thumbnailViewer.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, new Transfer[] { LocalSelectionTransfer.getTransfer() }, createDropListener());
 		thumbnailViewer.getThumbnail().addKeyListener(imageControlPanel.getKeyListener());
 		thumbnailViewer.getThumbnail().addMouseWheelListener(imageControlPanel.getMouseWheelListener());
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(thumbnailViewer.getControl());
@@ -370,7 +338,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		splitComp.setWeights(new int[] { 20, 80 });
 		splitComp.createModeButton().fill(toolbar, 0);
 
-		initializeKeyListeners();
 		createSelectionProvider();
 
 		// Table View is default tab
@@ -380,37 +347,10 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 		createListeners();
 
-		addDecorator(new CopyPasteSelectionDecorator(CopyPasteSelectionDecorator.COPY | CopyPasteSelectionDecorator.CUT | CopyPasteSelectionDecorator.PASTE) {
+		addDecorator(new CopyPasteSelectionDecorator(CopyPasteSelectionDecorator.COPY | CopyPasteSelectionDecorator.PASTE) {
 			@Override
 			public void pasteAction(ISelection selection) {
 				addEntitySelection(getSelectedEntities(selection));
-			}
-			@Override
-			public void cutAction(ISelection selection) {
-				//TODO
-//				try {
-//					List<SiloStructure> siloStructures = SelectionUtils.getObjects(selection, SiloStructure.class);
-//					String cutGroup;
-//					// Check if the cut was done in another group of this Silo.
-//					if (siloStructures.isEmpty()) {
-//						cutGroup = currentDatasetName;
-//					} else {
-//						cutGroup = siloStructures.get(0).getFullName();
-//					}
-//					List<ENTITY> rowsToDelete = getSelectedEntities(selection);
-//					int[] rows = new int[rowsToDelete.size()];
-//					for (int i=0; i<rows.length; i++) {
-//						rows[i] = accessor.getRowObject(cutGroup, rowsToDelete.get(i));
-//					}
-//					accessor.removeRows(cutGroup, rows);
-//					if (currentDatasetName.equals(cutGroup))	{
-//						selectionProvider.setSelection(new StructuredSelection(rowsToDelete));
-//					}
-//				} catch (SiloException e) {
-//					Shell shell = Display.getDefault().getActiveShell();
-//					String msg = "Failed to delete rows";
-//					ErrorDialog.openError(shell, "Cannot Delete Rows", msg, new Status(IStatus.ERROR, Activator.PLUGIN_ID, msg, e));
-//				}
 			}
 		});
 		initDecorators(parent, thumbnailViewer.getControl());
@@ -421,7 +361,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewSiloEditor");
 	}
 
-	private void createNatTable(boolean isGroupBy) {
+	private void createNatTable() {
 		// Create a menu manager.
 		MenuManager menuMgr = new MenuManager("#Popup");
 		menuMgr.setRemoveAllWhenShown(true);
@@ -441,11 +381,11 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		eventList = GlazedLists.eventListOf(rowNrs);
 
 		// Create a NatTable builder.
-		NatTableBuilder<Integer> builder = new NatTableBuilder<Integer>(createColumnAccessor(), eventList);
+		tableColumnAccessor = createColumnAccessor();
+		NatTableBuilder<Integer> builder = new NatTableBuilder<Integer>(tableColumnAccessor, eventList);
 		table = builder
 				.hideColumns(new Integer[] { 0 })
 				.makeEditable(createDataValidator(), createEditableRule())
-				.makeGroupByable(isGroupBy)
 				.makeUnsortable(new int[] { 0 })
 				.addSortedListEventListener(e -> {
 					// Check if the list was sorted.
@@ -530,13 +470,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		// Register menu manager with selection provider.
 		getSite().registerContextMenu(menuMgr, natTableSelectionProvider);
 
-		// Add Drag & Drop support.
-		// TODO: Find way to disable selection so it does not ruin selection.
-		//table.addDragSupport(DND.DROP_MOVE, new Transfer[] { LocalSelectionTransfer.getTransfer() },
-		//		createDragListener());
-		table.addDropSupport(DND.DROP_COPY | DND.DROP_MOVE, new Transfer[] { LocalSelectionTransfer.getTransfer() },
-				createDropListener());
-
 		// Add the Selected Filter if enabled.
 		if (selectedItem.getSelection()) columnHeaderLayer.addStaticFilter(selectedFilter);
 	}
@@ -550,9 +483,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 					for (int rowIndex : list) {
 						entities.add(accessor.getRowObject(currentDatasetName, rowIndex));
 					}
-					//TODO
-//					SiloStructure siloStructure = SiloStructureUtils.findDataGroup(SiloDataService.getInstance().getSiloStructure(silo), currentDatasetName);
-//					entities.add(siloStructure);
 				} catch (SiloException e) {
 					EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 				}
@@ -696,8 +626,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		getSite().getPage().removeSelectionListener(selectionListener);
 		ModelEventService.getInstance().removeEventListener(modelListener);
 		ProtocolUIService.getInstance().removeUIEventListener(imageSettingListener);
-		Display.getDefault().removeFilter(SWT.KeyDown, keyListeners[0]);
-		Display.getDefault().removeFilter(SWT.KeyUp, keyListeners[1]);
 		if (isDirty) accessor.revert();
 		super.dispose();
 	}
@@ -743,6 +671,11 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 	protected void fillContextMenu(IMenuManager manager) {
 		AbstractSiloCommand.setActiveSilo(accessor.getSilo());
 		AbstractSiloCommand.setActiveSiloDataset(currentDatasetName);
+		
+		int[] cols = columnHeaderLayer.getSelectionLayer().getSelectedColumnPositions();
+		String[] colNames = Arrays.stream(cols).mapToObj(i -> tableColumnAccessor.getColumnProperty(i)).toArray(i -> new String[i]);
+		AbstractSiloCommand.setActiveColumns(colNames);
+		
 		super.fillContextMenu(manager);
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -765,53 +698,9 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 	protected abstract List<ENTITY> getSelectedEntities(ISelection selection);
 
-	protected abstract boolean selectFeatures(ProtocolClass pClass, List<FEATURE> selectedFeatures, List<String> selectedNormalizations);
-
 	protected abstract void registerDisplayConverters(ISiloAccessor<ENTITY> accessor, String dataGroup, IConfigRegistry configRegistry);
 
 	protected abstract ToolTipLabelProvider createToolTipLabelProvider();
-
-	protected void configureFeatures(final ISiloAccessor<ENTITY> accessor, final String dataGroup) {
-		final ProtocolClass pClass = accessor.getSilo().getProtocolClass();
-		final List<FEATURE> selectedFeatures = new ArrayList<>();
-		final List<String> selectedNormalizations = new ArrayList<>();
-
-		// Open the Feature Selection dialog.
-		boolean proceed = selectFeatures(pClass, selectedFeatures, selectedNormalizations);
-		if (!proceed) return;
-
-		if (dataGroup == null) {
-			MessageDialog.openInformation(Display.getDefault().getActiveShell(), "No group selected", "Cannot configure features: no group selected.");
-			return;
-		}
-
-		Job addColumnsJob = new Job("Adding Columns") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				monitor.beginTask("Adding Columns", selectedFeatures.size());
-				try {
-					// Check for Features that need to be added to the Silo.
-					for (int i=0; i<selectedFeatures.size(); i++) {
-						if (monitor.isCanceled()) return Status.CANCEL_STATUS;
-						FEATURE f = selectedFeatures.get(i);
-						monitor.subTask("Adding column " + (i+1) + "/" + selectedFeatures.size() + ": " + f.getName() + "");
-						//TODO support normalization
-						String norm = selectedNormalizations.get(i);
-						String colName = f.getName();
-						accessor.createColumn(currentDatasetName, colName, SiloUtils.getDataType(f));
-						monitor.worked(1);
-					}
-				} catch (SiloException e) {
-					return new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to add columns", e);
-				}
-
-				monitor.done();
-				return Status.OK_STATUS;
-			}
-		};
-		addColumnsJob.setUser(true);
-		addColumnsJob.schedule();
-	}
 
 	@SuppressWarnings("unchecked")
 	protected void addEntitySelection(List<ENTITY> selections) {
@@ -828,11 +717,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			EclipseLog.error(e.getMessage(), e, Activator.getDefault());
 		}
 	}
-
-
-	/*
-	 * Private Methods
-	 */
 
 	private List<Integer> getSelectedRows(ISelection selection) {
 		// Check if the incoming selection is already an Integer List.
@@ -867,24 +751,17 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			} else {
 				thumbnailViewer.removeFilter(selectionFilter);
 			}
-//			thumbnailViewer.setInput(thumbnailViewer.getInput());
-//			thumbnailViewer.refresh();
 		});
 
 		saveItem = new ToolItem(toolbar, SWT.PUSH);
 		saveItem.setImage(IconManager.getIconImage("disk.png"));
-		saveItem.setToolTipText("Save the current table to the HDF5 File");
+		saveItem.setToolTipText("Save the current changes to the silo");
 		saveItem.setEnabled(false);
 		saveItem.addListener(SWT.Selection, e -> doSave(null));
 
 		ToolItem item = new ToolItem(toolbar, SWT.PUSH);
-		item.setImage(IconManager.getIconImage((accessor.getSilo().getType() == GroupType.WELL.getType()) ? "tag_blue.png" : "tag_red.png"));
-		item.setToolTipText("Select which Features should be included in the Silo");
-		item.addListener(SWT.Selection, e -> configureFeatures(accessor, currentDatasetName));
-
-		item = new ToolItem(toolbar, SWT.PUSH);
 		item.setImage(IconManager.getIconImage("table.png"));
-		item.setToolTipText("Compact table");
+		item.setToolTipText("Compact table columns");
 		item.addListener(SWT.Selection, e -> {
 			NatTableUtils.resizeAllColumns(table, DataLayer.DEFAULT_COLUMN_WIDTH);
 			int imageColumnPos = columnHeaderLayer.getSelectionLayer().getColumnPositionByIndex(IMAGE_COLUMN_INDEX);
@@ -892,19 +769,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 				NatTableUtils.resizeImageColumn(table, natTableSelectionProvider.getRowDataProvider(), eventList, imageColumnPos, imageBounds, 1);
 			} else {
 				NatTableUtils.resizeAllRows(table);
-			}
-		});
-
-		item = new ToolItem(toolbar, SWT.CHECK);
-		item.setImage(IconManager.getIconImage("table_groupby.png"));
-		item.setToolTipText("Enable Group By Column");
-		item.addListener(SWT.Selection, e -> {
-			if (table != null && !table.isDisposed() ) {
-				table.dispose();
-
-				createNatTable(((ToolItem) e.widget).getSelection());
-				setInput(true);
-				table.getParent().layout();
 			}
 		});
 	}
@@ -1038,12 +902,14 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 			}
 		};
 		getSite().getPage().addSelectionListener(selectionListener);
+		
 		modelListener = event -> {
 			if (event.source instanceof Silo) {
 				if (((Silo) event.source).equals(accessor.getSilo())) refreshCurrentSilo();
 			}
 		};
 		ModelEventService.getInstance().addEventListener(modelListener);
+		
 		imageSettingListener = event -> {
 			if (event.type == EventType.ImageSettingsChanged) {
 				updateImages(false);
@@ -1053,9 +919,12 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 	}
 
 	private void refreshCurrentSilo() {
-		setDirty(accessor.isDirty());
-		treeViewer.refresh();
-		setInput(true);
+		Display.getDefault().asyncExec(() -> {
+			if (treeViewer.getTree().isDisposed()) return;
+			setDirty(accessor.isDirty());
+			treeViewer.refresh();
+			setInput(true);
+		});
 	}
 
 	private void createSelectionProvider() {
@@ -1084,117 +953,6 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 
 		getSite().setSelectionProvider(selectionProvider);
 	}
-
-	private DragSourceListener createDragListener() {
-		return new DragSourceAdapter() {
-			@Override
-			public void dragStart(DragSourceEvent event) {
-				LocalSelectionTransfer.getTransfer().setSelection(natTableSelectionProvider.getSelection());
-			}
-			@Override
-			public void dragFinished(DragSourceEvent event) {
-				if (event.detail == DND.DROP_MOVE) {
-					try {
-						List<Integer> rowsList = natTableSelectionProvider.getCurrentListselection();
-						int[] rows = new int[rowsList.size()];
-						for (int i = 0; i < rows.length; i++) {
-							rows[i] = rowsList.get(i);
-						}
-						accessor.removeRows(currentDatasetName, rows);
-					} catch (SiloException e) {
-						EclipseLog.error(e.getMessage(), e, Activator.getDefault());
-					}
-					selectionProvider.setSelection(new StructuredSelection(natTableSelectionProvider.getSelection()));
-					setInput(false);
-					setDirty(true);
-				}
-				toggleDragSupport(false);
-			}
-		};
-	}
-
-	private DropTargetListener createDropListener() {
-		return new DropTargetAdapter() {
-			@Override
-			public void drop(DropTargetEvent event) {
-				List<ENTITY> selections = getSelectedEntities(LocalSelectionTransfer.getTransfer().getSelection());
-				addEntitySelection(selections);
-			}
-			@Override
-			public void dragEnter(DropTargetEvent event) {
-				if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
-					List<ENTITY> selections = getSelectedEntities(LocalSelectionTransfer.getTransfer().getSelection());
-					if (!selections.isEmpty()) {
-						// Only allow a drop if it's from the correct ProtocolClass.
-						ProtocolClass pClass = (ProtocolClass) selections.get(0).getAdapter(ProtocolClass.class);
-						ProtocolClass currentPClass = accessor.getSilo().getProtocolClass();
-						if (currentPClass.equals(pClass)) {
-							// It's from the same ProtocolClass, check if it has new selected items.
-							boolean isNewSelection = false;
-							try {
-								Iterator<ENTITY> iter = accessor.getRowIterator(currentDatasetName);
-								while (iter.hasNext()) {
-									ENTITY next = iter.next();
-									if (!selections.contains(next)) {
-										// It has new items, allow drop.
-										isNewSelection = true;
-										break;
-									}
-								}
-							} catch (SiloException e) {
-								EclipseLog.error(e.getMessage(), e, Activator.getDefault());
-							}
-							if (isNewSelection) event.detail = event.operations;
-						}
-					}
-				}
-				event.detail = DND.DROP_NONE;
-			}
-		};
-	}
-
-	private void toggleDragSupport(boolean enabled) {
-		disposeExistingDragSupport();
-		thumbnailViewer.getThumbnail().setSelectionEnabled(!enabled);;
-		if (enabled) {
-			thumbnailViewer.addDragSupport(DND.DROP_MOVE, new Transfer[] { LocalSelectionTransfer.getTransfer() },
-					createDragListener());
-		}
-	}
-	private void disposeExistingDragSupport() {
-		Object o = thumbnailViewer.getThumbnail().getData(DND.DRAG_SOURCE_KEY);
-		if (o != null) {
-			((DragSource) o).dispose();;
-		}
-	}
-
-	private void initializeKeyListeners() {
-		keyListeners = new Listener[2];
-		keyListeners[0] = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (event.keyCode == SWT.SHIFT) {
-					if (!thumbnailViewer.getThumbnail().isDragging()) {
-						toggleDragSupport(true);
-					}
-				}
-			}
-		};
-		keyListeners[1] = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (event.keyCode == SWT.SHIFT) {
-					toggleDragSupport(false);
-				}
-			}
-		};
-		Display.getDefault().addFilter(SWT.KeyDown, keyListeners[0]);
-		Display.getDefault().addFilter(SWT.KeyUp, keyListeners[1]);
-	}
-
-	/*
-	 * Private Classes
-	 */
 
 	private class SelectedMatcher implements Matcher<Integer> {
 		@Override

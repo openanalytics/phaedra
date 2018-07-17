@@ -88,10 +88,6 @@ public abstract class AbstractPasteCommand<T extends PlatformObject> extends Abs
 			if (!confirmed) return null;
 		}
 		
-		//TODO See if this selection came from a (different) Silo
-//		List<SiloStructure> siloStructures = SelectionUtils.getObjects(itemSelection, SiloStructure.class);
-//		SiloStructure siloSource = siloStructures.isEmpty() ? null : siloStructures.get(0);
-
 		// Insert the items as new rows into the target dataset
 		try {
 			ISiloAccessor<T> accessor = SiloService.getInstance().getSiloAccessor(silo);

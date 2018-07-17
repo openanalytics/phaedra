@@ -12,6 +12,7 @@ import java.util.stream.IntStream;
 
 import javax.persistence.PersistenceException;
 
+import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
@@ -44,17 +45,6 @@ public class SiloDataDAO {
 	public void saveData(SiloDatasetData data) {
 		long datasetId = data.getDataset().getId();
 		
-		// Identify new points and insert them.
-		List<SiloDatapoint> newPoints = Arrays.stream(data.getDataPoints()).filter(p -> p.getDatapointId() == 0).collect(Collectors.toList());
-		//TODO Support other DB's sequence syntax
-		String sql = "insert into phaedra.hca_silo_datapoint(datapoint_id,dataset_id,well_id,subwell_id)"
-				+ " values (nextval('phaedra.hca_silo_datapoint_s'),?,?,?)";
-		runBatch(sql, newPoints, (p, ps) -> {
-			ps.setLong(1, datasetId);
-			ps.setLong(2, p.getWellId());
-			ps.setLong(3, p.getSubwellId());
-		});
-		
 		// Identify removed points and delete them.
 		long[] currentPointIds = Arrays.stream(data.getDataPoints()).mapToLong(p -> p.getDatapointId()).sorted().toArray();
 		String[] removedPoints = queryDataPoints(datasetId).stream()
@@ -65,6 +55,16 @@ public class SiloDataDAO {
 			runStatement("delete from phaedra.hca_silo_datapoint where datapoint_id in (" 
 				+ StringUtils.createSeparatedString(removedPoints, ",") + ")");
 		}
+		
+		// Identify new points and insert them.
+		List<SiloDatapoint> newPoints = Arrays.stream(data.getDataPoints()).filter(p -> p.getDatapointId() == 0).collect(Collectors.toList());
+		String sql = "insert into phaedra.hca_silo_datapoint(datapoint_id,dataset_id,well_id,subwell_id)"
+				+ " values (" + JDBCUtils.getSequenceNextValSQL("phaedra.hca_silo_datapoint_s") + ",?,?,?)";
+		runBatch(sql, newPoints, (p, ps) -> {
+			ps.setLong(1, datasetId);
+			ps.setLong(2, p.getWellId());
+			ps.setLong(3, p.getSubwellId());
+		});
 		
 		for (SiloDatasetColumnData colData: data.getColumnData().values()) {
 			runStatement("delete from phaedra.hca_silo_datapoint_value"

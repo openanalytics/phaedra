@@ -49,7 +49,7 @@ public class DeleteRows extends AbstractSiloCommand {
 			return null;
 		}
 
-		boolean confirmed = MessageDialog.openConfirm(shell, "Delete Rows", "Are you sure you want to delete these " + rowsToDelete.size() + " row(s) ?");
+		boolean confirmed = MessageDialog.openConfirm(shell, "Delete Rows", "Are you sure you want to delete the selected " + rowsToDelete.size() + " row(s) ?");
 		if (!confirmed) return null;
 
 		try {

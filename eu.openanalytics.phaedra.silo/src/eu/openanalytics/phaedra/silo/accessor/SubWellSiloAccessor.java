@@ -80,19 +80,20 @@ public class SubWellSiloAccessor extends AbstractSiloAccessor<SubWellItem> {
 		
 		for (int i = 0; i < newRows.size(); i++) {
 			SubWellItem item = newRows.get(i);
+			int dataIndex = getIndexOfRow(column.getDataset().getName(), item);
 			float[] numericData = feature.isNumeric() ? SubWellService.getInstance().getNumericData(item.getWell(), feature) : null;
 			String[] stringData = feature.isNumeric() ? null : SubWellService.getInstance().getStringData(item.getWell(), feature);
 			switch (column.getType()) {
 			case Float:
 				float[] fData = columnData.getFloatData();
-				fData[fData.length - newRows.size()] = numericData[item.getIndex()];
+				fData[dataIndex] = numericData[item.getIndex()];
 				break;
 			case Long:
 				long[] lData = columnData.getLongData();
-				lData[lData.length - newRows.size()] = (long) numericData[item.getIndex()];
+				lData[dataIndex] = (long) numericData[item.getIndex()];
 			case String:
 				String[] sData = columnData.getStringData();
-				sData[sData.length - newRows.size()] = stringData[item.getIndex()];
+				sData[dataIndex] = stringData[item.getIndex()];
 			default:
 				// Nothing to set.
 			}

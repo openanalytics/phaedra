@@ -139,6 +139,7 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 
 	@Override
 	public void setSelectedFeature(String feature, int axis, IProgressMonitor monitor) {
+		if (!feature.contains(SPLITTER)) return;
 		super.setSelectedFeature(feature, axis, monitor);
 		loadDataGroup();
 	}
@@ -215,28 +216,29 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 			Arrays.fill(filteredColumns, Float.NaN);
 			try {
 				String selectedFeature = getFeatures().get(col);
+				String featureName = getFeatureName(selectedFeature);
 				String datasetName = getDatasetName(selectedFeature);
 
-				SiloDataType dataType = siloAccessor.getColumnDataType(datasetName, selectedFeature);
+				SiloDataType dataType = siloAccessor.getColumnDataType(datasetName, featureName);
 				switch (dataType) {
 				case Float:
-					float[] floatValues = siloAccessor.getFloatValues(datasetName, selectedFeature);
+					float[] floatValues = siloAccessor.getFloatValues(datasetName, featureName);
 					for (int i = 0; i < filteredColumns.length && i < floatValues.length; i++) {
 						filteredColumns[i] = floatValues[i];
 					}
 					break;
 				case Long:
-					long[] longValues = siloAccessor.getLongValues(datasetName, selectedFeature);
+					long[] longValues = siloAccessor.getLongValues(datasetName, featureName);
 					for (int i = 0; i < filteredColumns.length && i < longValues.length; i++) {
 						filteredColumns[i] = longValues[i];
 					}
 					break;
 				case String:
 					// Convert the String values to a sequence number.
-					stringPropertyValues.putIfAbsent(selectedFeature, new ArrayList<>());
-					List<String> uniqueValues = stringPropertyValues.get(selectedFeature);
+					stringPropertyValues.putIfAbsent(featureName, new ArrayList<>());
+					List<String> uniqueValues = stringPropertyValues.get(featureName);
 
-					String[] data = siloAccessor.getStringValues(datasetName, selectedFeature);
+					String[] data = siloAccessor.getStringValues(datasetName, featureName);
 					for (int i = 0; i < filteredColumns.length && i < data.length; i++) {
 						if (monitor.isCanceled()) return filteredColumns;
 						String value = data[i];
@@ -310,10 +312,14 @@ public class SiloDataProvider extends BaseDataProvider<Silo, Silo> {
 		return null;
 	}
 	
-	private String getDatasetName(String featureName) {
-		String[] split = featureName.split(SPLITTER);
-		String datasetName = split[1];
-		return datasetName;
+	private String getFeatureName(String fullFeatureName) {
+		String[] split = fullFeatureName.split(SPLITTER);
+		return split[0];
+	}
+	
+	private String getDatasetName(String fullFeatureName) {
+		String[] split = fullFeatureName.split(SPLITTER);
+		return split[1];
 	}
 
 	private void loadDataGroup() {

@@ -168,7 +168,6 @@ public class SiloUtils {
 	}
 	
 	public static void saveSiloChanges(Silo original, Silo workingCopy) {
-		//TODO Error handling, object refresh, etc.
 		// Save the silo model
 		ObjectCopyFactory.copy(workingCopy, original, false);
 		SiloService.getInstance().updateSilo(original);
