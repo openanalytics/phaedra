@@ -222,15 +222,23 @@ public class JDBCUtils {
 	public static long getSequenceNextVal(EntityManager em, String sequenceName) {
 		String statement = null;
 		if (isOracle()) {
-			statement = "select " + sequenceName + ".nextval from dual";
+			statement = "select " + getSequenceNextValSQL(sequenceName) + " from dual";
 		} else {
-			statement = "select nextval('" + sequenceName + "')";
+			statement = "select " + getSequenceNextValSQL(sequenceName);
 		}
 		Query query = em.createNativeQuery(statement);
 		List<?> res = JDBCUtils.queryWithLock(query, em);
 		return ((Number)res.get(0)).longValue();
 	}
 	
+	public static String getSequenceNextValSQL(String sequenceName) {
+		if (isOracle()) {
+			return sequenceName + ".nextval";
+		} else {
+			return "nextval('" + sequenceName + "')";
+		}
+	}
+
 	public static boolean testFunctionExists(Connection conn, String namespace, String name) throws SQLException {
 		String query = null;
 		if (isOracle()) {
