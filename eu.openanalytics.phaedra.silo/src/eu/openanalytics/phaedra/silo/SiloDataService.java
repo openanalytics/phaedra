@@ -96,6 +96,7 @@ public class SiloDataService {
 		for (SiloDatasetData data: dataSets) {
 			if (monitor.isCanceled()) return;
 			dao.saveData(data);
+			cache.put(getKey(silo.getId(), data.getDataset().getName()), data);
 			monitor.worked(1);
 		}
 		monitor.done();
@@ -120,6 +121,7 @@ public class SiloDataService {
 			SiloDatasetData dataTo = dataFrom.copy();
 			dataTo.setDataset(dsTo);
 			dao.saveData(dataTo);
+			cache.put(getKey(to.getId(), dataTo.getDataset().getName()), dataTo);
 		}
 	}
 

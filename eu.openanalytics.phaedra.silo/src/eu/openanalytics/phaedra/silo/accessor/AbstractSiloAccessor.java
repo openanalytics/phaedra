@@ -274,6 +274,7 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 		if (columnData == null) {
 			SiloDatasetColumn column = getColumn(datasetName, columnName, true);
 			columnData = SiloUtils.createColumnData(column, 0);
+			data.getColumnData().put(column.getName(), columnData);
 		}
 		SiloUtils.replaceColumnData(columnData, newData, data.getDataPoints().length);
 		

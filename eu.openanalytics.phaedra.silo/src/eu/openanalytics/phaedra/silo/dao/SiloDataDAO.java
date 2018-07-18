@@ -70,6 +70,10 @@ public class SiloDataDAO {
 			runStatement("delete from phaedra.hca_silo_datapoint_value"
 					+ " where column_id = " + colData.getColumn().getId()
 					+ " and datapoint_id in (select datapoint_id from phaedra.hca_silo_datapoint where dataset_id = " + datasetId + ")");
+
+			// Do not save values if this column was removed from the dataset.
+			SiloDatasetColumn column = colData.getColumn();
+			if (!column.getDataset().getColumns().contains(column)) continue;
 			
 			boolean hasData = colData.getStringData() != null || colData.getFloatData() != null || colData.getLongData() != null;
 			if (hasData) {
