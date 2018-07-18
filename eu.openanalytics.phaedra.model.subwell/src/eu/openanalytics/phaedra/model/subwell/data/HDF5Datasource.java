@@ -120,17 +120,31 @@ public class HDF5Datasource implements ISubWellDataSource {
 	@Override
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
 		if (data == null || data.isEmpty()) return;
-		Well sampleWell = data.values().iterator().next().keySet().iterator().next();
-		Plate plate = sampleWell.getPlate();
-
-		SubWellModificationTransaction transaction = new SubWellModificationTransaction(plate);
-		try {
-			transaction.begin();
-			updateData(data, transaction);
-			transaction.commit();
-		} catch (IOException e) {
-			transaction.rollback();
-			throw new RuntimeException("Failed to update subwell data", e);
+		
+		List<Plate> plates = data.values().stream().flatMap(m -> m.keySet().stream()).map(Well::getPlate).distinct().collect(Collectors.toList());
+		
+		for (Plate plate: plates) {
+			Map<SubWellFeature, Map<Well, Object>> dataPerPlate = new HashMap<>();
+			
+			for (SubWellFeature feature: data.keySet()) {
+				Map<Well, Object> dataPerWell = data.get(feature).entrySet().stream()
+						.filter(e -> e.getKey().getPlate().equals(plate))
+						.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+				if (dataPerWell.isEmpty()) continue;
+				dataPerPlate.put(feature, dataPerWell);
+			}
+			
+			if (dataPerPlate.isEmpty()) continue;
+			
+			SubWellModificationTransaction transaction = new SubWellModificationTransaction(plate);
+			try {
+				transaction.begin();
+				updateData(dataPerPlate, transaction);
+				transaction.commit();
+			} catch (IOException e) {
+				transaction.rollback();
+				throw new RuntimeException("Failed to update subwell data", e);
+			}
 		}
 	}
 	
