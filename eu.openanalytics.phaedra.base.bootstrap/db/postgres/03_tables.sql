@@ -1311,7 +1311,7 @@ TABLESPACE phaedra_d;
 
 ALTER TABLE phaedra.hca_silo_datapoint_value
 	ADD CONSTRAINT hca_silo_datapoint_value_pk
-	PRIMARY KEY  ( datapoint_id, name ) 
+	PRIMARY KEY  ( datapoint_id, column_id ) 
 	USING INDEX TABLESPACE phaedra_i;
 
 ALTER TABLE phaedra.hca_silo_datapoint_value
