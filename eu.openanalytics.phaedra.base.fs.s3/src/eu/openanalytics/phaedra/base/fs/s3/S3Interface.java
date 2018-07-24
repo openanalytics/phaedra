@@ -21,8 +21,8 @@ import com.amazonaws.services.s3.model.S3Object;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.fs.FileServerConfig;
-import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
 import eu.openanalytics.phaedra.base.util.io.CachingByteRange.DataFetcher;
+import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
 
 public class S3Interface extends BaseFileServer {
 
@@ -108,9 +108,12 @@ public class S3Interface extends BaseFileServer {
 		req.setDelimiter("/");
 		ListObjectsV2Result res = s3.listObjectsV2(req);
 		
+		String originalKey = key;
 		List<String> results = new ArrayList<>();
 		results.addAll(res.getCommonPrefixes().stream().map(s -> getLocalName(s)).collect(Collectors.toList()));
-		results.addAll(res.getObjectSummaries().stream().map(s -> getLocalName(s.getKey())).collect(Collectors.toList()));
+		results.addAll(res.getObjectSummaries().stream()
+				.filter(s -> !s.getKey().equals(originalKey))
+				.map(s -> getLocalName(s.getKey())).collect(Collectors.toList()));
 		return results;
 	}
 
