@@ -144,8 +144,8 @@ public class SiloUtils {
 					.filter(i -> !CollectionUtils.contains(rowsToRemove, i))
 					.mapToDouble(i -> t[i])
 					.toArray();
-				newFloatData = new float[t.length];
-				for (int i = 0; i < t.length; i++) newFloatData[i] = (float) td[i];
+				newFloatData = new float[td.length];
+				for (int i = 0; i < td.length; i++) newFloatData[i] = (float) td[i];
 			}
 			data.setFloatData(newFloatData);
 			break;

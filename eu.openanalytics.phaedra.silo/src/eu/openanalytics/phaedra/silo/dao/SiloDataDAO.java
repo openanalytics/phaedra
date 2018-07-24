@@ -65,6 +65,7 @@ public class SiloDataDAO {
 			ps.setLong(2, p.getWellId());
 			ps.setLong(3, p.getSubwellId());
 		});
+		if (!newPoints.isEmpty()) data.setDataPoints(queryDataPoints(datasetId).toArray(new SiloDatapoint[0]));
 		
 		for (SiloDatasetColumnData colData: data.getColumnData().values()) {
 			runStatement("delete from phaedra.hca_silo_datapoint_value"
