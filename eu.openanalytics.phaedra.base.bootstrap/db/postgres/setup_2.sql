@@ -6,10 +6,9 @@
 
 CREATE SCHEMA phaedra;
 
-\ir 01_public_functions.sql
-\ir 02_roles.sql
+\ir setup_roles.sql
 
 GRANT USAGE ON SCHEMA phaedra TO phaedra_role_read;
 
-\ir 03_tables.sql
-\ir 04_views.sql
+\ir setup_tables.sql
+\ir setup_views.sql

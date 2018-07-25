@@ -1,9 +1,14 @@
+\set accountNameRead phaedra_role_read
+
+-- -----------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW phaedra.hca_protocolclasses AS
 SELECT pc.*,
 	(SELECT count(protocol_id) FROM phaedra.hca_protocol WHERE protocolclass_id = pc.protocolclass_id) protocol_count,
 	(SELECT count(feature_id) FROM phaedra.hca_feature WHERE protocolclass_id = pc.protocolclass_id) feature_count
 FROM phaedra.hca_protocolclass pc;
+
+GRANT SELECT ON phaedra.hca_protocolclasses to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
@@ -14,15 +19,19 @@ SELECT  p.*, pc.protocolclass_name,
 FROM phaedra.hca_protocol p, phaedra.hca_protocolclass pc
 WHERE pc.protocolclass_id = p.protocolclass_id;
 
+GRANT SELECT ON phaedra.hca_protocols to :accountNameRead;
+
 -- -----------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW phaedra.hca_experiments AS
-SELECT  e.*,pr.protocol_name , pr.team_code, prc.protocolclass_id, prc.protocolclass_name, 
-	 to_char(e.experiment_dt, 'YYYY.IW') week_nr, 
+SELECT  e.*,pr.protocol_name , pr.team_code, prc.protocolclass_id, prc.protocolclass_name,
+	 to_char(e.experiment_dt, 'YYYY.IW') week_nr,
 	(SELECT count(experiment_id) FROM phaedra.hca_plate WHERE experiment_id = e.experiment_id) plate_count
-FROM phaedra.hca_experiment e, phaedra.hca_protocol pr,  phaedra.hca_protocolclass prc 
+FROM phaedra.hca_experiment e, phaedra.hca_protocol pr,  phaedra.hca_protocolclass prc
 WHERE pr.protocol_id = e.protocol_id
 AND prc.protocolclass_id = pr.protocolclass_id;
+
+GRANT SELECT ON phaedra.hca_experiments to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
@@ -31,6 +40,8 @@ SELECT p.*, e.experiment_name, e.protocol_id, e.protocol_name, e.team_code, e.pr
 FROM phaedra.hca_plate p, phaedra.hca_experiments e
 WHERE e.experiment_id = p.experiment_id;
 
+GRANT SELECT ON phaedra.hca_plates to :accountNameRead;
+
 -- -----------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW phaedra.hca_plate_compounds AS
@@ -38,26 +49,21 @@ SELECT c.*, p.experiment_id, p.experiment_name, p.protocol_id, p.protocol_name, 
 FROM phaedra.hca_plate_compound c, phaedra.hca_plates p
 WHERE p.plate_id = c.plate_id;
 
+GRANT SELECT ON phaedra.hca_plate_compounds to :accountNameRead;
+
 -- -----------------------------------------------------------------------
 
 CREATE OR REPLACE VIEW phaedra.hca_plate_wells AS
 SELECT w.*, p.barcode, p.experiment_id, p.experiment_name, p.protocol_id, p.protocol_name, p.team_code , p.protocolclass_id, p.protocolclass_name, c.compound_ty, c.compound_nr
-FROM phaedra.hca_plate_well w 
+FROM phaedra.hca_plate_well w
 LEFT OUTER JOIN phaedra.hca_plate_compound c on w.platecompound_id = c.platecompound_id, phaedra.hca_plates p
 WHERE p.plate_id = w.plate_id;
 
--- -----------------------------------------------------------------------
+GRANT SELECT ON phaedra.hca_plate_wells to :accountNameRead;
 
-GRANT SELECT ON phaedra.hca_protocolclasses 	to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_protocols 			to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_experiments 		to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_plates 				to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_plate_compounds 	to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_plate_wells 		to phaedra_role_read;
-
--- ======================================================================= 
+-- =======================================================================
 -- Curve views
--- ======================================================================= 
+-- =======================================================================
 
 CREATE OR REPLACE VIEW phaedra.hca_well_curves AS
 SELECT
@@ -79,11 +85,9 @@ WHERE
 			WHERE fv.well_id = w.well_id AND fv.feature_id = f.feature_id AND f.feature_name = cs.setting_value AND cs.feature_id = c.feature_id AND cs.setting_name = 'GROUP_BY_3'))
 		AND w.platecompound_id = cc.platecompound_id AND cc.curve_id = c.curve_id;
 
--- -----------------------------------------------------------------------
+GRANT SELECT ON phaedra.hca_well_curves to :accountNameRead;
 
-GRANT SELECT ON phaedra.hca_well_curves to phaedra_role_read;
-
--- ======================================================================= 
+-- =======================================================================
 -- Upload views
 -- =======================================================================
 
@@ -96,7 +100,9 @@ WHERE
 	e.experiment_id = p.experiment_id
 	AND PR.PROTOCOL_ID = E.PROTOCOL_ID
 	AND P.APPROVE_STATUS > 1
-	AND P.UPLOAD_STATUS = 0; 
+	AND P.UPLOAD_STATUS = 0;
+
+GRANT SELECT ON phaedra.hca_UPLOAD_PLATES_TODO to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
@@ -113,8 +119,5 @@ WHERE
 	AND PR.PROTOCOL_ID = E.PROTOCOL_ID
 	AND c.validate_status >= 0
 	AND c.UPLOAD_STATUS = 0;
-    
--- -----------------------------------------------------------------------
 
-GRANT SELECT ON phaedra.hca_UPLOAD_PLATES_TODO to phaedra_role_read;
-GRANT SELECT ON phaedra.hca_UPLOAD_COMPOUNDS_TODO to phaedra_role_read;
+GRANT SELECT ON phaedra.hca_UPLOAD_COMPOUNDS_TODO to :accountNameRead;

@@ -1,6 +1,7 @@
 -- ================================
 -- Run the below script as POSTGRES
 -- ================================
+
 -- To execute the script:
 -- psql -f setup1.sql -U postgres postgresql://hostname:5432
 
