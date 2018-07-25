@@ -94,7 +94,7 @@ private static ImageRenderService instance = new ImageRenderService();
 	 * @return The scaled well image size, or (0,0) if the size could not be determined.
 	 */
 	public Point getWellImageSize(Well well, float scale) {
-		String key = "WellImageSize" + well.getId();
+		String key = "WellImageSize" + well.getId() + "#" + scale;
 		Point size = (Point) imageCache.get(key);
 		if (size == null) {
 			try {
