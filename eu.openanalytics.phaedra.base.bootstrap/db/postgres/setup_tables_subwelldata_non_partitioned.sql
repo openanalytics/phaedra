@@ -31,5 +31,10 @@ create table phaedra.hca_subwelldata_feature (
 	sequence_nr integer
 );
 
+alter table phaedra.hca_subwelldata_feature
+	add constraint hca_subwelldata_feature_pk
+	primary key (protocolclass_id, feature_id)
+	using index tablespace :tsNameIndex;
+	
 grant INSERT, UPDATE, DELETE on phaedra.hca_subwelldata_feature to :accountNameWrite;
 grant SELECT on phaedra.hca_subwelldata_feature to :accountNameRead;
