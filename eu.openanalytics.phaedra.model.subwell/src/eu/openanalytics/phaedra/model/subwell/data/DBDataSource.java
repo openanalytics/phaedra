@@ -300,23 +300,30 @@ public class DBDataSource implements ISubWellDataSource {
 		});
 		
 		for (SubWellFeature f: pc.getSubWellFeatures()) {
-			int featureIndex = 0;
-			for (int i = 0; i < mapping.length; i++) {
-				if (mapping[i] == f.getId()) { featureIndex = i; break; }
-			}
-			if (featureIndex == 0) {
-				for (int i = 0; i < mapping.length; i++) {
-					if (mapping[i] == 0) { featureIndex = i; break; }
-				}
-				// Create new mapping for this feature.
+			int featureIndex = getFeatureIndex(f.getId(), mapping);
+			
+			if (featureIndex == -1) {
+				// No mapping yet, find a free spot to create a mapping.
+				featureIndex = getFeatureIndex(0, mapping);
 				//TODO Recycle old mappings. This will start failing after MAX_FEATURES.
+				if (featureIndex == -1) throw new RuntimeException("Failed to create feature mapping: too many mappings defined");
+				
 				createFeatureMapping(f, featureIndex);
 				mapping[featureIndex] = f.getId();
 			}
+			
 			features.put(f, featureIndex);
 		}
 		
 		return features;
+	}
+	
+	private int getFeatureIndex(long featureId, long[] mapping) {
+		int featureIndex = -1;
+		for (int i = 0; i < mapping.length; i++) {
+			if (mapping[i] == featureId) { featureIndex = i; break; }
+		}
+		return featureIndex;
 	}
 	
 	private void createFeatureMapping(SubWellFeature feature, int index) {
