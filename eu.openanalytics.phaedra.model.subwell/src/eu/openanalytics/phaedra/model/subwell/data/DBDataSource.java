@@ -44,11 +44,6 @@ public class DBDataSource implements ISubWellDataSource {
 				deletePlateData((Plate) event.source);
 			}
 		});
-		try {
-			checkTables();
-		} catch (SQLException e) {
-			throw new RuntimeException("Failed to set up database tables", e);
-		}
 	}
 
 	@Override
@@ -373,41 +368,5 @@ public class DBDataSource implements ISubWellDataSource {
 	
 	private Connection getConnection() throws SQLException {
 		return Screening.getEnvironment().getJDBCConnection();
-	}
-
-	private void checkTables() throws SQLException {
-		try (Connection conn = getConnection()) {
-//			try {
-				executeStatement(String.format("select * from %s.%s limit 1", SCHEMA, DATA_TABLE), conn);
-//			} catch (SQLException e) {
-//				conn.rollback();
-//
-//				//TODO this requires table creation privileges
-//				StringBuilder sql = new StringBuilder();
-//				sql.append(String.format("create table %s.%s (", SCHEMA, DATA_TABLE));
-//				sql.append("well_id bigint, cell_id bigint, ");
-//				for (int i = 0; i < MAX_FEATURES; i++) {
-//					sql.append(String.format("f%d_num_val float, f%d_str_val varchar(100),", i, i));
-//				}
-//				sql.deleteCharAt(sql.length() - 1);
-//				sql.append(") tablespace phaedra_d");
-//				executeStatement(sql.toString(), conn);
-//				
-//				sql = new StringBuilder();
-//				sql.append(String.format("create table %s.%s (", SCHEMA, MAPPING_TABLE));
-//				sql.append("protocolclass_id bigint, feature_id bigint, sequence_nr integer) tablespace phaedra_d");
-//				executeStatement(sql.toString(), conn);
-//				conn.commit();
-//				
-//				executeStatement(String.format("alter table %s.%s add constraint %s_pk primary key (well_id, cell_id) using index tablespace phaedra_i", SCHEMA, DATA_TABLE, DATA_TABLE), conn);
-//				executeStatement(String.format("alter table %s.%s add constraint %s_fk_well foreign key (well_id) references %s.hca_plate_well(well_id) on delete cascade", SCHEMA, DATA_TABLE, DATA_TABLE, SCHEMA), conn);
-//				
-//				executeStatement(String.format("grant INSERT, UPDATE, DELETE on %s.%s to phaedra_role_crud", SCHEMA, DATA_TABLE), conn);
-//				executeStatement(String.format("grant SELECT on %s.%s to phaedra_role_read", SCHEMA, DATA_TABLE), conn);
-//				executeStatement(String.format("grant INSERT, UPDATE, DELETE on %s.%s to phaedra_role_crud", SCHEMA, MAPPING_TABLE), conn);
-//				executeStatement(String.format("grant SELECT on %s.%s to phaedra_role_read", SCHEMA, MAPPING_TABLE), conn);
-//				conn.commit();
-//			}
-		}
 	}
 }
