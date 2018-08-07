@@ -1182,31 +1182,126 @@ GRANT SELECT ON phaedra.hca_silo to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
-CREATE TABLE phaedra.hca_silo_group_member (
-	silo_id			bigint not null,
-	group_id		bigint not null
+CREATE TABLE phaedra.hca_silo_dataset (
+	dataset_id				bigint not null,
+	dataset_name			varchar(100) not null, 
+	silo_id					bigint not null
 )
 TABLESPACE :tsNameData;
 
-ALTER TABLE phaedra.hca_silo_group_member
-	ADD CONSTRAINT hca_silo_group_member_pk
-	PRIMARY KEY  ( silo_id, group_id )
+ALTER TABLE phaedra.hca_silo_dataset
+	ADD CONSTRAINT hca_silo_dataset_pk
+	PRIMARY KEY  ( dataset_id ) 
 	USING INDEX TABLESPACE :tsNameIndex;
 
-ALTER TABLE phaedra.hca_silo_group_member
-	ADD CONSTRAINT hca_silo_group_member_fk_silo
+ALTER TABLE phaedra.hca_silo_dataset
+	ADD CONSTRAINT hca_silo_dataset_fk_silo
 	FOREIGN KEY (silo_id)
 	REFERENCES phaedra.hca_silo(silo_id)
 	ON DELETE CASCADE;
 
-ALTER TABLE phaedra.hca_silo_group_member
-	ADD CONSTRAINT hca_silo_group_member_fk_group
-	FOREIGN KEY (group_id)
-	REFERENCES phaedra.hca_silo_group(group_id)
+CREATE SEQUENCE phaedra.hca_silo_dataset_s
+	INCREMENT BY 1
+	START WITH 1
+	MAXVALUE 9223372036854775807
+	NO CYCLE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_silo_dataset to :accountNameWrite;
+GRANT SELECT, USAGE ON phaedra.hca_silo_dataset_s to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_silo_dataset to :accountNameRead;
+
+-- -----------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_silo_dataset_column (
+	column_id				bigint not null,
+	column_name				varchar(100) not null, 
+	dataset_id				bigint not null,
+	data_type				varchar(25) not null
+)
+TABLESPACE :tsNameData;
+
+ALTER TABLE phaedra.hca_silo_dataset_column
+	ADD CONSTRAINT hca_silo_dataset_column_pk
+	PRIMARY KEY  ( column_id ) 
+	USING INDEX TABLESPACE :tsNameIndex;
+
+ALTER TABLE phaedra.hca_silo_dataset_column
+	ADD CONSTRAINT hca_silo_dataset_column_fk_dataset
+	FOREIGN KEY (dataset_id)
+	REFERENCES phaedra.hca_silo_dataset(dataset_id)
 	ON DELETE CASCADE;
 
-GRANT INSERT, UPDATE, DELETE ON phaedra.hca_silo_group_member to :accountNameWrite;
-GRANT SELECT ON phaedra.hca_silo_group_member to :accountNameRead;
+CREATE SEQUENCE phaedra.hca_silo_dataset_column_s
+	INCREMENT BY 1
+	START WITH 1
+	MAXVALUE 9223372036854775807
+	NO CYCLE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_silo_dataset_column to :accountNameWrite;
+GRANT SELECT, USAGE ON phaedra.hca_silo_dataset_column_s to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_silo_dataset_column to :accountNameRead;
+
+-- -----------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_silo_datapoint (
+	datapoint_id		bigint not null,
+	dataset_id			bigint not null,
+	well_id				bigint not null,
+	subwell_id			bigint not null
+)
+TABLESPACE :tsNameData;
+
+ALTER TABLE phaedra.hca_silo_datapoint
+	ADD CONSTRAINT hca_silo_datapoint_pk
+	PRIMARY KEY  ( datapoint_id ) 
+	USING INDEX TABLESPACE :tsNameIndex;
+
+ALTER TABLE phaedra.hca_silo_datapoint
+	ADD CONSTRAINT hca_silo_datapoint_fk_dataset
+	FOREIGN KEY (dataset_id)
+	REFERENCES phaedra.hca_silo_dataset(dataset_id)
+	ON DELETE CASCADE;
+
+CREATE SEQUENCE phaedra.hca_silo_datapoint_s
+	INCREMENT BY 1
+	START WITH 1
+	MAXVALUE 9223372036854775807
+	NO CYCLE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_silo_datapoint to :accountNameWrite;
+GRANT SELECT, USAGE ON phaedra.hca_silo_datapoint_s to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_silo_datapoint to :accountNameRead;
+
+-- -----------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_silo_datapoint_value (
+	datapoint_id		bigint not null,
+	column_id			bigint not null,
+	str_value			varchar(255),
+	float_value			double precision,
+	long_value			bigint
+)
+TABLESPACE :tsNameData;
+
+ALTER TABLE phaedra.hca_silo_datapoint_value
+	ADD CONSTRAINT hca_silo_datapoint_value_pk
+	PRIMARY KEY  ( datapoint_id, column_id ) 
+	USING INDEX TABLESPACE :tsNameIndex;
+
+ALTER TABLE phaedra.hca_silo_datapoint_value
+	ADD CONSTRAINT hca_silo_datapoint_value_fk_datapoint
+	FOREIGN KEY (datapoint_id)
+	REFERENCES phaedra.hca_silo_datapoint(datapoint_id)
+	ON DELETE CASCADE;
+
+ALTER TABLE phaedra.hca_silo_datapoint_value
+	ADD CONSTRAINT hca_silo_datapoint_value_fk_column
+	FOREIGN KEY (column_id)
+	REFERENCES phaedra.hca_silo_dataset_column(column_id)
+	ON DELETE CASCADE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_silo_datapoint_value to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_silo_datapoint_value to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
