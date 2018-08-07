@@ -101,7 +101,7 @@ public class CompoundInspector extends DecoratedView implements ISelectionListen
 		selectionChanged(getSite().getPage().getActivePart(), getSite().getPage().getSelection());
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewCompoundInspector");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewCompoundInspector");
 	}
 
 	@Override

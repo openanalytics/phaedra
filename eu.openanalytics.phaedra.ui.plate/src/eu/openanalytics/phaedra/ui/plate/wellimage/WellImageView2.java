@@ -171,7 +171,7 @@ public class WellImageView2 extends DecoratedView {
 		ContextHelper.attachContext(imageCanvas, CopyItems.COPY_PASTE_CONTEXT_ID);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent,"org.eclipse.datatools.connectivity.ui.viewWellImage");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent,"eu.openanalytics.phaedra.ui.help.viewWellImage");
 	}
 
 	private Properties getProperties() {

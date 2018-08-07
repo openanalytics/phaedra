@@ -250,7 +250,7 @@ public class FeatureInspector extends ViewPart {
 		ModelEventService.getInstance().addEventListener(modelEventListener);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewFeatureInspector");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewFeatureInspector");
 		initializeFields();
 	}
 

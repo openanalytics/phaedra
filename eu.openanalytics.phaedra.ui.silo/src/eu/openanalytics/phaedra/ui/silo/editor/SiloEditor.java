@@ -358,7 +358,7 @@ abstract class SiloEditor<ENTITY extends PlatformObject, FEATURE extends IFeatur
 		ContextHelper.attachContext(thumbnailViewer.getControl(), CopyItems.COPY_PASTE_CONTEXT_ID);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewSiloEditor");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewSiloEditor");
 	}
 
 	private void createNatTable() {

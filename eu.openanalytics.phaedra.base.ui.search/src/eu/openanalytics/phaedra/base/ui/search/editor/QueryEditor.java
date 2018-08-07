@@ -325,7 +325,7 @@ public class QueryEditor extends EditorPart {
 		form.getParent().layout(true);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewQueryEditor");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewQueryEditor");
 	}
 
 	private void createSelectionListener() {

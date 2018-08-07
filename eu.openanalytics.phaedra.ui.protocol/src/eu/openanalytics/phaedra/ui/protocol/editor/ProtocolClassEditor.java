@@ -70,7 +70,7 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 	@Override
 	protected Composite createPageContainer(Composite parent) {
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewProtocolClassSettings");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewProtocolClassSettings");
 		return super.createPageContainer(parent);
 	}
 

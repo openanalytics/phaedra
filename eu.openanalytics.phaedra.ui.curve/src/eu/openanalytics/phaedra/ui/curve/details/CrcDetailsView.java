@@ -235,7 +235,7 @@ public class CrcDetailsView extends DecoratedView {
 		SelectionUtils.triggerActiveSelection(selectionListener);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewDoseResponseCurve");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewDoseResponseCurve");
 	}
 
 	@Override

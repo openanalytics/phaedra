@@ -56,7 +56,7 @@ public class FeatureScatterMatrixView extends BaseExperimentChartRView {
 		super.createPartControl(parent);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewScatterMatrix");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewScatterMatrix");
 	}
 
 	@Override

@@ -102,7 +102,7 @@ public class ProtocolBrowser extends EditorPart {
 
 		// Link specific help view based on the Context ID
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent
-				, "org.eclipse.datatools.connectivity.ui.viewProtocolBrowser");
+				, "eu.openanalytics.phaedra.ui.help.viewProtocolBrowser");
 	}
 
 	@Override

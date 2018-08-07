@@ -237,7 +237,7 @@ public class SubWellInspector extends DecoratedView {
 		form.reflow(true);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewCellInspector");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewCellInspector");
 	}
 
 	@Override

@@ -219,7 +219,7 @@ public class ExperimentInspector extends DecoratedView {
 		form.reflow(true);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewExperimentInspector");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewExperimentInspector");
 	}
 
 	@Override

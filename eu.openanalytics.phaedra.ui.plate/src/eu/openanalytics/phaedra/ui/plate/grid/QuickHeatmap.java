@@ -158,7 +158,7 @@ public class QuickHeatmap extends DecoratedView {
 		SelectionUtils.triggerActiveSelection(selectionListener);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewQuickHeatmap");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewQuickHeatmap");
 	}
 
 	public void setPlate(Plate plate) {

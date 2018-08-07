@@ -84,7 +84,7 @@ public class PlateTemplateBrowser extends ViewPart {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(treeViewer.getControl());
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewPlateTemplateBrowser");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewPlateTemplateBrowser");
 	}
 
 	@Override

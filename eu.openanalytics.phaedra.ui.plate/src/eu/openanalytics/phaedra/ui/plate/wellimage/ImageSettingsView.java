@@ -55,7 +55,7 @@ public class ImageSettingsView extends ViewPart {
 		SelectionUtils.triggerActiveEditorSelection(selectionListener);
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui.viewImageSettings");
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewImageSettings");
 	}
 
 	@Override

@@ -250,7 +250,7 @@ public abstract class CompositeChartLegendView<ENTITY, ITEM> extends DecoratedVi
 		parent.addMouseWheelListener(getChartView());
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "org.eclipse.datatools.connectivity.ui." + getClass().getSimpleName());
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help." + getClass().getSimpleName());
 	}
 
 	public BaseLegendView<ENTITY, ITEM> createLegendView(Composite composite, List<AbstractChartLayer<ENTITY, ITEM>> layers) {
