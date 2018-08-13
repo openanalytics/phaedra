@@ -75,6 +75,8 @@ public class QueryBuilder {
 		appendIfIncludes(Includes.RawValue, settings, sb, rawVal, null, null);
 
 		if (settings.includes.contains(Includes.CurveProperties) || settings.includes.contains(Includes.CurvePropertiesAll)) {
+			Includes inc = settings.includes.contains(Includes.CurveProperties) ? Includes.CurveProperties : Includes.CurvePropertiesAll;
+			
 			CurveFitSettings fitSettings = CurveFitService.getInstance().getSettings(feature);
 			if (fitSettings != null) {
 				ICurveFitModel model = CurveFitService.getInstance().getModel(fitSettings.getModelId());
@@ -92,8 +94,7 @@ public class QueryBuilder {
 							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName} Censor')"
 							+ " || (SELECT " + JDBCUtils.getFormatNumberSQL("CP.NUMERIC_VALUE", 3)
 							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
-					appendIfIncludes(Includes.CurveProperties, settings, sb,
-							(CurveParameter.isCensored(def) ? baseCensoredPropertyQuery : basePropertyQuery), def.name, def.name);
+					appendIfIncludes(inc, settings, sb, (CurveParameter.isCensored(def) ? baseCensoredPropertyQuery : basePropertyQuery), def.name, def.name);
 				}
 			}
 		}
