@@ -50,20 +50,27 @@ public class ExportSettings {
 	public List<Includes> includes = new ArrayList<>();
 	
 	public enum Includes {
-		RawValue("Raw Feature Values"),
-		NormalizedValue("Normalized Feature Values"),
-		Saltform("Saltform"),
-		PlateStatistics("Plate Statistics"),
-		CurveProperties("Curve Properties");
+		RawValue("Raw Feature Values", true),
+		NormalizedValue("Normalized Feature Values", true),
+		Saltform("Saltform", true),
+		PlateStatistics("Plate Statistics", true),
+		CurveProperties("Curve Properties (Basic)", true),
+		CurvePropertiesAll("Curve Properties (All)", false);
 	
 		private String label;
+		private boolean defaultValue;
 		
-		private Includes(String label) {
+		private Includes(String label, boolean defaultValue) {
 			this.label = label;
+			this.defaultValue = defaultValue;
 		}
 		
 		public String getLabel() {
 			return label;
+		}
+		
+		public boolean isDefaultValue() {
+			return defaultValue;
 		}
 	}
 }

@@ -127,7 +127,7 @@ public class IncludeDataPage extends BaseExportWizardPage {
 		if (!compoundJoinedChk.getSelection() && !compoundSplitChk.getSelection()) compoundJoinedChk.setSelection(true);
 		for (Includes inc: Includes.values()) {
 			String name = inc.name();
-			boolean state = settings.get("include" + name) == null ? true : settings.getBoolean("include" + name);
+			boolean state = settings.get("include" + name) == null ? inc.isDefaultValue() : settings.getBoolean("include" + name);
 			includesTableViewer.setChecked(inc, state);
 		}
 	}

@@ -16,6 +16,7 @@ import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
@@ -73,7 +74,7 @@ public class QueryBuilder {
 		String rawVal = (feature.isNumeric()) ? " FV.RAW_NUMERIC_VALUE as RAW_VALUE," : " FV.RAW_STRING_VALUE as RAW_VALUE,";
 		appendIfIncludes(Includes.RawValue, settings, sb, rawVal, null, null);
 
-		if (settings.includes.contains(Includes.CurveProperties)) {
+		if (settings.includes.contains(Includes.CurveProperties) || settings.includes.contains(Includes.CurvePropertiesAll)) {
 			CurveFitSettings fitSettings = CurveFitService.getInstance().getSettings(feature);
 			if (fitSettings != null) {
 				ICurveFitModel model = CurveFitService.getInstance().getModel(fitSettings.getModelId());
@@ -82,7 +83,9 @@ public class QueryBuilder {
 				appendIfIncludes(Includes.CurveProperties, settings, sb, baseCurveQuery, "MODEL_ID", "MODEL");
 				
 				for (Definition def: model.getOutputParameters()) {
-					if (!def.key) continue;
+					if (!def.key && !settings.includes.contains(Includes.CurvePropertiesAll)) continue;
+					if (def.type == ParameterType.Binary) continue;
+					
 					String basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
 							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
 					String baseCensoredPropertyQuery ="(SELECT CP.STRING_VALUE"
