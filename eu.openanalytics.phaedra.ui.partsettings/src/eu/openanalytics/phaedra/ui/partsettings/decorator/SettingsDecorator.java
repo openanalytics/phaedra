@@ -13,6 +13,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.ToolBar;
@@ -28,17 +29,19 @@ import eu.openanalytics.phaedra.ui.partsettings.dialog.PartSettingsDialog;
 import eu.openanalytics.phaedra.ui.partsettings.service.PartSettingsService;
 import eu.openanalytics.phaedra.ui.partsettings.utils.PartSettingsUtils;
 import eu.openanalytics.phaedra.ui.partsettings.vo.PartSettings;
+import eu.openanalytics.phaedra.ui.user.SelectUserDialog;
 
 public class SettingsDecorator extends PartDecorator {
 
 	public static final String IS_PART_SETTINGS_TOOLITEM = "IS_PART_SETTINGS_TOOLITEM";
 
 	// Currently still called "Saved views" to match Phaedra documentation.
-	private static final String LOAD_SETTINGS = "Show available views";//"Load Settings";
-	private static final String SAVE_SETTINGS = "Save view";//"Save Settings";
-	private static final String SAVE_SETTINGS_AS = "Save as new view";//"Save Settings As...";
-	private static final String EDIT_SETTINGS = "Rename view";//"Edit Settings";
-	private static final String REMOVE_SETTINGS = "Remove view";//"Remove Settings";
+	private static final String LOAD_SETTINGS = "Show available views";
+	private static final String SAVE_SETTINGS = "Save view";
+	private static final String SAVE_SETTINGS_AS = "Save as new view";
+	private static final String SHARE_SETTINGS = "Share view";
+	private static final String EDIT_SETTINGS = "Rename view";
+	private static final String REMOVE_SETTINGS = "Remove view";
 
 	private Supplier<Protocol> protocolSupplier;
 	private Supplier<Properties> propertySaver;
@@ -47,6 +50,7 @@ public class SettingsDecorator extends PartDecorator {
 	private Optional<PartSettings> currentSettings;
 
 	private MenuItem editMenuItem;
+	private MenuItem shareMenuItem;
 	private MenuItem removeMenuItem;
 
 	public SettingsDecorator(Supplier<Properties> propertySaver, Consumer<Properties> propertyLoader) {
@@ -120,6 +124,9 @@ public class SettingsDecorator extends PartDecorator {
 		item.addListener(SWT.Selection, e -> saveSettings());
 		item = DropdownToolItemFactory.createChild(toolItem, SAVE_SETTINGS_AS, SWT.PUSH);
 		item.addListener(SWT.Selection, e -> saveSettingsAs());
+		
+		shareMenuItem = DropdownToolItemFactory.createChild(toolItem, SHARE_SETTINGS, SWT.PUSH);
+		shareMenuItem.addListener(SWT.Selection, e -> shareSettings());
 		editMenuItem = DropdownToolItemFactory.createChild(toolItem, EDIT_SETTINGS, SWT.PUSH);
 		editMenuItem.addListener(SWT.Selection, e -> editSettings());
 		removeMenuItem = DropdownToolItemFactory.createChild(toolItem, REMOVE_SETTINGS, SWT.PUSH);
@@ -158,6 +165,7 @@ public class SettingsDecorator extends PartDecorator {
 	}
 
 	private void refreshMenuItems() {
+		this.shareMenuItem.setEnabled(currentSettings.isPresent());
 		this.editMenuItem.setEnabled(currentSettings.isPresent());
 		this.removeMenuItem.setEnabled(currentSettings.isPresent());
 	}
@@ -200,6 +208,17 @@ public class SettingsDecorator extends PartDecorator {
 		updateSettings(settings);
 	}
 
+	private void shareSettings() {
+		if (!currentSettings.isPresent()) return;
+		SelectUserDialog dialog = new SelectUserDialog(Display.getDefault().getActiveShell(), "Select a user to share the view with:");
+		if (dialog.open() == Window.OK) {
+			String username = dialog.getSelectedUser();
+			PartSettingsService.getInstance().shareSettings(currentSettings.get(), username);
+			MessageDialog.openInformation(Display.getDefault().getActiveShell(), "View shared",
+					"The view '" + currentSettings.get().getName() + "' has been shared with " + username + ".");
+		}
+	}
+	
 	private void editSettings() {
 		if (currentSettings.isPresent()) updateSettings(currentSettings.get());
 	}

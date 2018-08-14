@@ -77,6 +77,19 @@ public class PartSettingsService extends BaseJPAService {
 		if (decorator != null) decorator.loadPartSettings(Optional.of(partSettings));
 	}
 	
+	public void shareSettings(PartSettings partSettings, String username) {
+		checkCanModify(partSettings);
+		PartSettings copy = createPartSettings(null, null, null);
+		copy.setClassName(partSettings.getClassName());
+		copy.setGlobal(partSettings.isGlobal());
+		copy.setName(partSettings.getName());
+		copy.setProtocol(partSettings.getProtocol());
+		copy.setTemplate(partSettings.isTemplate());
+		copy.setProperties(partSettings.getProperties().deepClone());
+		copy.setUserName(username);
+		save(copy);
+	}
+	
 	/**
 	 * <p>Returns a list of part settings for the specified class name and protocol for the current user.
 	 * Global part settings for the specified class name are also included.</p>
