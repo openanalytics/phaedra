@@ -6,7 +6,10 @@ import java.util.List;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
@@ -35,6 +38,7 @@ import org.eclipse.ui.forms.widgets.Section;
 
 import eu.openanalytics.phaedra.base.ui.admin.fs.EditFSFileCmd;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
+import eu.openanalytics.phaedra.base.ui.util.autocomplete.ComboAutoCompleteField;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
@@ -58,9 +62,11 @@ public class ProtocolClassPage extends FormPage {
 	private Button checkIsInDevelopment;
 
 	private CCombo comboDefaultLinkSource;
-	private CCombo comboDefaultFeature;
 	private CCombo comboDefaultCaptureConfig;
-
+	
+	private ComboViewer defaultFeatureCmbViewer;
+	private ComboAutoCompleteField defaultFeatureAutoComplete;
+	
 	private CCombo comboHigerBound;
 	private CCombo comboLowerBound;
 
@@ -187,19 +193,21 @@ public class ProtocolClassPage extends FormPage {
 		GridLayoutFactory.fillDefaults().numColumns(2).margins(1, 1).applyTo(subcomp);
 		toolkit.paintBordersFor(subcomp);
 
-		comboDefaultFeature = new CCombo(subcomp, SWT.BORDER | SWT.READ_ONLY);
-		comboDefaultFeature.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(final SelectionEvent e) {
-				String name = comboDefaultFeature.getText();
-				Feature defaultFeature = ProtocolUtils.getFeatures(protocolClass).stream()
-						.filter(f -> f.getDisplayName().equals(name))
-						.findAny().orElse(null);
-				protocolClass.setDefaultFeature(defaultFeature);
-				markDirty();
-			}
+		defaultFeatureCmbViewer = new ComboViewer(subcomp, SWT.BORDER);
+		defaultFeatureCmbViewer.setContentProvider(new ArrayContentProvider());
+		defaultFeatureCmbViewer.setLabelProvider(new LabelProvider());
+		defaultFeatureCmbViewer.addSelectionChangedListener(e -> {
+			String name = defaultFeatureCmbViewer.getCombo().getText();
+			if (name == null || name.isEmpty()) return;
+			Feature defaultFeature = ProtocolUtils.getFeatures(protocolClass).stream()
+					.filter(f -> f.getDisplayName().equals(name))
+					.findAny().orElse(null);
+			if (protocolClass.getDefaultFeature() != null && protocolClass.getDefaultFeature().equals(defaultFeature)) return;
+			protocolClass.setDefaultFeature(defaultFeature);
+			markDirty();
 		});
-		GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).applyTo(comboDefaultFeature);
+		defaultFeatureAutoComplete = new ComboAutoCompleteField(defaultFeatureCmbViewer, new String[0]);
+		GridDataFactory.fillDefaults().hint(280, SWT.DEFAULT).applyTo(defaultFeatureCmbViewer.getControl());
 		fillComboDefaultFeature();
 
 		Hyperlink refreshFeaturesLnk = toolkit.createHyperlink(subcomp, "Refresh", SWT.NONE);
@@ -333,21 +341,12 @@ public class ProtocolClassPage extends FormPage {
 		if (features.isEmpty()) return;
 
 		String[] names = features.stream().map(ProtocolUtils.FEATURE_NAMES).toArray(size -> new String[size]);
-
-		comboDefaultFeature.setItems(names);
-
+		defaultFeatureCmbViewer.setInput(names);
+		defaultFeatureAutoComplete.setProposals(names);
+		
 		Feature defaultFeature = protocolClass.getDefaultFeature();
-		if (defaultFeature != null) {
-			comboDefaultFeature.setText(defaultFeature.getDisplayName());
-		} else {
-			Feature firstNumericFeature = CollectionUtils.find(features, ProtocolUtils.NUMERIC_FEATURES);
-			if (firstNumericFeature != null) {
-				comboDefaultFeature.setText(firstNumericFeature.getDisplayName());
-			} else {
-				comboDefaultFeature.select(0);
-			}
-		}
-
+		if (defaultFeature == null) defaultFeature = CollectionUtils.find(features, ProtocolUtils.NUMERIC_FEATURES);
+		if (defaultFeature != null) defaultFeatureCmbViewer.setSelection(new StructuredSelection(ProtocolUtils.FEATURE_NAMES.apply(defaultFeature)), true);
 	}
 
 	private void fillComboDefaultCaptureConfig() {
