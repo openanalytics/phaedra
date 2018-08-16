@@ -104,7 +104,10 @@ public class SubwellDataProcessor {
 			}
 		}
 
-		fieldLayout = FieldLayoutSourceRegistry.getInstance().getLayout(reading, uniqueFields.size(), montageConfig, context);
+		int fieldCount = uniqueFields.stream().mapToInt(i -> i).max().orElse(0);
+		if (uniqueFields.contains(Integer.valueOf(0))) fieldCount++;
+		
+		fieldLayout = FieldLayoutSourceRegistry.getInstance().getLayout(reading, fieldCount, montageConfig, context);
 		if (fullImageDimensions) {
 			imageDimensions.x = imageDimensions.x / fieldLayout.getColumns();
 			imageDimensions.y = imageDimensions.y / fieldLayout.getRows();

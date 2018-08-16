@@ -1,39 +1,33 @@
 package eu.openanalytics.phaedra.datacapture.montage.layout;
 
+import java.util.Arrays;
+
+import eu.openanalytics.phaedra.base.imaging.util.Montage;
 import eu.openanalytics.phaedra.datacapture.DataCaptureContext;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.datacapture.montage.MontageConfig;
 
 public class LiteralFieldLayoutSource extends BaseFieldLayoutSource {
 
+	public FieldLayout test(String layout) {
+		MontageConfig cfg = new MontageConfig();
+		cfg.layout = layout;
+		return getLayout(null, 0, cfg, null);
+	}
+	
 	@Override
 	public FieldLayout getLayout(PlateReading reading, int fieldCount, MontageConfig montageConfig, DataCaptureContext context) {
 
-		String layout = montageConfig.layout;
-		if (layout.startsWith("[")) layout = layout.substring(1);
-		if (layout.endsWith("]")) layout = layout.substring(0, layout.length()-1);
-		String[] rows = layout.split(";");
-		int rowCount = rows.length;
-		if (rows.length == 0) throw new IllegalArgumentException("Cannot montage, invalid layout: " + layout);
-		int columnCount = rows[0].trim().split(",").length;
-
-		int startingFieldNr = 10000;
-		for (int r=0; r<rowCount; r++) {
-			String[] columns = rows[r].trim().split(",");
-			for (int c=0; c<columnCount; c++) {
-				int fieldNr = Integer.parseInt(columns[c]);
-				startingFieldNr = Math.min(startingFieldNr, fieldNr);
+		int[][] parsedLayout = Montage.parseLayout(montageConfig.layout);
+		int startingFieldNr = Arrays.stream(parsedLayout).flatMapToInt(i -> Arrays.stream(i)).filter(i -> i >= 0).min().orElse(0);
+		FieldLayout fieldLayout = new FieldLayout(startingFieldNr);
+		
+		for (int r = 0; r < parsedLayout.length; r++) {
+			for (int c = 0; c < parsedLayout[r].length; c++) {
+				fieldLayout.addFieldPosition(parsedLayout[r][c], c, r);
 			}
 		}
 		
-		FieldLayout fieldLayout = new FieldLayout(startingFieldNr);
-		for (int r=0; r<rowCount; r++) {
-			String[] columns = rows[r].trim().split(",");
-			for (int c=0; c<columnCount; c++) {
-				int fieldNr = Integer.parseInt(columns[c]);
-				fieldLayout.addFieldPosition(fieldNr, c, r);
-			}
-		}
 		return fieldLayout;
 	}
 }

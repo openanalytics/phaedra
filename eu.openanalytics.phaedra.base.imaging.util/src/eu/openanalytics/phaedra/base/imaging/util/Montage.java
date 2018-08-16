@@ -1,46 +1,36 @@
 package eu.openanalytics.phaedra.base.imaging.util;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
 
 public class Montage {
 
-	public static void montage(String[] inputFiles, String layout, int padding, String outputFile) throws IOException {
+	public static void montage(String[] inputFiles, String layoutString, int padding, String outputFile) throws IOException {
 		// Note: layout must be zero-based!
 		
-		// Analyze the layout (or use the default layout).
-		int imageCount = inputFiles.length;
-		int columnCount = imageCount;
-		int rowCount = 1;
-		if (layout != null && !layout.isEmpty()) {
-			if (layout.startsWith("[")) layout = layout.substring(1);
-			if (layout.endsWith("]")) layout = layout.substring(0, layout.length()-1);
-			String[] rows = layout.split(";");
-			rowCount = rows.length;
-			if (rows.length == 0) throw new IOException("Cannot montage, invalid layout: " + layout);
-			columnCount = rows[0].trim().split(",").length;
-		} else {
-			StringBuilder sb = new StringBuilder();
-			for (int i=1; i<=inputFiles.length; i++) {
-				sb.append(i + ",");
-			}
-			sb.deleteCharAt(sb.length()-1);
-			layout = sb.toString();
+		// If no layout is given, montage all in a single row.
+		if (layoutString == null || layoutString.isEmpty()) {
+			layoutString = IntStream.range(0, inputFiles.length).mapToObj(i -> String.valueOf(i)).collect(Collectors.joining(","));
 		}
 		
+		int[][] layout = parseLayout(layoutString);
+		int rowCount = layout.length;
+		int columnCount = layout[0].length;
+		
 		// Create an array of image names ordered by layout.
-		String[] orderedInputFiles = new String[rowCount*columnCount];
+		String[] orderedInputFiles = new String[rowCount * columnCount];
 		int index = 0;
-		String[] rows = layout.split(";");
-		for (int r=0; r<rowCount; r++) {
-			String[] columns = rows[r].trim().split(",");
-			for (int c=0; c<columnCount; c++) {
+		for (int r = 0; r < layout.length; r++) {
+			for (int c = 0; c < layout[r].length; c++) {
 				String inputPath = null;
-				int fieldIndex = Integer.parseInt(columns[c]);
+				int fieldIndex = layout[r][c];
 				if (fieldIndex >= 0 && fieldIndex < inputFiles.length) inputPath = inputFiles[fieldIndex];
 				orderedInputFiles[index++] = inputPath;
 			}
@@ -51,6 +41,30 @@ public class Montage {
 	
 	public static String appendFrameNr(String fileName, int frameNr) {
 		return fileName + "[frame=" + frameNr + "]";
+	}
+	
+	public static int[][] parseLayout(String layoutString) {
+		if (layoutString.startsWith("[")) layoutString = layoutString.substring(1);
+		if (layoutString.endsWith("]")) layoutString = layoutString.substring(0, layoutString.length()-1);
+		
+		String[] rows = layoutString.split(";");
+		int rowCount = rows.length;
+		if (rowCount == 0) throw new IllegalArgumentException("Invalid montage layout (0 rows): " + layoutString);
+		
+		int columnCount = Arrays.stream(rows).mapToInt(r -> r.trim().split(",").length).max().orElse(0);
+		if (columnCount == 0) throw new IllegalArgumentException("Invalid montage layout (0 columns): " + layoutString);
+		
+		int[][] parsedLayout = new int[rowCount][columnCount];
+		for (int[] row: parsedLayout) Arrays.fill(row, -1);
+		
+		for (int r = 0; r < rowCount; r++) {
+			String[] columns = rows[r].trim().split(",");
+			for (int c = 0; c < columns.length; c++) {
+				parsedLayout[r][c] = Integer.parseInt(columns[c]);
+			}
+		}
+		
+		return parsedLayout;
 	}
 	
 	private static int getFrameNr(String fileName) {

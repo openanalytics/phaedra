@@ -94,7 +94,9 @@ public class ImageProcessor {
 			}
 			mon.worked(5);
 			
-			int fieldCount = uniqueFields.size();
+			int fieldCount = uniqueFields.stream().mapToInt(i -> i).max().orElse(0);
+			if (uniqueFields.contains(Integer.valueOf(0))) fieldCount++;
+			
 			if (fieldLayout == null) fieldLayout = FieldLayoutSourceRegistry.getInstance().getLayout(reading, fieldCount, montageConfig, context);
 			
 			MTExecutor<String> threadPool = createThreadPool();
