@@ -17,6 +17,7 @@ import javax.persistence.PersistenceException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 
+import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -35,8 +36,8 @@ public class DBDataSource implements ISubWellDataSource {
 	private static final String DATA_TABLE = "hca_subwelldata";
 	private static final String MAPPING_TABLE = "hca_subwelldata_feature";
 	
-	private static final int MAX_FEATURES = 1500;
-	private static final int MAX_ROWS_PER_WELL = 10000;
+	private static final int MAX_FEATURES = JDBCUtils.isOracle() ? 998 : 1500;
+	private static final int MAX_ROWS_PER_WELL = 30000;
 	
 	public DBDataSource() {
 		ModelEventService.getInstance().addEventListener(event -> {
