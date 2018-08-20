@@ -10,7 +10,6 @@
 		<tycho.version>0.24.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.tools.dir>C:/Phaedra-build</build.tools.dir>
-		<!-- <build.tools.dir>/home/frederick/projects/phaedra/phaedra-build</build.tools.dir> -->
 		<maven.install.skip>true</maven.install.skip>
 		<maven.deploy.skip>true</maven.deploy.skip>
 	</properties>
@@ -21,6 +20,11 @@
 			<name>OpenAnalytics Snapshots Repository</name>
 			<url>http://nexus.openanalytics.eu/nexus/content/repositories/snapshots</url>
 		</snapshotRepository>
+		<repository>
+			<id>oa-nexus-releases</id>
+			<name>OpenAnalytics Release Repository</name>
+			<url>http://nexus.openanalytics.eu/nexus/content/repositories/releases</url>
+		</repository>
 	</distributionManagement>
 	
 	<modules>
