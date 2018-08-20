@@ -3,7 +3,7 @@ Eclipse-BuddyPolicy: global
 Bundle-ManifestVersion: 2
 Bundle-Name: Editor Utilities
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.ui.editor;singleton:=true
-Bundle-Version: 1.0.3.qualifier
+Bundle-Version: 1.0.4.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.ui.editor.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,

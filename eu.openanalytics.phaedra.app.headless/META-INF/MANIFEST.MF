@@ -3,7 +3,7 @@ Eclipse-BuddyPolicy: global, app
 Bundle-ManifestVersion: 2
 Bundle-Name: Headless
 Bundle-SymbolicName: eu.openanalytics.phaedra.app.headless;singleton:=true
-Bundle-Version: 1.0.3.qualifier
+Bundle-Version: 1.0.4.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.app.headless.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,

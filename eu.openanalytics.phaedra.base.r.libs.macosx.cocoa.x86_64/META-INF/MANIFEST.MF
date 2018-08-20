@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: R libraries for MacOSX 64bit
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.r.libs.macosx.cocoa.x86_64
-Bundle-Version: 1.0.3.qualifier
+Bundle-Version: 1.0.4.qualifier
 Bundle-Vendor: OpenAnalytics
 Fragment-Host: eu.openanalytics.phaedra.base.r.libs;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8

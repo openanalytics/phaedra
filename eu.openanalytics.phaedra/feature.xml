@@ -2,7 +2,7 @@
 <feature
       id="eu.openanalytics.phaedra"
       label="Phaedra Application"
-      version="1.0.3.qualifier"
+      version="1.0.4.qualifier"
       provider-name="OpenAnalytics">
 
    <description>
