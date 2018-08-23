@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Curve Model
 Bundle-SymbolicName: eu.openanalytics.phaedra.model.curve;singleton:=true
-Bundle-Version: 1.0.4.qualifier
+Bundle-Version: 1.0.5.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.model.curve.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,

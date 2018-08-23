@@ -2,7 +2,7 @@
 <feature
       id="eu.openanalytics.phaedra.base.r"
       label="Embedded R Server"
-      version="1.0.4.qualifier"
+      version="1.0.5.qualifier"
       provider-name="OpenAnalytics">
 
    <description>

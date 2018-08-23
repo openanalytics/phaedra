@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Event Model
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.event
-Bundle-Version: 1.0.4.qualifier
+Bundle-Version: 1.0.5.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.event.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
