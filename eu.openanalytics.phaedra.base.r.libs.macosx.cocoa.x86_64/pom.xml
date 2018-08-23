@@ -23,9 +23,8 @@
 						<phase>prepare-package</phase>
 						<configuration>
 							<target>
-								<copy todir="user-libs" overwrite="true" force="true">
-									<fileset dir="${build.tools.dir}/macosx.cocoa.x86_64/R-user-libs" />
-								</copy>
+								<get src="${build.tools.url}/macosx/R-user-libs.zip" dest="${project.build.directory}/R-user-libs.zip" />
+								<unzip src="${project.build.directory}/R-user-libs.zip" dest="user-libs"/>
 							</target>
 						</configuration>
 						<goals>

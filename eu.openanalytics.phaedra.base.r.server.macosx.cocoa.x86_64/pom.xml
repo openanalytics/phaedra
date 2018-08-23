@@ -23,9 +23,8 @@
 						<phase>prepare-package</phase>
 						<configuration>
 							<target>
-								<copy todir="R" overwrite="true" force="true">
-									<fileset dir="${build.tools.dir}/macosx.cocoa.x86_64/R" />
-								</copy>
+								<get src="${build.tools.url}/macosx/R.zip" dest="${project.build.directory}/R.zip" />
+								<unzip src="${project.build.directory}/R.zip" dest="R"/>
 							</target>
 						</configuration>
 						<goals>

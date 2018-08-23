@@ -2,8 +2,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.openanalytics.phaedra</groupId>
-	<artifactId>eu.openanalytics.phaedra.base.r.libs.linux.gtk.x86_64</artifactId>
-	<packaging>eclipse-plugin</packaging>
+	<artifactId>eu.openanalytics.phaedra.jre</artifactId>
+	<packaging>eclipse-feature</packaging>
 	<version>1.0.4-SNAPSHOT</version>
 	
 	<parent>
@@ -20,11 +20,15 @@
 				<version>1.7</version>
 				<executions>
 					<execution>
-						<phase>prepare-package</phase>
+						<phase>process-resources</phase>
 						<configuration>
 							<target>
-								<get src="${build.tools.url}/linux/R-user-libs.zip" dest="${project.build.directory}/R-user-libs.zip" />
-								<unzip src="${project.build.directory}/R-user-libs.zip" dest="user-libs"/>
+								<get src="${build.tools.url}/linux/jre.zip" dest="${project.build.directory}/jre-linux.zip" />
+								<unzip src="${project.build.directory}/jre-linux.zip" dest="${project.build.directory}/linux/jre"/>
+								<get src="${build.tools.url}/macosx/jre.zip" dest="${project.build.directory}/jre-macosx.zip" />
+								<unzip src="${project.build.directory}/jre-macosx.zip" dest="${project.build.directory}/macosx/jre"/>
+								<get src="${build.tools.url}/win32/jre.zip" dest="${project.build.directory}/jre-win32.zip" />
+								<unzip src="${project.build.directory}/jre-win32.zip" dest="${project.build.directory}/win32/jre"/>
 							</target>
 						</configuration>
 						<goals>
@@ -32,20 +36,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.eclipse.tycho</groupId>
-				<artifactId>target-platform-configuration</artifactId>
-				<version>${tycho.version}</version>
-				<configuration>
-					<environments>
-						<environment>
-							<os>linux</os>
-							<ws>gtk</ws>
-							<arch>x86_64</arch>
-						</environment>
-					</environments>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

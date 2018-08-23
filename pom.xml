@@ -9,7 +9,7 @@
 	<properties>
 		<tycho.version>0.24.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<build.tools.dir>C:/Phaedra-build</build.tools.dir>
+		<build.tools.url>http://nexus.openanalytics.eu/nexus/content/sites/phaedra_build_tools</build.tools.url>
 		<maven.install.skip>true</maven.install.skip>
 		<maven.deploy.skip>true</maven.deploy.skip>
 	</properties>
