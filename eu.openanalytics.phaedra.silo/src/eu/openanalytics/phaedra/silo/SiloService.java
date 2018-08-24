@@ -52,34 +52,23 @@ public class SiloService extends BaseJPAService {
 	 * **********
 	 */
 
-	public List<Silo> getSilos() {
-		return streamableList(getList(Silo.class));
-	}
-
-	public List<Silo> getSilos(GroupType type) {
-		String query = "select s from Silo s where s.type = ?1";
-		return streamableList(getList(query, Silo.class, type.getType()));
-	}
-
-	public List<Silo> getMySilos(GroupType type) {
-		String currentUser = SecurityService.getInstance().getCurrentUserName();
-		String query = "select s from Silo s where s.owner = ?1 and s.type = ?2";
-		return streamableList(getList(query, Silo.class, currentUser, type.getType()));
-	}
-
 	public List<Silo> getPrivateSilos(GroupType type) {
-		return getMySilos(type).stream().filter(s -> s.getAccessScope().isPrivateScope()).collect(Collectors.toList());
+		String currentUser = SecurityService.getInstance().getCurrentUserName();
+		return getSilos(type).stream()
+				.filter(s -> s.getAccessScope().isPrivateScope())
+				.filter(s -> s.getOwner().equalsIgnoreCase(currentUser))
+				.collect(Collectors.toList());
 	}
 
 	public List<Silo> getTeamSilos(GroupType type) {
-		return getMySilos(type).stream()
+		return getSilos(type).stream()
 				.filter(s -> s.getAccessScope().isTeamScope())
 				.filter(s -> SecurityService.getInstance().checkPersonalObject(Action.READ, s))
 				.collect(Collectors.toList());
 	}
 	
 	public List<Silo> getPublicSilos(GroupType type) {
-		return getMySilos(type).stream().filter(s -> s.getAccessScope().isPublicScope()).collect(Collectors.toList());
+		return getSilos(type).stream().filter(s -> s.getAccessScope().isPublicScope()).collect(Collectors.toList());
 	}
 
 	public List<Silo> getReadableSilos() {
@@ -94,6 +83,15 @@ public class SiloService extends BaseJPAService {
 				.collect(Collectors.toList());
 	}
 
+	private List<Silo> getSilos() {
+		return streamableList(getList(Silo.class));
+	}
+	
+	private List<Silo> getSilos(GroupType type) {
+		String query = "select s from Silo s where s.type = ?1";
+		return streamableList(getList(query, Silo.class, type.getType()));
+	}
+	
 	public Silo createSilo(ProtocolClass pClass, GroupType type) {
 		Silo silo = new Silo();
 		silo.setName("New Silo");
