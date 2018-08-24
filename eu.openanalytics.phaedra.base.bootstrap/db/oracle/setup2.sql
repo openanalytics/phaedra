@@ -40,6 +40,10 @@
 @02_tables/hca_silo_group.sql
 @02_tables/hca_silo.sql
 @02_tables/hca_silo_group_member.sql
+@02_tables/hca_silo_dataset.sql
+@02_tables/hca_silo_dataset_column.sql
+@02_tables/hca_silo_datapoint.sql
+@02_tables/hca_silo_datapoint_value.sql
 @02_tables/hca_report.sql
 @02_tables/hca_report_page.sql
 @02_tables/query.sql
