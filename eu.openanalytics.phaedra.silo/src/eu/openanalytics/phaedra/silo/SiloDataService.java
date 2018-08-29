@@ -144,6 +144,12 @@ public class SiloDataService {
 			return data;
 		}
 	}
+	
+	public int getDataSize(Silo silo, String datasetName) {
+		SiloDataset dataset = SiloService.streamableList(silo.getDatasets()).stream().filter(ds -> ds.getName().equals(datasetName)).findAny().orElse(null);
+		if (dataset == null) return 0;
+		return dao.getDataSize(dataset);
+	}
 
 	private static CacheKey getKey(long siloId, String datasetName) {
 		return CacheKey.create(siloId, datasetName);

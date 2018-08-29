@@ -24,6 +24,11 @@ import eu.openanalytics.phaedra.silo.vo.SiloDatasetColumn;
 
 public class SiloDataDAO {
 
+	public int getDataSize(SiloDataset dataset) {
+		String sql = "select count(*) from phaedra.hca_silo_datapoint dp where dp.dataset_id = " + dataset.getId();
+		return runQuery(sql, r -> r.getInt(1)).get(0);
+	}
+	
 	public SiloDatasetData loadData(SiloDataset dataset) {
 		SiloDatasetData data = new SiloDatasetData();
 		data.setDataset(dataset);

@@ -42,6 +42,7 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 	private Silo workingCopySilo;
 	private Map<String, SiloDatasetData> workingCopyData;
 	private Map<String, List<T>> rowObjectCache;
+	private Map<String, Integer> rowCountCache;
 	private boolean dirty;
 	
 	public AbstractSiloAccessor(Silo silo) {
@@ -144,8 +145,16 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 
 	@Override
 	public int getRowCount(String datasetName) throws SiloException {
-		SiloDatasetData data = getWorkingCopyData(datasetName);
-		return (data == null) ? 0 : data.getDataPoints().length;
+		if (workingCopyData.containsKey(datasetName)) {
+			return workingCopyData.get(datasetName).getDataPoints().length;
+		} else {
+			Integer rowCount = rowCountCache.get(datasetName);
+			if (rowCount == null) {
+				rowCount = SiloDataService.getInstance().getDataSize(workingCopySilo, datasetName);
+				rowCountCache.put(datasetName, rowCount);
+			}
+			return rowCount;
+		}
 	}
 
 	@Override
@@ -206,6 +215,7 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 			setDefaultValues(column, columnData, newRows);
 		}
 
+		rowCountCache.remove(datasetName);
 		dirty = true;
 		notifySiloChanged();
 	}
@@ -245,6 +255,7 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 			}
 		}
 		
+		rowCountCache.remove(datasetName);
 		dirty = true;
 		notifySiloChanged();
 	}
@@ -305,6 +316,7 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 		workingCopySilo = new Silo();
 		workingCopyData = new HashMap<>();
 		rowObjectCache = new HashMap<>();
+		rowCountCache = new HashMap<>();
 		dirty = false;
 		ObjectCopyFactory.copy(originalSilo, workingCopySilo, true);
 	}
