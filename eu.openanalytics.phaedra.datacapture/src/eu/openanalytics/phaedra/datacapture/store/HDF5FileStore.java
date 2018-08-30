@@ -127,6 +127,7 @@ public class HDF5FileStore implements IFileStore {
 	public void writeValue(String key, Object value) throws IOException {
 		if (value instanceof String) writeStringValue(key, (String) value);
 		else if (value instanceof Float) writeNumericValue(key, (Float) value);
+		else if (value instanceof Number) writeNumericValue(key, ((Number) value).floatValue());
 		else if (value instanceof String[]) writeStringArray(key, (String[]) value);
 		else if (value instanceof float[]) writeNumericArray(key, (float[]) value);
 		else if (value instanceof byte[]) writeBinaryValue(key, (byte[]) value);
