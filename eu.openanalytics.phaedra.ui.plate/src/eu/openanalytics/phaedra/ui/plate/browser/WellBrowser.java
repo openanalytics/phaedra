@@ -134,6 +134,9 @@ public class WellBrowser extends EditorPart {
 			f = PlateUtils.getProtocolClass(plate).getDefaultFeature();
 			if (f == null) f = CollectionUtils.find(features, ProtocolUtils.KEY_FEATURES);
 			// If no Key Features are available, use first feature.
+			if (f == null && features.isEmpty()) {
+				throw new PartInitException("Cannot open plate: there are currently no well features defined in the Protocol Class.");
+			}
 			if (f == null) f = features.get(0);
 			ProtocolUIService.getInstance().setCurrentProtocolClass(f.getProtocolClass());
 			ProtocolUIService.getInstance().setCurrentFeature(f);
