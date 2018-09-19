@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.fs.s3;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
@@ -18,6 +20,8 @@ import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.fs.FileServerConfig;
@@ -27,6 +31,8 @@ import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
 public class S3Interface extends BaseFileServer {
 
 	private AmazonS3 s3;
+	private TransferManager transferMgr;
+	
 	private String bucketName;
 	private boolean enableSSE;
 	
@@ -53,7 +59,12 @@ public class S3Interface extends BaseFileServer {
 		s3 = AmazonS3ClientBuilder.standard()
 				.withEndpointConfiguration(endpointConfiguration)
 				.enablePathStyleAccess()
-				.withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+				.withCredentials(new AWSStaticCredentialsProvider(credentials))
+				.build();
+
+		transferMgr = TransferManagerBuilder.standard()
+				.withS3Client(s3)
+				.build();
 	}
 
 	@Override
@@ -171,16 +182,36 @@ public class S3Interface extends BaseFileServer {
 	protected void doRenameTo(String from, String to) throws IOException {
 		String keyFrom = getKey(from);
 		String keyTo = getKey(to);
-		s3.copyObject(bucketName, keyFrom, bucketName, keyTo);
+		try {
+			transferMgr.copy(bucketName, keyFrom, bucketName, keyTo).waitForCompletion();
+		} catch (AmazonClientException | InterruptedException e) {
+			throw new IOException(e);
+		}
 		s3.deleteObject(bucketName, keyFrom);
 	}
 	
 	@Override
+	public void upload(String path, File file) throws IOException {
+		// Optimized upload case for File objects: enables parallel upload and retrying
+		try {
+			transferMgr.upload(bucketName, getKey(path), file).waitForCompletion();
+		} catch (AmazonClientException | InterruptedException e) {
+			throw new IOException(e);
+		}
+	}
+	
+	@Override
 	protected void doUpload(String path, InputStream input, long length) throws IOException {
+		// Regular upload case for non-File objects: uses serial upload with retrying via a BufferedInputStream
 		ObjectMetadata metadata = new ObjectMetadata();
 		if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
 		if (length > 0) metadata.setContentLength(length);
-		s3.putObject(bucketName, getKey(path), input, metadata);
+		InputStream bufferedInput = new BufferedInputStream(input, 20*1024*1024);
+		try {
+			transferMgr.upload(bucketName, getKey(path), bufferedInput, metadata).waitForCompletion();
+		} catch (AmazonClientException | InterruptedException e) {
+			throw new IOException(e);
+		}
 	}
 	
 	private String getKey(String path) {
