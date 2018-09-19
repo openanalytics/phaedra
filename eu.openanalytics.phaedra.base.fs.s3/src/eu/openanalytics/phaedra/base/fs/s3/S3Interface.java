@@ -19,6 +19,7 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ListObjectsV2Request;
 import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
@@ -193,8 +194,13 @@ public class S3Interface extends BaseFileServer {
 	@Override
 	public void upload(String path, File file) throws IOException {
 		// Optimized upload case for File objects: enables parallel upload and retrying
+		PutObjectRequest req = new PutObjectRequest(bucketName, getKey(path), file);
+		ObjectMetadata metadata = new ObjectMetadata();
+		if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+		metadata.setContentLength(file.length());
+		req.setMetadata(metadata);
 		try {
-			transferMgr.upload(bucketName, getKey(path), file).waitForCompletion();
+			transferMgr.upload(req).waitForCompletion();
 		} catch (AmazonClientException | InterruptedException e) {
 			throw new IOException(e);
 		}
