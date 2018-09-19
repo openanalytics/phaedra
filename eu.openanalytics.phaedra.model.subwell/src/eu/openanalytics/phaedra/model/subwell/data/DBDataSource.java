@@ -34,6 +34,7 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private static final String SCHEMA = "phaedra";
 	private static final String DATA_TABLE = "hca_subwelldata";
+	private static final String DATA_TABLE_PART = "hca_subwelldata_part_current";
 	private static final String MAPPING_TABLE = "hca_subwelldata_feature";
 	
 	private static final int MAX_FEATURES = JDBCUtils.isOracle() ? 998 : 1500;
@@ -168,7 +169,9 @@ public class DBDataSource implements ISubWellDataSource {
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
 		if (data.isEmpty()) return;
 		
-		SubWellFeature sample = data.keySet().iterator().next();
+		SubWellFeature sample = data.keySet().stream().filter(f -> f != null).findAny().orElse(null);
+		if (sample == null) return;
+		
 		Map<SubWellFeature, Integer> featureMapping = getFeatureMapping(sample.getProtocolClass());
 		
 		String wellIds = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
@@ -239,7 +242,7 @@ public class DBDataSource implements ISubWellDataSource {
 						.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
 						.collect(Collectors.joining(","));
 				String args = dataForWell.keySet().stream().map(f -> "?").collect(Collectors.joining(","));
-				String queryString = String.format("insert into %s.%s(well_id,cell_id," + colNames + ") values (?,?," + args + ")", SCHEMA, DATA_TABLE);
+				String queryString = String.format("insert into %s.%s(well_id,cell_id," + colNames + ") values (?,?," + args + ")", SCHEMA, getInsertDataTable());
 				
 				// Determine nr of cells (rows) for this well
 				int cellCount = 0;
@@ -369,5 +372,23 @@ public class DBDataSource implements ISubWellDataSource {
 	
 	private Connection getConnection() throws SQLException {
 		return Screening.getEnvironment().getJDBCConnection();
+	}
+	
+	private Boolean isPartitioned;
+	
+	private synchronized String getInsertDataTable() {
+		if (isPartitioned == null) {
+			try {
+				String sql = String.format("select count(*) from %s.%s", SCHEMA, DATA_TABLE_PART);
+				select(sql, rs -> {
+					rs.next();
+					return rs.getInt(1);
+				});
+				isPartitioned = true;
+			} catch (Exception e) {
+				isPartitioned = false;
+			}
+		}
+		return isPartitioned ? DATA_TABLE_PART : DATA_TABLE;
 	}
 }
