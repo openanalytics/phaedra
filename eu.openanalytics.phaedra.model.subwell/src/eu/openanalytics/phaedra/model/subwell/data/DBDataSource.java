@@ -168,10 +168,11 @@ public class DBDataSource implements ISubWellDataSource {
 	@Override
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data) {
 		if (data.isEmpty()) return;
+		data = data.entrySet().stream().filter(e -> e.getKey() != null).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+		if (data.isEmpty()) return;
 		
-		SubWellFeature sample = data.keySet().stream().filter(f -> f != null).findAny().orElse(null);
+		SubWellFeature sample = data.keySet().iterator().next();
 		if (sample == null) return;
-		
 		Map<SubWellFeature, Integer> featureMapping = getFeatureMapping(sample.getProtocolClass());
 		
 		String wellIds = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
@@ -259,8 +260,16 @@ public class DBDataSource implements ISubWellDataSource {
 						ps.setLong(2, cellId);
 						for (int i = 0; i < orderedFeatures.size(); i++) {
 							SubWellFeature f = orderedFeatures.get(i);
-							if (f.isNumeric()) ps.setFloat(3+i, ((float[]) dataForWell.get(f))[cellId]);
-							else ps.setString(3+i, ((String[]) dataForWell.get(f))[cellId]);
+							if (f.isNumeric()) {
+								float[] d = (float[]) dataForWell.get(f);
+								float value = (d == null || d.length <= cellId) ? Float.NaN : d[cellId];
+								ps.setFloat(3+i, value);
+							}
+							else {
+								String[] d = (String[]) dataForWell.get(f);
+								String value = (d == null || d.length <= cellId) ? null : d[cellId];
+								ps.setString(3+i, value);
+							}
 						}
 						ps.addBatch();
 					}
