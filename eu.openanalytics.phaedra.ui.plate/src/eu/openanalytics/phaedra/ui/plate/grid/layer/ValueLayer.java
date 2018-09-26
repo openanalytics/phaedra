@@ -213,7 +213,8 @@ public class ValueLayer extends PlatesLayer {
 		@Override
 		public String getTooltipContribution(GridCell cell) {
 			String[] labels = getLabels(cell);
-			return Arrays.stream(labels).filter(s -> !s.isEmpty()).collect(Collectors.joining("\n"));
+			if (labels == null) return null;
+			return Arrays.stream(labels).filter(s -> s != null && !s.isEmpty()).collect(Collectors.joining("\n"));
 		}
 
 	}
