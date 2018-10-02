@@ -362,6 +362,7 @@ private static ImageRenderService instance = new ImageRenderService();
 	}
 	
 	private Object getCacheKey(ImageRenderRequest req) {
+		if (req.customSettings != null) return null;
 		if (req.region != null) return new ImageKey(req.well, req.scale, req.components, req.region);
 		else if (req.size != null) return new ImageKey(req.well, req.size.x, req.size.y, req.components);
 		else if (req.scale != 0.0f) return new ImageKey(req.well, req.scale, req.components);
