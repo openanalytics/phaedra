@@ -9,7 +9,7 @@ create table hca_dc_scan_job (
 	scanner_type			varchar2(200),
 	label					varchar2(100),
 	description				varchar2(1000),
-	config					XMLType 
+	config					varchar2(4000)
 )
 tablespace phaedra_d;
 
