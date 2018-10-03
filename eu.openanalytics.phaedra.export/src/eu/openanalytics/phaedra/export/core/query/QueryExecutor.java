@@ -41,14 +41,14 @@ public class QueryExecutor {
 			if (isFeatureQuery) {
 				headers = new String[metadata.getColumnCount() - 2];
 				for (int i=0; i<headers.length; i++) {
-					headers[i] = metadata.getColumnName(i+3);
+					headers[i] = metadata.getColumnLabel(i+3);
 					if (SQLUtils.isNumeric(metadata.getColumnType(i+3))) result.setNumericColumn(i);
 				}
 				result.setColumns(headers);
 			} else {
 				headers = new String[metadata.getColumnCount()];
 				for (int i=0; i<headers.length; i++) {
-					headers[i] = metadata.getColumnName(i+1);
+					headers[i] = metadata.getColumnLabel(i+1);
 					if (SQLUtils.isNumeric(metadata.getColumnType(i+1))) result.setNumericColumn(i);
 				}
 				result.setColumns(headers);
@@ -72,11 +72,12 @@ public class QueryExecutor {
 			}
 			result.finish();
 
-			if (isFeatureQuery && featureName != null) {
-				for (int i=0; i<headers.length; i++) {
+			// Set headers to uppercase and prepend feature name, if needed.
+			for (int i=0; i<headers.length; i++) {
+				headers[i] = headers[i].toUpperCase();
+				if (isFeatureQuery && featureName != null) {
 					headers[i] = featureName + " " + headers[i];
 				}
-				result.setColumns(headers);
 			}
 
 			long duration = System.currentTimeMillis() - startTime;
