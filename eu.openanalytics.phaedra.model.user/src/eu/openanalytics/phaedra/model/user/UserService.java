@@ -16,8 +16,8 @@ import org.eclipse.core.runtime.Status;
 
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.SecurityService;
-import eu.openanalytics.phaedra.base.security.ldap.LDAPConfig;
 import eu.openanalytics.phaedra.base.security.ldap.LDAPUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
@@ -135,7 +135,7 @@ public class UserService extends BaseJPAService {
 		try {
 			// Attempt to bind as the current user and then look up the target user's email address in LDAP.
 			// Note that this only works if the current user is a service account with its password stored.
-			LDAPConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
+			AuthConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
 			String currentUserName = SecurityService.getInstance().getCurrentUserName();
 			String password = Screening.getEnvironment().getConfig().resolvePassword(currentUserName);
 			ctx = LDAPUtils.bind(currentUserName, password.getBytes(), ldapConfig);

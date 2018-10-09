@@ -9,7 +9,6 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
 
-import eu.openanalytics.phaedra.base.security.ldap.LDAPConfig;
 import eu.openanalytics.phaedra.base.security.ldap.LDAPSecureLoginHandler;
 import eu.openanalytics.phaedra.base.security.model.Group;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
@@ -17,6 +16,7 @@ import eu.openanalytics.phaedra.base.security.model.IOwnedPersonalObject;
 import eu.openanalytics.phaedra.base.security.model.Roles;
 import eu.openanalytics.phaedra.base.security.model.UserContext;
 import eu.openanalytics.phaedra.base.security.ui.AccessDialog;
+import eu.openanalytics.phaedra.base.security.windows.WindowsLoginHandler;
 
 /**
  * This class takes care of the following security aspects:
@@ -36,16 +36,18 @@ public class SecurityService {
 	private Map<Group, List<String>> securityConfig;
 
 	private ILoginHandler loginHandler;
-	private LDAPConfig ldapConfig;
+	private AuthConfig authConfig;
 
-	private SecurityService(LDAPConfig ldapConfig) {
+	private SecurityService(AuthConfig authConfig) {
 		// Hidden constructor
-		this.ldapConfig = ldapConfig;
-		if (ldapConfig == null) this.loginHandler = new EmbeddedLoginHandler();
+		this.authConfig = authConfig;
+		
+		if (authConfig == null) this.loginHandler = new EmbeddedLoginHandler();
+		else if (Boolean.valueOf(authConfig.get(AuthConfig.WIN_LOGON))) this.loginHandler = new WindowsLoginHandler(authConfig);
 		else this.loginHandler = new LDAPSecureLoginHandler();
 	}
 
-	public static synchronized SecurityService createInstance(LDAPConfig ldapConfig) {
+	public static synchronized SecurityService createInstance(AuthConfig ldapConfig) {
 		instance = new SecurityService(ldapConfig);
 		return instance;
 	}
@@ -69,8 +71,9 @@ public class SecurityService {
 		return loginHandler;
 	}
 
-	public LDAPConfig getLdapConfig() {
-		return ldapConfig;
+	//TODO Rename method
+	public AuthConfig getLdapConfig() {
+		return authConfig;
 	}
 
 	public void setSecurityConfig(Map<Group, List<String>> securityConfig) {
@@ -98,7 +101,7 @@ public class SecurityService {
 	}
 
 	public boolean isGlobalAdmin(String userName) {
-		if (ldapConfig == null) return true;
+		if (authConfig == null) return true;
 		for (Group group : getMemberships(userName)) {
 			if (group.equals(Group.GLOBAL_ADMIN_GROUP)) return true;
 		}

@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.base.security.ldap;
 
 import javax.naming.directory.DirContext;
 
+import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.ILoginHandler;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 
@@ -14,7 +15,7 @@ public class LDAPSecureLoginHandler implements ILoginHandler {
 	public void authenticate(String userName, byte[] password) {
 		DirContext ctx = null;
 	    try {
-	    	LDAPConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
+	    	AuthConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
 	    	ctx = LDAPUtils.bind(userName, password, ldapConfig);
 	    	SecurityService.getInstance().setCurrentUser(userName);
 	    	SecurityService.getInstance().setSecurityConfig(LDAPUtils.loadGroups(ctx, ldapConfig));

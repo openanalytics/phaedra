@@ -1,9 +1,10 @@
-package eu.openanalytics.phaedra.base.security.ldap;
+package eu.openanalytics.phaedra.base.security;
 
 import eu.openanalytics.phaedra.base.util.misc.ConfigResolver;
 
-public class LDAPConfig extends ConfigResolver {
+public class AuthConfig extends ConfigResolver {
 
+	// LDAP config
 	public static final String URL = "url";
 	public static final String AUTH_TYPE = "type";
 	public static final String DEFAULT_DOMAIN = "default.domain";
@@ -12,7 +13,11 @@ public class LDAPConfig extends ConfigResolver {
 	public static final String PRINCIPAL_MAPPING = "principal.mapping";
 	public static final String USERNAME_ATTRIBUTE = "username.attribute";
 	
-	public LDAPConfig() {
+	// Windows config
+	public static final String WIN_LOGON = "win.logon";
+	public static final String GLOBAL_ROLE = "global.role";
+	
+	public AuthConfig() {
 		super("phaedra.auth.");
 	}
 }

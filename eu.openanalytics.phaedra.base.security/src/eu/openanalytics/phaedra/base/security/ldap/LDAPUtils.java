@@ -14,6 +14,7 @@ import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 
+import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SSL;
 import eu.openanalytics.phaedra.base.security.model.Group;
@@ -45,19 +46,19 @@ public class LDAPUtils {
 		return login;
 	}
 	
-	public static DirContext bind(String userName, byte[] password, LDAPConfig cfg) {
+	public static DirContext bind(String userName, byte[] password, AuthConfig cfg) {
 
 		if (password.length == 0) throw new AuthenticationException("Password cannot be empty");
 		
 		// If a default domain has been configured, prepend it to the username (AD only).
-		String defaultDomain = cfg.get(LDAPConfig.DEFAULT_DOMAIN);
+		String defaultDomain = cfg.get(AuthConfig.DEFAULT_DOMAIN);
 		if (defaultDomain != null && !defaultDomain.isEmpty() && !userName.contains("\\")) {
 			userName = defaultDomain + "\\" + userName;
 		}
 		
 		// If a principal mapping has been configured, apply it (e.g. map username to DN).
 		String principal = userName;
-		String principalMapping = cfg.get(LDAPConfig.PRINCIPAL_MAPPING);
+		String principalMapping = cfg.get(AuthConfig.PRINCIPAL_MAPPING);
 		if (principalMapping != null && !principalMapping.isEmpty()) {
 			principal = principalMapping.replace("${username}", userName);
 		}
@@ -67,11 +68,11 @@ public class LDAPUtils {
 			
 			Hashtable<String, String> env = new Hashtable<>(11);
 			env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-			env.put(Context.PROVIDER_URL, cfg.get(LDAPConfig.URL));
+			env.put(Context.PROVIDER_URL, cfg.get(AuthConfig.URL));
 			env.put(Context.SECURITY_PRINCIPAL, principal);
 			env.put(Context.SECURITY_CREDENTIALS, new String(password));
 			
-			String authType = cfg.get(LDAPConfig.AUTH_TYPE);
+			String authType = cfg.get(AuthConfig.AUTH_TYPE);
 			if (authType != null && !authType.isEmpty()) env.put(Context.SECURITY_AUTHENTICATION, authType);
 			
 			DirContext ctx = new InitialDirContext(env);
@@ -84,9 +85,9 @@ public class LDAPUtils {
 		}
 	}
 	
-	public static String lookupEmail(String username, DirContext ctx, LDAPConfig cfg) {
+	public static String lookupEmail(String username, DirContext ctx, AuthConfig cfg) {
 		try {
-			String usernameAttribute = cfg.get(LDAPConfig.USERNAME_ATTRIBUTE);
+			String usernameAttribute = cfg.get(AuthConfig.USERNAME_ATTRIBUTE);
 			if (usernameAttribute == null || usernameAttribute.isEmpty()) usernameAttribute = DEFAULT_USERNAME_ATTR;
 			
 			SearchControls ctrl = new SearchControls();
@@ -106,12 +107,12 @@ public class LDAPUtils {
 		return null;
 	}
 	
-	protected static Map<Group, List<String>> loadGroups(DirContext ctx, LDAPConfig cfg) {
+	protected static Map<Group, List<String>> loadGroups(DirContext ctx, AuthConfig cfg) {
 		Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
 		
-		String groupPrefix = cfg.get(LDAPConfig.GROUP_PREFIX);
-		String groupFilter = cfg.get(LDAPConfig.GROUP_FILTER);
-		String usernameAttribute = cfg.get(LDAPConfig.USERNAME_ATTRIBUTE);
+		String groupPrefix = cfg.get(AuthConfig.GROUP_PREFIX);
+		String groupFilter = cfg.get(AuthConfig.GROUP_FILTER);
+		String usernameAttribute = cfg.get(AuthConfig.USERNAME_ATTRIBUTE);
 		if (usernameAttribute == null || usernameAttribute.isEmpty()) usernameAttribute = DEFAULT_USERNAME_ATTR;
 		
 		// If no group config is provided, treat all users as admins.

@@ -11,9 +11,9 @@ import eu.openanalytics.phaedra.base.db.DatabaseConfig;
 import eu.openanalytics.phaedra.base.environment.config.Config;
 import eu.openanalytics.phaedra.base.fs.FileServerConfig;
 import eu.openanalytics.phaedra.base.fs.SecureFileServer;
+import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
-import eu.openanalytics.phaedra.base.security.ldap.LDAPConfig;
 
 public class EnvironmentImpl implements IEnvironment {
 
@@ -40,12 +40,12 @@ public class EnvironmentImpl implements IEnvironment {
 	
 	@Override
 	public void connect(String userName, byte[] password) throws AuthenticationException, IOException {
-		LDAPConfig ldapConfig = null;
+		AuthConfig authConfig = null;
 		if (requiresAuthentication()) {
-			ldapConfig = new LDAPConfig();
-			ldapConfig.setResolver(key -> config.getValue(name, "auth", key));
+			authConfig = new AuthConfig();
+			authConfig.setResolver(key -> config.getValue(name, "auth", key));
 		}
-		SecurityService.createInstance(ldapConfig);
+		SecurityService.createInstance(authConfig);
 		SecurityService.getInstance().getLoginHandler().authenticate(userName, password);
 		
 		FileServerConfig fsConfig = new FileServerConfig();
