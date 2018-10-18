@@ -1544,7 +1544,7 @@ CREATE SEQUENCE phaedra.HCA_REPORT_S
 	NO CYCLE;
 
 GRANT INSERT, UPDATE, DELETE on phaedra.HCA_REPORT to :accountNameWrite;
-GRANT SELECT on phaedra.HCA_REPORT_s to :accountNameWrite;
+GRANT SELECT, USAGE on phaedra.HCA_REPORT_s to :accountNameWrite;
 GRANT SELECT ON phaedra.HCA_REPORT to :accountNameRead;
 
 -- -----------------------------------------------------------------------
@@ -1587,5 +1587,5 @@ CREATE SEQUENCE phaedra.HCA_REPORT_PAGE_S
 	NO CYCLE;
 
 GRANT INSERT, UPDATE, DELETE on phaedra.HCA_REPORT_PAGE to :accountNameWrite;
-GRANT SELECT on phaedra.HCA_REPORT_PAGE_s to :accountNameWrite;
+GRANT SELECT, USAGE on phaedra.HCA_REPORT_PAGE_s to :accountNameWrite;
 GRANT SELECT ON phaedra.HCA_REPORT_PAGE to :accountNameRead;
