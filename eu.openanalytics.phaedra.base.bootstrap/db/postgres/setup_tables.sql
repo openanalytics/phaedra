@@ -1413,8 +1413,8 @@ CREATE TABLE phaedra.hca_part_settings (
     USER_CODE   	varchar(20) NOT NULL,
     CLASS_NAME	 	varchar(256) NOT NULL,
     NAME		   	varchar(100) NOT NULL,
-	IS_GLOBAL		bigint DEFAULT 0,
-	IS_TEMPLATE		bigint DEFAULT 0,
+	IS_GLOBAL		bool DEFAULT FALSE,
+	IS_TEMPLATE		bool DEFAULT FALSE,
     PROPERTIES 		text
 )
 TABLESPACE :tsNameData;
@@ -1437,7 +1437,7 @@ CREATE SEQUENCE phaedra.hca_part_settings_s
 	NO CYCLE;
 
 GRANT INSERT, UPDATE, DELETE on phaedra.hca_part_settings to :accountNameWrite;
-GRANT SELECT on phaedra.hca_part_settings_s to :accountNameWrite;
+GRANT SELECT, USAGE on phaedra.hca_part_settings_s to :accountNameWrite;
 GRANT SELECT ON phaedra.hca_part_settings to :accountNameRead;
 
 -- -----------------------------------------------------------------------
