@@ -1390,3 +1390,67 @@ CREATE SEQUENCE phaedra.HCA_REPORT_PAGE_S
 
 GRANT INSERT, UPDATE, DELETE on phaedra.HCA_REPORT_PAGE to phaedra_role_crud;
 GRANT SELECT ON phaedra.HCA_REPORT_PAGE to phaedra_role_read;
+
+-- -----------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_psp (
+	psp_id				bigint not null,
+	psp_name 			varchar(100),
+	workbench_state		text,
+	owner 				varchar(50),
+	access_scope 		varchar(50),
+	feature_id			bigint
+);
+
+ALTER TABLE phaedra.hca_psp
+	ADD CONSTRAINT hca_psp_pk
+	PRIMARY KEY (psp_id);
+
+ALTER TABLE phaedra.hca_psp
+	ADD CONSTRAINT hca_psp_fk_feature
+	FOREIGN KEY (feature_id)
+	REFERENCES hca_feature(feature_id);
+
+CREATE SEQUENCE phaedra.hca_psp_s
+	INCREMENT BY 1
+	START WITH 1
+	MAXVALUE 9223372036854775807
+	NO CYCLE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_psp to phaedra_role_crud;
+GRANT SELECT ON phaedra.hca_psp to phaedra_role_read;
+
+-- -----------------------------------------------------------------------
+
+create table phaedra.hca_psp_part_ref (
+	part_ref_id			bigint not null,
+	psp_id				bigint not null,
+	part_id 			varchar(100) not null,
+	part_secondary_id	varchar(100),
+	part_settings_id	bigint
+);
+
+ALTER TABLE phaedra.hca_psp_part_ref
+	ADD CONSTRAINT hca_psp_part_ref_pk
+	PRIMARY KEY (part_ref_id);
+
+ALTER TABLE phaedra.hca_psp_part_ref
+	ADD CONSTRAINT hca_psp_part_ref_fk_psp
+	FOREIGN KEY (psp_id)
+	REFERENCES hca_psp(psp_id)
+	ON DELETE CASCADE;
+
+ALTER TABLE phaedra.hca_psp_part_ref
+	ADD CONSTRAINT hca_psp_part_ref_fk_part_sett
+	FOREIGN KEY (part_settings_id)
+	REFERENCES hca_part_settings(settings_id)
+	ON DELETE CASCADE;
+
+CREATE SEQUENCE phaedra.hca_psp_part_ref_s
+	INCREMENT BY 1
+	START WITH 1
+	MAXVALUE 9223372036854775807
+	NO CYCLE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_psp_part_ref to phaedra_role_crud;
+GRANT SELECT ON phaedra.hca_psp_part_ref to phaedra_role_read;

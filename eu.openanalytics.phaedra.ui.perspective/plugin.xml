@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.navigator.elementProvider">
+      <elementProvider
+            class="eu.openanalytics.phaedra.ui.perspective.navigator.PerspectiveProvider">
+      </elementProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.navigator.elementHandler">
+      <elementHandler
+            class="eu.openanalytics.phaedra.ui.perspective.navigator.PerspectiveGroupHandler">
+      </elementHandler>
+      <elementHandler
+            class="eu.openanalytics.phaedra.ui.perspective.navigator.PerspectiveHandler">
+      </elementHandler>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.icons.iconProvider">
+      <iconProvider
+            class="eu.openanalytics.phaedra.ui.perspective.PerspectiveIconProvider"
+            id="eu.openanalytics.phaedra.ui.perspective.PerspectiveIconProvider">
+      </iconProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="Saved Perspective">
+         <entityClass
+               class="eu.openanalytics.phaedra.ui.perspective.vo.SavedPerspective">
+         </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.ui.perspective.vo.SavedPartReference">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.perspective.cmd.OpenPerspective"
+            id="eu.openanalytics.phaedra.ui.perspective.cmd.OpenPerspective"
+            name="Open Saved Perspective">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.perspective.cmd.SaveNewPerspective"
+            id="eu.openanalytics.phaedra.ui.perspective.cmd.SaveNewPerspective"
+            name="Save New Perspective">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.perspective.cmd.DeletePerspective"
+            id="eu.openanalytics.phaedra.ui.perspective.cmd.DeletePerspective"
+            name="Delete Saved Perspective">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.perspective.cmd.EditPerspectiveSettings"
+            id="eu.openanalytics.phaedra.ui.perspective.cmd.EditPerspectiveSettings"
+            name="Edit Saved Perspective Settings">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.perspective.cmd.UpdatePerspective"
+            id="eu.openanalytics.phaedra.ui.perspective.cmd.UpdatePerspective"
+            name="Update Saved Perspective">
+      </command>
+   </extension>
+
+</plugin>

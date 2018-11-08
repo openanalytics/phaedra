@@ -1,0 +1,20 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Saved Perspectives
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.perspective;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.ui.perspective.Activator
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.model.protocol,
+ eu.openanalytics.phaedra.ui.protocol,
+ eu.openanalytics.phaedra.ui.partsettings,
+ eu.openanalytics.phaedra.base.environment,
+ eu.openanalytics.phaedra.base.event,
+ eu.openanalytics.phaedra.base.ui.gridviewer,
+ eu.openanalytics.phaedra.base.ui.navigator,
+ eu.openanalytics.phaedra.base.ui.icons,
+ org.eclipse.persistence.jpa;bundle-version="2.3.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: eu.openanalytics.phaedra.ui.perspective
+Bundle-ActivationPolicy: lazy
