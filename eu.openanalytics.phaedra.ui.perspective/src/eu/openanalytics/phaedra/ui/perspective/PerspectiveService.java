@@ -176,19 +176,6 @@ public class PerspectiveService extends BaseJPAService {
 			IPerspectiveDescriptor newPerspective = reg.createPerspective(name, (PerspectiveDescriptor) page.getPerspective());
 			page.savePerspectiveAs(newPerspective);
 		}
-		
-//		Workbench wb = (Workbench) PlatformUI.getWorkbench();
-//		EObject appCopy = EcoreUtil.copy((EObject) wb.getApplication());
-//
-//		byte[] workbenchState;
-//		try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-//			Resource res = new ResourceImpl();
-//			res.getContents().add(appCopy);
-//			res.save(bos, null);
-//			workbenchState = bos.toByteArray();
-//		}
-//
-//		perspective.setWorkbenchState(new String(workbenchState));
 	}
 
 	private void deleteWorkbenchState(SavedPerspective perspective) {
@@ -236,6 +223,15 @@ public class PerspectiveService extends BaseJPAService {
 		IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 		PerspectiveRegistry reg = (PerspectiveRegistry) WorkbenchPlugin.getDefault().getPerspectiveRegistry();		
 		IPerspectiveDescriptor pDesc = reg.findPerspectiveWithLabel(perspective.getWorkbenchState());
+		
+		// Open the default perspective so that when closePerspective is called, not all perspectives are closed,
+		// which would trigger closing of all editors as well.
+		String defaultPerspId = reg.getDefaultPerspective();
+		if (defaultPerspId != null) {
+			IPerspectiveDescriptor defaultPersp = reg.findPerspectiveWithId(defaultPerspId);
+			page.setPerspective(defaultPersp);
+		}
+		page.closePerspective(pDesc, true, false);
 		page.setPerspective(pDesc);
 	}
 
