@@ -29,14 +29,14 @@ public class PerspectiveProvider implements IElementProvider {
 			elements = new IElement[1];
 			elements[0] = new Group("Perspectives", PSP_GROUP_ALL, parent.getId());
 		} else if (parent.getId().equals(PSP_GROUP_ALL)) {
-			elements = new IElement[3];
-			elements[0] = new Group("My Perspectives", PSP_GROUP_PRIVATE, parent.getId());
-			((Group)elements[0]).setImageDescriptor(IconManager.getIconDescriptor("user.png"));
-			elements[1] = new Group("Team Perspectives", PSP_GROUP_TEAM, parent.getId());
-			((Group)elements[1]).setImageDescriptor(IconManager.getIconDescriptor("group.png"));
-			elements[2] = new Group("Public Perspectives", PSP_GROUP_PUBLIC, parent.getId());
-			((Group)elements[2]).setImageDescriptor(IconManager.getIconDescriptor("group.png"));
-		} else if (parent.getId().equals(PSP_GROUP_PRIVATE)) {
+//			elements = new IElement[3];
+//			elements[0] = new Group("My Perspectives", PSP_GROUP_PRIVATE, parent.getId());
+//			((Group)elements[0]).setImageDescriptor(IconManager.getIconDescriptor("user.png"));
+//			elements[1] = new Group("Team Perspectives", PSP_GROUP_TEAM, parent.getId());
+//			((Group)elements[1]).setImageDescriptor(IconManager.getIconDescriptor("group.png"));
+//			elements[2] = new Group("Public Perspectives", PSP_GROUP_PUBLIC, parent.getId());
+//			((Group)elements[2]).setImageDescriptor(IconManager.getIconDescriptor("group.png"));
+//		} else if (parent.getId().equals(PSP_GROUP_PRIVATE)) {
 			List<SavedPerspective> perspectives = PerspectiveService.getInstance().getPrivatePerspectives();
 			elements = createElements(perspectives, parent.getId());
 		} else if (parent.getId().equals(PSP_GROUP_TEAM)) {

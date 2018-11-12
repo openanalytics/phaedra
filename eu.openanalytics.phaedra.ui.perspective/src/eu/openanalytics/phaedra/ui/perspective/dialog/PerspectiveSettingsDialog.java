@@ -9,15 +9,12 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.security.model.AccessScope;
-import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.ui.perspective.Activator;
 import eu.openanalytics.phaedra.ui.perspective.PerspectiveService;
 import eu.openanalytics.phaedra.ui.perspective.vo.SavedPerspective;
@@ -30,7 +27,7 @@ public class PerspectiveSettingsDialog extends TitleAreaDialog {
 	private Text nameTxt;
 	private Text idTxt;
 	private Text ownerTxt;
-	private Combo accessCmb;
+//	private Combo accessCmb;
 	
 	public PerspectiveSettingsDialog(Shell parentShell, SavedPerspective perspective) {
 		super(parentShell);
@@ -74,11 +71,11 @@ public class PerspectiveSettingsDialog extends TitleAreaDialog {
 		ownerTxt.setText(perspective.getOwner());
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(ownerTxt);
 		
-		new Label(area, SWT.NONE).setText("Access:");
-		accessCmb = new Combo(area, SWT.READ_ONLY);
-		accessCmb.setItems(AccessScope.getScopeNames());
-		accessCmb.select(CollectionUtils.find(AccessScope.getScopeNames(), perspective.getAccessScope().getName()));
-		GridDataFactory.fillDefaults().grab(true, false).applyTo(accessCmb);
+//		new Label(area, SWT.NONE).setText("Access:");
+//		accessCmb = new Combo(area, SWT.READ_ONLY);
+//		accessCmb.setItems(AccessScope.getScopeNames());
+//		accessCmb.select(CollectionUtils.find(AccessScope.getScopeNames(), perspective.getAccessScope().getName()));
+//		GridDataFactory.fillDefaults().grab(true, false).applyTo(accessCmb);
 		
 		setTitle("Saved Perspective Settings");
 		setMessage("If you have the required permissions, you can modify the settings of the Saved Perspective below.");
@@ -98,7 +95,7 @@ public class PerspectiveSettingsDialog extends TitleAreaDialog {
 		try {
 			if (!editable) throw new IllegalStateException("Cannot update PSP: no permission");
 			perspective.setName(nameTxt.getText());
-			perspective.setAccessScope(AccessScope.values()[accessCmb.getSelectionIndex()]);
+//			perspective.setAccessScope(AccessScope.values()[accessCmb.getSelectionIndex()]);
 			PerspectiveService.getInstance().savePerspectiveSettings(perspective);
 		} catch (Exception e) {
 			ErrorDialog.openError(getShell(), "Update failed", "Failed to update the PSP", new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
