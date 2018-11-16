@@ -9,7 +9,7 @@ create table hca_reading (
 	file_name				varchar2(100),
 	file_part				number,
 	file_info				varchar2(500),
-	barcode					varchar2(50),
+	barcode					varchar2(64),
 	plate_rows				number,
 	plate_columns			number,
 	src_path				varchar2(300),
