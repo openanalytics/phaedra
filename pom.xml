@@ -127,6 +127,7 @@
 		<module>eu.openanalytics.phaedra.ui.link.importer</module>
 		<module>eu.openanalytics.phaedra.ui.link.platedef</module>
 		<module>eu.openanalytics.phaedra.ui.partsettings</module>
+		<module>eu.openanalytics.phaedra.ui.perspective</module>
 		<module>eu.openanalytics.phaedra.ui.plate</module>
 		<module>eu.openanalytics.phaedra.ui.protocol</module>
 		<module>eu.openanalytics.phaedra.ui.protocol.template</module>
