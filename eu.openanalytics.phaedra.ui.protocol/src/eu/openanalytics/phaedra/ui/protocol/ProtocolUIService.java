@@ -351,20 +351,21 @@ public class ProtocolUIService extends EventManager implements IFeatureProvider 
 			return;
 		}
 
-		IMemento[] features = memento.getChildren("f");
-		for (IMemento f: features) {
-			ProtocolClass pc = ProtocolService.getInstance().getProtocolClass(Long.parseLong(f.getString("pcId")));
-			Feature feature = ProtocolService.getInstance().getFeature(Long.parseLong(f.getString("id")));
-			currentFeatures.put(pc, feature);
-		}
-
-		IMemento[] featureGroups = memento.getChildren("fg");
-		for (IMemento fg: featureGroups) {
-			ProtocolClass pc = ProtocolService.getInstance().getProtocolClass(Long.parseLong(fg.getString("pcId")));
-			long groupId = Long.parseLong(fg.getString("id"));
-			FeatureGroup group = CollectionUtils.find(pc.getFeatureGroups(), g -> g.getId() == groupId);
-			currentFeatureGroups.put(pc, group);
-		}
+		// Disabled: poor performance, as this may trigger hundreds of small DB queries
+//		IMemento[] features = memento.getChildren("f");
+//		for (IMemento f: features) {
+//			ProtocolClass pc = ProtocolService.getInstance().getProtocolClass(Long.parseLong(f.getString("pcId")));
+//			Feature feature = ProtocolService.getInstance().getFeature(Long.parseLong(f.getString("id")));
+//			currentFeatures.put(pc, feature);
+//		}
+//
+//		IMemento[] featureGroups = memento.getChildren("fg");
+//		for (IMemento fg: featureGroups) {
+//			ProtocolClass pc = ProtocolService.getInstance().getProtocolClass(Long.parseLong(fg.getString("pcId")));
+//			long groupId = Long.parseLong(fg.getString("id"));
+//			FeatureGroup group = CollectionUtils.find(pc.getFeatureGroups(), g -> g.getId() == groupId);
+//			currentFeatureGroups.put(pc, group);
+//		}
 
 		// Disabled: by saving active normalizations, changes in the protocol class could not be seen anymore.
 //		IMemento[] normalizations = memento.getChildren("n");
