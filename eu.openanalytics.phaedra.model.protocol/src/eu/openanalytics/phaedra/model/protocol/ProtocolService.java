@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
@@ -379,7 +380,7 @@ public class ProtocolService extends BaseJPAService {
 				+ " (select count(subwellfeature_id) from phaedra.hca_subwellfeature where protocolclass_id = ?) swFeatures,"
 				+ " (select count(image_channel_id) from phaedra.hca_image_channel where image_setting_id = "
 				+ " 	(select image_setting_id from phaedra.hca_protocolclass where protocolclass_id = ?)) imageChannels "
-				+ " from dual";
+				+ JDBCUtils.getFromDual();
 		sql = sql.replace("?", "" + pClass.getId());
 
 		PreparedStatement ps = null;
@@ -462,8 +463,6 @@ public class ProtocolService extends BaseJPAService {
 		SecurityService.getInstance().checkWithException(Permissions.PROTOCOL_CREATE, protocolClass);
 		Protocol p = new Protocol();
 		p.setProtocolClass(protocolClass);
-		p.setImageSettings(new ImageSettings());
-		p.getImageSettings().setImageChannels(new ArrayList<ImageChannel>());
 		p.setName("New Protocol");
 		return p;
 	}

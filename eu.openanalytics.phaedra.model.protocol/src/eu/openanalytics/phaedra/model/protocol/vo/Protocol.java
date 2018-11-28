@@ -2,7 +2,6 @@ package eu.openanalytics.phaedra.model.protocol.vo;
 
 import java.io.Serializable;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -11,13 +10,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.eclipse.core.runtime.PlatformObject;
-import org.eclipse.persistence.annotations.JoinFetch;
-import org.eclipse.persistence.annotations.JoinFetchType;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 
 import eu.openanalytics.phaedra.base.cache.IgnoreSizeOf;
 import eu.openanalytics.phaedra.base.db.IValueObject;
@@ -41,15 +39,10 @@ public class Protocol extends PlatformObject implements IValueObject, IOwnedObje
 	private String description;
 
 	@IgnoreSizeOf
-	@JoinFetch(JoinFetchType.INNER)
-	@ManyToOne(fetch = FetchType.EAGER)
+	@BatchFetch(BatchFetchType.JOIN)
+	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="protocolclass_id")
 	private ProtocolClass protocolClass;
-
-	@IgnoreSizeOf
-	@OneToOne(cascade=CascadeType.ALL)
-	@JoinColumn(name="image_setting_id")
-	private ImageSettings imageSettings;
 
 	@Column(name="team_code")
 	private String teamCode;
@@ -86,14 +79,6 @@ public class Protocol extends PlatformObject implements IValueObject, IOwnedObje
 
 	public void setProtocolClass(ProtocolClass protocolClass) {
 		this.protocolClass = protocolClass;
-	}
-
-	public ImageSettings getImageSettings() {
-		return imageSettings;
-	}
-
-	public void setImageSettings(ImageSettings imageSettings) {
-		this.imageSettings = imageSettings;
 	}
 
 	public String getTeamCode() {

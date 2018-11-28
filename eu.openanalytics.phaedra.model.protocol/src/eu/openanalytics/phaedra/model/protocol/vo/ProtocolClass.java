@@ -7,6 +7,7 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -17,6 +18,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 
 import eu.openanalytics.phaedra.base.cache.IgnoreSizeOf;
 import eu.openanalytics.phaedra.base.db.IValueObject;
@@ -68,7 +71,8 @@ public class ProtocolClass extends PlatformObject implements IValueObject, IOwne
 	private String highWellTypeCode;
 
 	@IgnoreSizeOf
-	@OneToOne(cascade=CascadeType.ALL)
+	@BatchFetch(BatchFetchType.JOIN)
+	@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
 	@JoinColumn(name="image_setting_id")
 	private ImageSettings imageSettings;
 

@@ -45,7 +45,7 @@ public class ImageSettings implements IValueObject, Serializable {
 	private float pixelSizeZ;
 
 	@IgnoreSizeOf
-	@OneToMany(mappedBy="imageSettings", fetch=FetchType.EAGER, cascade=CascadeType.ALL, orphanRemoval=true)
+	@OneToMany(mappedBy="imageSettings", fetch=FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
 	@OrderColumn(name="channel_sequence")
 	private List<ImageChannel> imageChannels;
 
