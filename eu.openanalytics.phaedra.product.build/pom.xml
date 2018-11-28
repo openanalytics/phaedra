@@ -4,7 +4,7 @@
 	<groupId>eu.openanalytics.phaedra</groupId>
 	<artifactId>eu.openanalytics.phaedra.product.build</artifactId>
 	<packaging>eclipse-repository</packaging>
-	<version>1.0.5-SNAPSHOT</version>
+	<version>1.0.5</version>
 
 	<parent>
 		<groupId>eu.openanalytics.phaedra</groupId>
