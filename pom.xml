@@ -4,10 +4,10 @@
 	<groupId>eu.openanalytics.phaedra</groupId>
 	<artifactId>eu.openanalytics.phaedra.build</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.5</version>
 
 	<properties>
-		<tycho.version>0.24.0</tycho.version>
+		<tycho.version>0.25.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<build.tools.url>http://nexus.openanalytics.eu/nexus/content/sites/phaedra_build_tools</build.tools.url>
 		<maven.install.skip>true</maven.install.skip>
@@ -151,6 +151,14 @@
 			</plugin>
 			<plugin>
 				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-packaging-plugin</artifactId>
+				<version>${tycho.version}</version>
+				<configuration>
+					<strictVersions>false</strictVersions>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
 				<artifactId>target-platform-configuration</artifactId>
 				<version>${tycho.version}</version>
 				<configuration>
@@ -158,7 +166,7 @@
 						<artifact>
 							<groupId>eu.openanalytics.phaedra</groupId>
 							<artifactId>eu.openanalytics.phaedra.targetdef</artifactId>
-							<version>1.0.0-SNAPSHOT</version>
+							<version>${project.version}</version>
 						</artifact>
 					</target>
 					<environments>
