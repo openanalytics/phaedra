@@ -3,7 +3,7 @@ Eclipse-BuddyPolicy: global
 Bundle-ManifestVersion: 2
 Bundle-Name: JavaScript Engine
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.scripting.javascript;singleton:=true
-Bundle-Version: 1.0.5.qualifier
+Bundle-Version: 1.0.6.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.scripting.javascript.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,

@@ -4,7 +4,7 @@
 	<groupId>eu.openanalytics.phaedra</groupId>
 	<artifactId>eu.openanalytics.phaedra.build</artifactId>
 	<packaging>pom</packaging>
-	<version>1.0.5</version>
+	<version>1.0.6-SNAPSHOT</version>
 
 	<properties>
 		<tycho.version>0.25.0</tycho.version>
@@ -166,7 +166,7 @@
 						<artifact>
 							<groupId>eu.openanalytics.phaedra</groupId>
 							<artifactId>eu.openanalytics.phaedra.targetdef</artifactId>
-							<version>1.0.5</version>
+							<version>1.0.6-SNAPSHOT</version>
 						</artifact>
 					</target>
 					<environments>

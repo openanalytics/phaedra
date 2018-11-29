@@ -2,7 +2,7 @@
 <feature
       id="eu.openanalytics.phaedra.base.ui"
       label="Base UI"
-      version="1.0.5.qualifier"
+      version="1.0.6.qualifier"
       provider-name="OpenAnalytics">
 
    <description>
