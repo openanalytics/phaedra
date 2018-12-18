@@ -24,13 +24,13 @@ public class HTTPAPIClient implements APIClient {
 	@Override
 	public SessionToken login(String url, String username, String password) throws APIException {
 		this.baseURL = url;
-		String token = invokePost("login", res -> EntityUtils.toString(res.getEntity()));
+		String token = invokePost(String.format("/login?user=%s&password=%s", username, password), res -> EntityUtils.toString(res.getEntity()));
 		return new SessionToken(url, token);
 	}
 	
 	@Override
 	public void logout(SessionToken token) throws APIException {
-		invokePost("logout", null);
+		invokePost("/logout", null);
 	}
 
 	private <T> T invokePost(String operation, ResponseProcessor<T> responseProcessor) {
@@ -39,7 +39,7 @@ public class HTTPAPIClient implements APIClient {
 		try (CloseableHttpResponse res = httpClient.execute(post)) {
 			if (responseProcessor != null) return responseProcessor.process(res);
 		} catch (Exception e) {
-			throw new APIException("Failed to invoke " + operation + " at " + targetURL, e);
+			throw new APIException("Failed to invoke API at " + targetURL, e);
 		}
 		return null;
 	}
