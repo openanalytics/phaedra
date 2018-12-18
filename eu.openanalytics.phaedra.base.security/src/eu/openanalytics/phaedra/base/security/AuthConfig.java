@@ -17,6 +17,9 @@ public class AuthConfig extends ConfigResolver {
 	public static final String WIN_LOGON = "win.logon";
 	public static final String GLOBAL_ROLE = "global.role";
 	
+	// API server config
+	public static final String API_URL = "api.url";
+	
 	public AuthConfig() {
 		super("phaedra.auth.");
 	}

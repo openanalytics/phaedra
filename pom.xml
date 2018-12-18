@@ -63,6 +63,7 @@
 		<module>eu.openanalytics.phaedra.base.ui.trafficlight</module>
 		<module>eu.openanalytics.phaedra.base.ui.util</module>
 		<module>eu.openanalytics.phaedra.base.util</module>	
+		<module>eu.openanalytics.phaedra.api.client</module>
 
 		<module>eu.openanalytics.phaedra.base.imaging</module>
 		<module>eu.openanalytics.phaedra.base.imaging.jp2k</module>

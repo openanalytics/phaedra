@@ -19,6 +19,7 @@ public class LDAPSecureLoginHandler implements ILoginHandler {
 	    	ctx = LDAPUtils.bind(userName, password, ldapConfig);
 	    	SecurityService.getInstance().setCurrentUser(userName);
 	    	SecurityService.getInstance().setSecurityConfig(LDAPUtils.loadGroups(ctx, ldapConfig));
+	    	SecurityService.getInstance().registerAPIToken(userName, new String(password));
 		} finally {
 			if (ctx != null) try { ctx.close(); } catch (Exception e) {}
 		}

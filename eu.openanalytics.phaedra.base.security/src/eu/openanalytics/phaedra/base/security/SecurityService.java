@@ -9,6 +9,9 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.IAdaptable;
 
+import eu.openanalytics.phaedra.api.client.APIClientFactory;
+import eu.openanalytics.phaedra.api.client.APIClientSessionManager;
+import eu.openanalytics.phaedra.api.client.model.SessionToken;
 import eu.openanalytics.phaedra.base.security.ldap.LDAPSecureLoginHandler;
 import eu.openanalytics.phaedra.base.security.model.Group;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
@@ -37,10 +40,12 @@ public class SecurityService {
 
 	private ILoginHandler loginHandler;
 	private AuthConfig authConfig;
-
+	private APIClientSessionManager apiSessions;
+	
 	private SecurityService(AuthConfig authConfig) {
 		// Hidden constructor
 		this.authConfig = authConfig;
+		this.apiSessions = new APIClientSessionManager();
 		
 		if (authConfig == null) this.loginHandler = new EmbeddedLoginHandler();
 		else if (Boolean.valueOf(authConfig.get(AuthConfig.WIN_LOGON))) this.loginHandler = new WindowsLoginHandler(authConfig);
@@ -76,6 +81,18 @@ public class SecurityService {
 		return authConfig;
 	}
 
+	public void registerAPIToken(String username, String password) {
+		String apiURL = authConfig.get(AuthConfig.API_URL);
+    	if (apiURL != null && !apiURL.isEmpty()) {
+	    	SessionToken apiToken = APIClientFactory.createDefault().login(apiURL, username, password);
+	    	apiSessions.register(username, apiToken);
+    	}
+	}
+	
+	public SessionToken getCurrentUserAPIToken() {
+		return apiSessions.getToken(getCurrentUserName());
+	}
+	
 	public void setSecurityConfig(Map<Group, List<String>> securityConfig) {
 		this.securityConfig = securityConfig;
 	}

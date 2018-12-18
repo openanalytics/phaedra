@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Phaedra API Client
+Bundle-SymbolicName: eu.openanalytics.phaedra.api.client
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.api.client.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ org.apache.httpcomponents.httpclient;bundle-version="4.3.6",
+ org.apache.httpcomponents.httpcore;bundle-version="4.3.3"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: eu.openanalytics.phaedra.api.client
+Bundle-ActivationPolicy: lazy
+Export-Package: eu.openanalytics.phaedra.api.client,
+ eu.openanalytics.phaedra.api.client.model
