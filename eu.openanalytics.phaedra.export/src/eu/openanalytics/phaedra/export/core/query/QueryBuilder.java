@@ -39,7 +39,7 @@ public class QueryBuilder {
 		
 		sb.append(" WHERE");
 		sb.append(" E.EXPERIMENT_ID = P.EXPERIMENT_ID AND W.PLATE_ID = P.PLATE_ID");
-		sb.append(" AND P.PLATE_ID IN (SELECT PLATE_ID FROM PHAEDRA.HCA_PLATE WHERE EXPERIMENT_ID IN (${experimentIds}))");
+		sb.append(" AND E.EXPERIMENT_ID IN (${experimentIds})");
 
 		addPlateFilters(sb, settings);
 		addWellFilters(sb, settings);
@@ -109,7 +109,7 @@ public class QueryBuilder {
 
 		sb.append(" WHERE");
 		sb.append(" W.PLATE_ID = P.PLATE_ID AND F.FEATURE_ID = ${featureId}");
-		sb.append(" AND P.PLATE_ID IN (SELECT PLATE_ID FROM PHAEDRA.HCA_PLATES WHERE EXPERIMENT_ID IN (${experimentIds}))");
+		sb.append(" AND P.EXPERIMENT_ID IN (${experimentIds})");
 
 		addPlateFilters(sb, settings);
 		addWellFilters(sb, settings);
