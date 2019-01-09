@@ -19,6 +19,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import org.eclipse.persistence.annotations.Cache;
 import org.eclipse.persistence.annotations.JoinFetch;
 import org.eclipse.persistence.annotations.JoinFetchType;
@@ -57,6 +59,7 @@ public class Compound extends PlatformObject implements IValueObject, Serializab
 	private String description;
 
 	@IgnoreSizeOf
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="compound")
 	private List<Well> wells;
 

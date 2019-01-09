@@ -20,6 +20,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import org.eclipse.persistence.annotations.Cache;
 import org.eclipse.persistence.annotations.JoinFetch;
 import org.eclipse.persistence.annotations.JoinFetchType;
@@ -50,6 +52,7 @@ public class Plate extends PlatformObject implements IValueObject, Serializable 
 	private List<Well> wells;
 
 	@IgnoreSizeOf
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="plate") // Let DB handle cascade. If compounds are removed before wells, constraint errors will occur.
 	private List<Compound> compounds;
 

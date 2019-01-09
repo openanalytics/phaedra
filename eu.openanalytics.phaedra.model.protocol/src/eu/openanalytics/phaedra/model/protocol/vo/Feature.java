@@ -21,6 +21,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import org.eclipse.persistence.annotations.JoinFetch;
 import org.eclipse.persistence.annotations.JoinFetchType;
 
@@ -91,6 +93,7 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 
 	@IgnoreSizeOf
 	@ElementCollection
+	@BatchFetch(BatchFetchType.JOIN)
 	@MapKeyColumn(name="setting_name")
 	@Column(name="setting_value")
 	@CollectionTable(name="hca_curve_setting", schema="phaedra", joinColumns=@JoinColumn(name="feature_id"))
