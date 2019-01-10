@@ -68,7 +68,7 @@ public class JDBCUtils {
 	private static DbType dbType;
 	
 	public static void checkDbType(String url) {
-		dbType = DbType.getByURL(url);
+		if (dbType == null) dbType = DbType.getByURL(url);
 		if (dbType == DbType.Unknown) throw new RuntimeException("Unsupported database type: " + url);
 		loadJDBCDriver(url);
 	}
