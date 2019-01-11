@@ -34,11 +34,12 @@ public class DBDataSource implements ISubWellDataSource {
 
 	private static final String SCHEMA = "phaedra";
 	private static final String DATA_TABLE = "hca_subwelldata";
-	private static final String DATA_TABLE_PART = "hca_subwelldata_part_current";
 	private static final String MAPPING_TABLE = "hca_subwelldata_feature";
 	
 	private static final int MAX_FEATURES = JDBCUtils.isOracle() ? 998 : 1500;
 	private static final int MAX_ROWS_PER_WELL = 30000;
+
+	private String dataInsertTable = DATA_TABLE;
 	
 	public DBDataSource() {
 		ModelEventService.getInstance().addEventListener(event -> {
@@ -46,6 +47,9 @@ public class DBDataSource implements ISubWellDataSource {
 				deletePlateData((Plate) event.source);
 			}
 		});
+		
+		String diTable = Screening.getEnvironment().getConfig().getValue(Screening.getEnvironment().getName(), "db", "subwelldata.inserttable");
+		if (diTable != null && !diTable.isEmpty()) dataInsertTable = diTable;
 	}
 
 	@Override
@@ -243,7 +247,7 @@ public class DBDataSource implements ISubWellDataSource {
 						.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
 						.collect(Collectors.joining(","));
 				String args = dataForWell.keySet().stream().map(f -> "?").collect(Collectors.joining(","));
-				String queryString = String.format("insert into %s.%s(well_id,cell_id," + colNames + ") values (?,?," + args + ")", SCHEMA, getInsertDataTable());
+				String queryString = String.format("insert into %s.%s(well_id,cell_id," + colNames + ") values (?,?," + args + ")", SCHEMA, dataInsertTable);
 				
 				// Determine nr of cells (rows) for this well
 				int cellCount = 0;
@@ -381,23 +385,5 @@ public class DBDataSource implements ISubWellDataSource {
 	
 	private Connection getConnection() throws SQLException {
 		return Screening.getEnvironment().getJDBCConnection();
-	}
-	
-	private Boolean isPartitioned;
-	
-	private synchronized String getInsertDataTable() {
-		if (isPartitioned == null) {
-			try {
-				String sql = String.format("select count(*) from %s.%s", SCHEMA, DATA_TABLE_PART);
-				select(sql, rs -> {
-					rs.next();
-					return rs.getInt(1);
-				});
-				isPartitioned = true;
-			} catch (Exception e) {
-				isPartitioned = false;
-			}
-		}
-		return isPartitioned ? DATA_TABLE_PART : DATA_TABLE;
 	}
 }
