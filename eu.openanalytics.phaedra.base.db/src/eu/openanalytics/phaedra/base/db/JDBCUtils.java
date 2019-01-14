@@ -258,6 +258,14 @@ public class JDBCUtils {
 		}
 	}
 	
+	public static String selectConcat(String col1, String col2, char separator) {
+		if (isOracle()) {
+			return col1 + " ||'" + separator + "'|| " + col2;
+		} else {
+			return "concat_ws('" + separator + "', " + col1 + ", " + col2 + ")";
+		}
+	}
+	
 	public static String getDBSize(Connection conn) throws SQLException {
 		StringBuilder response = new StringBuilder();
 		if (isEmbedded()) {
