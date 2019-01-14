@@ -261,7 +261,8 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 					for (int i=0; i<plates.size(); i++) {
 						Plate plate = plates.get(i);
 						PlateLinkSettings plateSettings = new PlateLinkSettings();
-						plateSettings.setSettings(settings.getSettings());
+						plateSettings.setSettings(new HashMap<>());
+						plateSettings.getSettings().putAll(settings.getSettings());
 						plateSettings.getSettings().put("keepBarcodes", keepBarcodes);
 						plateSettings.getSettings().put("recalcPlates", recalcPlates);
 						plateSettings.setBarcode(barcodeMap.get(plate));
