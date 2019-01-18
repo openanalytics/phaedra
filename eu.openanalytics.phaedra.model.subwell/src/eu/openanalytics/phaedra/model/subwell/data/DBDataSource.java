@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
@@ -101,24 +102,6 @@ public class DBDataSource implements ISubWellDataSource {
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache, IProgressMonitor monitor) {
 		if (wells.isEmpty() || features.isEmpty()) return;
 		
-		String well_ids = wells.stream().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
-
-		// First, retrieve the cell count of each well.
-		Map<Well, Integer> cellCounts = new HashMap<>();
-		String sql = String.format("select well_id, count(*) as cellCount from %s.%s where well_id in (%s) group by well_id", SCHEMA, DATA_TABLE, well_ids);
-		select(sql, rs -> {
-			while (rs.next()) {
-				Well well = getWell(wells, rs.getLong("well_id"));
-				if (well != null) cellCounts.put(well, rs.getInt("cellCount"));
-			};
-			return null;
-		});
-
-		Map<SubWellFeature, Integer> featureMapping = getFeatureMapping(ProtocolUtils.getProtocolClass(wells.get(0)));
-		
-		String colNames = "*";
-		if (features.size() < 200) colNames = getColNames(featureMapping);
-
 		// Mark the whole set as cached, so empty wells are not queried again later.
 		for (Well well: wells) {
 			for (SubWellFeature feature: features) {
@@ -126,53 +109,100 @@ public class DBDataSource implements ISubWellDataSource {
 				else cache.putData(well, feature, (String[]) null);
 			}
 		}
+		
+		Map<SubWellFeature, Integer> featureMappingAll = getFeatureMapping(ProtocolUtils.getProtocolClass(wells.get(0)));
+		Map<SubWellFeature, Integer> featureMapping = new HashMap<>();
+		for (SubWellFeature f: features) {
+			featureMapping.put(f, featureMappingAll.get(f));
+		}
+		
+		String colNames = "*";
+		if (features.size() < 200) colNames = getColNames(featureMapping);
 
-		// The, retrieve the actual data for each well.
-		sql = String.format("select %s from %s.%s where well_id in (%s) order by well_id asc", colNames, SCHEMA, DATA_TABLE, well_ids);
-		select(sql, rs -> processResultSet(rs, cellCounts, wells, featureMapping, cache));
+		String well_ids = wells.stream().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
+		String sql = String.format("select %s from %s.%s where well_id in (%s) order by well_id asc", colNames, SCHEMA, DATA_TABLE, well_ids);
+		select(sql, rs -> processResultSet(rs, wells, featureMapping, cache));
 	}
 
-	private Object processResultSet(ResultSet rs, Map<Well, Integer> cellCounts, List<Well> wells, Map<SubWellFeature, Integer> features, SubWellDataCache cache) throws SQLException {
+	private Object processResultSet(ResultSet rs, List<Well> wells, Map<SubWellFeature, Integer> features, SubWellDataCache cache) throws SQLException {
 		Well currentWell = null;
 		Map<SubWellFeature, Object> currentWellData = new HashMap<>();
 
+		BiFunction<SubWellFeature, Integer, Object> dataArraySupplier = (feature, minSize) -> {
+			int newSize = 1000;
+			while (newSize < minSize) newSize += 1000;
+			
+			Object array = currentWellData.get(feature);
+			
+			if (array == null) {
+				// Create a new array with sufficient size
+				if (feature.isNumeric()) array = new float[newSize];
+				else array = new String[newSize];
+				currentWellData.put(feature, array);
+			} else {
+				// Ensure that the array has sufficient size
+				if (feature.isNumeric()) {
+					float[] numArray = (float[]) array;
+					if (numArray.length < minSize) {
+						array = Arrays.copyOf(numArray, newSize);
+						currentWellData.put(feature, array);
+					}
+				} else {
+					String[] strArray = (String[]) array;
+					if (strArray.length < minSize) {
+						array = Arrays.copyOf(strArray, newSize);
+						currentWellData.put(feature, array);
+					}
+				}
+			}
+			
+			return array;
+		};
+		
+		int cellCount = 0;
+		
 		while (rs.next()) {
-			long well_id = rs.getLong("well_id");
-			int cell_id = rs.getInt("cell_id");
-
-			if (currentWell == null || well_id != currentWell.getId()) {
-				addToCache(currentWell, currentWellData, cache);
-				currentWell = getWell(wells, well_id);
+			long wellId = rs.getLong("well_id");
+			int cellId = rs.getInt("cell_id");
+			
+			if (currentWell == null || wellId != currentWell.getId()) {
+				addToCache(currentWell, cellCount, currentWellData, cache);
+				currentWell = getWell(wells, wellId);
 				currentWellData.clear();
+				cellCount = 0;
 			}
 
-			int cellCount = cellCounts.get(currentWell);
+			cellCount = Math.max(cellCount, cellId + 1);
+			
 			for (SubWellFeature feature: features.keySet()) {
 				int index = features.get(feature);
 				if (feature.isNumeric()) {
 					float value = rs.getFloat(String.format("f%d_num_val", index));
-					if (!currentWellData.containsKey(feature)) currentWellData.put(feature, new float[cellCount]); 
-					float[] values = (float[]) currentWellData.get(feature);
-					values[cell_id] = value;
+					float[] values = (float[]) dataArraySupplier.apply(feature, cellCount);
+					values[cellId] = value;
 				} else {
 					String value = rs.getString(String.format("f%d_str_val", index));
-					if (!currentWellData.containsKey(feature)) currentWellData.put(feature, new String[cellCount]); 
-					String[] values = (String[]) currentWellData.get(feature);
-					values[cell_id] = value;
+					String[] values = (String[]) dataArraySupplier.apply(feature, cellCount);
+					values[cellId] = value;
 				}
 			}
-
 		}
 
-		addToCache(currentWell, currentWellData, cache);
+		addToCache(currentWell, cellCount, currentWellData, cache);
 		return null;
 	}
 
-	private void addToCache(Well well, Map<SubWellFeature, Object> data, SubWellDataCache cache) {
+	private void addToCache(Well well, int cellCount, Map<SubWellFeature, Object> data, SubWellDataCache cache) {
 		if (well == null || data.isEmpty()) return;
+		
 		for (SubWellFeature feature: data.keySet()) {
-			if (feature.isNumeric()) cache.putData(well, feature, (float[]) data.get(feature));
-			else cache.putData(well, feature, (String[]) data.get(feature));
+			Object array = data.get(feature);
+			if (array == null) continue;
+			if (feature.isNumeric()) {
+				cache.putData(well, feature, Arrays.copyOf((float[]) array, cellCount));
+			} else {
+				cache.putData(well, feature, Arrays.copyOf((String[]) array, cellCount));
+			}
 		}
 	}
 
@@ -267,7 +297,8 @@ public class DBDataSource implements ISubWellDataSource {
 				
 				// Create a TEMP table
 				try (Statement stmt = conn.createStatement()) {
-					stmt.execute("create temp table tmp_subwelldata (well_id bigint, cell_id bigint, num_val float)");
+					stmt.execute("create temp table if not exists tmp_subwelldata (well_id bigint, cell_id bigint, num_val float)");
+					stmt.execute("delete from tmp_subwelldata");
 				}
 				
 				// Put the new data into the TEMP table
@@ -277,8 +308,8 @@ public class DBDataSource implements ISubWellDataSource {
 				// Update the actual table using the TEMP table
 				try (Statement stmt = conn.createStatement()) {
 					String colName = String.format("f%d_num_val", featureMapping.get(feature));
-					String sql = String.format("update %s.%s set %s = tmp.num_val from tmp_subwelldata tmp"
-							+ " where well_id = tmp.well_id and cell_id = tmp.cell_id", SCHEMA, DATA_TABLE, colName);
+					String sql = String.format("update %s.%s sw set %s = tmp.num_val from tmp_subwelldata tmp"
+							+ " where sw.well_id = tmp.well_id and sw.cell_id = tmp.cell_id", SCHEMA, DATA_TABLE, colName);
 					stmt.execute(sql);
 				}
 			}
@@ -294,6 +325,11 @@ public class DBDataSource implements ISubWellDataSource {
 		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
 		if (data.isEmpty() || wells.isEmpty()) return;
 		
+		if (JDBCUtils.isPostgres()) {
+			insertDataPostgres(data, featureMapping);
+			return;
+		}
+
 		try (Connection conn = getConnection()) {
 			for (Well well: wells) {
 				Map<SubWellFeature, Object> dataForWell = new HashMap<>();
@@ -340,6 +376,69 @@ public class DBDataSource implements ISubWellDataSource {
 			}
 			conn.commit();
 		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
+	private void insertDataPostgres(Map<SubWellFeature, Map<Well, Object>> data, Map<SubWellFeature, Integer> featureMapping) {
+		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
+		if (data.isEmpty() || wells.isEmpty()) return;
+		List<SubWellFeature> orderedFeatures = new ArrayList<>(data.keySet());
+		
+		// Format the data as CSV
+		byte[] csvBytes = null;
+		try {
+			ByteArrayOutputStream csv = new ByteArrayOutputStream();
+			BufferedWriter csvWriter = new BufferedWriter(new OutputStreamWriter(csv));
+			
+			for (Well well: wells) {
+				int cellCount = data.keySet().stream().mapToInt(f -> {
+					Object values = data.get(f).get(well);
+					if (values instanceof float[]) return ((float[]) values).length;
+					else if (values instanceof String[]) return ((String[]) values).length;
+					else return 0;
+				}).max().orElse(0);
+				
+				for (int cellId = 0; cellId < cellCount; cellId++) {
+					String[] line = new String[orderedFeatures.size() + 2];
+					line[0] = String.valueOf(well.getId());
+					line[1] = String.valueOf(cellId);
+					
+					for (int fIndex = 0; fIndex < orderedFeatures.size(); fIndex++) {
+						SubWellFeature f = orderedFeatures.get(fIndex);
+						if (f.isNumeric()) {
+							float[] numVal = (float[]) data.get(f).get(well);
+							if (numVal == null || cellId >= numVal.length) line[fIndex + 2] = "";
+							else line[fIndex + 2] = String.valueOf(numVal[cellId]);						
+						} else {
+							String[] strVal = (String[]) data.get(f).get(well);
+							if (strVal == null || cellId >= strVal.length) line[fIndex + 2] = "";
+							else line[fIndex + 2] = strVal[cellId];
+						}
+					}
+					
+					String lineStr = Arrays.stream(line).collect(Collectors.joining(","));
+					csvWriter.write(lineStr + "\n");
+				}
+			}
+			
+			csvWriter.flush();
+			csvBytes = csv.toByteArray();
+		} catch (IOException e) {
+			throw new PersistenceException(e);
+		}
+		
+		try (Connection conn = getConnection()) {
+			String colNames = orderedFeatures.stream()
+					.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
+					.collect(Collectors.joining(","));
+			String sql = String.format("copy %s.%s (well_id,cell_id,%s) from stdin (format csv)", SCHEMA, DATA_TABLE, colNames);
+			
+			CopyManager cm = conn.unwrap(PgConnection.class).getCopyAPI();
+			cm.copyIn(sql, new ByteArrayInputStream(csvBytes));
+			
+			conn.commit();
+		} catch (IOException | SQLException e) {
 			throw new PersistenceException(e);
 		}
 	}
