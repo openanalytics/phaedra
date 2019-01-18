@@ -1,5 +1,10 @@
 package eu.openanalytics.phaedra.model.subwell.data;
 
+import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +21,8 @@ import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.jdbc.PgConnection;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
@@ -189,6 +196,10 @@ public class DBDataSource implements ISubWellDataSource {
 			insertData(data, featureMapping);
 			return;
 		}
+		if (JDBCUtils.isPostgres()) {
+			updateDataPostgres(data, featureMapping);
+			return;
+		}
 		
 		for (SubWellFeature feature: data.keySet()) {
 			String colName = String.format(feature.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(feature));
@@ -232,6 +243,53 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 
+	private void updateDataPostgres(Map<SubWellFeature, Map<Well, Object>> data, Map<SubWellFeature, Integer> featureMapping) {
+		try (Connection conn = getConnection()) {
+			boolean isAutoCommit = conn.getAutoCommit();
+			conn.setAutoCommit(false);
+			
+			for (SubWellFeature feature: data.keySet()) {
+				Map<Well, Object> featureData = data.get(feature);
+				
+				// Format the data as CSV
+				ByteArrayOutputStream csv = new ByteArrayOutputStream();
+				BufferedWriter csvWriter = new BufferedWriter(new OutputStreamWriter(csv));
+				for (Well well: featureData.keySet()) {
+					if (feature.isNumeric()) {
+						float[] numVal = (float[]) featureData.get(well);
+						for (int cell_id = 0; cell_id < numVal.length; cell_id++) {
+							csvWriter.write(well.getId() + "," + cell_id + "," + numVal[cell_id] + "\n");
+						}
+					}
+				}
+				csvWriter.flush();
+				byte[] csvBytes = csv.toByteArray();
+				
+				// Create a TEMP table
+				try (Statement stmt = conn.createStatement()) {
+					stmt.execute("create temp table tmp_subwelldata (well_id bigint, cell_id bigint, num_val float)");
+				}
+				
+				// Put the new data into the TEMP table
+				CopyManager cm = conn.unwrap(PgConnection.class).getCopyAPI();
+				cm.copyIn("copy tmp_subwelldata from stdin (format csv)", new ByteArrayInputStream(csvBytes));
+				
+				// Update the actual table using the TEMP table
+				try (Statement stmt = conn.createStatement()) {
+					String colName = String.format("f%d_num_val", featureMapping.get(feature));
+					String sql = String.format("update %s.%s set %s = tmp.num_val from tmp_subwelldata tmp"
+							+ " where well_id = tmp.well_id and cell_id = tmp.cell_id", SCHEMA, DATA_TABLE, colName);
+					stmt.execute(sql);
+				}
+			}
+			
+			conn.commit();
+			conn.setAutoCommit(isAutoCommit);
+		} catch (IOException | SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
 	private void insertData(Map<SubWellFeature, Map<Well, Object>> data, Map<SubWellFeature, Integer> featureMapping) {
 		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
 		if (data.isEmpty() || wells.isEmpty()) return;

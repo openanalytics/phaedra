@@ -87,6 +87,10 @@ public class JDBCUtils {
 		return dbType == DbType.Oracle;
 	}
 
+	public static boolean isPostgres() {
+		return dbType == DbType.Postgresql;
+	}
+
 	public static boolean isEmbedded() {
 		return dbType == DbType.H2;
 	}
