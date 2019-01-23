@@ -186,9 +186,10 @@ public class SubwellDataProcessor {
 			
 			for (ParsedWell well: parsedFields) {
 				int fieldNr = Integer.parseInt(well.getKeyword("Field"));
-				int cellCount = well.getSubWellData().get(parsedFeatures[0]).getCellCount();
+				ParsedSubWellDataset sampleDs = well.getSubWellData().get(parsedFeatures[0]);
+				int cellCount = (sampleDs == null) ? 0 : sampleDs.getCellCount();
+				
 				for (int row=0; row<cellCount; row++) {
-					
 					String[] rowValues = new String[featureCount];
 					
 					// If we are processing a single-file well, obtain the field nr from the "Field" feature.
