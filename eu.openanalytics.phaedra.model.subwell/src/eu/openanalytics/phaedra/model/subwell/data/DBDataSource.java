@@ -4,7 +4,10 @@ import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -383,64 +386,72 @@ public class DBDataSource implements ISubWellDataSource {
 	private void insertDataPostgres(Map<SubWellFeature, Map<Well, Object>> data, Map<SubWellFeature, Integer> featureMapping) {
 		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
 		if (data.isEmpty() || wells.isEmpty()) return;
-		List<SubWellFeature> orderedFeatures = new ArrayList<>(data.keySet());
-		
-		// Format the data as CSV
-		byte[] csvBytes = null;
-		try {
-			ByteArrayOutputStream csv = new ByteArrayOutputStream();
-			BufferedWriter csvWriter = new BufferedWriter(new OutputStreamWriter(csv));
-			
-			for (Well well: wells) {
-				int cellCount = data.keySet().stream().mapToInt(f -> {
-					Object values = data.get(f).get(well);
-					if (values instanceof float[]) return ((float[]) values).length;
-					else if (values instanceof String[]) return ((String[]) values).length;
-					else return 0;
-				}).max().orElse(0);
-				
-				for (int cellId = 0; cellId < cellCount; cellId++) {
-					String[] line = new String[orderedFeatures.size() + 2];
-					line[0] = String.valueOf(well.getId());
-					line[1] = String.valueOf(cellId);
-					
-					for (int fIndex = 0; fIndex < orderedFeatures.size(); fIndex++) {
-						SubWellFeature f = orderedFeatures.get(fIndex);
-						if (f.isNumeric()) {
-							float[] numVal = (float[]) data.get(f).get(well);
-							if (numVal == null || cellId >= numVal.length) line[fIndex + 2] = "";
-							else line[fIndex + 2] = String.valueOf(numVal[cellId]);						
-						} else {
-							String[] strVal = (String[]) data.get(f).get(well);
-							if (strVal == null || cellId >= strVal.length) line[fIndex + 2] = "";
-							else line[fIndex + 2] = strVal[cellId];
-						}
-					}
-					
-					String lineStr = Arrays.stream(line).collect(Collectors.joining(","));
-					csvWriter.write(lineStr + "\n");
-				}
-			}
-			
-			csvWriter.flush();
-			csvBytes = csv.toByteArray();
-		} catch (IOException e) {
-			throw new PersistenceException(e);
-		}
 		
 		try (Connection conn = getConnection()) {
+			List<SubWellFeature> orderedFeatures = new ArrayList<>(data.keySet());
 			String colNames = orderedFeatures.stream()
 					.map(f -> String.format(f.isNumeric() ? "f%d_num_val" : "f%d_str_val", featureMapping.get(f)))
 					.collect(Collectors.joining(","));
 			String sql = String.format("copy %s.%s (well_id,cell_id,%s) from stdin (format csv)", SCHEMA, DATA_TABLE, colNames);
 			
 			CopyManager cm = conn.unwrap(PgConnection.class).getCopyAPI();
-			cm.copyIn(sql, new ByteArrayInputStream(csvBytes));
+			try (InputStream input = createDataStreamCopier(data, orderedFeatures)) {
+				cm.copyIn(sql, input);
+			}
 			
 			conn.commit();
 		} catch (IOException | SQLException e) {
 			throw new PersistenceException(e);
 		}
+	}
+	
+	private InputStream createDataStreamCopier(Map<SubWellFeature, Map<Well, Object>> data, List<SubWellFeature> orderedFeatures) throws IOException {
+		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
+		
+		PipedInputStream input = new PipedInputStream(1024*1024*50);
+		PipedOutputStream output = new PipedOutputStream(input);
+
+		Runnable dataCopier = () -> {
+			try (BufferedWriter csvWriter = new BufferedWriter(new OutputStreamWriter(output))) {
+				for (Well well: wells) {
+					int cellCount = data.keySet().stream().mapToInt(f -> {
+						Object values = data.get(f).get(well);
+						if (values instanceof float[]) return ((float[]) values).length;
+						else if (values instanceof String[]) return ((String[]) values).length;
+						else return 0;
+					}).max().orElse(0);
+					
+					for (int cellId = 0; cellId < cellCount; cellId++) {
+						String[] line = new String[orderedFeatures.size() + 2];
+						line[0] = String.valueOf(well.getId());
+						line[1] = String.valueOf(cellId);
+						
+						for (int fIndex = 0; fIndex < orderedFeatures.size(); fIndex++) {
+							SubWellFeature f = orderedFeatures.get(fIndex);
+							if (f.isNumeric()) {
+								float[] numVal = (float[]) data.get(f).get(well);
+								if (numVal == null || cellId >= numVal.length) line[fIndex + 2] = "";
+								else line[fIndex + 2] = String.valueOf(numVal[cellId]);						
+							} else {
+								String[] strVal = (String[]) data.get(f).get(well);
+								if (strVal == null || cellId >= strVal.length) line[fIndex + 2] = "";
+								else line[fIndex + 2] = strVal[cellId];
+							}
+						}
+						
+						String lineStr = Arrays.stream(line).collect(Collectors.joining(","));
+						csvWriter.write(lineStr + "\n");
+					}
+					
+					csvWriter.flush();
+				}
+			} catch (IOException e) {
+				throw new PersistenceException(e);
+			}
+		};
+
+		new Thread(dataCopier, "Data Stream Copier").start();
+		return input;
 	}
 	
 	private void deletePlateData(Plate plate) {
