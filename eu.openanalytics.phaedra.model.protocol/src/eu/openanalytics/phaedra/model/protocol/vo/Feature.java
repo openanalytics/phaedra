@@ -55,6 +55,7 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 	private ProtocolClass protocolClass;
 
 	@IgnoreSizeOf
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="wellFeature", cascade=CascadeType.ALL, orphanRemoval=true)
 	private List<FeatureClass> featureClasses;
 
@@ -110,6 +111,7 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 
 	@IgnoreSizeOf
 	@ElementCollection
+	@BatchFetch(BatchFetchType.JOIN)
 	@MapKeyColumn(name="setting_name")
 	@Column(name="setting_value")
 	@CollectionTable(name="hca_colormethod_setting", schema="phaedra", joinColumns=@JoinColumn(name="feature_id"))

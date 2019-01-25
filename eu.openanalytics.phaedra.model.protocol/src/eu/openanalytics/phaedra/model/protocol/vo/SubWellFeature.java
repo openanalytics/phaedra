@@ -17,6 +17,8 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.eclipse.core.runtime.PlatformObject;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import org.eclipse.persistence.annotations.JoinFetch;
 import org.eclipse.persistence.annotations.JoinFetchType;
 
@@ -47,6 +49,7 @@ public class SubWellFeature extends PlatformObject implements IFeature, Serializ
 	private ProtocolClass protocolClass;
 
 	@IgnoreSizeOf
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="subWellFeature", cascade=CascadeType.ALL, orphanRemoval=true)
 	private List<FeatureClass> featureClasses;
 
