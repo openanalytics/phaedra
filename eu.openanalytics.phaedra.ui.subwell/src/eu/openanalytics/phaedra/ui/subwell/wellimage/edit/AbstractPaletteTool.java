@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -110,13 +111,14 @@ public abstract class AbstractPaletteTool implements IPaletteTool {
 				"Do you want to save the changes made to " + getDrawnObjects().size() + " well(s)?");
 		if (!confirmed) return;
 		
-		//TODO Closing the image provider during save will result in much faster JP2K update.
+		AtomicBoolean saveSuccess = new AtomicBoolean(false);
 		Shell shell = Display.getCurrent().getActiveShell();
 		try {
 			new ProgressMonitorDialog(shell).run(true, false,
 				(monitor) -> {
 					try {
 						doSave(monitor);
+						saveSuccess.set(true);
 					} catch (IOException e) {
 						throw new InvocationTargetException(e);
 					}
@@ -127,9 +129,11 @@ public abstract class AbstractPaletteTool implements IPaletteTool {
 			ErrorDialog.openError(shell, "Error while saving", "Failed to save changes", status);
 		}
 		
-		host.toggleDrawMode(false);
-		host.setDirty(false);
-		reset();
+		if (saveSuccess.get()) {
+			host.toggleDrawMode(false);
+			host.setDirty(false);
+			reset();
+		}
 	}
 
 	@Override

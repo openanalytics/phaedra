@@ -112,10 +112,14 @@ public class DrawCellsPaletteTool extends AbstractPaletteTool {
 
 	@Override
 	public void restoreState(IMemento memento) {
-		xFeature = PaletteStateHelper.getSubWellFeature(memento, "xFeature");
-		yFeature = PaletteStateHelper.getSubWellFeature(memento, "yFeature");
-		sizeFeature = PaletteStateHelper.getSubWellFeature(memento, "sizeFeature");
-		classificationFeature = PaletteStateHelper.getSubWellFeature(memento, "classificationFeature");
+		SubWellFeature memXFeature = PaletteStateHelper.getSubWellFeature(memento, "xFeature");
+		if (memXFeature != null) xFeature = memXFeature;
+		SubWellFeature memYFeature = PaletteStateHelper.getSubWellFeature(memento, "yFeature");
+		if (memYFeature != null) yFeature = memYFeature;
+		SubWellFeature memSizeFeature = PaletteStateHelper.getSubWellFeature(memento, "sizeFeature");
+		if (memSizeFeature != null) sizeFeature = memSizeFeature;
+		SubWellFeature memClassificationFeature = PaletteStateHelper.getSubWellFeature(memento, "classificationFeature");
+		if (memClassificationFeature != null) classificationFeature = memClassificationFeature;
 		if (intensityFeatures != null) intensityFeatures.load(memento);
 	}
 
