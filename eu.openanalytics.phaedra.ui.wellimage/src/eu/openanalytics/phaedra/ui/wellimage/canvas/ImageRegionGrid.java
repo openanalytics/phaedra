@@ -15,11 +15,13 @@ public class ImageRegionGrid {
 
 	private Point fullImageSize;
 	private Point cellSize;
+	private float scale;
 	private List<Rectangle> imageGrid;
 	
-	public ImageRegionGrid(Point fullImageSize, Point cellSize) {
+	public ImageRegionGrid(Point fullImageSize, Point cellSize, float scale) {
 		this.fullImageSize = fullImageSize;
 		this.cellSize = cellSize;
+		this.scale = scale;
 		calculateGrid();
 	}
 
@@ -99,16 +101,19 @@ public class ImageRegionGrid {
 		imageGrid = new ArrayList<>();
 		int x = 0;
 		int y = 0;
+		Point scaledCellSize = SWTUtils.scale(cellSize, 1.0f/scale);
+		
 		while (y < fullImageSize.y) {
 			while (x < fullImageSize.x) {
-				int width = Math.min(cellSize.x, fullImageSize.x - x);
-				int height = Math.min(cellSize.y, fullImageSize.y - y);
+				int width = Math.min(scaledCellSize.x, fullImageSize.x - x);
+				int height = Math.min(scaledCellSize.y, fullImageSize.y - y);
 				Rectangle cell = new Rectangle(x, y, width, height);
 				imageGrid.add(cell);
-				x += cellSize.x;
+				x += scaledCellSize.x;
 			}
 			x = 0;
-			y += cellSize.y;
+			y += scaledCellSize.y;
 		}
+		System.out.println("Generating image grid: " + fullImageSize + ", cell size: " + scaledCellSize + " = " + imageGrid.size());
 	}
 }
