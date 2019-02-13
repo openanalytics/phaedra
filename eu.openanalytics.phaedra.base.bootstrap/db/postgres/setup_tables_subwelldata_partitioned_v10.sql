@@ -17,7 +17,7 @@ grant INSERT, UPDATE, DELETE on phaedra.hca_subwellfeature_value to :accountName
 grant SELECT on phaedra.hca_subwellfeature_value to :accountNameRead;
 
 -- -----------------------------------------------------------------------
--- Partition tablesfmic
+-- Partition tables
 -- -----------------------------------------------------------------------
 
 create table phaedra.hca_subwellfeature_value_part_current
