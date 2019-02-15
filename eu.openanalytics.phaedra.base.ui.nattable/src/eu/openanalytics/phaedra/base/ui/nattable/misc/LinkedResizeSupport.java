@@ -68,6 +68,7 @@ public class LinkedResizeSupport {
 	private static void handleColumnResize(SizeManager sm, int colPosition) {
 		int newWidth = sm.table.getColumnWidthByPosition(colPosition);
 		if (newWidth == 0 || sm.currentWidth == newWidth) return;
+		if (newWidth == Integer.MAX_VALUE) newWidth = 50;
 		sm.currentWidth = newWidth;
 		sm.currentHeight = (int) (sm.currentWidth / sm.aspectRatio);
 		resetSize(sm);
@@ -76,6 +77,7 @@ public class LinkedResizeSupport {
 	private static void handleRowResize(SizeManager sm, int rowPosition) {
 		int newHeight = sm.table.getRowHeightByPosition(rowPosition);
 		if (newHeight == 0 || sm.currentHeight == newHeight) return;
+		if (newHeight == Integer.MAX_VALUE) newHeight = 50;
 		sm.currentHeight = newHeight;
 		sm.currentWidth = (int) (sm.currentHeight * sm.aspectRatio);
 		resetSize(sm);
