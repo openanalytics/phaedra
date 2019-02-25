@@ -228,7 +228,7 @@ public class DBDataSource implements ISubWellDataSource {
 			for (SubWellFeature feature: data.keySet()) {
 				Map<Well, Object> featureData = data.get(feature);
 				for (Well well: featureData.keySet()) {
-					if (feature.isNumeric()) {
+					if (feature.isNumeric() && featureData.get(well) != null) {
 						csvWriter.write(well.getId() + "," + feature.getId() + ",\"{");
 						float[] numVal = (float[]) featureData.get(well);
 						for (int cellId = 0; cellId < numVal.length; cellId++) {
@@ -240,7 +240,7 @@ public class DBDataSource implements ISubWellDataSource {
 				}
 			}
 			csvWriter.flush();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			EclipseLog.error(String.format("Failed to dump subwelldata to CSV"), e, Platform.getBundle(Activator.class.getPackage().getName()));
 		}
 	}
