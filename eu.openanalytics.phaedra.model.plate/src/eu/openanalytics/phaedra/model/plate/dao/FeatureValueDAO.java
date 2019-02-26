@@ -1,5 +1,11 @@
 package eu.openanalytics.phaedra.model.plate.dao;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -9,12 +15,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
+import org.eclipse.core.runtime.Platform;
+import org.postgresql.copy.CopyManager;
+import org.postgresql.jdbc.PgConnection;
+
 import eu.openanalytics.phaedra.base.db.IValueObject;
+import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.plate.Activator;
@@ -247,23 +259,27 @@ public class FeatureValueDAO {
 				conn.commit();
 			} else {
 				// Insert all values
-				String queryString = "insert into phaedra.hca_feature_value (raw_numeric_value, raw_string_value, normalized_value, well_id, feature_id) values(?,?,?,?,?)";
-				ps = conn.prepareStatement(queryString);
-
-				for (Well well: p.getWells()) {
-					int wellNr = PlateUtils.getWellNr(well);
-					double raw = (rawValues == null) ? Double.NaN : rawValues[wellNr-1];
-					String str = (rawStringValues == null) ? null : rawStringValues[wellNr-1];
-					double norm = (normValues == null) ? Double.NaN : normValues[wellNr-1];
-					ps.setDouble(1, raw);
-					ps.setString(2, str);
-					ps.setDouble(3, norm);
-					ps.setLong(4, well.getId());
-					ps.setLong(5, f.getId());
-					ps.addBatch();
+				if (JDBCUtils.isPostgres()) {
+					insertValuesPostgres(p, f, rawValues, rawStringValues, normValues);
+				} else {
+					String queryString = "insert into phaedra.hca_feature_value (raw_numeric_value, raw_string_value, normalized_value, well_id, feature_id) values(?,?,?,?,?)";
+					ps = conn.prepareStatement(queryString);
+					
+					for (Well well: p.getWells()) {
+						int wellNr = PlateUtils.getWellNr(well);
+						double raw = (rawValues == null) ? Double.NaN : rawValues[wellNr-1];
+						String str = (rawStringValues == null) ? null : rawStringValues[wellNr-1];
+						double norm = (normValues == null) ? Double.NaN : normValues[wellNr-1];
+						ps.setDouble(1, raw);
+						ps.setString(2, str);
+						ps.setDouble(3, norm);
+						ps.setLong(4, well.getId());
+						ps.setLong(5, f.getId());
+						ps.addBatch();
+					}
+					ps.executeBatch();
+					conn.commit();
 				}
-				ps.executeBatch();
-				conn.commit();
 			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
@@ -342,4 +358,41 @@ public class FeatureValueDAO {
 		return newList.stream().map(o -> o.getId()+"").collect(Collectors.joining(","));
 	}
 
+	private void insertValuesPostgres(Plate p, Feature f, double[] rawValues, String[] rawStringValues, double[] normValues) {
+		Consumer<OutputStream> csvStreamer = out -> {
+			try (BufferedWriter csvWriter = new BufferedWriter(new OutputStreamWriter(out))) {
+				for (Well well: p.getWells()) {
+					int wellNr = PlateUtils.getWellNr(well);
+					double raw = (rawValues == null) ? Double.NaN : rawValues[wellNr-1];
+					String str = (rawStringValues == null) ? null : rawStringValues[wellNr-1];
+					double norm = (normValues == null) ? Double.NaN : normValues[wellNr-1];
+					String[] line = {
+							String.valueOf(well.getId()),
+							String.valueOf(f.getId()),
+							String.valueOf(raw),
+							String.valueOf(str),
+							String.valueOf(norm)
+					};
+					csvWriter.write(Arrays.stream(line).collect(Collectors.joining(",")) + "\n");
+				}
+				csvWriter.flush();
+			} catch (Exception e) {
+				EclipseLog.error(String.format("Failed to stream welldata to CSV"), e, Platform.getBundle(Activator.class.getPackage().getName()));
+			}
+		};
+		
+		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+			String sql = String.format("copy phaedra.hca_feature_value (well_id,feature_id,raw_numeric_value,raw_string_value,normalized_value) from stdin (format csv)");
+			CopyManager cm = conn.unwrap(PgConnection.class).getCopyAPI();
+			
+			try (PipedInputStream input = new PipedInputStream(1024*1024*10)) {
+				PipedOutputStream output = new PipedOutputStream(input);
+				new Thread(() -> { csvStreamer.accept(output); } , "Data Stream Copier").start();
+				cm.copyIn(sql, input);
+			}
+			conn.commit();
+		} catch (IOException | SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
 }

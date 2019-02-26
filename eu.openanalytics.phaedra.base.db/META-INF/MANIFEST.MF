@@ -17,7 +17,7 @@ Require-Bundle: org.eclipse.core.runtime,
  javax.validation;bundle-version="1.0.0";visibility:=reexport,
  com.zaxxer.HikariCP,
  com.oracle.jdbc;bundle-version="11.2.0",
- org.postgresql.jdbc;bundle-version="9.3.0",
+ org.postgresql.jdbc;bundle-version="9.3.0";visibility:=reexport,
  org.h2;bundle-version="1.4.191",
  org.monetdb.jdbc;bundle-version="2.26.0",
  com.mysql.jdbc;bundle-version="5.1.40"
