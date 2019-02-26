@@ -1,12 +1,16 @@
 package eu.openanalytics.phaedra.calculation.jep;
 
 import java.util.Arrays;
+import java.util.Collections;
+
+import org.eclipse.core.runtime.NullProgressMonitor;
 
 import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationException;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
@@ -44,6 +48,11 @@ public class SubWellFeatureScanner extends BaseScanner<Well> {
 	}
 	
 	private float[] getSubwellData(Well well, SubWellFeature feature, String normalization) {
+		Plate plate = well.getPlate();
+		synchronized (plate) {
+			SubWellService.getInstance().preloadData(plate.getWells(), Collections.singletonList(feature), new NullProgressMonitor());
+		}
+		
 		float[] featureData = SubWellService.getInstance().getNumericData(well, feature);
 		if (featureData == null || featureData.length == 0) return null;
 
