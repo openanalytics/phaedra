@@ -164,8 +164,8 @@ public class SelectProtocol extends BaseStatefulWizardPage {
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
-				Protocol p = (Protocol)element;
-				return p.getProtocolClass().getName();
+				Protocol p = (Protocol) element;
+				return (p == null || p.getProtocolClass() == null) ? "" : p.getProtocolClass().getName();
 			}
 		};
 		config.setLabelProvider(labelProvider);
