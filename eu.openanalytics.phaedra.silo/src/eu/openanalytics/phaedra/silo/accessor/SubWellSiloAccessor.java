@@ -86,14 +86,14 @@ public class SubWellSiloAccessor extends AbstractSiloAccessor<SubWellItem> {
 			switch (column.getType()) {
 			case Float:
 				float[] fData = columnData.getFloatData();
-				fData[dataIndex] = numericData[item.getIndex()];
+				fData[dataIndex] = (numericData == null) ? Float.NaN : numericData[item.getIndex()];
 				break;
 			case Long:
 				long[] lData = columnData.getLongData();
-				lData[dataIndex] = (long) numericData[item.getIndex()];
+				lData[dataIndex] = (numericData == null) ? 0 : (long) numericData[item.getIndex()];
 			case String:
 				String[] sData = columnData.getStringData();
-				sData[dataIndex] = stringData[item.getIndex()];
+				sData[dataIndex] = (stringData == null) ? null : stringData[item.getIndex()];
 			default:
 				// Nothing to set.
 			}
