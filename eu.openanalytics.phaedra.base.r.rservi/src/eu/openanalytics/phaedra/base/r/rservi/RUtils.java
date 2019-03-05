@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.eclipse.statet.rj.data.RCharacterStore;
 import org.eclipse.statet.rj.data.RDataFrame;
@@ -16,6 +17,8 @@ import org.eclipse.statet.rj.data.RVector;
 import org.eclipse.statet.rj.data.impl.RCharacter32Store;
 import org.eclipse.statet.rj.data.impl.RDataFrame32Impl;
 import org.eclipse.statet.rj.data.impl.RInteger32Store;
+import org.eclipse.statet.rj.data.impl.RList32Impl;
+import org.eclipse.statet.rj.data.impl.RNullImpl;
 import org.eclipse.statet.rj.data.impl.RNumericB32Store;
 import org.eclipse.statet.rj.data.impl.RVectorImpl;
 import org.eclipse.swt.graphics.GC;
@@ -26,7 +29,36 @@ import org.eclipse.swt.widgets.Shell;
 
 public class RUtils {
 
-	static public int[] makeMissingIndexArray(double[] array){
+	public static RObject makeRObject(Object value) {
+		if (value == null) {
+			return RNullImpl.INSTANCE;
+		} else if (value instanceof String) {
+			return makeStringRVector(new String[] { (String) value });
+		} else if (value instanceof Number) {
+			return makeNumericRVector(new double[] { ((Number) value).doubleValue() });
+		} else if (value instanceof String[]) {
+			return makeStringRVector((String[]) value);
+		} else if (value instanceof double[]) {
+			return makeNumericRVector((double[]) value);
+		} else if (value instanceof float[]) {
+			float[] v = (float[]) value;
+			double[] copy = new double[v.length];
+			for (int i = 0; i < copy.length; i++) { copy[i] = v[i]; }
+			return makeNumericRVector(copy);
+		} else if (value instanceof int[]) {
+			return makeIntegerRVector((int[]) value);
+		} else if (value instanceof Object[]) {
+			Object[] v = (Object[]) value;
+			RObject[] rV = new RObject[v.length];
+			for (int i = 0; i < v.length; i++) { rV[i] = makeRObject(v[i]); }
+			String[] names = IntStream.range(1, v.length + 1).mapToObj(i -> String.valueOf(i)).toArray(i -> new String[i]);
+			return new RList32Impl(rV, names);
+		} else {
+			throw new RuntimeException("Unsupported data type: " + value.getClass().getName());
+		}
+	}
+	
+	public static int[] makeMissingIndexArray(double[] array) {
 		List<Integer> indices = new ArrayList<Integer>();
 		for (int i =0;i< array.length;i++){
 			if (Double.isNaN(array[i])){
@@ -41,19 +73,19 @@ public class RUtils {
 		return idx;
 	}
 
-	static public RObject makeStringRVector(String[] array) {
+	public static RObject makeStringRVector(String[] array) {
 		return new RVectorImpl<RCharacterStore>(new RCharacter32Store(array));
 	}
 
-	static public RObject makeNumericRVector(double[] array) {
+	public static RObject makeNumericRVector(double[] array) {
 		return new RVectorImpl<RNumericStore>(new RNumericB32Store(array));
 	}
 
-	static public RObject makeNumericRVector(double[] array, int[] missingIndexArray) {
+	public static RObject makeNumericRVector(double[] array, int[] missingIndexArray) {
 		return new RVectorImpl<RNumericStore>(new RNumericB32Store(array, missingIndexArray));
 	}
 	
-	static public RObject makeNumericRVector(Double[] array) {
+	public static RObject makeNumericRVector(Double[] array) {
 		double[] doubleArray = new double[array.length];
 		for (int i = 0; i < array.length; i++) {
 			doubleArray[i] = array[i];
@@ -61,7 +93,7 @@ public class RUtils {
 		return makeNumericRVector(doubleArray);
 	}
 
-	static public RObject makeIntegerRVector(Integer[] array) {
+	public static RObject makeIntegerRVector(Integer[] array) {
 		int[] intArray = new int[array.length];
 		for (int i = 0; i < array.length; i++) {
 			intArray[i] = array[i];
@@ -69,15 +101,15 @@ public class RUtils {
 		return new RVectorImpl<RIntegerStore>(new RInteger32Store(intArray));
 	}
 	
-	static public RObject makeIntegerRVector(int[] array) {
+	public static RObject makeIntegerRVector(int[] array) {
 		return new RVectorImpl<RIntegerStore>(new RInteger32Store(array));
 	}
 
-	static public RObject makeIntegerRVector(int[] array, int[] missingIndexArray) {
+	public static RObject makeIntegerRVector(int[] array, int[] missingIndexArray) {
 		return new RVectorImpl<RIntegerStore>(new RInteger32Store(array, missingIndexArray));
 	}
 
-	static public RDataFrame makeDoubleRDataFrame(String[] columnNames, double[][] array2D) {
+	public static RDataFrame makeDoubleRDataFrame(String[] columnNames, double[][] array2D) {
 		int colCount = columnNames.length;
 		int rowCount = array2D[0].length;
 
@@ -101,7 +133,7 @@ public class RUtils {
 		return df;
 	}
 	
-	static public double[][] getDouble2DArrayFromRDataFrame(RDataFrame rDataFrame) {
+	public static double[][] getDouble2DArrayFromRDataFrame(RDataFrame rDataFrame) {
 		double[][] doubleArray2D = new double[(int) rDataFrame.getColumnCount()][(int) rDataFrame.getRowCount()];
 		
 		for (int i = 0; i < rDataFrame.getColumnCount(); i++) {
@@ -114,7 +146,7 @@ public class RUtils {
 		return doubleArray2D;
 	}
 
-	static public int getIntegerFromList(RList list, String name) {
+	public static int getIntegerFromList(RList list, String name) {
 		int result = 0;
 		try {
 			RObject o = list.get(name);
@@ -127,7 +159,7 @@ public class RUtils {
 		return result;
 	}
 
-	static public double getDoubleFromList(RList list, String name) {
+	public static double getDoubleFromList(RList list, String name) {
 		double result = Double.NaN;
 		try {
 			RObject o = list.get(name);
@@ -140,7 +172,7 @@ public class RUtils {
 		return result;
 	}
 
-	static public double getDoubleFromList(RList list, String name, int decimals) {
+	public static double getDoubleFromList(RList list, String name, int decimals) {
 		double result = getDoubleFromList(list, name);
 		return roundUp(result,decimals);
 	}
@@ -153,7 +185,7 @@ public class RUtils {
 	}
 
 
-	static public String getStringFromList(RList list, String name) {
+	public static String getStringFromList(RList list, String name) {
 		String result = "";
 		try {
 			RObject o = list.get(name);
