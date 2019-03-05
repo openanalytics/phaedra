@@ -3,18 +3,17 @@ package eu.openanalytics.phaedra.base.console;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+
 
 public class ConsoleManager {
 	
 	private static ConsoleManager instance;
 	
 	private List<InteractiveConsole> consoles;
-	private InteractiveConsole logConsole;
 	
 	private ConsoleManager() {
 		consoles = new ArrayList<>();
-		logConsole = new LogConsole();
-		consoles.add(logConsole);
 	}
 	
 	public static ConsoleManager getInstance() {
@@ -32,16 +31,14 @@ public class ConsoleManager {
 		return consoles.toArray(new InteractiveConsole[consoles.size()]);
 	}
 	
+	@Deprecated
 	public void print(String message) {
-		print(LogConsole.NAME, message);
+		EclipseLog.info(message, Activator.PLUGIN_ID);
 	}
 	
+	@Deprecated
 	public void printErr(String message) {
-		printErr(LogConsole.NAME, message);
-	}
-	
-	public void printErr(String message, Throwable cause) {
-		printErr(LogConsole.NAME, message, cause);
+		EclipseLog.error(message, null, Activator.PLUGIN_ID);
 	}
 	
 	public void print(String console, String message) {
