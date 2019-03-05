@@ -29,7 +29,7 @@ import org.eclipse.swt.widgets.Shell;
 
 public class RUtils {
 
-	public static RObject makeRObject(Object value) {
+	public static RObject makeRObject(Object value, boolean unknownToNull) {
 		if (value == null) {
 			return RNullImpl.INSTANCE;
 		} else if (value instanceof String) {
@@ -50,11 +50,12 @@ public class RUtils {
 		} else if (value instanceof Object[]) {
 			Object[] v = (Object[]) value;
 			RObject[] rV = new RObject[v.length];
-			for (int i = 0; i < v.length; i++) { rV[i] = makeRObject(v[i]); }
+			for (int i = 0; i < v.length; i++) { rV[i] = makeRObject(v[i], unknownToNull); }
 			String[] names = IntStream.range(1, v.length + 1).mapToObj(i -> String.valueOf(i)).toArray(i -> new String[i]);
 			return new RList32Impl(rV, names);
 		} else {
-			throw new RuntimeException("Unsupported data type: " + value.getClass().getName());
+			if (unknownToNull) return RNullImpl.INSTANCE;
+			else throw new RuntimeException("Unsupported data type: " + value.getClass().getName());
 		}
 	}
 	
@@ -177,7 +178,38 @@ public class RUtils {
 		return roundUp(result,decimals);
 	}
 
-	static double roundUp(double val, int decimals) {
+	public static Object getAsJavaObject(RObject value) {
+		if (value == null || RNullImpl.INSTANCE.equals(value)) return null;
+		
+		Object retVal = null;
+		int valueSize = (int) value.getLength();
+		RStore<?> valueData = value.getData();
+		
+		switch (value.getRClassName()) {
+		case RObject.CLASSNAME_CHARACTER:
+			if (valueSize == 1) {
+				retVal = valueData.getChar(0);
+			} else {
+				String[] jValue = new String[valueSize];
+				for (int i = 0; i < jValue.length; i++) jValue[i] = valueData.getChar(i);
+				retVal = jValue;
+			}
+			break;
+		case RObject.CLASSNAME_NUMERIC:
+			if (valueSize == 1) {
+				retVal = valueData.getNum(0);
+			} else {
+				double[] jValue = new double[valueSize];
+				for (int i = 0; i < jValue.length; i++) jValue[i] = valueData.getNum(i);
+				retVal = jValue;
+			}
+			break;
+		}
+		//TODO add more conversion types here
+		return retVal;
+	}
+	
+	public static double roundUp(double val, int decimals) {
 		if (Double.isNaN(val) || Double.isInfinite(val)) return val;
 		BigDecimal bd = new BigDecimal(val);
 		bd = bd.setScale(decimals, BigDecimal.ROUND_HALF_UP);
@@ -211,7 +243,6 @@ public class RUtils {
 	}
 	
 	public static void showInPopup(byte[] pngImg, int x, int y) {
-
 		Shell shell = new Shell(Display.getCurrent());
 		shell.setText("R Graphic");
 		shell.setSize(x, y);

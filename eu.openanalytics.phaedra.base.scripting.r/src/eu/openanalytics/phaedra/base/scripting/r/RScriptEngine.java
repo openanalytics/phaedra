@@ -57,14 +57,7 @@ public class RScriptEngine extends BaseScriptEngine {
 	}
 
 	private Object eval(String script, Map<String, Object> objects, RServi session) throws ScriptException {
-		if (!initialized) {
-			try {
-				consoleSession = RService.getInstance().createSession();
-				initialized = true;
-			} catch (CoreException e) {
-				throw new ScriptException("R script engine is not yet ready");
-			}
-		}
+		if (!initialized) doInitLazy();
 		
 		boolean closeSession = false;
 		try {
@@ -74,11 +67,12 @@ public class RScriptEngine extends BaseScriptEngine {
 			}
 			if (objects != null) {
 				for (Entry<String, Object> entry: objects.entrySet()) {
-					RObject value = RUtils.makeRObject(entry.getValue());
-					session.assignData(entry.getKey(), value, new NullProgressMonitor());
+					String name = entry.getKey();
+					RObject value = RUtils.makeRObject(entry.getValue(), true);
+					session.assignData(name, value, new NullProgressMonitor());
 				}
 			}
-			Object retVal = null;
+			RObject retVal = null;
 			if (script.contains("\n")) {
 				byte[] scriptContents = script.getBytes();
 				session.uploadFile(new ByteArrayInputStream(scriptContents), scriptContents.length, "scriptFile", 0, null);
@@ -87,11 +81,21 @@ public class RScriptEngine extends BaseScriptEngine {
 			} else {
 				retVal = session.evalData(script, new NullProgressMonitor());
 			}
-			return retVal;
+			return RUtils.getAsJavaObject(retVal);
 		} catch (CoreException e) {
 			throw new ScriptException(parseRErrorMessage(e.getMessage()));
 		} finally {
 			if (closeSession) RService.getInstance().closeSession(session);
+		}
+	}
+	
+	private synchronized void doInitLazy() throws ScriptException {
+		if (initialized) return;
+		try {
+			consoleSession = RService.getInstance().createSession();
+			initialized = true;
+		} catch (CoreException e) {
+			throw new ScriptException("R script engine is not yet ready");
 		}
 	}
 	
