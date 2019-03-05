@@ -56,6 +56,7 @@
 		<module>eu.openanalytics.phaedra.base.scripting</module>
 		<module>eu.openanalytics.phaedra.base.scripting.javascript</module>
 		<module>eu.openanalytics.phaedra.base.scripting.jep</module>
+		<module>eu.openanalytics.phaedra.base.scripting.r</module>
 		<module>eu.openanalytics.phaedra.base.search</module>
 		<module>eu.openanalytics.phaedra.base.security</module>
 		<module>eu.openanalytics.phaedra.base.seda</module>
