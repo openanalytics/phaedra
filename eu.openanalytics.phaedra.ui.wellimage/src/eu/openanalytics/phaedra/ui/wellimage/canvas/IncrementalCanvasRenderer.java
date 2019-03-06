@@ -83,6 +83,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 			e.printStackTrace();
 		}
 		currentCanvasState = canvasState.copy();
+		canvasState.setForceChange(false);
 	}
 
 	@Override
