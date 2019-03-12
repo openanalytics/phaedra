@@ -20,6 +20,9 @@ import org.eclipse.statet.rj.servi.node.RServiNodeConfig;
 import org.eclipse.statet.rj.servi.node.RServiNodeFactory;
 import org.eclipse.statet.rj.servi.pool.PoolConfig;
 
+import eu.openanalytics.phaedra.api.client.model.SessionToken;
+import eu.openanalytics.phaedra.base.security.SecurityService;
+
 @SuppressWarnings("restriction")
 public class RServiManager {
 
@@ -77,6 +80,13 @@ public class RServiManager {
 					rConfig.getEnvironmentVariables().put(envVar, envVars.get(envVar));
 				}
 			}
+			
+			SessionToken apiToken = SecurityService.getInstance().getCurrentUserAPIToken();
+			if (apiToken != null) {
+				String stmt = "library(phaedraAPI);\nphaedraAPI::login('%s', token = '%s');";
+				rConfig.setRStartupSnippet(String.format(stmt, apiToken.getUrl(), apiToken.getToken()));
+			}
+			
 			nodeFactory.setConfig(rConfig);
 			nodeFactory.setRegistry(registry);
 			

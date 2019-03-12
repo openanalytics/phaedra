@@ -204,6 +204,17 @@ public class RUtils {
 				retVal = jValue;
 			}
 			break;
+		case RObject.CLASSNAME_INTEGER:
+			if (valueSize == 1) {
+				retVal = valueData.getInt(0);
+			} else {
+				int[] jValue = new int[valueSize];
+				for (int i = 0; i < jValue.length; i++) jValue[i] = valueData.getInt(i);
+				retVal = jValue;
+			}
+			break;
+		default:
+			retVal = value.toString();	
 		}
 		//TODO add more conversion types here
 		return retVal;
