@@ -690,6 +690,18 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
+	 * Retrieve a well by its primary ID.
+	 * 
+	 * @param wellId The ID of the well.
+	 * @return The well, or null if no matching well was found.
+	 */
+	public Well getWellById(long wellId) {
+		Well well = getEntity(Well.class, wellId);
+		if (!SecurityService.getInstance().check(Permissions.PLATE_OPEN, well)) return null;
+		return well;
+	}
+	
+	/**
 	 * See {@link PlateService#getWellData(List, List))}
 	 * 
 	 * @param wells The wells whose data should be retrieved.

@@ -124,6 +124,7 @@ public class ScriptedChart extends DecoratedView {
 		args.put("width", w); //Math.max(w, 100));
 		args.put("height", h); //Math.max(h, 100));
 		args.put("wells", wells.toArray());
+		args.put("wellIds", wells.stream().mapToLong(well -> well.getId()).toArray());
 		
 		ScriptService.getInstance().getCatalog().run(scriptSrc, args);
 		
