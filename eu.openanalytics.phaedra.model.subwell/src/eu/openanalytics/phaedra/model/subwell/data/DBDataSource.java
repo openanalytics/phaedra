@@ -48,13 +48,13 @@ public class DBDataSource implements ISubWellDataSource {
 	@Override
 	public int getNrCells(Well well) {
 		String sql = String.format("select array_length(num_val, 1) from %s.%s where well_id = %d limit 1", SCHEMA, DATA_TABLE, well.getId());
-		return select(sql, rs -> rs.next() ? rs.getInt(1) : 0);
+		return select(sql, rs -> rs.next() ? rs.getInt(1) : 0, 0);
 	}
 
 	@Override
 	public float[] getNumericData(Well well, SubWellFeature feature) {
 		String sql = String.format("select num_val from %s.%s where well_id = %d and feature_id = %d", SCHEMA, DATA_TABLE, well.getId(), feature.getId());
-		return select(sql, rs -> (rs.next()) ? getNumVal(rs) : null);
+		return select(sql, rs -> (rs.next()) ? getNumVal(rs) : null, 0);
 	}
 
 	@Override
@@ -82,7 +82,7 @@ public class DBDataSource implements ISubWellDataSource {
 
 		String wellIds = wells.stream().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
 		String sql = String.format("select * from %s.%s where well_id in (%s)%s order by well_id asc", SCHEMA, DATA_TABLE, wellIds, featureClause);
-		select(sql, rs -> processResultSet(rs, wells, features, cache));
+		select(sql, rs -> processResultSet(rs, wells, features, cache), 1000);
 	}
 
 	private Object processResultSet(ResultSet rs, List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache) throws SQLException {
@@ -137,7 +137,7 @@ public class DBDataSource implements ISubWellDataSource {
 		
 		String wellIds = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().map(w -> String.valueOf(w.getId())).collect(Collectors.joining(","));
 		String sql = String.format("select count(*) from %s.%s where well_id in (%s)", SCHEMA, DATA_TABLE, wellIds);
-		int rowCount = select(sql, rs -> (rs.next()) ? rs.getInt(1) : 0);
+		int rowCount = select(sql, rs -> (rs.next()) ? rs.getInt(1) : 0, 0);
 		
 		if (rowCount == 0) {
 			insertData(data);
@@ -245,10 +245,11 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 
-	private <T> T select(String sql, ResultProcessor<T> resultProcessor) {
+	private <T> T select(String sql, ResultProcessor<T> resultProcessor, int fetchSize) {
 		long start = System.currentTimeMillis();
 		try (Connection conn = getConnection()) {
 			try (Statement stmt = conn.createStatement()) {
+				if (fetchSize > 0) stmt.setFetchSize(fetchSize);
 				try (ResultSet rs = stmt.executeQuery(sql)) {
 					return resultProcessor.process(rs);
 				}
