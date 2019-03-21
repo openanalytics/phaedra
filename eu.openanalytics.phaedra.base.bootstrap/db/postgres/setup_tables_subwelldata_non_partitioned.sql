@@ -25,7 +25,7 @@ alter table phaedra.hca_subwellfeature_value
 alter table phaedra.hca_subwellfeature_value
 	add constraint hca_subwellfeature_value_fk_ft
 	foreign key (feature_id)
-	references phaedra.hca_subwellfeature(feature_id)
+	references phaedra.hca_subwellfeature(subwellfeature_id)
 	on delete cascade;
 
 grant INSERT, UPDATE, DELETE on phaedra.hca_subwellfeature_value to :accountNameWrite;
