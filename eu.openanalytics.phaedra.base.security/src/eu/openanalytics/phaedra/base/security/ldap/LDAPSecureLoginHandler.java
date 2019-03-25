@@ -2,9 +2,11 @@ package eu.openanalytics.phaedra.base.security.ldap;
 
 import javax.naming.directory.DirContext;
 
+import eu.openanalytics.phaedra.base.security.Activator;
 import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.ILoginHandler;
 import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
 /**
  * This login handler is geared towards Active Directory.
@@ -19,9 +21,14 @@ public class LDAPSecureLoginHandler implements ILoginHandler {
 	    	ctx = LDAPUtils.bind(userName, password, ldapConfig);
 	    	SecurityService.getInstance().setCurrentUser(userName);
 	    	SecurityService.getInstance().setSecurityConfig(LDAPUtils.loadGroups(ctx, ldapConfig));
-	    	SecurityService.getInstance().registerAPIToken(userName, new String(password));
 		} finally {
 			if (ctx != null) try { ctx.close(); } catch (Exception e) {}
+		}
+	    
+	    try {
+		    SecurityService.getInstance().registerAPIToken(userName, new String(password));
+		} catch (Exception e) {
+			EclipseLog.error("Failed to obtain API token", e, Activator.PLUGIN_ID);
 		}
 	}
 
