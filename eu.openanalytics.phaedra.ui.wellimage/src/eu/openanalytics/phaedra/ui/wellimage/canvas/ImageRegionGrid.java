@@ -114,6 +114,6 @@ public class ImageRegionGrid {
 			x = 0;
 			y += scaledCellSize.y;
 		}
-		System.out.println("Generating image grid: " + fullImageSize + ", cell size: " + scaledCellSize + " = " + imageGrid.size());
+//		System.out.println("Generating image grid: " + fullImageSize + ", cell size: " + scaledCellSize + " = " + imageGrid.size());
 	}
 }

@@ -8,6 +8,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.Grid;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.GridCell;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.BaseGridCellRenderer;
+import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.threading.ConcurrentTask;
 
 /**
@@ -35,19 +36,24 @@ public abstract class BaseConcurrentGridCellRenderer extends BaseGridCellRendere
 
 	@Override
 	public void render(GridCell cell, GC gc, int x, int y, int w, int h) {
-		if (renderingSupport.isValidCache(w, h)) {
-			ImageData data = renderingSupport.getImageData(cell);
-			if (data != null) {
-				Image image = null;
-				try {
-					image = new Image(null, data);
-					gc.drawImage(image, x, y);
-				} finally {
-					if (image != null) image.dispose();
-				}
-			} else if (cell.getData() != null) {
-				ConcurrentTask task = createRendertask(cell, w, h);
-				if (task != null) renderingSupport.offloadTask(task);
+		// If the requested dimensions do not match the current renderingSupport dimensions, abort.
+		if (!renderingSupport.isValidCache(w, h)) return;
+		
+		ImageData data = renderingSupport.getImageData(cell);
+		if (data == null) {
+			if (cell.getData() == null) return;
+			// Submit a rendering job and render a temporary placeholder
+			ConcurrentTask task = createRendertask(cell, w, h);
+			if (task != null) renderingSupport.offloadTask(task);
+			gc.drawImage(IconManager.getIconImage("loading.gif"), x+(w/2)-8, y+(h/2)-8);
+		} else {
+			// Render cached image
+			Image image = null;
+			try {
+				image = new Image(null, data);
+				gc.drawImage(image, x, y);
+			} finally {
+				if (image != null) image.dispose();
 			}
 		}
 	}
