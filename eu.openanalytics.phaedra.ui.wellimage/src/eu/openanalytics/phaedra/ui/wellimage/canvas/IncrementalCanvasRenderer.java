@@ -47,7 +47,10 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	
 	@Override
 	public void drawImage(GC gc, Rectangle clientArea, CanvasState canvasState) {
-		if (canvasState.getWell() == null) return;
+		if (canvasState.getWell() == null 
+				|| canvasState.getFullImageSize() == null
+				|| canvasState.getFullImageSize().x == 0
+				|| canvasState.getFullImageSize().y == 0) return;
 		
 		try {
 			boolean stateChanged = currentCanvasState == null
