@@ -56,7 +56,6 @@ import eu.openanalytics.phaedra.base.ui.gridviewer.provider.AbstractGridContentP
 import eu.openanalytics.phaedra.base.ui.gridviewer.provider.AbstractGridLabelProvider;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.IGridCellRenderer;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
-import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -526,15 +525,12 @@ public class PlateTemplateEditor extends EditorPart {
 					+ new String(FileUtils.ILLEGAL_FILENAME_CHARS));
 			return false;
 		}
-		if (isNewTemplate) {
-			String[] allIds = PlateDefinitionService.getInstance().getTemplateManager().getIDs();
-			if (CollectionUtils.find(allIds,id) != -1) {
-				MessageDialog.openWarning(Display.getCurrent().getActiveShell(),
-						"Invalid template ID",
-						"A template with ID '" + id + "' already exists.\n"
-						+ "Please use another ID.");
-				return false;
-			}
+		if (isNewTemplate && PlateDefinitionService.getInstance().getTemplateManager().exists(id)) {
+			MessageDialog.openWarning(Display.getCurrent().getActiveShell(),
+					"Invalid template ID",
+					"A template with ID '" + id + "' already exists.\n"
+					+ "Please use another ID.");
+			return false;
 		}
 
 		plateTemplate.setId(id);

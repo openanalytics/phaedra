@@ -1,24 +1,18 @@
 package eu.openanalytics.phaedra.link.platedef.template;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-
 import eu.openanalytics.phaedra.base.environment.Screening;
-import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.link.platedef.Activator;
 
-
-public class TemplateManager {
+public class FSTemplateManager extends AbstractTemplateManager {
 
 	public static final String TEMPLATE_REPO_PATH = "/plate.templates";
 	
@@ -26,14 +20,11 @@ public class TemplateManager {
 	
 	private Map<String, PlateTemplate> templateCache = new ConcurrentHashMap<String, PlateTemplate>();
 
-	public TemplateManager() {
+	public FSTemplateManager() {
 		loadTemplateIds();
 	}
 
-	public String[] getIDs() {
-		return templateCache.keySet().stream().sorted().toArray(i -> new String[i]);
-	}
-
+	@Override
 	public PlateTemplate getTemplate(String id) throws IOException {
 		PlateTemplate template = templateCache.get(id);
 		if (template == UNLOADED_TEMPLATE) {
@@ -43,6 +34,7 @@ public class TemplateManager {
 		return template;
 	}
 
+	@Override
 	public List<PlateTemplate> getTemplates(long protocolClassId) throws IOException {
 		loadTemplates();
 		return templateCache.values().stream()
@@ -51,6 +43,7 @@ public class TemplateManager {
 				.collect(Collectors.toList());
 	}
 
+	@Override
 	public boolean exists(String id) {
 		String path = TEMPLATE_REPO_PATH + "/" + id + ".xml";
 		try {
@@ -60,71 +53,25 @@ public class TemplateManager {
 		}
 	}
 
-	public boolean canDelete(PlateTemplate template) {
-		String creator = template.getCreator();
-		if (creator == null) return false;
-		String currentUser = SecurityService.getInstance().getCurrentUserName();
-		return (creator.equalsIgnoreCase(currentUser));
+	@Override
+	protected void doDelete(PlateTemplate template) throws IOException {
+		String path = TEMPLATE_REPO_PATH + "/" + template.getId() + ".xml";
+		Screening.getEnvironment().getFileServer().delete(path);
+		templateCache.remove(template.getId());		
 	}
-
-	public void delete(PlateTemplate template) throws IOException {
-		if (canDelete(template)) {
-			String path = TEMPLATE_REPO_PATH + "/" + template.getId() + ".xml";
-			Screening.getEnvironment().getFileServer().delete(path);
-			templateCache.remove(template.getId());
-		}
-	}
-
-	public void save(PlateTemplate template, IProgressMonitor monitor, boolean isNew) throws IOException {
-		if (monitor != null) monitor.beginTask("Saving template", 10);
-		String id = template.getId();
-
-		// First, check whether the id is valid.
-		if (id == null || id.isEmpty()) throw new IllegalArgumentException("No template id set");
-
-		if (isNew) {
-			String creator = SecurityService.getInstance().getCurrentUserName();
-			template.setCreator(creator);
-		}
-
-		// If we're not allowed to overwrite (in the case of new templates),
-		// check the availability of the id, and throw an error if it's taken.
-		if (isNew && exists(id)) {
-			throw new IllegalArgumentException("Template id '" + id + "' already exists.");
-		}
-
-		// If the size decreased, throw away unused wells.
-		int size = template.getRows() * template.getColumns();
-		int wellCount = template.getWells().size();
-		if (size < wellCount) {
-			List<Integer> nrsToDiscard = new ArrayList<Integer>();
-			for (Integer nr: template.getWells().keySet()) {
-				if (nr > size) nrsToDiscard.add(nr);
-			}
-			for (Integer nr: nrsToDiscard) {
-				template.getWells().remove(nr);
-			}
-		}
-
-		// Make sure compound types are set to default when omitted.
-		String defaultType = "OC";
-		for (WellTemplate well: template.getWells().values()) {
-			String compType = well.getCompoundType();
-			String compNr = well.getCompoundNumber();
-			if ((compType == null || compType.isEmpty()) && (compNr != null && !compNr.isEmpty())) well.setCompoundType(defaultType);
-		}
-
-		// Then, write the template to XML.
-		if (monitor != null) monitor.subTask("Writing template");
-		String path = TEMPLATE_REPO_PATH + "/" + id + ".xml";
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		TemplateParser.write(template, out);
-		Screening.getEnvironment().getFileServer().putContents(path, out.toByteArray());
-
+	
+	@Override
+	protected void doCreate(PlateTemplate template, String xmlData) throws IOException {
+		String path = TEMPLATE_REPO_PATH + "/" + template.getId() + ".xml";
+		Screening.getEnvironment().getFileServer().putContents(path, xmlData.getBytes());
 		// Update or add the template in the cache.
-		templateCache.put(id, template);
-
-		if (monitor != null) monitor.done();
+		templateCache.put(template.getId(), template);
+	}
+	
+	@Override
+	protected void doUpdate(PlateTemplate template, String xmlData) throws IOException {
+		// Simply overwrite the existing file
+		doCreate(template, xmlData);
 	}
 
 	/*

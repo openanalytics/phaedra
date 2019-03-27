@@ -5,6 +5,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.link.platedef.hook.LinkPlateDefHookManager;
@@ -13,7 +14,9 @@ import eu.openanalytics.phaedra.link.platedef.link.PlateLinkSettings;
 import eu.openanalytics.phaedra.link.platedef.source.AbstractDefinitionSource;
 import eu.openanalytics.phaedra.link.platedef.source.IPlateDefinitionSource;
 import eu.openanalytics.phaedra.link.platedef.source.SourceRegistry;
-import eu.openanalytics.phaedra.link.platedef.template.TemplateManager;
+import eu.openanalytics.phaedra.link.platedef.template.DBTemplateManager;
+import eu.openanalytics.phaedra.link.platedef.template.FSTemplateManager;
+import eu.openanalytics.phaedra.link.platedef.template.ITemplateManager;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 
 /**
@@ -30,12 +33,18 @@ public class PlateDefinitionService {
 	private static PlateDefinitionService instance = new PlateDefinitionService();
 	
 	private SourceRegistry sourceRegistry;
-	private TemplateManager templateManager;
+	private ITemplateManager templateManager;
 	
 	private PlateDefinitionService() {
 		// Hidden constructor
 		sourceRegistry = new SourceRegistry();
-		templateManager = new TemplateManager();
+		
+		String templateStorage = Screening.getEnvironment().getConfig().getValue("plate.template.storage");
+		if ("db".equalsIgnoreCase(templateStorage)) {
+			templateManager = new DBTemplateManager();
+		} else {
+			templateManager = new FSTemplateManager();
+		}
 	}
 	
 	public static PlateDefinitionService getInstance() {
@@ -86,7 +95,7 @@ public class PlateDefinitionService {
 		return retVals;
 	}
 	
-	public TemplateManager getTemplateManager() {
+	public ITemplateManager getTemplateManager() {
 		return templateManager;
 	}
 	

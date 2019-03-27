@@ -28,6 +28,7 @@
 @02_tables/hca_part_settings.sql
 @02_tables/hca_object_log_eventtype.sql
 @02_tables/hca_object_log.sql
+@02_tables/hca_plate_template.sql
 @02_tables/hca_user.sql
 @02_tables/hca_preference.sql
 @02_tables/hca_reading.sql

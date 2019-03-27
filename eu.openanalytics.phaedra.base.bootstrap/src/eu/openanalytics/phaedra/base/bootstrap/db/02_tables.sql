@@ -871,6 +871,38 @@ GRANT SELECT ON phaedra.hca_object_log to phaedra_role_read;
 
 -- -----------------------------------------------------------------------
 
+CREATE TABLE phaedra.hca_plate_template (
+	template_id			bigint not null,
+	protocolclass_id	bigint not null,
+	template_name		varchar2(1000) not null,
+	rows				integer not null,
+	columns				integer not null,
+	creator				varchar2(200),
+	data_xml			xml	
+);
+
+ALTER TABLE phaedra.hca_plate_template
+	ADD CONSTRAINT hca_plate_template_pk
+	PRIMARY KEY  ( template_id );
+
+ALTER TABLE phaedra.hca_plate_template
+	ADD CONSTRAINT hca_plate_template_fk_protocolclass
+	FOREIGN KEY (protocolclass_id)
+	REFERENCES phaedra.hca_protocolclass(protocolclass_id)
+	ON DELETE CASCADE;
+
+CREATE SEQUENCE phaedra.hca_plate_template_s
+	INCREMENT BY 1
+	START WITH 1
+	MAXVALUE 9223372036854775807
+	NO CYCLE;
+
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_plate_template to :accountNameWrite;
+GRANT SELECT, USAGE ON phaedra.hca_plate_template_s to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_plate_template to :accountNameRead;
+
+-- -----------------------------------------------------------------------
+
 CREATE TABLE phaedra.hca_upload (
 	platecompound_id	bigint, 
 	compound_ty			varchar(10),
