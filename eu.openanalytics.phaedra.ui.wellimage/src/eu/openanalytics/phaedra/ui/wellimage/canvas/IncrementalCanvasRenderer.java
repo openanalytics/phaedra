@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
+import org.eclipse.swt.graphics.PaletteData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
@@ -31,7 +32,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	private ImageData lqFullImage;
 	private ImageRegionGrid imageRegionGrid;
 	private Map<Rectangle, ImageData> highResRegions;
-	private Set<RenderJob> runningRenderJobs;
+	private Set<IRenderJob> runningRenderJobs;
 	
 	private static final Point GRID_CELL_SIZE = new Point(512, 512);
 	
@@ -95,7 +96,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		// To prevent duplicate render jobs.
 		highResRegions.put(cellArea, null);
 		
-		RenderJob hqRenderJob = new RenderJob(canvasState.copy(), cellArea, (job, data) -> {
+		HQRenderJob hqRenderJob = new HQRenderJob(canvasState.copy(), cellArea, (job, data) -> {
 			highResRegions.put(cellArea, data);
 			renderCallback.requestRenderUpdate();
 			runningRenderJobs.remove(job);
@@ -105,25 +106,77 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 		executor.execute(hqRenderJob);
 	}
 	
+	// Throw away any cached data and start with a fresh image grid.
 	private void resetState(CanvasState canvasState) throws IOException {
-		// Throw away any cached data and start with a fresh image grid.
-		lqFullImage = ImageRenderService.getInstance().getWellImageData(canvasState.getWell(), lqScale, canvasState.getChannels());
+		lqFullImage = new ImageData(
+				(int) (canvasState.getScale() * canvasState.getFullImageSize().x),
+				(int) (canvasState.getScale() * canvasState.getFullImageSize().y),
+				24, new PaletteData(0xFF0000, 0xFF00, 0xFF));
+		
 		imageRegionGrid = new ImageRegionGrid(canvasState.getFullImageSize(), GRID_CELL_SIZE, canvasState.getScale());
 		synchronized (runningRenderJobs) {
-			for (RenderJob job: runningRenderJobs) job.cancel();
+			for (IRenderJob job: runningRenderJobs) job.cancel();
 		}
-		highResRegions.clear();	
+		highResRegions.clear();
+		
+		// Submit an initial job to render the LQ image
+		LQRenderJob lqRenderJob = new LQRenderJob(canvasState.copy(), lqScale, (job, data) -> {
+			lqFullImage = data;
+			renderCallback.requestRenderUpdate();
+			runningRenderJobs.remove(job);
+		});
+		runningRenderJobs.add(lqRenderJob);
+		executor.execute(lqRenderJob);
 	}
 	
-	private static class RenderJob implements Runnable {
+	private static interface IRenderJob extends Runnable {
+		public void cancel();
+	}
+	
+	private static class LQRenderJob implements IRenderJob {
 		
 		private CanvasState state;
-		private Rectangle region;
-		private BiConsumer<RenderJob, ImageData> callback;
+		private float scale;
+		private BiConsumer<IRenderJob, ImageData> callback;
 		
 		private volatile boolean cancelled;
 		
-		public RenderJob(CanvasState state, Rectangle region, BiConsumer<RenderJob, ImageData> callback) {
+		public LQRenderJob(CanvasState state, float scale, BiConsumer<IRenderJob, ImageData> callback) {
+			this.state = state;
+			this.scale = scale;
+			this.callback = callback;
+		}
+
+		@Override
+		public void run() {
+			if (cancelled) return;
+			try {
+				ImageData data = ImageRenderService.getInstance().getWellImageData(
+						state.getWell(),
+						scale,
+						state.getChannels());
+				if (cancelled) return;
+				callback.accept(this, data);
+			} catch (IOException e) {
+				EclipseLog.error("Failed to render image", e, Activator.PLUGIN_ID);
+			}
+		}
+		
+		@Override
+		public void cancel() {
+			cancelled = true;
+		}
+	}
+	
+	private static class HQRenderJob implements IRenderJob {
+		
+		private CanvasState state;
+		private Rectangle region;
+		private BiConsumer<IRenderJob, ImageData> callback;
+		
+		private volatile boolean cancelled;
+		
+		public HQRenderJob(CanvasState state, Rectangle region, BiConsumer<IRenderJob, ImageData> callback) {
 			this.state = state;
 			this.region = region;
 			this.callback = callback;
@@ -145,6 +198,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 			}
 		}
 		
+		@Override
 		public void cancel() {
 			cancelled = true;
 		}
