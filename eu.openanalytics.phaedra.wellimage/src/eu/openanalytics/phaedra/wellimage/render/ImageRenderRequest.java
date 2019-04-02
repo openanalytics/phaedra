@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.wellimage.render;
 
+import java.util.Arrays;
+
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
@@ -21,6 +23,12 @@ public class ImageRenderRequest {
 	
 	public boolean applyBlend;
 	public boolean applyGamma;
+	
+	@Override
+	public String toString() {
+		return String.format("ImageRenderRequest [well: %d, scale: %f, size: %s, region: %s, components: %s]",
+				well.getId(), scale, String.valueOf(size), String.valueOf(region), Arrays.toString(components));
+	}
 	
 	public static class Builder {
 		

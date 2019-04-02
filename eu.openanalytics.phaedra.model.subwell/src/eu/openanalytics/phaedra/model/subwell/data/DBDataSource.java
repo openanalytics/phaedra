@@ -258,7 +258,7 @@ public class DBDataSource implements ISubWellDataSource {
 			throw new RuntimeException("Failed to run query: " + sql, e);
 		} finally {
 			long duration = System.currentTimeMillis() - start;
-			EclipseLog.info(String.format("Query took %d ms: %s", duration, sql), Platform.getBundle(Activator.class.getPackage().getName()));
+			EclipseLog.debug(String.format("Query took %d ms: %s", duration, sql), DBDataSource.class);
 		}
 	}
 	

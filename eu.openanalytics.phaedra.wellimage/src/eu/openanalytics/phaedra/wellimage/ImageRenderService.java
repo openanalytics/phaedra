@@ -18,6 +18,7 @@ import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -300,8 +301,13 @@ private static ImageRenderService instance = new ImageRenderService();
 		Object key = getCacheKey(req);
 		ImageData cachedData = (ImageData) imageCache.get(key);
 		if (cachedData == null) {
+			long start = System.currentTimeMillis();
 			cachedData = renderImage(req);
+			long duration = System.currentTimeMillis() - start;
+			EclipseLog.debug(String.format("Render image from source (%d ms): %s", duration, req), ImageRenderService.class);
 			imageCache.put(key, cachedData);
+		} else {
+			EclipseLog.debug(String.format("Render image from cache: %s", req), ImageRenderService.class);
 		}
 		return cachedData;
 	}
