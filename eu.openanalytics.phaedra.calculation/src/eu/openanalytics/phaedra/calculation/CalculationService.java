@@ -351,6 +351,13 @@ public class CalculationService {
 			Map<String, Object> context = new HashMap<String, Object>();
 			if ("jep".equals(id)) {
 				result = "" + JEPCalculation.evaluate(formula, well);
+			} else if ("r".equals(id)) {
+				context.put("plateId", well.getPlate().getId());
+				context.put("wellId", well.getId());
+				context.put("wellNr", PlateUtils.getWellNr(well));
+				context.put("featureId", feature.getId());
+				Object retVal = ScriptService.getInstance().executeScript(formula, context, id);
+				if (retVal != null) result = retVal.toString();
 			} else {
 				context.put("data", accessor);
 				context.put("well", well);
