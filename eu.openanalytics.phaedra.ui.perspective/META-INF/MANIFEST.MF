@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Saved Perspectives
 Bundle-SymbolicName: eu.openanalytics.phaedra.ui.perspective;singleton:=true
-Bundle-Version: 1.0.6.qualifier
+Bundle-Version: 1.0.7.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.ui.perspective.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,

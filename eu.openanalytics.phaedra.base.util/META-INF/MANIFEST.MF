@@ -3,7 +3,7 @@ Eclipse-BuddyPolicy: dependent
 Bundle-ManifestVersion: 2
 Bundle-Name: Core Utilities
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.util
-Bundle-Version: 1.0.6.qualifier
+Bundle-Version: 1.0.7.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.util.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
