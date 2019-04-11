@@ -33,6 +33,8 @@ import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.Activator;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
+import oracle.sql.ARRAY;
+import oracle.sql.Datum;
 
 //TODO Support string data
 public class DBDataSource implements ISubWellDataSource {
@@ -47,7 +49,9 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public int getNrCells(Well well) {
-		String sql = String.format("select array_length(num_val, 1) from %s.%s where well_id = %d limit 1", SCHEMA, DATA_TABLE, well.getId());
+		String sql = String.format("select array_length(num_val, 1) from %s.%s where well_id = %d", SCHEMA, DATA_TABLE, well.getId());
+		if (JDBCUtils.isPostgres()) sql += " limit 1";
+		else if (JDBCUtils.isOracle()) sql += " and rownum = 1";
 		return select(sql, rs -> rs.next() ? rs.getInt(1) : 0, 0);
 	}
 
@@ -143,6 +147,8 @@ public class DBDataSource implements ISubWellDataSource {
 			insertData(data);
 		} else if (JDBCUtils.isPostgres()) {
 			updateDataPostgres(data);
+		} else if (JDBCUtils.isOracle()) {
+			updateDataOracle(data);
 		} else {
 			//TODO
 		}
@@ -189,21 +195,53 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 	
+	private void updateDataOracle(Map<SubWellFeature, Map<Well, Object>> data) {
+		try (Connection conn = getConnection()) {
+			for (SubWellFeature feature: data.keySet()) {
+				Map<Well, Object> featureData = data.get(feature);
+				for (Well well: featureData.keySet()) {
+					if (!feature.isNumeric() || featureData.get(well) == null) continue;
+					
+					StringBuilder values = new StringBuilder();
+					values.append("num_val_array(");
+					float[] numVal = (float[]) featureData.get(well);
+					for (int cellId = 0; cellId < numVal.length; cellId++) {
+						values.append(String.valueOf(numVal[cellId]));
+						if (cellId + 1 < numVal.length) values.append(",");
+					}
+					values.append(")");
+					
+					try (Statement stmt = conn.createStatement()) {
+						String sql = String.format("merge into %s.%s using dual on (well_id = %d and feature_id = %d)"
+								+ " when not matched then insert (well_id, feature_id, num_val) values (%d, %d, %s)"
+								+ " when matched then update set num_val = %s",
+								SCHEMA, DATA_TABLE, well.getId(), feature.getId(),
+								well.getId(), feature.getId(), values.toString(),
+								values.toString());
+						stmt.execute(sql);
+					}
+				}
+				conn.commit();
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
 	private void insertData(Map<SubWellFeature, Map<Well, Object>> data) {
 		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
 		if (data.isEmpty() || wells.isEmpty()) return;
 		
 		if (JDBCUtils.isPostgres()) {
 			insertDataPostgres(data);
+		} else if (JDBCUtils.isOracle()) {
+			insertDataOracle(data);
 		} else {
 			//TODO
 		}
 	}
 	
 	private void insertDataPostgres(Map<SubWellFeature, Map<Well, Object>> data) {
-		List<Well> wells = data.values().stream().flatMap(m -> m.keySet().stream()).distinct().collect(Collectors.toList());
-		if (data.isEmpty() || wells.isEmpty()) return;
-		
 		try (Connection conn = getConnection()) {
 			String sql = String.format("copy %s.%s (well_id,feature_id,num_val) from stdin (format csv)", SCHEMA, DATA_TABLE);
 			CopyManager cm = conn.unwrap(PgConnection.class).getCopyAPI();
@@ -212,6 +250,34 @@ public class DBDataSource implements ISubWellDataSource {
 			}
 			conn.commit();
 		} catch (IOException | SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
+	private void insertDataOracle(Map<SubWellFeature, Map<Well, Object>> data) {
+		try (Connection conn = getConnection()) {
+			for (SubWellFeature feature: data.keySet()) {
+				Map<Well, Object> featureData = data.get(feature);
+				for (Well well: featureData.keySet()) {
+					if (!feature.isNumeric() || featureData.get(well) == null) continue;
+					
+					StringBuilder values = new StringBuilder();
+					values.append(well.getId() + ", " + feature.getId() + ", num_val_array(");
+					float[] numVal = (float[]) featureData.get(well);
+					for (int cellId = 0; cellId < numVal.length; cellId++) {
+						values.append(String.valueOf(numVal[cellId]));
+						if (cellId + 1 < numVal.length) values.append(",");
+					}
+					values.append(")");
+					
+					try (Statement stmt = conn.createStatement()) {
+						String sql = String.format("insert into %s.%s (well_id,feature_id,num_val) values (%s)", SCHEMA, DATA_TABLE, values.toString());
+						stmt.execute(sql);
+					}
+				}
+				conn.commit();
+			}
+		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
 	}
@@ -266,10 +332,19 @@ public class DBDataSource implements ISubWellDataSource {
 		Array numValArray = rs.getArray("num_val");
 		if (numValArray == null) return null;
 		
-		Double[] doubleValues = (Double[]) numValArray.getArray();
-		float[] floatValues = new float[doubleValues.length];
-		for (int i=0; i<doubleValues.length; i++) floatValues[i] = doubleValues[i].floatValue();
-		return floatValues;
+		if (JDBCUtils.isPostgres()) {
+			Double[] doubleValues = (Double[]) numValArray.getArray();
+			float[] floatValues = new float[doubleValues.length];
+			for (int i=0; i<doubleValues.length; i++) floatValues[i] = doubleValues[i].floatValue();
+			return floatValues;
+		} else if (JDBCUtils.isOracle()) {
+			Datum[] dValues = ((ARRAY) numValArray).getOracleArray();
+			float[] floatValues = new float[dValues.length];
+			for (int i=0; i<dValues.length; i++) floatValues[i] = dValues[i].floatValue();
+			return floatValues;
+		}
+		
+		return null;
 	}
 	
 	private interface ResultProcessor<T> {

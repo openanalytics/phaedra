@@ -14,7 +14,8 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.validation;bundle-version="1.0.0",
- org.postgresql.jdbc;bundle-version="42.1.4"
+ org.postgresql.jdbc;bundle-version="42.1.4",
+ com.oracle.jdbc;bundle-version="11.2.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.model.subwell,

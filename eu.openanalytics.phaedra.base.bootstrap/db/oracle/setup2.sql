@@ -16,6 +16,7 @@
 @02_tables/hca_plate_well.sql
 @02_tables/hca_feature.sql
 @02_tables/hca_subwellfeature.sql
+@02_tables/hca_subwellfeature_value.sql
 @02_tables/hca_feature_group.sql
 @02_tables/hca_feature_value.sql
 @02_tables/hca_curve_setting.sql
