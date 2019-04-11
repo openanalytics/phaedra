@@ -24,10 +24,12 @@ alter table hca_subwellfeature_value
 	references phaedra.hca_subwellfeature(subwellfeature_id)
 	on delete cascade;
 
-grant select on hca_subwellfeature_value to phaedra_role_read;
-grant insert, update, delete on hca_subwellfeature_value to phaedra_role_crud;
-
 create or replace function array_length(ar in num_val_array, dim in number) return number is
 begin
    return ar.count;
 end;
+
+grant select on hca_subwellfeature_value to phaedra_role_read;
+grant insert, update, delete on hca_subwellfeature_value to phaedra_role_crud;
+grant execute on array_length to phaedra_role_read;
+grant execute on num_val_array to phaedra_role_read;

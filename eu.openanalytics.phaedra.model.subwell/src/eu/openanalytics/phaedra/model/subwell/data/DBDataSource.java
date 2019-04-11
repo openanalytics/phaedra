@@ -49,9 +49,12 @@ public class DBDataSource implements ISubWellDataSource {
 
 	@Override
 	public int getNrCells(Well well) {
-		String sql = String.format("select array_length(num_val, 1) from %s.%s where well_id = %d", SCHEMA, DATA_TABLE, well.getId());
-		if (JDBCUtils.isPostgres()) sql += " limit 1";
-		else if (JDBCUtils.isOracle()) sql += " and rownum = 1";
+		String sql = "select %s from %s.%s where well_id = %d %s";
+		if (JDBCUtils.isPostgres()) {
+			sql = String.format(sql, "array_length(num_val, 1)", SCHEMA, DATA_TABLE, well.getId(), "limit 1");
+		} else if (JDBCUtils.isOracle()) {
+			sql = String.format(sql, "phaedra.array_length(num_val, 1)", SCHEMA, DATA_TABLE, well.getId(), "and rownum = 1");
+		}
 		return select(sql, rs -> rs.next() ? rs.getInt(1) : 0, 0);
 	}
 
@@ -203,7 +206,7 @@ public class DBDataSource implements ISubWellDataSource {
 					if (!feature.isNumeric() || featureData.get(well) == null) continue;
 					
 					StringBuilder values = new StringBuilder();
-					values.append("num_val_array(");
+					values.append("phaedra.num_val_array(");
 					float[] numVal = (float[]) featureData.get(well);
 					for (int cellId = 0; cellId < numVal.length; cellId++) {
 						values.append(String.valueOf(numVal[cellId]));
@@ -262,7 +265,7 @@ public class DBDataSource implements ISubWellDataSource {
 					if (!feature.isNumeric() || featureData.get(well) == null) continue;
 					
 					StringBuilder values = new StringBuilder();
-					values.append(well.getId() + ", " + feature.getId() + ", num_val_array(");
+					values.append(well.getId() + ", " + feature.getId() + ", phaedra.num_val_array(");
 					float[] numVal = (float[]) featureData.get(well);
 					for (int cellId = 0; cellId < numVal.length; cellId++) {
 						values.append(String.valueOf(numVal[cellId]));
