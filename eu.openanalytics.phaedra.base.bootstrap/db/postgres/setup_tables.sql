@@ -977,7 +977,7 @@ CREATE TABLE phaedra.hca_upload (
 	plate_barcode		varchar(64),
 	plate_description	varchar(200),
 	plate_info			varchar(100),
-	data_xml			xml,	-- additional properties
+	data_xml			text,
 	upload_system		varchar(25)
 )
 TABLESPACE :tsNameData;
@@ -988,13 +988,12 @@ GRANT SELECT ON phaedra.hca_upload to :accountNameRead;
 -- -----------------------------------------------------------------------
 
 CREATE TABLE phaedra.hca_upload_result (
-	platecompound_id		bigint,
 	curve_id				bigint,
 	feature_id				bigint,
-	feature_name			varchar(100),
-	result_type				varchar(25),
-	qualifier				varchar(25),
-	value					varchar(100)
+	feature_name			text,
+	result_type				text,
+	qualifier				text,
+	value					text
 )
 TABLESPACE :tsNameData;
 
@@ -1008,9 +1007,12 @@ CREATE TABLE phaedra.hca_upload_point (
 	platecompound_id		bigint,
 	curve_id				bigint,
 	feature_id				bigint,
+	group1					varchar(150),
+	group2					varchar(150),
+	group3					varchar(150),
 	feature_name			varchar(100),
 	concentration			double precision,
-	is_valid				boolean,
+	is_valid				bigint,
 	value					double precision,
 	normalized				double precision
 )

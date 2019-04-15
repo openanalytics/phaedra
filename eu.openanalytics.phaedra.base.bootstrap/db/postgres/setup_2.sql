@@ -12,3 +12,4 @@ GRANT USAGE ON SCHEMA phaedra TO phaedra_role_read;
 
 \ir setup_tables.sql
 \ir setup_views.sql
+\ir setup_functions.sql

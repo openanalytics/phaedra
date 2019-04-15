@@ -91,33 +91,21 @@ GRANT SELECT ON phaedra.hca_well_curves to :accountNameRead;
 -- Upload views
 -- =======================================================================
 
-CREATE OR REPLACE VIEW phaedra.HCA_UPLOAD_PLATES_TODO AS
-SELECT
-	p.plate_id, p.barcode, e.experiment_id, e.experiment_name, e.protocol_id, pr.protocol_name, pr.upload_system
-FROM
-	phaedra.hca_plate p, phaedra.hca_experiment e, phaedra.hca_protocol pr
-WHERE
-	e.experiment_id = p.experiment_id
-	AND PR.PROTOCOL_ID = E.PROTOCOL_ID
-	AND P.APPROVE_STATUS > 1
-	AND P.UPLOAD_STATUS = 0;
+create or replace view phaedra.hca_upload_compounds_todo as
+	select pc.platecompound_id
+	from phaedra.hca_plate_compound pc, phaedra.hca_plate p, phaedra.hca_experiment e, phaedra.hca_protocol pr
+	where pc.plate_id = p.plate_id and p.experiment_id = e.experiment_id and e.protocol_id = pr.protocol_id
+	and pc.validate_status >= 0 and pc.upload_status = 0 and p.approve_status > 1 and p.upload_status = 0 and pr.upload_system is not null;
 
-GRANT SELECT ON phaedra.hca_UPLOAD_PLATES_TODO to :accountNameRead;
+grant select on phaedra.hca_upload_compounds_todo to phaedraprod;
+grant select on phaedra.hca_upload_compounds_todo to phaedra_readonly;
 
 -- -----------------------------------------------------------------------
 
-CREATE OR REPLACE VIEW phaedra.HCA_UPLOAD_COMPOUNDS_TODO AS
-SELECT
-	c.platecompound_id, p.plate_id, p.barcode, e.experiment_id, e.experiment_name, e.protocol_id, pr.protocol_name, pr.upload_system
-FROM
-	phaedra.hca_plate_compound c, phaedra.hca_plate p, phaedra.hca_experiment e, phaedra.hca_protocol pr
-WHERE
-	EXISTS (SELECT cc.curve_id FROM phaedra.hca_curve_compound cc WHERE cc.platecompound_id = c.platecompound_id)
-	AND p.plate_id = c.plate_id
-	AND p.approve_status > 1
-	AND e.experiment_id = p.experiment_id
-	AND PR.PROTOCOL_ID = E.PROTOCOL_ID
-	AND c.validate_status >= 0
-	AND c.UPLOAD_STATUS = 0;
+create or replace view phaedra.hca_upload_wells_todo as
+	select w.well_id, w.plate_id, w.platecompound_id, w.concentration, w.is_valid
+	from phaedra.hca_plate_well w, phaedra.hca_upload_compounds_todo cu
+	where w.platecompound_id = cu.platecompound_id and w.is_valid not in (-1, -2, -8);
 
-GRANT SELECT ON phaedra.hca_UPLOAD_COMPOUNDS_TODO to :accountNameRead;
+grant select on phaedra.hca_upload_wells_todo to phaedraprod;
+grant select on phaedra.hca_upload_wells_todo to phaedra_readonly;
