@@ -1,15 +1,8 @@
 package eu.openanalytics.phaedra.base.imaging.jp2k.openjpeg;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.channels.SeekableByteChannel;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.PaletteData;
@@ -20,30 +13,19 @@ import org.openjpeg.JavaByteSource;
 import org.openjpeg.OpenJPEGDecoder;
 
 import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
+import eu.openanalytics.phaedra.base.imaging.jp2k.codestream.CodeStreamAccessor;
 import eu.openanalytics.phaedra.base.util.misc.SWTUtils;
-import eu.openanalytics.phaedra.base.util.reflect.ReflectionUtils;
-import net.java.truevfs.comp.zip.ZipEntry;
-import net.java.truevfs.comp.zip.ZipFile;
 
 //TODO Support additionalDiscardLevels
 public class ZIPDecoder implements IDecodeAPI {
 
-	private SeekableByteChannel channel;
 	private Lock lock = new ReentrantLock();
 	
 	private int bgColor = 0xCCCCCC;
-	private int nrCodestreamsPerImage;
-	private long[] codestreamOffsets;
-	private long[] codestreamSizes;
 
 	private OpenJPEGDecoder decoder;
 	private JavaByteSource activeCodestream;
-	
-	public ZIPDecoder(SeekableByteChannel channel, int nrCodestreamsPerImage) throws IOException {
-		this.channel = channel;
-		this.nrCodestreamsPerImage = nrCodestreamsPerImage;
-		scanZipEntries();
-	}
+	private CodeStreamAccessor activeCodestreamAccessor;
 
 	@Override
 	public void open() throws IOException {
@@ -59,14 +41,8 @@ public class ZIPDecoder implements IDecodeAPI {
 	@Override
 	public void close() {
 		lock.lock();
-		try {
-			decoder = null;
-			if (channel.isOpen()) channel.close();
-		} catch (IOException e) {
-			// Ignore
-		} finally {
-			lock.unlock();
-		}
+		decoder = null;
+		lock.unlock();
 	}
 
 	@Override
@@ -75,10 +51,10 @@ public class ZIPDecoder implements IDecodeAPI {
 	}
 
 	@Override
-	public Point getSize(int imageNr) throws IOException {
+	public Point getSize(CodeStreamAccessor accessor) throws IOException {
 		lock.lock();
 		try {
-			openCodestream(imageNr, 0);
+			openCodestream(accessor);
 			int[] size = decoder.getSize(activeCodestream);
 			return new Point(size[0], size[1]);
 		} finally {
@@ -88,10 +64,10 @@ public class ZIPDecoder implements IDecodeAPI {
 	}
 
 	@Override
-	public int getBitDepth(int imageNr, int component) throws IOException {
+	public int getBitDepth(CodeStreamAccessor accessor) throws IOException {
 		lock.lock();
 		try {
-			openCodestream(imageNr, component);
+			openCodestream(accessor);
 			int[] size = decoder.getSize(activeCodestream);
 			return size[2];
 		} finally {
@@ -101,12 +77,12 @@ public class ZIPDecoder implements IDecodeAPI {
 	}
 
 	@Override
-	public ImageData renderImage(int w, int h, int imageNr, int component) throws IOException {
+	public ImageData renderImage(int w, int h, CodeStreamAccessor accessor) throws IOException {
 		ImageData data = null;
 		
 		lock.lock();
 		try {
-			openCodestream(imageNr, component);
+			openCodestream(accessor);
 			
 			// Decode while maintaining aspect ratio.
 			int[] fullSize = decoder.getSize(activeCodestream);
@@ -130,17 +106,17 @@ public class ZIPDecoder implements IDecodeAPI {
 	}
 
 	@Override
-	public ImageData renderImage(float scale, int imageNr, int component) throws IOException {
-		return renderImage(scale, 0, imageNr, component);
+	public ImageData renderImage(float scale, CodeStreamAccessor accessor) throws IOException {
+		return renderImage(scale, 0, accessor);
 	}
 
 	@Override
-	public ImageData renderImage(float scale, int additionalDiscardLevels, int imageNr, int component) throws IOException {
+	public ImageData renderImage(float scale, int additionalDiscardLevels, CodeStreamAccessor accessor) throws IOException {
 		ImageData data = null;
 		
 		lock.lock();
 		try {
-			openCodestream(imageNr, component);
+			openCodestream(accessor);
 			int[] fullSize = decoder.getSize(activeCodestream);
 			data = decode(fullSize, scale, null);
 		} finally {
@@ -152,17 +128,17 @@ public class ZIPDecoder implements IDecodeAPI {
 	}
 
 	@Override
-	public ImageData renderImageRegion(float scale, Rectangle region, int imageNr, int component) throws IOException {
-		return renderImageRegion(scale, 0, region, imageNr, component);
+	public ImageData renderImageRegion(float scale, Rectangle region, CodeStreamAccessor accessor) throws IOException {
+		return renderImageRegion(scale, 0, region, accessor);
 	}
 
 	@Override
-	public ImageData renderImageRegion(float scale, int additionalDiscardLevels, Rectangle region, int imageNr, int component) throws IOException {
+	public ImageData renderImageRegion(float scale, int additionalDiscardLevels, Rectangle region, CodeStreamAccessor accessor) throws IOException {
 		ImageData data = null;
 		
 		lock.lock();
 		try {
-			openCodestream(imageNr, component);
+			openCodestream(accessor);
 			int[] fullSize = decoder.getSize(activeCodestream);
 			// If the region falls outside the image, render only the part within the image.
 			Rectangle clipped = region.intersection(new Rectangle(0, 0, fullSize[0], fullSize[1]));
@@ -179,41 +155,6 @@ public class ZIPDecoder implements IDecodeAPI {
 	 * Non-public
 	 * **********
 	 */
-	
-	private void scanZipEntries() throws IOException {
-		@SuppressWarnings("resource") // No the channel is not closed, it's going to be reused later on!
-		ZipFile zipFile = new ZipFile(channel);
-		
-		Map<Integer, Long> offsetMap = new HashMap<>();
-		Map<Integer, Long> sizeMap = new HashMap<>();
-		Pattern codestreamPattern = Pattern.compile("codestream_(\\d+)\\.j2c");
-		
-		int highestCodestreamNr = 0;
-		Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
-		while (zipEntries.hasMoreElements()) {
-			ZipEntry entry = zipEntries.nextElement();
-			if (entry.isDirectory()) continue;
-			Matcher matcher = codestreamPattern.matcher(entry.getName());
-			if (matcher.matches()) {
-				if (entry.getMethod() != ZipEntry.STORED) throw new IOException("Only ZIP files with method STORED (no compression) are supported.");
-				int codestreamNr = Integer.parseInt(matcher.group(1));
-				if (codestreamNr > highestCodestreamNr) highestCodestreamNr = codestreamNr;
-				// getRawOffset: This is the reason we use TrueVFS instead of java.util.zip.
-				long offset = 30 + entry.getName().length() + ((long)ReflectionUtils.invoke("getRawOffset", entry));
-				offsetMap.put(codestreamNr, offset);
-				sizeMap.put(codestreamNr, entry.getSize());
-			}
-		}
-		
-		codestreamOffsets = new long[highestCodestreamNr+1];
-		codestreamSizes = new long[codestreamOffsets.length];
-		for (Integer index: offsetMap.keySet()) {
-			codestreamOffsets[index] = offsetMap.get(index);
-			codestreamSizes[index] = sizeMap.get(index);
-		}
-		
-		channel.position(0);
-	}
 	
 	private int calculateDiscardLevels(int[] fullSize, float scale) {
 		int discard = 0;
@@ -270,82 +211,64 @@ public class ZIPDecoder implements IDecodeAPI {
 		return data;
 	}
 	
-	private void openCodestream(int imageNr, int componentNr) throws IOException {
+	private void openCodestream(CodeStreamAccessor accessor) throws IOException {
 		if (activeCodestream != null) closeCodestream();
-		int codestreamNr = imageNr*nrCodestreamsPerImage + componentNr;
-		if (codestreamNr >= codestreamOffsets.length || codestreamOffsets[codestreamNr] == 0) {
-			throw new IOException("Codestream not found: " + codestreamNr);
-		}
-		long offset = codestreamOffsets[codestreamNr];
-		long size = codestreamSizes[codestreamNr];
-		activeCodestream = new ZippedCodestreamSource(offset, size);
+		activeCodestream = new ZippedCodestreamSource();
+		activeCodestreamAccessor = accessor;
 	}
 	
 	private void closeCodestream() {
 		if (activeCodestream != null) {
 			activeCodestream.close();
 			activeCodestream = null;
+			activeCodestreamAccessor = null;
 		}
 	}
 	
 	private class ZippedCodestreamSource extends JavaByteSource {
 
-		private long csOffset;
-		private long csSize;
+		private long pos;
 		
-		public ZippedCodestreamSource(long offset, long size) throws IOException {
+		public ZippedCodestreamSource() throws IOException {
 			super(SRC_TYPE_J2K);
-			this.csOffset = offset;
-			this.csSize = size;
-			channel.position(csOffset);
+			this.pos = 0;
 		}
 		
 		@Override
 		public boolean seek(long pos) {
-			if (pos >= (csOffset + csSize)) return false;
-			try {
-				channel.position(csOffset + pos);
-			} catch (IOException e) {
-				return false;
-			}
+			this.pos = pos;
 			return true;
 		}
 		
 		@Override
 		public long skip(long len) {
 			long currentPos = getPos();
-			long canSkip = Math.min(len, (csOffset + csSize - currentPos));
+			long size = getSize();
+			long canSkip = Math.min(len, size - currentPos);
 			long newPos = currentPos + canSkip;
 			
-			if (newPos == csOffset + csSize) {
-				try { channel.position(csOffset + csSize); } catch (IOException e) {}
-				return -1;
-			}
-			else seek(newPos);
-			return canSkip;
+			seek(newPos);
+			if (newPos == size) return -1;
+			else return canSkip;
 		}
 		
 		@Override
 		public long getPos() {
-			try {
-				return (channel.position() - csOffset);
-			} catch (IOException e) {
-				return -1;
-			}
+			return pos;
 		}
 		
 		@Override
 		public long getSize() {
-			return csSize;
+			return activeCodestreamAccessor.getSize();
 		}
 		
 		@Override
 		public int read(int len) {
-			ByteBuffer dst = ByteBuffer.allocate(len);
 			try {
-				int bytesRead = channel.read(dst);
-				addBytesRead(dst.array(), 0, bytesRead);
-				return bytesRead;
+				byte[] data = activeCodestreamAccessor.getBytes(pos, len);
+				pos += data.length;
+				addBytesRead(data, 0, data.length);
+				return data.length;
 			} catch (IOException e) {
 				return 0;
 			}

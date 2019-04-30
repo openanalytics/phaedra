@@ -184,6 +184,10 @@ public class CacheService {
 			.timeToLiveSeconds(config.ttl)
 			.timeToIdleSeconds(config.tti)
 		;
+
+		if (config.maxBytes > 0) {
+			cacheConfiguration.maxBytesLocalHeap(config.maxBytes, MemoryUnit.BYTES);
+		}
 		
 		boolean diskStoreEnabled = config.useDisk && maxDiskSizeBytes > 0;
 		if (diskStoreEnabled) {

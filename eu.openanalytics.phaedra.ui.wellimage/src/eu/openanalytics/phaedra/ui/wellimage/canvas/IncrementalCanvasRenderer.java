@@ -39,7 +39,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 	@Override
 	public void initialize(ICanvasRenderCallback callback) {
 		this.renderCallback = callback;
-		this.executor = Executors.newFixedThreadPool(4);
+		this.executor = Executors.newFixedThreadPool(1);
 		this.runningRenderJobs = Collections.synchronizedSet(new HashSet<>());
 		this.highResRegions = Collections.synchronizedMap(new HashMap<>());
 		this.lqScale = 0.1f;

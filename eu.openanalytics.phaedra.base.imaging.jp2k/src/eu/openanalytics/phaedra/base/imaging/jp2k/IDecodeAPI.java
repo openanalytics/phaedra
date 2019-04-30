@@ -6,6 +6,8 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
+import eu.openanalytics.phaedra.base.imaging.jp2k.codestream.CodeStreamAccessor;
+
 /**
  * This API is used for decoding multiple images that are organized in a single source.
  * Individual images are accessed via two numbers, an image number (zero-based) and a component number (zero-based).
@@ -42,7 +44,7 @@ public interface IDecodeAPI extends AutoCloseable {
 	 * @return The original image size, in pixels.
 	 * @throws IOException If the image could not be accessed.
 	 */
-	public Point getSize(int imageNr) throws IOException;
+	public Point getSize(CodeStreamAccessor accessor) throws IOException;
 	
 	/**
 	 * Get the bit depth of the specified component in the specified image.
@@ -52,7 +54,7 @@ public interface IDecodeAPI extends AutoCloseable {
 	 * @return The bit depth of the codestream.
 	 * @throws IOException If the image could not be accessed.
 	 */
-	public int getBitDepth(int imageNr, int component) throws IOException;
+	public int getBitDepth(CodeStreamAccessor accessor) throws IOException;
 	
 	/**
 	 * Render an individual image component.
@@ -67,11 +69,11 @@ public interface IDecodeAPI extends AutoCloseable {
 	 * @return The pixels of the rendered image.
 	 * @throws IOException If the rendering failed.
 	 */
-	public ImageData renderImage(int w, int h, int imageNr, int component) throws IOException;
+	public ImageData renderImage(int w, int h, CodeStreamAccessor accessor) throws IOException;
 
-	public ImageData renderImage(float scale, int imageNr, int component) throws IOException;
+	public ImageData renderImage(float scale, CodeStreamAccessor accessor) throws IOException;
 	
-	public ImageData renderImage(float scale, int additionalDiscardLevels, int imageNr, int component) throws IOException;
+	public ImageData renderImage(float scale, int additionalDiscardLevels, CodeStreamAccessor accessor) throws IOException;
 	
 	/**
 	 * Render a region of an image.
@@ -87,8 +89,8 @@ public interface IDecodeAPI extends AutoCloseable {
 	 * @return The pixels of the rendered image.
 	 * @throws IOException If the rendering failed.
 	 */
-	public ImageData renderImageRegion(float scale, Rectangle region, int imageNr, int component) throws IOException;
+	public ImageData renderImageRegion(float scale, Rectangle region, CodeStreamAccessor accessor) throws IOException;
 
-	public ImageData renderImageRegion(float scale, int additionalDiscardLevels, Rectangle region, int imageNr, int component) throws IOException;
+	public ImageData renderImageRegion(float scale, int additionalDiscardLevels, Rectangle region, CodeStreamAccessor accessor) throws IOException;
 	
 }

@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +25,6 @@ import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.fs.FileServerConfig;
-import eu.openanalytics.phaedra.base.util.io.CachingByteRange.DataFetcher;
-import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
 
 public class S3Interface extends BaseFileServer {
 
@@ -161,17 +158,7 @@ public class S3Interface extends BaseFileServer {
 	@Override
 	public SeekableByteChannel getChannel(String path, String mode) throws IOException {
 		if (mode.toLowerCase().contains("w")) throw new IOException("S3 interface does not support writable channels");
-		return new CachingSeekableChannel(new SeekableS3Channel(s3, bucketName, getKey(path))) {
-			@Override
-			protected DataFetcher createDataFetcher(SeekableByteChannel delegate) {
-				return (o,l) -> {
-					byte[] data = new byte[l];
-					((SeekableS3Channel) delegate).position(o, l);
-					delegate.read(ByteBuffer.wrap(data));
-					return data;
-				};
-			}
-		};
+		return new SeekableS3Channel(s3, bucketName, getKey(path));
 	}
 
 	@Override

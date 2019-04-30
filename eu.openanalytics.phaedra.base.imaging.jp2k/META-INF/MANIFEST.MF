@@ -11,8 +11,10 @@ Require-Bundle: org.eclipse.ui,
  eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.imaging.util;bundle-version="1.0.0";visibility:=reexport,
  eu.openanalytics.phaedra.base.scripting;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0"
+ eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ net.java.truevfs
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.imaging.jp2k,
+ eu.openanalytics.phaedra.base.imaging.jp2k.codestream,
  eu.openanalytics.phaedra.base.imaging.jp2k.comp

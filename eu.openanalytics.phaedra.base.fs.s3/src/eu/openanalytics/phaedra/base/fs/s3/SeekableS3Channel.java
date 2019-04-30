@@ -8,7 +8,13 @@ import java.nio.channels.SeekableByteChannel;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
+/**
+ * Implements a SeekableByteChannel on top of a S3 object.
+ * Every read() will trigger an HTTP call, so performance-wise it is important
+ * to perform sufficiently large chunk reads and implement caching on a higher level.
+ */
 public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 
 	private AmazonS3 s3;
@@ -17,7 +23,6 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 
 	private long length;
 	
-	private S3Object currentObject;
 	private boolean open;
 	private long pos;
 	
@@ -29,7 +34,6 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 		this.length = s3.getObjectMetadata(bucketName, key).getContentLength();
 		this.open = true;
 		this.pos = -1;
-//		seek(0, -1);
 	}
 	
 	@Override
@@ -39,7 +43,6 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 
 	@Override
 	public void close() throws IOException {
-		if (currentObject != null) currentObject.close();
 		open = false;
 	}
 
@@ -48,18 +51,24 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 		int requestedRead = dst.remaining();
 		if (requestedRead < 1) return requestedRead;
 		
-		if (pos == -1) seek(0, requestedRead);
-		
 		byte[] bytes = new byte[requestedRead];
-		
 		int totalRead = 0;
-		while (totalRead < requestedRead) {
-			int read = currentObject.getObjectContent().read(bytes, totalRead, bytes.length - totalRead);
-			if (read == -1) break;
-			totalRead += read;
+		
+		GetObjectRequest req = new GetObjectRequest(bucketName, key);
+		req.setRange(pos, pos + requestedRead - 1);
+		try (
+			S3Object o = s3.getObject(req);
+			S3ObjectInputStream input = o.getObjectContent();
+		) {
+			while (totalRead < requestedRead) {
+				int read = input.read(bytes, totalRead, bytes.length - totalRead);
+				if (read == -1) break;
+				totalRead += read;
+			}
 		}
 		
 		dst.put(bytes, 0, totalRead);
+		pos += totalRead;
 		return totalRead;
 	}
 
@@ -75,12 +84,7 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 
 	@Override
 	public SeekableByteChannel position(long newPosition) throws IOException {
-		seek(newPosition, -1);
-		return this;
-	}
-
-	public SeekableByteChannel position(long newPosition, long expectedRead) throws IOException {
-		seek(newPosition, expectedRead);
+		pos = newPosition;
 		return this;
 	}
 	
@@ -92,15 +96,5 @@ public class SeekableS3Channel implements SeekableByteChannel, Closeable {
 	@Override
 	public SeekableByteChannel truncate(long size) throws IOException {
 		throw new IOException("S3 writes are not supported");
-	}
-	
-	private void seek(long newPos, long expectedRead) throws IOException {
-		if (pos == newPos && expectedRead == 0) return;
-		this.pos = newPos;
-		GetObjectRequest req = new GetObjectRequest(bucketName, key);
-		if (expectedRead == -1) req.setRange(pos);
-		else req.setRange(pos, pos + expectedRead - 1);
-		if (currentObject != null) currentObject.close();
-		this.currentObject = s3.getObject(req);
 	}
 }

@@ -1,11 +1,16 @@
 package eu.openanalytics.phaedra.wellimage;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.SeekableByteChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -13,22 +18,33 @@ import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 
+import eu.openanalytics.phaedra.base.cache.CacheConfig;
+import eu.openanalytics.phaedra.base.cache.CacheKey;
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.imaging.jp2k.IDecodeAPI;
+import eu.openanalytics.phaedra.base.imaging.jp2k.codestream.CodeStreamAccessor;
+import eu.openanalytics.phaedra.base.imaging.jp2k.codestream.CodeStreamIndex;
+import eu.openanalytics.phaedra.base.imaging.jp2k.codestream.ICodeStreamByteSource;
+import eu.openanalytics.phaedra.base.util.io.CachingByteRange.DataFetcher;
+import eu.openanalytics.phaedra.base.util.io.CachingSeekableChannel;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
+import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
+import eu.openanalytics.phaedra.wellimage.component.ComponentBlender;
 import eu.openanalytics.phaedra.wellimage.preferences.Prefs;
 import eu.openanalytics.phaedra.wellimage.render.DecoderPool;
+import eu.openanalytics.phaedra.wellimage.render.ImageChannelPool;
 import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequest;
 import eu.openanalytics.phaedra.wellimage.render.ImageRenderRequestFactory;
-import eu.openanalytics.phaedra.wellimage.render.ImageRenderer;
 
 /**
  * API for rendering well and sub-well images.
@@ -50,16 +66,24 @@ public class ImageRenderService {
 
 private static ImageRenderService instance = new ImageRenderService();
 	
+	private ImageChannelPool imageChannelPool;
 	private DecoderPool decoderPool;
-	private ExecutorService executor;
+	private ExecutorService renderExecutor;
+	
 	private ICache imageCache;
+	private ICache codestreamCache;
 	
 	private Collection<IPropertyChangeListener> propertyListeners;
 	
 	private ImageRenderService() {
-		decoderPool = new DecoderPool(4, 300000L);
-		executor = Executors.newCachedThreadPool();
+		imageChannelPool = new ImageChannelPool(5, 300000L);
+		decoderPool = new DecoderPool(300000L);
+		renderExecutor = Executors.newFixedThreadPool(10);
 		imageCache = CacheService.getInstance().createCache("ImageCache");
+		
+		CacheConfig cfg = new CacheConfig("ImageCodestreamCache");
+		cfg.maxBytes = Math.max(200000000L, (long) (CacheService.getInstance().getMaxHeapSizeBytes() * 0.1));
+		codestreamCache = CacheService.getInstance().createCache(cfg);
 		
 		this.propertyListeners = new HashSet<>();
 		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(e -> {
@@ -99,8 +123,8 @@ private static ImageRenderService instance = new ImageRenderService();
 		Point size = (Point) imageCache.get(key);
 		if (size == null) {
 			try {
-				int imageNr = PlateUtils.getWellNr(well) - 1;
-				Point fullImageSize = useDecoder(well.getPlate(), dc -> dc.getSize(imageNr));
+				CodeStreamAccessor accessor = getAccessor(well, 0, getIndex(well.getPlate()));
+				Point fullImageSize = useDecoder(dc -> dc.getSize(accessor));
 				size = new Point((int) (fullImageSize.x * scale), (int) (fullImageSize.y * scale));
 			} catch (IOException e) {
 				size = new Point(0, 0);
@@ -120,8 +144,8 @@ private static ImageRenderService instance = new ImageRenderService();
 	 */
 	public int getWellImageDepth(Well well, int channelNr) {
 		try {
-			int imageNr = PlateUtils.getWellNr(well) - 1;
-			return useDecoder(well.getPlate(), dc -> dc.getBitDepth(imageNr, channelNr));
+			CodeStreamAccessor accessor = getAccessor(well, channelNr, getIndex(well.getPlate()));
+			return useDecoder(dc -> dc.getBitDepth(accessor));
 		} catch (IOException e) {
 			return 0;
 		}
@@ -340,31 +364,168 @@ private static ImageRenderService instance = new ImageRenderService();
 	 * @param plate The plate whose resources will be closed.
 	 */
 	public void releaseDecoders(Plate plate) {
-		decoderPool.clear(plate);
+		imageChannelPool.clear(plate);
 	}
 	
 	private ImageData renderImage(ImageRenderRequest req) throws IOException {
-		return useDecoder(req.well.getPlate(), dc -> new ImageRenderer().render(req, dc));
+		CodeStreamIndex csIndex = getIndex(req.well.getPlate());
+		
+		ImageSettings imageSettings = req.customSettings;
+		if (imageSettings == null) imageSettings = ImageSettingsFactory.getSettings(req.well);
+		List<ImageChannel> channels = imageSettings.getImageChannels();
+		
+		// Determine which components should be rendered.
+		boolean[] compFilter = req.components;
+		if (compFilter == null || compFilter.length == 0) {
+			// If no component filter is provided, assume that all components must be rendered.
+			compFilter = new boolean[channels.size()];
+			Arrays.fill(compFilter, true);
+		}
+		if (compFilter.length > channels.size()) {
+			compFilter = Arrays.copyOf(compFilter, channels.size());
+		}
+
+		int enabledCompCnt = 0;
+		for (boolean enabled : compFilter) {
+			if (enabled) enabledCompCnt++;
+		}
+
+		ImageChannel[] enabledChannels = new ImageChannel[enabledCompCnt];
+		List<Future<ImageData>> results = new ArrayList<>();
+		int index = 0;
+		for (int compNr = 0; compNr < compFilter.length; compNr++) {
+			if (!compFilter[compNr]) continue;
+			enabledChannels[index++] = channels.get(compNr);
+
+			CodeStreamAccessor accessor = getAccessor(req.well, compNr, csIndex);
+			if (req.region != null) {
+				results.add(useDecoderAsync(api -> api.renderImageRegion(req.scale, req.region, accessor)));
+			} else if (req.size != null) {
+				results.add(useDecoderAsync(api -> api.renderImage(req.size.x, req.size.y, accessor)));
+			} else if (req.scale != 0.0f) {
+				results.add(useDecoderAsync(api -> api.renderImage(req.scale, accessor)));
+			} else {
+				throw new IOException("Cannot render: no render scale or size provided");
+			}
+			
+		}
+		
+		ImageData[] datas = new ImageData[enabledCompCnt];
+		for (int i = 0; i < datas.length; i++) {
+			try {
+				datas[i] = results.get(i).get();
+			} catch (Exception e) {
+				throw new IOException("Error rendering image", e);
+			}
+		}
+		
+		// Blend the components into a single output image.
+		ImageData data = datas[0];
+		if (req.applyBlend) {
+			ComponentBlender blender = new ComponentBlender(enabledChannels);
+			data = blender.blend(datas);
+		}
+
+		// Apply gamma, but only if gamma != 1.0
+		if (req.applyGamma) {
+			float gamma = ((float)imageSettings.getGamma())/10;
+			if (data != null && gamma != 1f) data = ImageUtils.applyGamma(data, gamma);
+		}
+
+		return data;
 	}
 	
-	private <T> T useDecoder(Plate plate, DecodeOperation<T> operation) throws IOException {
+	private <T> T useDecoder(DecodeOperation<T> operation) throws IOException {
 		try {
-			return executor.submit(() -> {
-				IDecodeAPI decoder = decoderPool.borrowObject(plate);
-				try {
-					return operation.apply(decoder);
-				} finally {
-					decoderPool.returnObject(plate, decoder);
-				}
-			}).get();
+			IDecodeAPI decoder = decoderPool.borrowObject();
+			try {
+				return operation.apply(decoder);
+			} finally {
+				decoderPool.returnObject(decoder);
+			}
 		} catch (Throwable e) {
 			if (e.getCause() instanceof IOException) throw (IOException) e.getCause();
 			else throw new IOException("Failed to decode image", e);
 		}
 	}
 	
+	private <T> Future<T> useDecoderAsync(DecodeOperation<T> operation) throws IOException {
+		return renderExecutor.submit(() -> {
+			return useDecoder(operation);
+		});
+	}
+	
+	private synchronized CodeStreamIndex getIndex(Plate plate) throws IOException {
+		Object key = getCSIndexCacheKey(plate);
+		CodeStreamIndex csIndex = (CodeStreamIndex) codestreamCache.get(key);
+		if (csIndex == null) {
+			csIndex = new CodeStreamIndex();
+			SeekableByteChannel channel = null;
+			try {
+				channel = imageChannelPool.borrowObject(plate);
+				SeekableByteChannel wrappingChannel = new CachingSeekableChannel(channel) {
+					@Override
+					protected DataFetcher createDataFetcher(SeekableByteChannel delegate) {
+						return (o,l) -> {
+							byte[] data = new byte[l];
+							delegate.position(o);
+							delegate.read(ByteBuffer.wrap(data));
+							return data;
+						};
+					}
+				};
+				csIndex.parse(wrappingChannel);
+			} catch (Exception e) {
+				throw new IOException("Failed to obtain image channel for plate " + plate, e);
+			} finally {
+				imageChannelPool.returnObject(plate, channel);
+			}
+			codestreamCache.put(key, csIndex);
+		}
+		return csIndex;
+	}
+	
+	private synchronized CodeStreamAccessor getAccessor(Well well, int compNr, CodeStreamIndex csIndex) throws IOException {
+		Object key = getCSCacheKey(well, compNr);
+		CodeStreamAccessor accessor = (CodeStreamAccessor) codestreamCache.get(key);
+		if (accessor == null) {
+			ProtocolClass pClass = PlateUtils.getProtocolClass(well.getPlate());
+			int imageNr = PlateUtils.getWellNr(well) - 1;
+			int imageChannels = pClass.getImageSettings().getImageChannels().size();
+			int codestream = imageNr * imageChannels + compNr;
+			accessor = new CodeStreamAccessor();
+			accessor.init(new PooledByteSource(well.getPlate()), csIndex.getOffset(codestream), (int) csIndex.getSize(codestream), 0.1f);
+			codestreamCache.put(key, accessor);
+		}
+		return accessor;
+	}
+	
 	private static interface DecodeOperation<T> {
 		public T apply(IDecodeAPI decoder) throws IOException;
+	}
+	
+	private class PooledByteSource implements ICodeStreamByteSource {
+		
+		private Plate plate;
+		
+		public PooledByteSource(Plate plate) {
+			this.plate = plate;
+		}
+		
+		@Override
+		public void get(long offset, int size, ByteBuffer destination) throws IOException {
+			SeekableByteChannel channel = null;
+			try {
+				channel = imageChannelPool.borrowObject(plate);
+				channel.position(offset);
+				channel.read(destination);
+			} catch (Exception e) {
+				throw new IOException("Failed to obtain image channel for plate " + plate, e);
+			} finally {
+				imageChannelPool.returnObject(plate, channel);
+			}
+			
+		}
 	}
 	
 	private Object getCacheKey(ImageRenderRequest req) {
@@ -375,4 +536,11 @@ private static ImageRenderService instance = new ImageRenderService();
 		else return null;
 	}
 
+	private Object getCSIndexCacheKey(Plate plate) {
+		return new CacheKey("CSIndex", plate.getId());
+	}
+	
+	private Object getCSCacheKey(Well well, int compNr) {
+		return new CacheKey("CS", well.getId(), compNr);
+	}
 }

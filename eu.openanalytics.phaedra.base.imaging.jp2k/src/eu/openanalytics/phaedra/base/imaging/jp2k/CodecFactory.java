@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.base.imaging.jp2k;
 
 import java.io.IOException;
-import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,14 +28,13 @@ public class CodecFactory {
 		return SUPPORTED_FORMATS;
 	}
 	
-	public static IDecodeAPI getDecoder(SeekableByteChannel channel, int imageCount, int componentCount) throws IOException {
-		if (channel == null) return null;
+	public static IDecodeAPI getDecoder() throws IOException {
 		if (preferredCodec != null) {
-			IDecodeAPI decoder = preferredCodec.getDecoder(channel, imageCount, componentCount);
+			IDecodeAPI decoder = preferredCodec.getDecoder();
 			if (decoder != null) return decoder;
 		}
 		for (ICodec codec: codecs) {
-			IDecodeAPI decoder = codec.getDecoder(channel, imageCount, componentCount);
+			IDecodeAPI decoder = codec.getDecoder();
 			if (decoder != null) return decoder;
 		}
 		return null;

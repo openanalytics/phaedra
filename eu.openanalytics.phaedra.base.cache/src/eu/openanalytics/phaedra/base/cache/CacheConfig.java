@@ -9,6 +9,7 @@ public class CacheConfig {
 	public boolean useDisk;
 	public int ttl;
 	public int tti;
+	public long maxBytes;
 	
 	public CacheConfig() {
 		this(null);
