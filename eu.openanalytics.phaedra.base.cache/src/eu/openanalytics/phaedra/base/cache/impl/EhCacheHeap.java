@@ -73,6 +73,9 @@ public class EhCacheHeap implements ICache {
 	
 	@Override
 	public boolean contains(Object key) {
+		// Workaround: isKeyInCache may return true for expired elements.
+		// Fetching the element here is slower, but forces eviction of expired elements.
+		cache.get(key);
 		return cache.isKeyInCache(key);
 	}
 
