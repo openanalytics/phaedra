@@ -226,7 +226,7 @@ CREATE TABLE phaedra.hca_plate (
 	plate_id			bigint not null,
 	experiment_id		bigint not null,
 	sequence_in_run		integer not null,
-	barcode 			varchar(64),
+	barcode 			varchar(200),
 	barcode_source		varchar(25),
 	description			varchar(200),
 	plate_info 			varchar(100),

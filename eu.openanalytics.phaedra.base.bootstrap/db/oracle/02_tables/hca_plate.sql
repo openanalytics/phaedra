@@ -8,7 +8,7 @@ create table hca_plate (
 	plate_id			number not null,
 	experiment_id		number not null, 
 	sequence_in_run		number not null,
-	barcode 			varchar2(64),
+	barcode 			varchar2(200),
 	barcode_source		varchar2(25),
 	description			varchar2(200),
 	plate_info 			varchar2(100),
