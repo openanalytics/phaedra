@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.datacapture.scanner.scannerType">
+      <scannerType
+            class="eu.openanalytics.phaedra.datacapture.s3.SQSScannerType"
+            id="sqsScanner">
+      </scannerType>
+   </extension>
+
+</plugin>

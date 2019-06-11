@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: S3 Datacapture
-Bundle-SymbolicName: eu.openanalytics.phaedra.datacapture.s3
+Bundle-SymbolicName: eu.openanalytics.phaedra.datacapture.s3;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.datacapture.s3.Activator
 Bundle-Vendor: OpenAnalytics
