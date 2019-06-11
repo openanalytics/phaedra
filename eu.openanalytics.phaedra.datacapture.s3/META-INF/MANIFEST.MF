@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: S3 Datacapture
+Bundle-SymbolicName: eu.openanalytics.phaedra.datacapture.s3
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: eu.openanalytics.phaedra.datacapture.s3.Activator
+Bundle-Vendor: OpenAnalytics
+Require-Bundle: org.eclipse.core.runtime,
+ com.amazon.aws;bundle-version="1.11.107",
+ eu.openanalytics.phaedra.datacapture,
+ eu.openanalytics.phaedra.datacapture.scanner,
+ eu.openanalytics.phaedra.base.util
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: eu.openanalytics.phaedra.datacapture.s3
+Bundle-ActivationPolicy: lazy

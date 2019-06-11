@@ -57,13 +57,24 @@ public class DataCapturer {
 			
 			if (mon.isCanceled()) doCancel(false, ctx, task, mon);
 
-			// Find out if any modules have to be skipped.
 			List<IModule> modulesToExecute = new ArrayList<>();
+			
+			IModule[] preModules = (IModule[]) task.getParameters().get(DataCaptureParameter.PreModules.name());
+			if (preModules != null && preModules.length > 0) {
+				for (IModule preModule: preModules) modulesToExecute.add(preModule);
+			}
+			
+			// Find out if any modules have to be skipped.
 			String[] moduleFilter = task.getModuleFilter();
 			for (int i=0; i<modules.length; i++) {
 				if (moduleFilter == null  || CollectionUtils.find(moduleFilter, modules[i].getId()) != -1) {
 					modulesToExecute.add(modules[i]);
 				}
+			}
+			
+			IModule[] postModules = (IModule[]) task.getParameters().get(DataCaptureParameter.PostModules.name());
+			if (postModules != null && postModules.length > 0) {
+				for (IModule postModule: postModules) modulesToExecute.add(postModule);
 			}
 			
 			double totalWeight = modulesToExecute.stream().mapToInt(m -> m.getWeight()).sum();

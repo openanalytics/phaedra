@@ -105,6 +105,7 @@
 		<module>eu.openanalytics.phaedra.datacapture.metrics</module>
 		<module>eu.openanalytics.phaedra.datacapture.parser</module>
 		<module>eu.openanalytics.phaedra.datacapture.scanner</module>
+		<module>eu.openanalytics.phaedra.datacapture.s3</module>
 		<module>eu.openanalytics.phaedra.export</module>
 		<module>eu.openanalytics.phaedra.link.importer</module>
 		<module>eu.openanalytics.phaedra.link.platedef</module>

@@ -16,10 +16,10 @@ var pattern = getParameter("plate.folder.pattern", ".*");
 var barcodeGroup = getParameter("plate.folder.barcode.group", 1);
 var sequenceGroup = getParameter("plate.folder.sequence.group");
 var plateIds = getParameterAsObject("plateIds");
-var sourcePath = task.getSource();
+var sourcePath = getParameter("source.path", task.getSource());
 var readingNr = 1;
 
-scanFolder(task.getSource());
+scanFolder(sourcePath);
 
 // If no readings are found, search 1 level deeper.
 if (ctx.getReadings().length == 0) {

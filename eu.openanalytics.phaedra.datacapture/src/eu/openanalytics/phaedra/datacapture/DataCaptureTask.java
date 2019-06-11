@@ -23,7 +23,10 @@ public class DataCaptureTask {
 		PlateMapping,			// To capture into existing plates
 		
 		CreateMissingWellFeatures,
-		CreateMissingSubWellFeatures
+		CreateMissingSubWellFeatures,
+		
+		PreModules,				// Additional modules to execute at the beginning of the task
+		PostModules				// Additional modules to execute at the end of the task
 	};
 	
 	public DataCaptureTask() {
