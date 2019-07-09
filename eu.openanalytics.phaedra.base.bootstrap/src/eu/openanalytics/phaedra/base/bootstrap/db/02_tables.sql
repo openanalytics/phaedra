@@ -878,7 +878,7 @@ CREATE TABLE phaedra.hca_plate_template (
 	rows				integer not null,
 	columns				integer not null,
 	creator				varchar2(200),
-	data_xml			xml	
+	data_xml			clob
 );
 
 ALTER TABLE phaedra.hca_plate_template
@@ -897,9 +897,8 @@ CREATE SEQUENCE phaedra.hca_plate_template_s
 	MAXVALUE 9223372036854775807
 	NO CYCLE;
 
-GRANT INSERT, UPDATE, DELETE ON phaedra.hca_plate_template to :accountNameWrite;
-GRANT SELECT, USAGE ON phaedra.hca_plate_template_s to :accountNameWrite;
-GRANT SELECT ON phaedra.hca_plate_template to :accountNameRead;
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_plate_template to phaedra_role_crud;
+GRANT SELECT ON phaedra.hca_plate_template to phaedra_role_read;
 
 -- -----------------------------------------------------------------------
 
