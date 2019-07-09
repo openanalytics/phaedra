@@ -44,7 +44,12 @@ public class Prefs extends AbstractPreferenceInitializer {
 	}
 	
 	public static void setDefaultLoginId(String defaultLoginId) {
-		getStore().setValue(COLUMBUS_DEFAULT_ID, defaultLoginId);
+		if (defaultLoginId != null) {
+			getStore().setValue(COLUMBUS_DEFAULT_ID, defaultLoginId);
+		}
+		else {
+			getStore().setToDefault(COLUMBUS_DEFAULT_ID);
+		}
 	}
 	
 	public static IPreferenceStore getStore() {
