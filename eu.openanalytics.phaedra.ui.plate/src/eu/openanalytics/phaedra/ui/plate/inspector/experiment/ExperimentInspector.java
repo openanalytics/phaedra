@@ -66,13 +66,14 @@ public class ExperimentInspector extends DecoratedView {
 
 	private ISelectionListener selectionListener;
 	private IUIEventListener featureListener;
-	private Experiment currentExperiment;
-	private Feature currentFeature;
+	private volatile Experiment currentExperiment;
+	private volatile Feature currentFeature;
 
 	private final static Color LBL_BG_RED = new Color(null, 255, 170, 170);
 	private final static Color LBL_BG_GREEN = new Color(null, 170, 255, 170);
 
 	private ExperimentStatistics expStats;
+	private FeatureStatistics featureStats;
 
 	@Override
 	public void createPartControl(Composite parent) {
@@ -171,12 +172,9 @@ public class ExperimentInspector extends DecoratedView {
 
 		statsTableViewer = new RichTableViewer(sectionContainer, SWT.BORDER);
 		statsTableViewer.setContentProvider(new ArrayContentProvider());
-		statsTableViewer.setData(LOADING, false);
 		statsTableViewer.setInput(new String[] { "mean", "stdev", "median", "mad", "min", "max" });
 		statsTableViewer.applyColumnConfig(configureColumns());
 		GridDataFactory.fillDefaults().grab(true, true).span(2,1).applyTo(statsTableViewer.getControl());
-
-		expStats = new ExperimentStatistics();
 
 		// Selection handling
 		selectionListener = (part, selection) -> {
@@ -191,9 +189,11 @@ public class ExperimentInspector extends DecoratedView {
 		getSite().getPage().addSelectionListener(selectionListener);
 		featureListener = event -> {
 			if (event.type == EventType.FeatureSelectionChanged) {
-				currentFeature = ProtocolUIService.getInstance().getCurrentFeature();
+				Experiment experiment = currentExperiment;
+				Feature feature = ProtocolUIService.getInstance().getCurrentFeature();
+				currentFeature = feature;
 				JobUtils.runUserJob(monitor -> {
-					loadFeatureStats();
+					loadFeatureStats(experiment, feature);
 				}, "Updating Experiment Inspector", 100, toString() + "FS", null);
 			}
 		};
@@ -235,46 +235,52 @@ public class ExperimentInspector extends DecoratedView {
 	}
 
 	private void loadExperiment() {
-		expStats.loadExperiment(currentExperiment);
+		Experiment experiment = currentExperiment;
+		Feature feature = currentFeature;
+		
+		expStats = new ExperimentStatistics(experiment);
+		expStats.load();
+		featureStats = null;
 
-		breadcrumb.setInput(currentExperiment);
+		breadcrumb.setInput(experiment);
 		breadcrumb.getControl().getParent().layout();
 
-		nameTxt.setText(currentExperiment.getName());
-		idTxt.setText("" + currentExperiment.getId());
-		creationDateTxt.setText(currentExperiment.getCreateDate().toString());
-		creatorTxt.setText(currentExperiment.getCreator());
+		nameTxt.setText(experiment.getName());
+		idTxt.setText("" + experiment.getId());
+		creationDateTxt.setText(experiment.getCreateDate().toString());
+		creatorTxt.setText(experiment.getCreator());
 
-		String description = currentExperiment.getDescription();
+		String description = experiment.getDescription();
 		if (description == null || description.isEmpty()) description = "<None>";
 		descriptionTxt.setText(description);
-		String comments = currentExperiment.getComments();
+		String comments = experiment.getComments();
 		if (comments == null || comments.isEmpty()) comments = "<None>";
 		commentsTxt.setText(comments);
 
-		protocolTxt.setText(currentExperiment.getProtocol().toString());
-		protocolClassTxt.setText(currentExperiment.getProtocol().getProtocolClass().toString());
+		protocolTxt.setText(experiment.getProtocol().toString());
+		protocolClassTxt.setText(experiment.getProtocol().getProtocolClass().toString());
 
 		sizeImageDataTxt.setText(LOADING);
 		sizeSubwellDataTxt.setText(LOADING);
 
-		validationLbls[0].setText(" ...");
-		validationLbls[1].setText(" ...");
-		validationLbls[2].setText(" ...");
+		validationLbls[0].setText(String.valueOf(expStats.getNrOfInvalidPlates()));
+		validationLbls[1].setText(String.valueOf(expStats.getNrOfValidPlates()));
+		validationLbls[2].setText(String.valueOf(expStats.getNrOfUnvalidatedPlates()));
 
-		approvalLbls[0].setText(" ...");
-		approvalLbls[1].setText(" ...");
-		approvalLbls[2].setText(" ...");
+		approvalLbls[0].setText(String.valueOf(expStats.getNrOfDisapprovedPlates()));
+		approvalLbls[1].setText(String.valueOf(expStats.getNrOfApprovedPlates()));
+		approvalLbls[2].setText(String.valueOf(expStats.getNrOfUnapprovedPlates()));
 
-		exportLbls[0].setText(" ...");
-		exportLbls[1].setText(" ...");
-		exportLbls[2].setText(" ...");
+		exportLbls[0].setText(String.valueOf(expStats.getNrOfNotUploadedPlates()));
+		exportLbls[1].setText(String.valueOf(expStats.getNrOfUploadedPlates()));
+		exportLbls[2].setText(String.valueOf(expStats.getNrOfUploadNotSetPlates()));
 
-		statsTableViewer.setData(LOADING, true);
 		statsTableViewer.refresh();
 
 		JobUtils.runUserJob(monitor -> {
-			List<Plate> plates = PlateService.getInstance().getPlates(currentExperiment);
+			if (experiment != currentExperiment) return;
+			
+			List<Plate> plates = PlateService.getInstance().getPlates(experiment);
 			long imageSize = 0l;
 			long hdf5Size = 0l;
 			for (Plate p : plates) {
@@ -287,13 +293,15 @@ public class ExperimentInspector extends DecoratedView {
 			long imageSizeFinal = imageSize;
 			long hdf5SizeFinal = hdf5Size;
 			Display.getDefault().asyncExec(() -> {
-				if (sizeImageDataTxt.isDisposed()) return;
+				if (sizeImageDataTxt.isDisposed()
+						|| experiment != currentExperiment) return;
+				
 				sizeImageDataTxt.setText(FileUtils.getHumanReadableByteCount(imageSizeFinal, false));
 				sizeSubwellDataTxt.setText(FileUtils.getHumanReadableByteCount(hdf5SizeFinal, false));
 			});
 
 			// calc.calculate() is called in this method.
-			loadFeatureStats();
+			loadFeatureStats(experiment, feature);
 		}, "Loading Experiment data (" + currentExperiment.getName() + ")", 100, toString(), null);
 	}
 
@@ -306,24 +314,19 @@ public class ExperimentInspector extends DecoratedView {
 		return 0;
 	}
 
-	private void loadFeatureStats() {
-		expStats.loadFeature(currentFeature);
+	private void loadFeatureStats(Experiment experiment, Feature feature) {
+		if (experiment != currentExperiment || feature != currentFeature) return;
+		
+		FeatureStatistics stats = new FeatureStatistics(experiment, feature);
+		stats.load();
+		
 		Display.getDefault().asyncExec(() -> {
-			if (statsTableViewer.getTable().isDisposed()) return;
-			validationLbls[0].setText(String.valueOf(expStats.getNrOfInvalidPlates()));
-			validationLbls[1].setText(String.valueOf(expStats.getNrOfValidPlates()));
-			validationLbls[2].setText(String.valueOf(expStats.getNrOfUnvalidatedPlates()));
-
-			approvalLbls[0].setText(String.valueOf(expStats.getNrOfDisapprovedPlates()));
-			approvalLbls[1].setText(String.valueOf(expStats.getNrOfApprovedPlates()));
-			approvalLbls[2].setText(String.valueOf(expStats.getNrOfUnapprovedPlates()));
-
-			exportLbls[0].setText(String.valueOf(expStats.getNrOfNotUploadedPlates()));
-			exportLbls[1].setText(String.valueOf(expStats.getNrOfUploadedPlates()));
-			exportLbls[2].setText(String.valueOf(expStats.getNrOfUploadNotSetPlates()));
-
-			currentFeatureLbl.setText(currentFeature == null ? "" : currentFeature.getDisplayName());
-			statsTableViewer.setData(LOADING, false);
+			if (statsTableViewer.getTable().isDisposed()
+					|| experiment != currentExperiment || feature != currentFeature) return;
+			
+			featureStats = stats;
+			
+			currentFeatureLbl.setText(feature == null ? "" : feature.getDisplayName());
 			statsTableViewer.refresh();
 		});
 	}
@@ -346,11 +349,12 @@ public class ExperimentInspector extends DecoratedView {
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
-				if ((boolean) statsTableViewer.getData(LOADING) == true) {
+				FeatureStatistics stats = featureStats;
+				if (stats == null) {
 					cell.setText("...");
 				} else {
 					String stat = cell.getElement().toString();
-					String value = NumberUtils.round(StatService.getInstance().calculate(stat, expStats.getZPrimes()), 2);
+					String value = NumberUtils.round(StatService.getInstance().calculate(stat, stats.getZPrimes()), 2);
 					cell.setText(value);
 				}
 			}
@@ -362,11 +366,12 @@ public class ExperimentInspector extends DecoratedView {
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
-				if ((boolean) statsTableViewer.getData(LOADING) == true) {
+				FeatureStatistics stats = featureStats;
+				if (stats == null) {
 					cell.setText("...");
 				} else {
 					String stat = cell.getElement().toString();
-					String value = NumberUtils.round(StatService.getInstance().calculate(stat, expStats.getSNS()), 2);
+					String value = NumberUtils.round(StatService.getInstance().calculate(stat, stats.getSNS()), 2);
 					cell.setText(value);
 				}
 			}
@@ -378,11 +383,12 @@ public class ExperimentInspector extends DecoratedView {
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
-				if ((boolean) statsTableViewer.getData(LOADING) == true) {
+				FeatureStatistics stats = featureStats;
+				if (stats == null) {
 					cell.setText("...");
 				} else {
 					String stat = cell.getElement().toString();
-					String value = NumberUtils.round(StatService.getInstance().calculate(stat, expStats.getSBS()), 2);
+					String value = NumberUtils.round(StatService.getInstance().calculate(stat, stats.getSBS()), 2);
 					cell.setText(value);
 				}
 			}

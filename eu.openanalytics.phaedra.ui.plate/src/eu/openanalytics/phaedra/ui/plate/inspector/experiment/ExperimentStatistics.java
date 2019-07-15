@@ -3,11 +3,9 @@ package eu.openanalytics.phaedra.ui.plate.inspector.experiment;
 import java.util.ArrayList;
 import java.util.List;
 
-import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateApprovalStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateUploadStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
@@ -15,7 +13,6 @@ import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStat
 public class ExperimentStatistics {
 
 	private Experiment experiment;
-	private Feature feature;
 
 	private int nrOfPlates;
 	private int nrOfValidPlates;
@@ -25,20 +22,15 @@ public class ExperimentStatistics {
 	private int nrOfUploadedPlates;
 	private int nrOfNotUploadedPlates;
 
-	private double[] zPrimes;
-	private double[] sbs;
-	private double[] sns;
-
 	public ExperimentStatistics() {
-		this(null, null);
+		this(null);
 	}
 
-	public ExperimentStatistics(Experiment experiment, Feature feature) {
+	public ExperimentStatistics(Experiment experiment) {
 		this.experiment = experiment;
-		this.feature = feature;
 	}
 
-	private void loadExperimentStatistics() {
+	public void load() {
 		List<Plate> plates = getPlates();
 
 		nrOfValidPlates = 0;
@@ -61,41 +53,9 @@ public class ExperimentStatistics {
 		}
 	}
 
-	private void loadExperimentFeatureStatistics() {
-		if (feature == null) {
-			this.zPrimes = new double[0];
-			this.sbs = new double[0];
-			this.sns = new double[0];
-		} else {
-			List<Plate> plates = getPlates();
-
-			int nrOfPlates = plates.size();
-			zPrimes = new double[nrOfPlates];
-			sbs = new double[nrOfPlates];
-			sns = new double[nrOfPlates];
-
-			for (int i = 0; i < nrOfPlates; i++) {
-				Plate p = plates.get(i);
-				zPrimes[i] = StatService.getInstance().calculate("zprime", p, feature, null, null);
-				sns[i] = StatService.getInstance().calculate("sn", p, feature, null, null);
-				sbs[i] = StatService.getInstance().calculate("sb", p, feature, null, null);
-			}
-		}
-	}
-
 	private List<Plate> getPlates() {
 		if (experiment == null) return new ArrayList<>();
 		return PlateService.getInstance().getPlates(experiment);
-	}
-
-	public void loadExperiment(Experiment experiment) {
-		this.experiment = experiment;
-		loadExperimentStatistics();
-	}
-
-	public void loadFeature(Feature feature) {
-		this.feature = feature;
-		loadExperimentFeatureStatistics();
 	}
 
 	public int getNrOfPlates() {
@@ -136,18 +96,6 @@ public class ExperimentStatistics {
 
 	public int getNrOfUploadNotSetPlates() {
 		return nrOfPlates - nrOfUploadedPlates - nrOfNotUploadedPlates;
-	}
-
-	public double[] getZPrimes() {
-		return zPrimes;
-	}
-
-	public double[] getSBS() {
-		return sbs;
-	}
-
-	public double[] getSNS() {
-		return sns;
 	}
 
 }
