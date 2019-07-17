@@ -5,7 +5,7 @@ import java.util.List;
 
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
-import eu.openanalytics.phaedra.export.core.ExportSettings;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -15,11 +15,11 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class StatisticsFactory {
 
-	public static void generateStatistics(QueryResult result, ExportSettings settings) {
+	public static void generateStatistics(QueryResult result, IExportExperimentsSettings settings) {
 
 		// Collect all plates, query if necessary.
 		List<Plate> allPlates = new ArrayList<Plate>();
-		for (Experiment exp : settings.experiments) {
+		for (Experiment exp : settings.getExperiments()) {
 			allPlates.addAll(PlateService.getInstance().getPlates(exp));
 		}
 

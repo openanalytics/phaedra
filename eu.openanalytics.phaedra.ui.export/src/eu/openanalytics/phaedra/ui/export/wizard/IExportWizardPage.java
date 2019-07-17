@@ -1,8 +1,15 @@
 package eu.openanalytics.phaedra.ui.export.wizard;
 
-import eu.openanalytics.phaedra.export.core.ExportSettings;
-
 public interface IExportWizardPage {
 
-	public void collectSettings(ExportSettings settings);
+	/**
+	 * Update export settings UI -> model
+	 */
+	public void collectSettings();
+	
+	/**
+	 * Save dialog settings, called on OK/Finish
+	 */
+	public void saveDialogSettings();
+	
 }

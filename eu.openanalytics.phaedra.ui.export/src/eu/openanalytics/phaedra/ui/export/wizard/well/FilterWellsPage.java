@@ -1,4 +1,4 @@
-package eu.openanalytics.phaedra.ui.export.wizard.pages;
+package eu.openanalytics.phaedra.ui.export.wizard.well;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,13 +28,14 @@ import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
-import eu.openanalytics.phaedra.ui.export.Activator;
 import eu.openanalytics.phaedra.ui.export.widget.ShoppingCart;
 import eu.openanalytics.phaedra.ui.export.widget.ShoppingCart.AddItemAction;
 import eu.openanalytics.phaedra.ui.export.wizard.BaseExportWizardPage;
 
 public class FilterWellsPage extends BaseExportWizardPage {
-
+	
+	private final ExportSettings settings;
+	
 	private Button filterWellResultsChk;
 	private Combo wellResultFeatureCombo;
 	private Combo wellResultNormCombo;
@@ -54,9 +55,11 @@ public class FilterWellsPage extends BaseExportWizardPage {
 	private WellFeatureFilter wellFeatureFilter;
 	private CompoundFilter compoundFilter;
 	
-	public FilterWellsPage() {
+	public FilterWellsPage(ExportSettings settings) {
 		super("Filter Wells and Compounds");
 		setDescription("Step 3/4:  Select filters for the wells and compounds you want to export.");
+		
+		this.settings = settings;
 	}
 
 	@Override
@@ -174,7 +177,7 @@ public class FilterWellsPage extends BaseExportWizardPage {
 		wellTypeTableViewer.setInput(allWellTypes);
 		GridDataFactory.fillDefaults().grab(true, false).hint(SWT.DEFAULT, 100).applyTo(table);
 		
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
+		IDialogSettings settings = getDialogSettings();
 		rejectedWellsChk.setSelection(settings.getBoolean("rejectedWellsChk"));
 		invalidatedCompoundsChk.setSelection(settings.getBoolean("invalidatedCompoundsChk"));
 		
@@ -184,7 +187,7 @@ public class FilterWellsPage extends BaseExportWizardPage {
 	}
 	
 	@Override
-	protected void pageAboutToShow(ExportSettings settings, boolean firstTime) {
+	protected void pageAboutToShow(boolean firstTime) {
 		
 		if (!firstTime) return;
 
@@ -211,7 +214,7 @@ public class FilterWellsPage extends BaseExportWizardPage {
 	}
 
 	@Override
-	public void collectSettings(ExportSettings settings) {
+	public void collectSettings() {
 		settings.filterWellResults = filterWellResultsChk.getSelection();
 		if (settings.filterWellResults) {
 			int index = wellResultFeatureCombo.getSelectionIndex();
@@ -243,10 +246,15 @@ public class FilterWellsPage extends BaseExportWizardPage {
 		settings.includeRejectedWells = rejectedWellsChk.getSelection();
 		settings.includeInvalidatedCompounds = invalidatedCompoundsChk.getSelection();
 		settings.wellTypes = Arrays.stream(wellTypeTableViewer.getCheckedElements()).map(e -> e.toString()).toArray(i -> new String[i]);
+	}
+
+	@Override
+	public void saveDialogSettings() {
+		IDialogSettings dialogSettings = getDialogSettings();
 		
-		IDialogSettings dialogSettings = Activator.getDefault().getDialogSettings();
 		dialogSettings.put("rejectedWellsChk", settings.includeRejectedWells);
 		dialogSettings.put("invalidatedCompoundsChk", settings.includeInvalidatedCompounds);
 		dialogSettings.put("wellTypes", settings.wellTypes);
 	}
+	
 }

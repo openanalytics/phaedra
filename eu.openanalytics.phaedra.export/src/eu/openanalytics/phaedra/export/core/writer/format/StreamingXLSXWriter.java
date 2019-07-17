@@ -4,18 +4,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
-import eu.openanalytics.phaedra.export.core.ExportSettings.Includes;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.export.core.statistics.Statistics;
 import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
@@ -23,126 +25,171 @@ import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
 
 public class StreamingXLSXWriter implements IExportWriter {
 
-	private ExportSettings settings;
+	private IExportExperimentsSettings settings;
 	private IValueConverter valueConverter;
 	
 	private QueryResult baseResult;
 	private List<QueryResult> featureResults;
 	
+	private SXSSFWorkbook wb;
+	private CellStyle dateCellStyle;
+	
 	@Override
-	public void initialize(ExportSettings settings) throws IOException {
+	public void initialize(IExportExperimentsSettings settings) {
 		this.settings = settings;
 		this.featureResults = new ArrayList<>();
 	}
 	
 	@Override
 	public void setValueConverter(IValueConverter valueConverter) {
-		this.valueConverter = valueConverter;		
+		this.valueConverter = valueConverter;
 	}
 	
 	@Override
 	public void writeBaseData(QueryResult result) throws IOException {
 		baseResult = result;
 	}
-
+	
 	@Override
 	public void writeFeature(QueryResult result) throws IOException {
 		featureResults.add(result);
 	}
-
+	
 	@Override
 	public void finish() throws IOException {
-		writeWorkbook();
+		wb = new SXSSFWorkbook(100);
+		try {
+			writeMainTable();
+			
+			if (settings instanceof ExportSettings) {
+				writeWellsExportAdditions();
+			}
+			
+			try (OutputStream out = new FileOutputStream(settings.getDestinationPath())) {
+				wb.write(out);
+			}
+		}
+		finally {
+			wb.dispose();
+			wb = null;
+			dateCellStyle = null;
+		}
 	}
 
 	@Override
 	public void rollback() {
-		// Nothing to do.
+		// Nothing to do
 	}
-
-	/*
-	 * Non-public
-	 * **********
-	 */
 	
-	private void writeWorkbook() throws IOException {
-		SXSSFWorkbook wb = new SXSSFWorkbook(100);
-		Sheet sh = wb.createSheet();
+
+	private void writeMainTable() throws IOException {
+		Sheet sh = wb.createSheet("Sheet1");
 		
 		// First row: headers
 		Row row = sh.createRow(0);
 		int colNr = 0;
-		for (String header: baseResult.getColumns()) writeCell(row, colNr++, header); 
+		for (String header: baseResult.getColumnNames()) writeNameCell(row, colNr++, header);
 		for (QueryResult res: featureResults) {
-			for (String header: res.getColumns()) writeCell(row, colNr++, header); 
+			for (String header: res.getColumnNames()) writeNameCell(row, colNr++, header);
 		}
+		sh.createFreezePane(0, 1);
 		
 		// Other rows: data values
 		for (int rowNr = 0; rowNr < baseResult.getRowCount(); rowNr++) {
 			row = sh.createRow(rowNr + 1);
-			for (colNr = 0; colNr < baseResult.getColumns().length; colNr++) {
-				boolean numeric = baseResult.isColumnNumeric(colNr);
-				if (numeric) writeCell(row, colNr, baseResult.getNumericValue(rowNr, colNr));
-				else writeCell(row, colNr, baseResult.getStringValue(rowNr, colNr));
+			for (colNr = 0; colNr < baseResult.getColumnNames().length; colNr++) {
+				writeDataCell(row, colNr, baseResult.getColumnValueType(colNr), baseResult.getValue(rowNr, colNr));
 			}
 			
 			int colOffset = colNr;
 			for (QueryResult res: featureResults) {
-				for (colNr = 0; colNr < res.getColumns().length; colNr++) {
-					boolean numeric = res.isColumnNumeric(colNr);
-					if (numeric) writeCell(row, colOffset+colNr, res.getNumericValue(rowNr, colNr));
-					else writeCell(row, colOffset+colNr, res.getStringValue(rowNr, colNr));
+				for (colNr = 0; colNr < res.getColumnNames().length; colNr++) {
+					writeDataCell(row, colOffset+colNr, res.getColumnValueType(colNr), res.getValue(rowNr, colNr));
 				}
 				colOffset += colNr;
 			}
 		}
-		
-		if (settings.includes.contains(Includes.PlateStatistics) && !featureResults.isEmpty()) {
+	}
+	
+	private void writeWellsExportAdditions() {
+		ExportSettings settings = (ExportSettings) this.settings;
+		if (settings.includes.contains(ExportSettings.Includes.PlateStatistics)
+				&& !featureResults.isEmpty()) {
 			Statistics stats = featureResults.get(0).getStatistics();
 			List<String> statNames = stats.getStatNames().stream().sorted().collect(Collectors.toList());
 			
-			sh = wb.createSheet("Statistics");
-			row = sh.createRow(0);
+			Sheet sh = wb.createSheet("Statistics");
+			Row row = sh.createRow(0);
 			for (int c = 0; c < settings.features.size(); c++) {
-				writeCell(row, c+1, settings.features.get(c).getDisplayName());
+				writeNameCell(row, c+1, settings.features.get(c).getDisplayName());
 			}
+			sh.createFreezePane(0, 1);
 			for (int r = 0; r < statNames.size(); r++) {
 				row = sh.createRow(r+1);
 				String statName = statNames.get(r);
-				writeCell(row, 0, statName);
+				writeNameCell(row, 0, statName);
 				for (int c = 0; c < settings.features.size(); c++) {
 					stats = featureResults.get(c).getStatistics();
-					writeCell(row, c+1, stats.get(statName));
+					writeDataCell(row, c+1, QueryResult.DOUBLE_VALUE, stats.get(statName));
 				}
 			}
 		}
-		
-		try (OutputStream out = new FileOutputStream(settings.destinationPath)) {
-			wb.write(out);
-		} finally {
-			wb.dispose();
-		}
 	}
 	
-	private void writeCell(Row row, int column, String data) {
-		Cell cell = row.createCell(column);
-		if (valueConverter != null) data = valueConverter.convert(data);
-		if (data == null) {
-			cell.setCellType(Cell.CELL_TYPE_BLANK);
-		} else if (NumberUtils.isDigit(data) || NumberUtils.isDouble(data)) {
-			cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-			cell.setCellValue(Double.parseDouble(data));
+	
+	private void writeNameCell(Row row, int colIdx, String name) {
+		Cell cell = row.createCell(colIdx);
+		if (valueConverter != null) name = valueConverter.convert(name);
+		if (name == null) {
+			cell.setCellType(CellType.BLANK);
 		} else {
-			cell.setCellValue(new XSSFRichTextString(data));
+			cell.setCellValue(new XSSFRichTextString(name));
 		}
 	}
 	
-	private void writeCell(Row row, int column, double data) {
-		Cell cell = row.createCell(column);
-		if (Double.isNaN(data)) cell.setCellType(Cell.CELL_TYPE_BLANK);
-		else {
-			cell.setCellType(Cell.CELL_TYPE_NUMERIC);
-			cell.setCellValue(data);
+	private void writeDataCell(Row row, int colIdx, byte valueType, Object data) {
+		Cell cell = row.createCell(colIdx);
+		if (data == null) {
+			cell.setCellType(CellType.BLANK);
+			return;
+		}
+		switch (valueType) {
+		case QueryResult.BOOLEAN_VALUE:
+			cell.setCellType(CellType.BOOLEAN);
+			cell.setCellValue((Boolean)data);
+			return;
+		case QueryResult.DOUBLE_VALUE:
+			Double d = (Double)data;
+			if (d.isNaN()) {
+				cell.setCellType(CellType.BLANK);
+			}
+			else {
+				cell.setCellType(CellType.NUMERIC);
+				cell.setCellValue((Double)data);
+			}
+			return;
+		case QueryResult.TIMESTAMP_VALUE:
+			cell.setCellType(CellType.NUMERIC);
+			cell.setCellValue((Date)data);
+			cell.setCellStyle(getDateCellStyle());
+			return;
+		case QueryResult.STRING_VALUE:
+			cell.setCellType(CellType.STRING);
+			cell.setCellValue(new XSSFRichTextString((String) data));
+			return;
+		default:
+			cell.setCellType(CellType.STRING);
+			cell.setCellValue(new XSSFRichTextString(data.toString()));
+			return;
 		}
 	}
+	
+	private CellStyle getDateCellStyle() {
+		if (dateCellStyle == null) {
+			dateCellStyle = wb.createCellStyle();
+			dateCellStyle.setDataFormat((short)0x16);
+		}
+		return dateCellStyle;
+	}
+	
 }

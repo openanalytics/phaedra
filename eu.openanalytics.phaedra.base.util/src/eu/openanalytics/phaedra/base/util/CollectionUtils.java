@@ -96,6 +96,35 @@ public class CollectionUtils {
 	}
 
 	/**
+	 * Ensures that the collection with unique elements contains/not contains the given element.
+	 * If required, the element is added or removed.
+	 * 
+	 * @param c the collection
+	 * @param element the element
+	 * @param contains if the collection should contain or not contain the element
+	 */
+	public static <E> void setContains(Collection<E> c, E element, boolean contains) {
+		if (contains) {
+			if (!c.contains(c)) c.add(element);
+		}
+		else {
+			c.remove(element);
+		}
+	}
+	
+	/**
+	 * Returns if the collections contains any of the given elements.
+	 * 
+	 * @param c the collection
+	 * @param e1 element to check
+	 * @param e2 element to check
+	 * @return <code>true</code> if the collections contains at least one of the elements
+	 */
+	public static <E> boolean containsAny(Collection<E> c, E e1, E e2) {
+		return (c.contains(e1) || c.contains(e2));
+	}
+	
+	/**
 	 * Find the index of an item in an array.
 	 *
 	 * @param array The array of items.

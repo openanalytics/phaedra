@@ -7,12 +7,12 @@ import org.eclipse.core.runtime.jobs.Job;
 
 import eu.openanalytics.phaedra.export.Activator;
 
-public class ExportJob extends Job {
+public class ExportWellsJob extends Job {
 
 	private ExportSettings exportSettings;
 	
-	public ExportJob(ExportSettings exportSettings) {
-		super("Export");
+	public ExportWellsJob(ExportSettings exportSettings) {
+		super("Export Well Data");
 		this.exportSettings = exportSettings;
 	}
 

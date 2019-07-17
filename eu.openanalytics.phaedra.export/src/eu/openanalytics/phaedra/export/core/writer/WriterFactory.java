@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.export.core.writer;
 
-import eu.openanalytics.phaedra.base.util.process.ProcessUtils;
 import eu.openanalytics.phaedra.export.core.writer.convert.DefaultValueConverter;
 import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
 import eu.openanalytics.phaedra.export.core.writer.format.CSVWriter;
@@ -11,30 +10,46 @@ public class WriterFactory {
 
 	private static IValueConverter valueConverter = new DefaultValueConverter();
 	
+	public static final String XLSX_FILE_TYPE = "xlsx";
+	public static final String CSV_FILE_TYPE = "csv";
+	public static final String TXT_FILE_TYPE = "txt";
+	public static final String H5_FILE_TYPE = "h5";
+	
 	public static String[] getAvailableFileTypes() {
-		if (ProcessUtils.isWindows()) {
-			return new String[]{ "xlsx","csv","txt" };
-		} else {
-			return new String[]{ "*.xlsx","*.csv","*.txt" };
+		return new String[] {
+				XLSX_FILE_TYPE,
+				CSV_FILE_TYPE,
+				TXT_FILE_TYPE };
+	}
+	
+	public static String getFileTypeName(String fileType) {
+		switch (fileType) {
+		case XLSX_FILE_TYPE:
+			return "Excel Workbook";
+		case CSV_FILE_TYPE:
+			return "Comma-separated Values";
+		case TXT_FILE_TYPE:
+			return "Tab-separated Text";
+		default:
+			return fileType.toUpperCase();
 		}
 	}
 	
-	public static String[] getAvailableFileTypeNames() {
-		return new String[]{
-				"Excel Workbook (*.xlsx)",
-				"Comma-separated Values (*.csv)",
-				"Tab-separated Text (*.txt)"};
-	}
-	
-	public static IExportWriter createWriter(String type) {
+	public static IExportWriter createWriter(String fileType) {
 		IExportWriter writer = null;
 		
-		if (type.endsWith("xlsx")) {
+		switch (fileType) {
+		case XLSX_FILE_TYPE:
 			writer = new StreamingXLSXWriter();
-		} else if (type.endsWith("csv")) {
+			break;
+		case CSV_FILE_TYPE:
 			writer = new CSVWriter();
-		} else if (type.endsWith("txt")) {
+			break;
+		case TXT_FILE_TYPE:
 			writer = new TXTWriter();
+			break;
+		default:
+			return null;
 		}
 		
 		if (writer != null) {
@@ -55,4 +70,5 @@ public class WriterFactory {
 		if (index == -1) return path;
 		return path.substring(0, index);
 	}
+	
 }

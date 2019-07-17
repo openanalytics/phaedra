@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
-import eu.openanalytics.phaedra.export.core.ExportSettings.Includes;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.export.core.statistics.Statistics;
 import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
@@ -20,7 +20,7 @@ public class CSVWriter implements IExportWriter {
 	private char quoteChar;
 	private char escapeChar;
 	
-	private ExportSettings settings;
+	private IExportExperimentsSettings settings;
 	private IValueConverter valueConverter;
 	
 	private QueryResult baseResult;
@@ -37,7 +37,7 @@ public class CSVWriter implements IExportWriter {
 	}
 	
 	@Override
-	public void initialize(ExportSettings settings) throws IOException {
+	public void initialize(IExportExperimentsSettings settings) throws IOException {
 		this.settings = settings;
 		this.featureResults = new ArrayList<>();
 	}
@@ -59,7 +59,15 @@ public class CSVWriter implements IExportWriter {
 	
 	@Override
 	public void finish() throws IOException {
-		writeFiles();
+		try {
+			writeMainTable();
+			
+			if (settings instanceof ExportSettings) {
+				writeWellsExportAdditions();
+			}
+		}
+		finally {
+		}
 	}
 	
 	@Override
@@ -67,40 +75,35 @@ public class CSVWriter implements IExportWriter {
 		// Nothing to do
 	}
 	
-	/*
-	 * Non-public
-	 * **********
-	 */
-	
+
 	protected boolean needQuoting() {
 		return true;
 	}
-
-	private void writeFiles() throws IOException {
-		String destination = settings.destinationPath;
-		try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(new FileWriter(destination), columnSeparator, quoteChar, escapeChar)) {
-
-			int colCount = baseResult.getColumns().length + featureResults.stream().mapToInt(qr -> qr.getColumns().length).sum();
+	
+	private void writeMainTable() throws IOException {
+		try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(new FileWriter(settings.getDestinationPath()),
+				columnSeparator, quoteChar, escapeChar)) {
+			int colCount = baseResult.getColumnNames().length + featureResults.stream().mapToInt(qr -> qr.getColumnNames().length).sum();
 			int colIndex = 0;
 			String[] rowData = new String[colCount];
-			for (int c = 0; c < baseResult.getColumns().length; c++) rowData[colIndex++] = baseResult.getColumns()[c];
+			for (int c = 0; c < baseResult.getColumnNames().length; c++) rowData[colIndex++] = baseResult.getColumnNames()[c];
 			for (QueryResult res: featureResults) {
-				for (int c = 0; c < res.getColumns().length; c++) rowData[colIndex++] = res.getColumns()[c];
+				for (int c = 0; c < res.getColumnNames().length; c++) rowData[colIndex++] = res.getColumnNames()[c];
 			}
 			writer.writeNext(rowData);
 			
 			for (int r = 0; r < baseResult.getRowCount(); r++) {
 				colIndex = 0;
-				for (int c = 0; c < baseResult.getColumns().length; c++) {
+				for (int c = 0; c < baseResult.getColumnNames().length; c++) {
 					boolean numeric = baseResult.isColumnNumeric(c);
 					if (numeric) {
-						if (baseResult.getColumns()[c].endsWith("_ID")) rowData[colIndex++] = "" + Double.valueOf(baseResult.getNumericValue(r, c)).longValue();
+						if (baseResult.getColumnNames()[c].endsWith("_ID")) rowData[colIndex++] = "" + Double.valueOf(baseResult.getNumericValue(r, c)).longValue();
 						else rowData[colIndex++] = formatValue(baseResult.getNumericValue(r, c));
 					}
 					else rowData[colIndex++] = formatValue(baseResult.getStringValue(r, c));
 				}
 				for (QueryResult res: featureResults) {
-					for (int c = 0; c < res.getColumns().length; c++) {
+					for (int c = 0; c < res.getColumnNames().length; c++) {
 						boolean numeric = res.isColumnNumeric(c);
 						if (numeric) rowData[colIndex++] = formatValue(res.getNumericValue(r, c));
 						else rowData[colIndex++] = formatValue(res.getStringValue(r, c));
@@ -109,14 +112,15 @@ public class CSVWriter implements IExportWriter {
 				writer.writeNext(rowData);
 			}
 		}
-		
-		if (settings.includes.contains(Includes.PlateStatistics) && !featureResults.isEmpty()) {
+	}
+	
+	private void writeWellsExportAdditions() throws IOException {
+		ExportSettings settings = (ExportSettings) this.settings;
+		if (settings.includes.contains(ExportSettings.Includes.PlateStatistics)
+				&& !featureResults.isEmpty()) {
 			// Write statistics into separate file.
-			String extension = FileUtils.getExtension(destination);
-			destination = destination.substring(0,destination.lastIndexOf('.'));
-			destination += "_Statistics." + extension;
-			try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(new FileWriter(destination), columnSeparator, quoteChar, escapeChar)) {
-				
+			try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(new FileWriter(getDestinationPath(settings, "Statistics")),
+					columnSeparator, quoteChar, escapeChar)) {
 				Statistics stats = featureResults.get(0).getStatistics();
 				List<String> statNames = stats.getStatNames().stream().sorted().collect(Collectors.toList());
 				
@@ -138,9 +142,16 @@ public class CSVWriter implements IExportWriter {
 		}
 	}
 	
+	private String getDestinationPath(IExportExperimentsSettings settings, String sub) {
+		String destinationPath = settings.getDestinationPath();
+		String extension = FileUtils.getExtension(destinationPath);
+		destinationPath = destinationPath.substring(0, destinationPath.lastIndexOf('.'));
+		return destinationPath + '_' + sub + '.' + extension;
+	}
+	
 	private String formatValue(double value) {
 		if (Double.isNaN(value)) return "";
-		return ""+value;
+		return Double.toString(value);
 	}
 	
 	private String formatValue(String value) {
@@ -150,4 +161,5 @@ public class CSVWriter implements IExportWriter {
 		if (needQuoting()) formattedValue = "\"" + formattedValue + "\"";
 		return formattedValue;
 	}
+	
 }
