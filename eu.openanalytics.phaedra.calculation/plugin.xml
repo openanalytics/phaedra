@@ -78,6 +78,10 @@
             class="eu.openanalytics.phaedra.calculation.stat.impl.PercentileCalculator"
             name="percentile">
       </statCalculator>
+      <statCalculator
+            class="eu.openanalytics.phaedra.calculation.stat.impl.RobustZPrimeCalculator"
+            name="robustzprime">
+      </statCalculator>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.calculation.normalizer">

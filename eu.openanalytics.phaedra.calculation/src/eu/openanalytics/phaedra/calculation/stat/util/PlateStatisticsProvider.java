@@ -19,6 +19,7 @@ public class PlateStatisticsProvider {
 		List<PlateStatistic> stats = new ArrayList<PlateStatistic>();
 
 		stats.add(new PlateStatistic("zprime", "Z-Prime"));
+		stats.add(new PlateStatistic("robustzprime", "Robust Z-Prime"));
 		stats.add(new PlateStatistic("sn", "Signal/Noise"));
 		stats.add(new PlateStatistic("sb", "Signal/Background"));
 
