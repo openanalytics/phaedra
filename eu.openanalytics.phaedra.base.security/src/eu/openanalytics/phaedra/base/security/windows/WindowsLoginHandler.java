@@ -31,7 +31,17 @@ public class WindowsLoginHandler implements ILoginHandler {
 	public void authenticate(String userName, byte[] password) throws AuthenticationException {
 		HANDLEByReference phUser = new HANDLEByReference();
 		try {
-			boolean loginOk = Advapi32.INSTANCE.LogonUser(userName, InetAddress.getLocalHost().getHostName(),
+			String domain = authConfig.get(AuthConfig.DEFAULT_DOMAIN);
+			if (domain == null || domain.trim().isEmpty()) {
+				domain = InetAddress.getLocalHost().getHostName();
+			}
+			if (userName.contains("\\")) {
+				int index = userName.indexOf("\\");
+				domain = userName.substring(0, index);
+				userName = userName.substring(index + 1);
+			}
+			
+			boolean loginOk = Advapi32.INSTANCE.LogonUser(userName, domain,
 					new String(password), WinBase.LOGON32_LOGON_NETWORK, WinBase.LOGON32_PROVIDER_DEFAULT, phUser);
 			if (!loginOk) throw new LastErrorException(Kernel32.INSTANCE.GetLastError());
 			
