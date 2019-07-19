@@ -22,7 +22,6 @@ public class QueryExecutor {
 	}
 
 	public QueryResult execute(Query query, boolean isFeatureQuery) throws ExportException {
-
 		QueryResult result = new QueryResult(query);
 		String sql = query.getSql();
 
@@ -30,30 +29,30 @@ public class QueryExecutor {
 		Statement stmt = null;
 
 		long startTime = System.currentTimeMillis();
-		
+
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
 			stmt = conn.createStatement();
 			resultSet = stmt.executeQuery(sql);
 			ResultSetMetaData metadata = resultSet.getMetaData();
 			
 			// Either get all column names, or in the case of feature queries, a subset.
-			String[] headers = null;
+			int columnCount;
+			int sqlOffset;
+			String[] headers;
 			if (isFeatureQuery) {
-				headers = new String[metadata.getColumnCount() - 2];
-				for (int i=0; i<headers.length; i++) {
-					headers[i] = metadata.getColumnLabel(i+3);
-					if (SQLUtils.isNumeric(metadata.getColumnType(i+3))) result.setNumericColumn(i);
-				}
-				result.setColumns(headers);
-			} else {
-				headers = new String[metadata.getColumnCount()];
-				for (int i=0; i<headers.length; i++) {
-					headers[i] = metadata.getColumnLabel(i+1);
-					if (SQLUtils.isNumeric(metadata.getColumnType(i+1))) result.setNumericColumn(i);
-				}
-				result.setColumns(headers);
+				columnCount = metadata.getColumnCount() - 2;
+				sqlOffset = 3;
 			}
-			int columnCount = headers.length;
+			else {
+				columnCount = metadata.getColumnCount();
+				sqlOffset = 1;
+			}
+			result.setColumnCount(columnCount);
+			headers = new String[columnCount];
+			for (int i=0; i<columnCount; i++) {
+				headers[i] = metadata.getColumnLabel(i+sqlOffset);
+				result.setColumnValueType(i, getColumnValueType(metadata, i+sqlOffset));
+			}
 			
 			String featureName = null;
 
@@ -65,20 +64,20 @@ public class QueryExecutor {
 
 				Object[] values = new Object[columnCount];
 				for (int i=0; i<columnCount; i++) {
-					String header = headers[i];
-					values[i] = resultSet.getObject(header);
+					values[i] = resultSet.getObject(i+sqlOffset);
 				}
 				result.addRow(values);
 			}
-			result.finish();
 
 			// Set headers to uppercase and prepend feature name, if needed.
-			for (int i=0; i<headers.length; i++) {
-				headers[i] = headers[i].toUpperCase();
+			for (int i=0; i<columnCount; i++) {
+				String name = headers[i].toUpperCase();
 				if (isFeatureQuery && featureName != null) {
-					headers[i] = featureName + " " + headers[i];
+					name = featureName + " " + name;
 				}
+				result.setColumnName(i, name);
 			}
+			result.finish();
 
 			long duration = System.currentTimeMillis() - startTime;
 			EclipseLog.debug("Query executed in " + duration + "ms.", QueryExecutor.class);
@@ -91,5 +90,12 @@ public class QueryExecutor {
 		}
 
 		return result;
+	}
+
+	private byte getColumnValueType(ResultSetMetaData metadata, int column) throws SQLException {
+		int sqlType = metadata.getColumnType(column);
+		if (SQLUtils.isNumeric(sqlType)) return QueryResult.DOUBLE_VALUE;
+		if (SQLUtils.isDate(sqlType)) return QueryResult.TIMESTAMP_VALUE;
+		return QueryResult.STRING_VALUE;
 	}
 }

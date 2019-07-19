@@ -1,7 +1,6 @@
-package eu.openanalytics.phaedra.ui.export.wizard.pages;
+package eu.openanalytics.phaedra.ui.export.wizard;
 
 import java.util.Calendar;
-import java.util.Date;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -17,15 +16,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.export.core.ExportSettings;
+import eu.openanalytics.phaedra.export.core.IFilterPlatesSettings;
 import eu.openanalytics.phaedra.export.core.filter.LibraryFilter;
 import eu.openanalytics.phaedra.export.core.filter.QualifierFilter;
-import eu.openanalytics.phaedra.ui.export.Activator;
 import eu.openanalytics.phaedra.ui.export.widget.EuroCalendarCombo;
-import eu.openanalytics.phaedra.ui.export.wizard.BaseExportWizardPage;
 
 public class FilterPlatesPage extends BaseExportWizardPage {
-
+	
+	private IFilterPlatesSettings settings;
+	
 	private Combo libraryCombo;
 	private Combo qualifierCombo;
 	
@@ -36,15 +35,17 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 	
 	private Button filterOnApprovalChk;
 	private Text approvalUserTxt;
-	private EuroCalendarCombo approvalDateFromCombo; 
+	private EuroCalendarCombo approvalDateFromCombo;
 	private EuroCalendarCombo approvalDateToCombo;
 	
 	private Button invalidPlatesChk;
 	private Button disapprovedPlatesChk;
 	
-	public FilterPlatesPage() {
+	public FilterPlatesPage(IFilterPlatesSettings settings, int stepNum, int stepTotal) {
 		super("Filter Plates");
-		setDescription("Step 2/4: Select the plates you want to export.");
+		setDescription(String.format("Step %1$s/%2$s: Select the plates to export.", stepNum, stepTotal));
+		
+		this.settings = settings;
 	}
 
 	@Override
@@ -169,7 +170,6 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 		label = new Label(container, SWT.SEPARATOR | SWT.SHADOW_OUT | SWT.HORIZONTAL);
 		GridDataFactory.fillDefaults().span(2,1).applyTo(label);
 		
-		
 		invalidPlatesChk = new Button(container, SWT.CHECK);
 		invalidPlatesChk.setText("Include invalidated plates");
 		GridDataFactory.fillDefaults().span(2,1).applyTo(invalidPlatesChk);
@@ -178,14 +178,12 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 		disapprovedPlatesChk.setText("Include disapproved plates");
 		GridDataFactory.fillDefaults().span(2,1).applyTo(disapprovedPlatesChk);
 		
-		IDialogSettings settings = Activator.getDefault().getDialogSettings();
-		invalidPlatesChk.setSelection(settings.getBoolean("invalidPlatesChk"));
-		disapprovedPlatesChk.setSelection(settings.getBoolean("disapprovedPlatesChk"));
+		loadDialogSettings();
 	}
 	
+	
 	@Override
-	protected void pageAboutToShow(ExportSettings settings, boolean firstTime) {
-		
+	protected void pageAboutToShow(boolean firstTime) {
 		if (!firstTime) return;
 		
 		libraryCombo.setItems(new String[] {"<All>"});
@@ -194,7 +192,7 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 			@Override
 			public void mouseDown(MouseEvent e) {
 				if ((Boolean) libraryCombo.getData("loaded")) return;
-				String[] libraries = new LibraryFilter(settings.experiments).getLibraries();
+				String[] libraries = new LibraryFilter(settings.getExperiments()).getLibraries();
 				libraryCombo.setItems(libraries);
 				libraryCombo.setData("loaded", Boolean.TRUE);
 				if (libraryCombo.getItemCount() > 0) libraryCombo.select(0);
@@ -208,7 +206,7 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 			@Override
 			public void mouseDown(MouseEvent e) {
 				if ((Boolean) qualifierCombo.getData("loaded")) return;
-				String[] qualifiers = new QualifierFilter(settings.experiments).getQualifiers();
+				String[] qualifiers = new QualifierFilter(settings.getExperiments()).getQualifiers();
 				qualifierCombo.setItems(qualifiers);
 				qualifierCombo.setData("loaded", Boolean.TRUE);
 				if (qualifierCombo.getItemCount() > 0) qualifierCombo.select(0);
@@ -216,46 +214,49 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 		});
 		if (qualifierCombo.getItemCount() > 0) qualifierCombo.select(0);
 	}
-
+	
 	@Override
-	public void collectSettings(ExportSettings settings) {
-		int index = libraryCombo.getSelectionIndex();
-		if (index != -1) settings.library = libraryCombo.getItem(index);
+	public void collectSettings() {
+		int index;
+		Calendar date;
+		
+		index = libraryCombo.getSelectionIndex();
+		settings.setLibrary((index != -1) ? libraryCombo.getItem(index) : null);
 		
 		index = qualifierCombo.getSelectionIndex();
-		if (index != -1) settings.plateQualifier = qualifierCombo.getItem(index);
+		settings.setPlateQualifier((index != -1) ? qualifierCombo.getItem(index) : null);
 		
-		settings.filterValidation = filterOnValidationChk.getSelection();
-		settings.validationUser = validationUserTxt.getText();
-		Calendar date = validationDateFromCombo.getDate();
-		if (date != null) settings.validationDateFrom = date.getTime();
+		settings.setFilterValidation(filterOnValidationChk.getSelection());
+		settings.setValidationUser(validationUserTxt.getText());
+		date = validationDateFromCombo.getDate();
+		settings.setValidationDateFrom((date != null) ? date.getTime() : null);
 		date = validationDateToCombo.getDate();
-		if (date != null) settings.validationDateTo = date.getTime();
-		if (settings.validationDateFrom != null && settings.validationDateTo == null) {
-			settings.validationDateTo = new Date();
-		}
-		if (settings.validationDateTo != null && settings.validationDateFrom == null) {
-			settings.validationDateFrom = new Date();
-		}
+		settings.setValidationDateTo((date != null) ? date.getTime() : null);
 		
-		settings.filterApproval = filterOnApprovalChk.getSelection();
-		settings.approvalUser = approvalUserTxt.getText();
+		settings.setFilterApproval(filterOnApprovalChk.getSelection());
+		settings.setApprovalUser(approvalUserTxt.getText());
 		date = approvalDateFromCombo.getDate();
-		if (date != null) settings.approvalDateFrom = date.getTime();
+		settings.setApprovalDateFrom((date != null) ? date.getTime() : null);
 		date = approvalDateToCombo.getDate();
-		if (date != null) settings.approvalDateTo = date.getTime();	
-		if (settings.approvalDateFrom != null && settings.approvalDateTo == null) {
-			settings.approvalDateTo = new Date();
-		}
-		if (settings.approvalDateTo != null && settings.approvalDateFrom == null) {
-			settings.approvalDateFrom = new Date();
-		}
+		settings.setApprovalDateTo((date != null) ? date.getTime() : null);
 		
-		settings.includeInvalidatedPlates = invalidPlatesChk.getSelection();
-		settings.includeDisapprovedPlates = disapprovedPlatesChk.getSelection();
-		
-		IDialogSettings dialogSettings = Activator.getDefault().getDialogSettings();
-		dialogSettings.put("invalidPlatesChk", settings.includeInvalidatedPlates);
-		dialogSettings.put("disapprovedPlatesChk", settings.includeDisapprovedPlates);
+		settings.setIncludeInvalidatedPlates(invalidPlatesChk.getSelection());
+		settings.setIncludeDisapprovedPlates(disapprovedPlatesChk.getSelection());
 	}
+	
+	private void loadDialogSettings() {
+		IDialogSettings dialogSettings = getDialogSettings();
+		
+		invalidPlatesChk.setSelection(dialogSettings.getBoolean("invalidPlatesChk"));
+		disapprovedPlatesChk.setSelection(dialogSettings.getBoolean("disapprovedPlatesChk"));
+	}
+	
+	@Override
+	public void saveDialogSettings() {
+		IDialogSettings dialogSettings = getDialogSettings();
+		
+		dialogSettings.put("invalidPlatesChk", settings.getIncludeInvalidatedPlates());
+		dialogSettings.put("disapprovedPlatesChk", settings.getIncludeDisapprovedPlates());
+	}
+	
 }

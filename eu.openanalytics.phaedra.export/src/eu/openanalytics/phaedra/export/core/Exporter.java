@@ -16,35 +16,41 @@ import eu.openanalytics.phaedra.export.core.writer.WriterFactory;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 /**
- * This class controls the flow of an export process.
+ * This class controls the flow of an well data export process.
  * 
  * It must remain independent of any UI component, to allow non-interactive
  * exports (e.g. batch-triggered or headless).
- * 
- * A IProgressMonitor can observe the progress of the export, but this is optional.
  */
 public class Exporter {
 
+	/**
+	 * Executes the export.
+	 * 
+	 * @param settings the settings
+	 * @param monitor optional progress monitor
+	 * @throws ExportException
+	 */
 	public void export(ExportSettings settings, IProgressMonitor monitor) throws ExportException {
 		List<Feature> features = settings.features;
 
 		if (monitor == null) monitor = new NullProgressMonitor();
-		monitor.beginTask("Exporting", 2*features.size()+6);
+		monitor.beginTask("Exporting", 1 + 5 + 2*features.size() + 2);
 		
 		// Validate settings, show errors if needed.
 		monitor.subTask("Validating settings");
-		new SettingsValidator().validate(settings);
+		new ExportWellsSettingsValidator().validate(settings);
 		
 		// Initialize the writer.
 		IExportWriter writer = WriterFactory.createWriter(settings.fileType);
 		try {
-			monitor.subTask("Initializing " + settings.fileType + " writer");
+			monitor.subTask(String.format("Initializing %1$s writer", settings.getFileType().toUpperCase()));
 			writer.initialize(settings);
 			monitor.worked(1);
 			
 			// First, perform the base query (columns that are independent of feature).
 			monitor.subTask("Querying wells");
-			Query query = new QueryBuilder().createBaseQuery(settings);
+			QueryBuilder queryBuilder = new QueryBuilder();
+			Query query = queryBuilder.createWellsQuery(settings);
 			QueryResult result = new QueryExecutor().execute(query);
 			writer.writeBaseData(result);
 			int expectedRowcount = result.getRowCount();
@@ -58,7 +64,7 @@ public class Exporter {
 				
 				// Collect the data
 				monitor.subTask("Exporting data for " + feature.getDisplayName());
-				query = new QueryBuilder().createFeatureQuery(feature, settings);
+				query = queryBuilder.createFeatureQuery(feature, settings);
 				result = new QueryExecutor().execute(query, true);
 				result.setFeature(feature);
 				monitor.worked(1);
@@ -75,6 +81,11 @@ public class Exporter {
 				
 				writer.writeFeature(result);
 				monitor.worked(1);
+			}
+			
+			if (monitor.isCanceled()) {
+				writer.rollback();
+				return;
 			}
 			
 			writer.finish();

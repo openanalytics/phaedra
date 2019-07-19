@@ -3,9 +3,13 @@ package eu.openanalytics.phaedra.export.core.subwell;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -23,7 +27,9 @@ import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Display;
 
 import eu.openanalytics.phaedra.export.Activator;
+import eu.openanalytics.phaedra.export.core.writer.format.StreamingXLSXWriter;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
@@ -46,6 +52,7 @@ public class SubWellDataXLSXWriter implements IExportWriter {
 		Job job = new Job("Export Subwell Data") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				Date timestamp = new Date();
 				Collections.sort(wells, PlateUtils.WELL_NR_SORTER);
 				SXSSFWorkbook wb = null;
 				try {
@@ -57,7 +64,11 @@ public class SubWellDataXLSXWriter implements IExportWriter {
 					}
 
 					if (monitor.isCanceled()) return Status.CANCEL_STATUS;
-
+					
+					Collection<Experiment> experiments = wells.stream().map((well) -> well.getPlate().getExperiment())
+							.collect(Collectors.toCollection(LinkedHashSet::new));
+					StreamingXLSXWriter.writeExportInfo(experiments, timestamp, wb);
+					
 					// Write the Excel file to the given location.
 					subMonitor = new SubProgressMonitor(monitor, 30);
 					writeFile(settings.getFileLocation(), wb, subMonitor);
@@ -79,7 +90,7 @@ public class SubWellDataXLSXWriter implements IExportWriter {
 
 		// We will manually flush rows.
 		SXSSFWorkbook wb = new SXSSFWorkbook(-1);
-		SXSSFSheet sheet = (SXSSFSheet) wb.createSheet("Subwell Data");
+		SXSSFSheet sheet = wb.createSheet("Subwell Data");
 
 		int rowStart = 0;
 		int rowEnd = 1;
@@ -159,7 +170,7 @@ public class SubWellDataXLSXWriter implements IExportWriter {
 			monitor.subTask("Exporting Well " + wellCoord);
 
 			// Create a new sheet for each well.
-			SXSSFSheet sheet = (SXSSFSheet) wb.createSheet(wellCoord);
+			SXSSFSheet sheet = wb.createSheet(wellCoord);
 			int colIndex = 0;
 			boolean[] subsetFilter = null;
 			

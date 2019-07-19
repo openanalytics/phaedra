@@ -2,7 +2,7 @@ package eu.openanalytics.phaedra.export.core.writer;
 
 import java.io.IOException;
 
-import eu.openanalytics.phaedra.export.core.ExportSettings;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
 
@@ -22,7 +22,7 @@ public interface IExportWriter {
 	 * @param settings The settings to use for exporting.
 	 * @throws IOException If the initialization fails because of an I/O exception.
 	 */
-	public void initialize(ExportSettings settings) throws IOException;
+	public void initialize(IExportExperimentsSettings settings) throws IOException;
 	
 	/**
 	 * Write the base data (the data that is not feature-specific) to the destination.

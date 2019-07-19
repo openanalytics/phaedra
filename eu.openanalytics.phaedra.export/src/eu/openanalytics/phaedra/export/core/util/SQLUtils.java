@@ -34,6 +34,15 @@ public class SQLUtils {
 		}
 	}
 	
+	public static boolean isDate(int columnType) {
+		try {
+			JDBCType type = JDBCType.valueOf(columnType);
+			return (type == JDBCType.DATE || type == JDBCType.TIMESTAMP);
+		} catch (IllegalArgumentException e) {
+			return false;
+		}
+	}
+	
 	public static String[] select(String sql, String columnName, boolean sort) {
 		
 		Query query = new Query();
@@ -47,11 +56,10 @@ public class SQLUtils {
 		}
 		
 		List<String> values = new ArrayList<String>();
-		int colIndex = CollectionUtils.find(result.getColumns(), columnName);
-		boolean numeric = result.isColumnNumeric(colIndex);
+		int colIndex = CollectionUtils.find(result.getColumnNames(), columnName);
 		
 		for (int i=0; i<result.getRowCount(); i++) {
-			String value = numeric ? ""+result.getNumericValue(i, colIndex) : result.getStringValue(i, colIndex);
+			String value = result.getValueString(i, colIndex);
 			if (value != null) values.add(value);
 		}
 
@@ -75,7 +83,7 @@ public class SQLUtils {
 		
 		int[] indices = new int[columnNames.length];
 		for (int i=0; i<indices.length; i++) {
-			indices[i] = CollectionUtils.find(result.getColumns(), columnNames[i]);
+			indices[i] = CollectionUtils.find(result.getColumnNames(), columnNames[i]);
 		}
 		
 		for (int c=0; c<columnNames.length; c++) {

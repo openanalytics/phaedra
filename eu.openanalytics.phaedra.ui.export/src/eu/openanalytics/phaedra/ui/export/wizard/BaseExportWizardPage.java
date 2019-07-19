@@ -3,8 +3,6 @@ package eu.openanalytics.phaedra.ui.export.wizard;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.widgets.Composite;
 
-import eu.openanalytics.phaedra.export.core.ExportSettings;
-
 public class BaseExportWizardPage extends WizardPage implements IExportWizardPage {
 
 	boolean firstShow;
@@ -19,15 +17,14 @@ public class BaseExportWizardPage extends WizardPage implements IExportWizardPag
 	@Override
 	public void setVisible(boolean visible) {
 		if (visible) {
-			ExportWizard wiz = (ExportWizard)getWizard();
-			pageAboutToShow(wiz.getSettings(), firstShow);
+			pageAboutToShow(firstShow);
 			firstShow = false;
 		}
 		super.setVisible(visible);
 	}
 	
 	@Override
-	public void collectSettings(ExportSettings settings) {
+	public void collectSettings() {
 		// Default: no settings changed.
 	}
 
@@ -36,7 +33,20 @@ public class BaseExportWizardPage extends WizardPage implements IExportWizardPag
 		// Default: empty page.
 	}
 
-	protected void pageAboutToShow(ExportSettings settings, boolean firstTime) {
+	protected void pageAboutToShow(boolean firstTime) {
 		// Default: take no action.
 	}
+	
+	protected void checkPageComplete() {
+		setPageComplete(validateSettings());
+	}
+	
+	protected boolean validateSettings() {
+		return true;
+	}
+	
+	@Override
+	public void saveDialogSettings() {
+	}
+	
 }

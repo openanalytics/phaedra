@@ -1,4 +1,4 @@
-package eu.openanalytics.phaedra.ui.export.subwell.cmd;
+package eu.openanalytics.phaedra.ui.export.cmd;
 
 import java.util.List;
 
@@ -8,7 +8,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -22,14 +21,13 @@ public class ExportSubWellDataCmd extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		ISelection selection = (ISelection)HandlerUtil.getCurrentSelection(event);
-		List<Well> wells = SelectionUtils.getObjects(selection, Well.class);
+		ISelection selection = HandlerUtil.getCurrentSelection(event);
 		
+		List<Well> wells = SelectionUtils.getObjects(selection, Well.class);
 		if (wells.isEmpty()) {
 			List<Plate> plates = SelectionUtils.getObjects(selection, Plate.class);
 			for (Plate p : plates) wells.addAll(p.getWells());
 		}
-		
 		if (wells.isEmpty()) {
 			List<Experiment> experiments = SelectionUtils.getObjects(selection, Experiment.class);
 			for (Experiment exp: experiments) {
@@ -39,8 +37,8 @@ public class ExportSubWellDataCmd extends AbstractHandler {
 		}
 		
 		if (!wells.isEmpty()) {
-			Shell shell = Display.getCurrent().getActiveShell();
-			WizardDialog wizardDialog = new WizardDialog(shell, new SubWellDataExportWizard(wells));
+			WizardDialog wizardDialog = new WizardDialog(Display.getCurrent().getActiveShell(),
+					new SubWellDataExportWizard(wells));
 			wizardDialog.open();
 		}
 		

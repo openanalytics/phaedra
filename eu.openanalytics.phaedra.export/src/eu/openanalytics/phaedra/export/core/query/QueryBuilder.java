@@ -1,12 +1,14 @@
 package eu.openanalytics.phaedra.export.core.query;
 
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
+import eu.openanalytics.phaedra.export.core.ExportPlateTableSettings;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
-import eu.openanalytics.phaedra.export.core.ExportSettings.Includes;
+import eu.openanalytics.phaedra.export.core.IFilterPlatesSettings;
 import eu.openanalytics.phaedra.export.core.filter.LibraryFilter;
 import eu.openanalytics.phaedra.export.core.filter.QualifierFilter;
 import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
@@ -14,15 +16,16 @@ import eu.openanalytics.phaedra.export.core.util.SQLUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
-import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
+import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
+
 public class QueryBuilder {
 
-	public Query createBaseQuery(ExportSettings settings) {
+	public Query createWellsQuery(ExportSettings settings) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("SELECT");
@@ -31,7 +34,7 @@ public class QueryBuilder {
 		if (settings.compoundNameSplit) sb.append(" PC.COMPOUND_TY, PC.COMPOUND_NR,");
 		else sb.append(" PC.COMPOUND_TY || PC.COMPOUND_NR COMP_NAME,");
 		sb.append(" W.CONCENTRATION, W.IS_VALID");
-		if (settings.includes.contains(Includes.Saltform)) sb.append(", PC.SALTFORM");
+		if (settings.includes.contains(ExportSettings.Includes.Saltform)) sb.append(", PC.SALTFORM");
 
 		sb.append(" FROM");
 		sb.append(" PHAEDRA.HCA_PLATE P, PHAEDRA.HCA_EXPERIMENT E, PHAEDRA.HCA_PLATE_WELL W");
@@ -68,24 +71,24 @@ public class QueryBuilder {
 		sb.append(" F.FEATURE_NAME, F.SHORT_NAME as FEATURE_ALIAS,");
 		String norm = feature.getNormalization();
 		if (norm != null && !norm.equals(NormalizationService.NORMALIZATION_NONE)) {
-			appendIfIncludes(Includes.NormalizedValue, settings, sb, " FV.NORMALIZED_VALUE as NORMALIZED,", null, null);
+			appendIfIncludes(ExportSettings.Includes.NormalizedValue, settings, sb, " FV.NORMALIZED_VALUE as NORMALIZED,", null, null);
 		}
 
 		String rawVal = (feature.isNumeric()) ? " FV.RAW_NUMERIC_VALUE as RAW_VALUE," : " FV.RAW_STRING_VALUE as RAW_VALUE,";
-		appendIfIncludes(Includes.RawValue, settings, sb, rawVal, null, null);
+		appendIfIncludes(ExportSettings.Includes.RawValue, settings, sb, rawVal, null, null);
 
-		if (settings.includes.contains(Includes.CurveProperties) || settings.includes.contains(Includes.CurvePropertiesAll)) {
-			Includes inc = settings.includes.contains(Includes.CurveProperties) ? Includes.CurveProperties : Includes.CurvePropertiesAll;
+		if (settings.includes.contains(ExportSettings.Includes.CurveProperties) || settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) {
+			ExportSettings.Includes inc = settings.includes.contains(ExportSettings.Includes.CurveProperties) ? ExportSettings.Includes.CurveProperties : ExportSettings.Includes.CurvePropertiesAll;
 			
 			CurveFitSettings fitSettings = CurveFitService.getInstance().getSettings(feature);
 			if (fitSettings != null) {
 				ICurveFitModel model = CurveFitService.getInstance().getModel(fitSettings.getModelId());
 				
 				String baseCurveQuery = " (SELECT c.${propertyName} FROM PHAEDRA.HCA_CURVE C WHERE C.CURVE_ID = WC.CURVE_ID) AS ${columnAlias},";
-				appendIfIncludes(Includes.CurveProperties, settings, sb, baseCurveQuery, "MODEL_ID", "MODEL");
+				appendIfIncludes(ExportSettings.Includes.CurveProperties, settings, sb, baseCurveQuery, "MODEL_ID", "MODEL");
 				
 				for (Definition def: model.getOutputParameters()) {
-					if (!def.key && !settings.includes.contains(Includes.CurvePropertiesAll)) continue;
+					if (!def.key && !settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) continue;
 					if (def.type == ParameterType.Binary) continue;
 					
 					String basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
@@ -119,22 +122,19 @@ public class QueryBuilder {
 		String sql = sb.toString();
 
 		// Insert the feature ID.
-		sql = sql.replace("${featureId}", ""+feature.getId());
+		sql = sql.replace("${featureId}", Long.toString(feature.getId()));
 
 		// Insert the experiment IDs.
-		String expIds = "";
-		for (Experiment exp: settings.experiments) {
-			expIds += exp.getId()+",";
-		}
-		expIds = expIds.substring(0,expIds.lastIndexOf(','));
-		sql = sql.replace("${experimentIds}", expIds);
+		sql = sql.replace("${experimentIds}", settings.getExperiments().stream()
+				.map((experiment) -> Long.toString(experiment.getId()))
+				.collect(Collectors.joining(",")));
 
 		Query query = new Query();
 		query.setSql(sql);
 		return query;
 	}
 
-	private void appendIfIncludes(Includes inc, ExportSettings settings, StringBuilder sb, String baseString, String propName, String colAlias) {
+	private void appendIfIncludes(ExportSettings.Includes inc, ExportSettings settings, StringBuilder sb, String baseString, String propName, String colAlias) {
 		if (settings.includes.contains(inc)) {
 			String string = baseString;
 			if (propName != null) string = string.replace("${propertyName}", propName);
@@ -142,20 +142,69 @@ public class QueryBuilder {
 			sb.append(string);
 		}
 	}
+	
+	public Query createPlatesQuery(ExportPlateTableSettings settings) {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append("select"
+				+ " p.EXPERIMENT_ID, e.EXPERIMENT_NAME,"
+				+ " p.PLATE_ID, p.SEQUENCE_IN_RUN, p.BARCODE, p.PLATE_INFO,"
+				+ " p.VALIDATE_STATUS, p.APPROVE_STATUS,"
+				+ " p.DESCRIPTION");
+		
+		if (settings.getIncludes().contains(ExportPlateTableSettings.Includes.PlateSummary)) {
+			// see eu.openanalytics.phaedra.model.plate.PlateService.getPlateSummary(Plate)
+			sb.append(", (select count(pc.PLATECOMPOUND_ID) from phaedra.hca_plate_compound pc"
+							+ " where pc.PLATE_ID = p.PLATE_ID"
+								+ " and (select count(w.WELL_ID) from phaedra.hca_plate_well w where w.PLATECOMPOUND_ID = pc.PLATECOMPOUND_ID) > 3)"
+							+ " DRC_COUNT"
+					+ ", (select count(pc.PLATECOMPOUND_ID) from phaedra.hca_plate_compound pc"
+							+ " where pc.PLATE_ID = p.PLATE_ID"
+								+ " and (select count(w.WELL_ID) from phaedra.hca_plate_well w where w.PLATECOMPOUND_ID = pc.PLATECOMPOUND_ID) <= 3)"
+							+ " SDP_COUNT");
+		}
+		if (settings.getIncludes().contains(ExportPlateTableSettings.Includes.ApproveAndValidationDetail)) {
+			sb.append(", p.VALIDATE_USER, p.VALIDATE_DT AS VALIDATE_DATE,"
+					+ " p.APPROVE_USER, p.APPROVE_DT AS APPROVE_DATE");
+		}
+		
+		sb.append(" from");
+		sb.append(" phaedra.HCA_PLATE p, phaedra.HCA_EXPERIMENT e");
+		
+		sb.append(" where");
+		sb.append(" e.EXPERIMENT_ID = p.EXPERIMENT_ID");
+		sb.append(" and e.EXPERIMENT_ID in (${experimentIds})");
+		
+		addPlateFilters(sb, settings);
+		
+		sb.append(" order by p.PLATE_ID");
+		
+		String sql = sb.toString();
+		
+		// Insert the experiment IDs.
+		sql = sql.replace("${experimentIds}", settings.getExperiments().stream()
+				.map((experiment) -> Long.toString(experiment.getId()))
+				.collect(Collectors.joining(",")));
+		
+		Query query = new Query();
+		query.setSql(sql);
+		return query;
+	}
 
-	private void addPlateFilters(StringBuilder sb, ExportSettings settings) {
-
-		if (settings.library != null && !settings.library.equals(LibraryFilter.ALL)) {
-			sb.append(" AND EXTRACTVALUE(P.DATA_XML,'/data/properties/property[@key=\"plate-library\"]/@value') = '" + settings.library + "'");
+	private void addPlateFilters(StringBuilder sb, IFilterPlatesSettings settings) {
+		String library = settings.getLibrary();
+		if (library != null && !library.equals(LibraryFilter.ALL)) {
+			sb.append(" AND EXTRACTVALUE(P.DATA_XML,'/data/properties/property[@key=\"plate-library\"]/@value') = '" + library + "'");
 		}
 
-		if (settings.plateQualifier != null && !settings.plateQualifier.equals(QualifierFilter.ALL)) {
-			sb.append(" AND EXTRACTVALUE(P.DATA_XML,'/data/properties/property[@key=\"plate-qualifier\"]/@value') = '" + settings.plateQualifier + "'");
+		String plateQualifier = settings.getPlateQualifier();
+		if (plateQualifier != null && !plateQualifier.equals(QualifierFilter.ALL)) {
+			sb.append(" AND EXTRACTVALUE(P.DATA_XML,'/data/properties/property[@key=\"plate-qualifier\"]/@value') = '" + plateQualifier + "'");
 		}
 
-		if (settings.filterValidation) {
-			Date from = settings.validationDateFrom;
-			Date to = settings.validationDateTo;
+		if (settings.getFilterValidation()) {
+			Date from = settings.getValidationDateFrom();
+			Date to = settings.getValidationDateTo();
 			if (to != null) {
 				// Add 1 day to the end date, so that the end date itself is included in the range.
 				long oneDay = 86400000L;
@@ -174,15 +223,15 @@ public class QueryBuilder {
 				sb.append(SQLUtils.generateSQLDate(to));
 			}
 
-			String user = settings.validationUser;
+			String user = settings.getValidationUser();
 			if (user != null && !user.isEmpty()) {
 				sb.append(" AND P.VALIDATE_USER LIKE '%" + user + "%'");
 			}
 		}
 
-		if (settings.filterApproval) {
-			Date from = settings.approvalDateFrom;
-			Date to = settings.approvalDateTo;
+		if (settings.getFilterApproval()) {
+			Date from = settings.getApprovalDateFrom();
+			Date to = settings.getApprovalDateTo();
 			if (to != null) {
 				// Add 1 day to the end date, so that the end date itself is included in the range.
 				long oneDay = 86400000L;
@@ -201,7 +250,7 @@ public class QueryBuilder {
 				sb.append(SQLUtils.generateSQLDate(to));
 			}
 
-			String user = settings.approvalUser;
+			String user = settings.getApprovalUser();
 			if (user != null && !user.isEmpty()) {
 				sb.append(" AND P.APPROVE_USER LIKE '%" + user + "%'");
 			}
@@ -254,4 +303,5 @@ public class QueryBuilder {
 			sb.append(" AND W.WELLTYPE_CODE IN ('" + wellTypes + "')");
 		}
 	}
+
 }

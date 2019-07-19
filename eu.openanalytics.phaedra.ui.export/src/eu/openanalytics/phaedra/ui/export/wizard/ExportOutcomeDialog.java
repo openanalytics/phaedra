@@ -4,16 +4,16 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.export.core.ExportSettings;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 
 public class ExportOutcomeDialog extends MessageDialog {
 	
 	private final static int OPEN_ID = 0;
 	private final static int CLOSE_ID = 1;
 	
-	private ExportSettings settings;
+	private IExportExperimentsSettings settings;
 	
-	protected ExportOutcomeDialog(Shell parentShell, ExportSettings settings) {
+	protected ExportOutcomeDialog(Shell parentShell, IExportExperimentsSettings settings) {
 		super(parentShell,"Export Complete", null,
 				generateMessage(settings), MessageDialog.INFORMATION,
 				new String[]{"Open","Close"}, 0);
@@ -35,14 +35,15 @@ public class ExportOutcomeDialog extends MessageDialog {
 		}
 	}
 	
-	private static String generateMessage(ExportSettings settings) {
+	private static String generateMessage(IExportExperimentsSettings settings) {
 		StringBuilder msg = new StringBuilder();
 		msg.append("The data was successfully exported to the following location:");
-		msg.append("\n\n"+settings.destinationPath);
+		msg.append("\n\n"+settings.getDestinationPath());
 		return msg.toString();
 	}
 	
 	private void openFile() {
-		Program.launch(settings.destinationPath);
+		Program.launch(settings.getDestinationPath());
 	}
+	
 }
