@@ -83,17 +83,13 @@ public abstract class AbstractFileSelectionPage extends BaseExportWizardPage {
 		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(container);
 		
 		Label label = new Label(container, SWT.SEPARATOR | SWT.SHADOW_OUT | SWT.HORIZONTAL);
-		GridDataFactory.fillDefaults().applyTo(label);
+		GridDataFactory.fillDefaults().span(2, 1).applyTo(label);
 		
 		label = new Label(container, SWT.NONE);
 		label.setText("Save As:");
-		GridDataFactory.fillDefaults().span(2,1).applyTo(label);
+		GridDataFactory.fillDefaults().span(2, 1).applyTo(label);
 		
-		Composite subContainer = new Composite(container, SWT.NONE);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(subContainer);
-		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(subContainer);
-		
-		browseBtn = new Button(subContainer, SWT.PUSH);
+		browseBtn = new Button(container, SWT.PUSH);
 		browseBtn.setText("Select Destination...");
 		browseBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -101,11 +97,11 @@ public abstract class AbstractFileSelectionPage extends BaseExportWizardPage {
 				promptFileSelector();
 			}
 		});
-		GridDataFactory.fillDefaults().applyTo(browseBtn);
+		GridDataFactory.defaultsFor(browseBtn).applyTo(browseBtn);
 		
-		pathTxt = new Text(subContainer, SWT.BORDER);
+		pathTxt = new Text(container, SWT.BORDER);
 		pathTxt.setEditable(false);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(pathTxt);
+		GridDataFactory.defaultsFor(pathTxt).grab(true, false).applyTo(pathTxt);
 		
 		return container;
 	}
