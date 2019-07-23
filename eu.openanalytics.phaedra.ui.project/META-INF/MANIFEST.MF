@@ -1,0 +1,26 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Project UI
+Bundle-SymbolicName: eu.openanalytics.phaedra.ui.project;singleton:=true
+Bundle-Version: 1.0.7.qualifier
+Bundle-Vendor: OpenAnalytics
+Bundle-Activator: eu.openanalytics.phaedra.ui.project.Activator
+Bundle-ActivationPolicy: lazy
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.expressions,
+ org.eclipse.core.databinding,
+ org.eclipse.core.databinding.beans,
+ org.eclipse.core.databinding.observable,
+ org.eclipse.core.databinding.property,
+ org.eclipse.ui,
+ org.eclipse.jface.databinding,
+ eu.openanalytics.phaedra.base.security,
+ eu.openanalytics.phaedra.model.protocol,
+ eu.openanalytics.phaedra.model.plate,
+ eu.openanalytics.phaedra.project,
+ eu.openanalytics.phaedra.base.ui.navigator,
+ eu.openanalytics.phaedra.base.ui.editor,
+ eu.openanalytics.phaedra.base.ui.util,
+ eu.openanalytics.phaedra.base.ui.icons,
+ eu.openanalytics.phaedra.ui.protocol

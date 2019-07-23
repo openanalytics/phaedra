@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="eu.openanalytics.phaedra.ui.project.cmd.CreateProject"
+            defaultHandler="eu.openanalytics.phaedra.ui.project.cmd.CreateProjectHandler"
+            name="New Project...">
+      </command>
+      <command
+            id="eu.openanalytics.phaedra.ui.project.cmd.EditProject"
+            defaultHandler="eu.openanalytics.phaedra.ui.project.cmd.EditProjectHandler"
+            name="Edit Project...">
+      </command>
+      <command
+            id="eu.openanalytics.phaedra.ui.project.cmd.AddExperiment"
+            defaultHandler="eu.openanalytics.phaedra.ui.project.cmd.AddProjectExperimentHandler"
+            name="Add Experiment...">
+      </command>
+   </extension>
+
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.icons.iconProvider">
+      <iconProvider
+            id="eu.openanalytics.phaedra.ui.project.icons.Project"
+            class="eu.openanalytics.phaedra.ui.project.ProjectIconProvider">
+      </iconProvider>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commandImages">
+      <image
+            commandId="eu.openanalytics.phaedra.ui.project.cmd.CreateProject"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/project_add.png">
+      </image>
+   </extension>
+
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.navigator.elementProvider">
+      <elementProvider
+            class="eu.openanalytics.phaedra.ui.project.navigator.ProjectProvider">
+      </elementProvider>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.ui.navigator.elementHandler">
+      <elementHandler
+            class="eu.openanalytics.phaedra.ui.project.navigator.ProjectsHandler">
+      </elementHandler>
+      <elementHandler
+            class="eu.openanalytics.phaedra.ui.project.navigator.ProjectHandler">
+      </elementHandler>
+      <elementHandler
+            class="eu.openanalytics.phaedra.ui.project.navigator.ProjectExperimentHandler">
+      </elementHandler>
+   </extension>
+
+</plugin>

@@ -1449,3 +1449,53 @@ CREATE SEQUENCE phaedra.hca_psp_part_ref_s
 
 GRANT INSERT, UPDATE, DELETE ON phaedra.hca_psp_part_ref to phaedra_role_crud;
 GRANT SELECT ON phaedra.hca_psp_part_ref to phaedra_role_read;
+
+-- Project -------------------------------------------------------------------
+
+create table phaedra.hca_project (
+		project_id			bigint not null,
+		name				varchar(100) not null,
+		description			varchar(1000),
+		owner				varchar(25),
+		team_code			varchar(25) default 'NONE',
+		access_scope		varchar(25)
+	);
+
+alter table phaedra.hca_project
+	add constraint hca_project_pk
+	primary key (project_id);
+
+create sequence phaedra.hca_project_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+
+grant insert, update, delete on phaedra.hca_project to phaedra_role_crud;
+grant select on phaedra.hca_project to phaedra_role_read;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_project_experiment (
+		project_id			bigint not null,
+		experiment_id		bigint not null
+	);
+
+alter table phaedra.hca_project_experiment
+	add constraint hca_project_experiment_pk
+	primary key (project_id, experiment_id);
+
+alter table phaedra.hca_project_experiment
+	add constraint hca_project_experiment_fk_project
+	foreign key (project_id)
+	references phaedra.hca_project(project_id)
+	on delete cascade;
+
+alter table phaedra.hca_project_experiment
+	add constraint hca_project_experiment_fk_experiment
+	foreign key (experiment_id)
+	references phaedra.hca_experiment(experiment_id)
+	on delete cascade;
+
+grant insert, update, delete on phaedra.hca_project_experiment to phaedra_role_crud;
+grant select on phaedra.hca_project_experiment to phaedra_role_read;

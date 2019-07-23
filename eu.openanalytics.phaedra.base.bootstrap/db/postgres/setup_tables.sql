@@ -1624,3 +1624,58 @@ CREATE SEQUENCE phaedra.HCA_REPORT_PAGE_S
 GRANT INSERT, UPDATE, DELETE on phaedra.HCA_REPORT_PAGE to :accountNameWrite;
 GRANT SELECT, USAGE on phaedra.HCA_REPORT_PAGE_s to :accountNameWrite;
 GRANT SELECT ON phaedra.HCA_REPORT_PAGE to :accountNameRead;
+
+-- Project -------------------------------------------------------------------
+
+create table phaedra.hca_project (
+		project_id			bigint not null,
+		name				varchar(100) not null,
+		description			varchar(1000),
+		owner				varchar(25),
+		team_code			varchar(25) default 'NONE',
+		access_scope		varchar(25)
+	)
+	tablespace :tsNameData;
+
+alter table phaedra.hca_project
+	add constraint hca_project_pk
+	primary key (project_id)
+	using index tablespace :tsNameIndex;
+
+create sequence phaedra.hca_project_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+
+grant insert, update, delete on phaedra.hca_project to :accountNameWrite;
+grant select, usage on phaedra.hca_project_s to :accountNameWrite;
+grant select on phaedra.hca_project to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_project_experiment (
+		project_id			bigint not null,
+		experiment_id		bigint not null
+	)
+	tablespace :tsNameData;
+
+alter table phaedra.hca_project_experiment
+	add constraint hca_project_experiment_pk
+	primary key (project_id, experiment_id)
+	using index tablespace :tsNameIndex;
+
+alter table phaedra.hca_project_experiment
+	add constraint hca_project_experiment_fk_project
+	foreign key (project_id)
+	references phaedra.hca_project(project_id)
+	on delete cascade;
+
+alter table phaedra.hca_project_experiment
+	add constraint hca_project_experiment_fk_experiment
+	foreign key (experiment_id)
+	references phaedra.hca_experiment(experiment_id)
+	on delete cascade;
+
+grant insert, update, delete on phaedra.hca_project_experiment to :accountNameWrite;
+grant select on phaedra.hca_project_experiment to :accountNameRead;

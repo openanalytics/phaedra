@@ -43,6 +43,21 @@ public class SelectionUtils {
 	}
 
 	/**
+	 * Get the element of a selection of the size 1 that matches the specified class.
+	 */
+	public static <E> E getSingleObject(ISelection selection, Class<E> clazz, boolean allowAdapting) {
+		if (selection instanceof IStructuredSelection) {
+			IStructuredSelection structuredSelection = (IStructuredSelection)selection;
+			Object selectedItem = structuredSelection.getFirstElement();
+			if (selectedItem == null || structuredSelection.size() != 1) {
+				return null;
+			}
+			return getAsClass(selectedItem, clazz, allowAdapting);
+		}
+		return null;
+	}
+
+	/**
 	 * Get all elements of a selection that match the specified class.
 	 * Both casting and adapting will be attempted.
 	 */

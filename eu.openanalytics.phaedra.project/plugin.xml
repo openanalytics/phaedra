@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="project.model">
+         <entityClass
+               class="eu.openanalytics.phaedra.project.vo.Project">
+         </entityClass>
+      </persistenceModel>
+   </extension>
+</plugin>
