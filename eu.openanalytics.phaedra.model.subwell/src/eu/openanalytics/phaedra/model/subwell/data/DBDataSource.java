@@ -9,6 +9,7 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.sql.Array;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -33,10 +34,11 @@ import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.Activator;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
+import oracle.jdbc.OracleConnection;
 import oracle.sql.ARRAY;
 import oracle.sql.Datum;
 
-//TODO Support string data
+//TODO Non-numeric subwelldata is not supported anymore.
 public class DBDataSource implements ISubWellDataSource {
 
 	private static final String SCHEMA = "phaedra";
@@ -153,7 +155,7 @@ public class DBDataSource implements ISubWellDataSource {
 		} else if (JDBCUtils.isOracle()) {
 			updateDataOracle(data);
 		} else {
-			//TODO
+			throw new UnsupportedOperationException("Database-stored subwelldata is not supported in the H2 embedded database.");
 		}
 	}
 
@@ -199,33 +201,21 @@ public class DBDataSource implements ISubWellDataSource {
 	}
 	
 	private void updateDataOracle(Map<SubWellFeature, Map<Well, Object>> data) {
-		try (Connection conn = getConnection()) {
-			for (SubWellFeature feature: data.keySet()) {
-				Map<Well, Object> featureData = data.get(feature);
-				for (Well well: featureData.keySet()) {
-					if (!feature.isNumeric() || featureData.get(well) == null) continue;
-					
-					StringBuilder values = new StringBuilder();
-					values.append("phaedra.num_val_array(");
-					float[] numVal = (float[]) featureData.get(well);
-					for (int cellId = 0; cellId < numVal.length; cellId++) {
-						values.append(String.valueOf(numVal[cellId]));
-						if (cellId + 1 < numVal.length) values.append(",");
-					}
-					values.append(")");
-					
-					try (Statement stmt = conn.createStatement()) {
-						String sql = String.format("merge into %s.%s using dual on (well_id = %d and feature_id = %d)"
-								+ " when not matched then insert (well_id, feature_id, num_val) values (%d, %d, %s)"
-								+ " when matched then update set num_val = %s",
-								SCHEMA, DATA_TABLE, well.getId(), feature.getId(),
-								well.getId(), feature.getId(), values.toString(),
-								values.toString());
-						stmt.execute(sql);
-					}
-				}
-				conn.commit();
-			}
+		// Step 1: insert all data in the TEMP table.
+		String tempTable = "hca_subwellfeature_value_tmp";
+		insertDataOracle(data, tempTable);
+		
+		// Step 2: merge the TEMP table into the actual table.
+		String sql = String.format("merge into %s.%s dst using %s.%s src"
+				+ " on (src.well_id = dst.well_id and src.feature_id = dst.feature_id)"
+				+ " when matched then update set dst.num_val = src.num_val"
+				+ " when not matched then insert (dst.well_id, dst.feature_id, dst.num_val)"
+				+ " values (src.well_id, src.feature_id, src.num_val)",
+				SCHEMA, DATA_TABLE, SCHEMA, tempTable);
+		try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
+			stmt.execute(sql);
+			stmt.execute(String.format("delete from %s.%s", SCHEMA, tempTable));
+			conn.commit();
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
@@ -238,9 +228,9 @@ public class DBDataSource implements ISubWellDataSource {
 		if (JDBCUtils.isPostgres()) {
 			insertDataPostgres(data);
 		} else if (JDBCUtils.isOracle()) {
-			insertDataOracle(data);
+			insertDataOracle(data, DATA_TABLE);
 		} else {
-			//TODO
+			throw new UnsupportedOperationException("Database-stored subwelldata is not supported in the H2 embedded database.");
 		}
 	}
 	
@@ -257,31 +247,39 @@ public class DBDataSource implements ISubWellDataSource {
 		}
 	}
 	
-	private void insertDataOracle(Map<SubWellFeature, Map<Well, Object>> data) {
-		try (Connection conn = getConnection()) {
+	private void insertDataOracle(Map<SubWellFeature, Map<Well, Object>> data, String targetTable) {
+		String sql = String.format("insert into %s.%s (well_id,feature_id,num_val) values (?,?,?)", SCHEMA, targetTable);
+		int batchSize = 1000;
+		int itemCount = 0;
+		
+		long start = System.currentTimeMillis();
+		try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
 			for (SubWellFeature feature: data.keySet()) {
 				Map<Well, Object> featureData = data.get(feature);
 				for (Well well: featureData.keySet()) {
 					if (!feature.isNumeric() || featureData.get(well) == null) continue;
-					
-					StringBuilder values = new StringBuilder();
-					values.append(well.getId() + ", " + feature.getId() + ", phaedra.num_val_array(");
+				
 					float[] numVal = (float[]) featureData.get(well);
+					Float[] numValFloat = new Float[numVal.length];
 					for (int cellId = 0; cellId < numVal.length; cellId++) {
-						values.append(String.valueOf(numVal[cellId]));
-						if (cellId + 1 < numVal.length) values.append(",");
+						numValFloat[cellId] = Float.valueOf(numVal[cellId]);
 					}
-					values.append(")");
+					Array valueArray = conn.unwrap(OracleConnection.class).createARRAY(SCHEMA.toUpperCase() + ".NUM_VAL_ARRAY", numValFloat);
 					
-					try (Statement stmt = conn.createStatement()) {
-						String sql = String.format("insert into %s.%s (well_id,feature_id,num_val) values (%s)", SCHEMA, DATA_TABLE, values.toString());
-						stmt.execute(sql);
-					}
+					stmt.setLong(1, well.getId());
+					stmt.setLong(2, feature.getId());
+					stmt.setArray(3, valueArray);
+					stmt.addBatch();
+					if (itemCount++ % batchSize == 0) stmt.executeBatch();
 				}
-				conn.commit();
 			}
+			stmt.executeBatch();
+			conn.commit();
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
+		} finally {
+			long duration = System.currentTimeMillis() - start;
+			EclipseLog.debug(String.format("Query took %d ms (batch size %d): %s", duration, itemCount, sql), DBDataSource.class);
 		}
 	}
 	
@@ -343,7 +341,7 @@ public class DBDataSource implements ISubWellDataSource {
 		} else if (JDBCUtils.isOracle()) {
 			Datum[] dValues = ((ARRAY) numValArray).getOracleArray();
 			float[] floatValues = new float[dValues.length];
-			for (int i=0; i<dValues.length; i++) floatValues[i] = dValues[i].floatValue();
+			for (int i=0; i<dValues.length; i++) floatValues[i] = (float) dValues[i].floatValue();
 			return floatValues;
 		}
 		

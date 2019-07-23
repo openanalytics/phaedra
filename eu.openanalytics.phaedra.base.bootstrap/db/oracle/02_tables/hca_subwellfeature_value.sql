@@ -6,7 +6,6 @@ create table hca_subwellfeature_value (
     num_val num_val_array
 ) tablespace phaedra_d;
 
-
 alter table hca_subwellfeature_value
 	add constraint hca_swf_value_pk
 	primary key (well_id, feature_id)
@@ -29,7 +28,16 @@ begin
    return ar.count;
 end;
 
+create global temporary table hca_subwellfeature_value_tmp (
+    well_id number not null,
+    feature_id number not null,
+    num_val num_val_array
+)
+on commit preserve rows;
+
 grant select on hca_subwellfeature_value to phaedra_role_read;
 grant insert, update, delete on hca_subwellfeature_value to phaedra_role_crud;
+grant select on hca_subwellfeature_value_tmp to phaedra_role_read;
+grant insert, update, delete on hca_subwellfeature_value_tmp to phaedra_role_crud;
 grant execute on array_length to phaedra_role_read;
 grant execute on num_val_array to phaedra_role_read;
