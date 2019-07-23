@@ -216,7 +216,7 @@ public class SecurityService {
 			ownedObject = (IOwnedObject)object;
 		} else if (object instanceof IAdaptable) {
 			IAdaptable adaptable = (IAdaptable)object;
-			ownedObject = (IOwnedObject)adaptable.getAdapter(IOwnedObject.class);
+			ownedObject = adaptable.getAdapter(IOwnedObject.class);
 		}
 		if (ownedObject == null) return getHighestRole(userName, null);
 
@@ -264,7 +264,7 @@ public class SecurityService {
 			ownedObject = (IOwnedPersonalObject) object;
 		} else if (object instanceof IAdaptable) {
 			IAdaptable adaptable = (IAdaptable) object;
-			ownedObject = (IOwnedPersonalObject) adaptable.getAdapter(IOwnedPersonalObject.class);
+			ownedObject = adaptable.getAdapter(IOwnedPersonalObject.class);
 		}
 
 		// Owner always has access. So does the admin.
@@ -281,6 +281,7 @@ public class SecurityService {
 				case TEAM:
 					// Since the accessing user is not the owner, see if he's part of the team.
 					hasAccess = getHighestRole(userName, object) != null;
+					break;
 				case PUBLIC_R:
 					// We're reading here, everyone can read.
 					hasAccess = Action.READ.hasRights(action);
