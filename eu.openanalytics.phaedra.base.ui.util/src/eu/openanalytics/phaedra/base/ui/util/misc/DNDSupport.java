@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.ui.util.misc;
 import java.util.function.Function;
 
 import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
@@ -34,8 +35,27 @@ public class DNDSupport {
 		DragSource dragSource = new DragSource(viewer.getControl(), operations);
 		dragSource.setTransfer(types);
 		dragSource.addDragListener(new DragSourceAdapter() {
+			@Override
+			public void dragStart(DragSourceEvent event) {
+				ISelection selection = viewer.getSelection();
+				if (selection.isEmpty()) {
+					event.doit = false;
+					return;
+				}
+				LocalSelectionTransfer transfer = LocalSelectionTransfer.getTransfer();
+				transfer.setSelectionSetTime(event.time & 0xFFFF);
+				transfer.setSelection(selection);
+			}
+			@Override
 			public void dragSetData(DragSourceEvent event) {
-				LocalSelectionTransfer.getTransfer().setSelection(viewer.getSelection());
+				LocalSelectionTransfer transfer = LocalSelectionTransfer.getTransfer();
+				event.data = transfer.getSelection();
+			}
+			@Override
+			public void dragFinished(DragSourceEvent event) {
+				LocalSelectionTransfer transfer = LocalSelectionTransfer.getTransfer();
+				transfer.setSelectionSetTime(0);
+				transfer.setSelection(null);
 			}
 		});
 		
