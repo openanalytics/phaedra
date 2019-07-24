@@ -141,6 +141,22 @@
             class="eu.openanalytics.phaedra.calculation.norm.impl.PctEffectMinus100Normalizer"
             id="\%EFFECT (x-100)">
       </normalizer>
+      <normalizer
+            id="PIN[Pos Mean]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhPosMeanNormalizer">
+      </normalizer>
+      <normalizer
+            id="PIN[Pos Median]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhPosMedianNormalizer">
+      </normalizer>
+      <normalizer
+            id="PIN[Neg Mean]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhNegMeanNormalizer">
+      </normalizer>
+      <normalizer
+            id="PIN[Neg Median]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhNegMedianNormalizer">
+      </normalizer>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.calculation.annotationCreator">
