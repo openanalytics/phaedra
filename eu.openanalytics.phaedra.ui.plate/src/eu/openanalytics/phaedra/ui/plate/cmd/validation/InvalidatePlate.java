@@ -11,7 +11,7 @@ import eu.openanalytics.phaedra.validation.dialog.InvalidatePlatesDialog;
 public class InvalidatePlate extends AbstractPlateValidationCommand {
 
 	@Override
-	protected String getRequiredRole() {
+	protected Permissions.Operation getRequiredRole() {
 		return Permissions.PLATE_CHANGE_VALIDATION;
 	}
 

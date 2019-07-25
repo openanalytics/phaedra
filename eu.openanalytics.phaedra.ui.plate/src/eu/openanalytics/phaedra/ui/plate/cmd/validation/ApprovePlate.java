@@ -13,7 +13,7 @@ import eu.openanalytics.phaedra.validation.ValidationService.Action;
 public class ApprovePlate extends AbstractPlateValidationCommand {
 
 	@Override
-	protected String getRequiredRole() {
+	protected Permissions.Operation getRequiredRole() {
 		return Permissions.PLATE_CHANGE_APPROVAL;
 	}
 

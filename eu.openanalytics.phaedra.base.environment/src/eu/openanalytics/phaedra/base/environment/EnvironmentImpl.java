@@ -14,6 +14,7 @@ import eu.openanalytics.phaedra.base.fs.SecureFileServer;
 import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.security.model.Permissions;
 
 public class EnvironmentImpl implements IEnvironment {
 
@@ -45,7 +46,9 @@ public class EnvironmentImpl implements IEnvironment {
 			authConfig = new AuthConfig();
 			authConfig.setResolver(key -> config.getValue(name, "auth", key));
 		}
-		SecurityService.createInstance(authConfig);
+		Permissions permissions = new Permissions();
+		permissions.load(key -> config.getValue(name, "permissions", key));
+		SecurityService.createInstance(authConfig, permissions);
 		SecurityService.getInstance().getLoginHandler().authenticate(userName, password);
 		
 		FileServerConfig fsConfig = new FileServerConfig();

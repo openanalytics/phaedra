@@ -317,7 +317,7 @@ public class ProtocolService extends BaseJPAService {
 	public boolean canEditProtocolClass(String userName, ProtocolClass protocolClass) {
 		SecurityService security = SecurityService.getInstance();
 		boolean isAdmin = security.isGlobalAdmin(userName);
-		boolean isPClassEditor = security.check(userName, Permissions.PROTOCOLCLASS_EDIT, protocolClass);
+		boolean isPClassEditor = security.check(userName, Permissions.PROTOCOLCLASS_EDIT, protocolClass, false, false);
 		boolean isPClassUser = security.check(userName, Roles.USER, protocolClass);
 
 		if (isAdmin) return true;

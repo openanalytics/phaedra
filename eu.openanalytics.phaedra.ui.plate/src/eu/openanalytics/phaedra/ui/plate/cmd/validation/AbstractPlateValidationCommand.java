@@ -10,6 +10,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
@@ -21,7 +22,7 @@ public abstract class AbstractPlateValidationCommand extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
 		// Obtain selected plate(s).
-		ISelection selection = (ISelection)HandlerUtil.getCurrentSelection(event);
+		ISelection selection = HandlerUtil.getCurrentSelection(event);
 		List<Plate> plates = SelectionUtils.getObjects(selection, Plate.class);
 		if (plates.isEmpty()) {
 			// Maybe an experiment selection was made rather than a plate selection.
@@ -49,7 +50,7 @@ public abstract class AbstractPlateValidationCommand extends AbstractHandler {
 		return null;
 	}
 	
-	protected abstract String getRequiredRole();
+	protected abstract Permissions.Operation getRequiredRole();
 	
 	protected abstract boolean getUserConfirmation(List<Plate> plates);
 	

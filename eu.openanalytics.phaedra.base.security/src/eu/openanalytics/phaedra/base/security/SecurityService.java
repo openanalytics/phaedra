@@ -16,6 +16,7 @@ import eu.openanalytics.phaedra.base.security.ldap.LDAPSecureLoginHandler;
 import eu.openanalytics.phaedra.base.security.model.Group;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
 import eu.openanalytics.phaedra.base.security.model.IOwnedPersonalObject;
+import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.security.model.Roles;
 import eu.openanalytics.phaedra.base.security.model.UserContext;
 import eu.openanalytics.phaedra.base.security.ui.AccessDialog;
@@ -37,14 +38,16 @@ public class SecurityService {
 	
 	private String currentUserName;
 	private Map<Group, List<String>> securityConfig;
+	private Permissions permissions;
 
 	private ILoginHandler loginHandler;
 	private AuthConfig authConfig;
 	private APIClientSessionManager apiSessions;
 	
-	private SecurityService(AuthConfig authConfig) {
+	private SecurityService(AuthConfig authConfig, Permissions permissions) {
 		// Hidden constructor
 		this.authConfig = authConfig;
+		this.permissions = permissions;
 		this.apiSessions = new APIClientSessionManager();
 		
 		if (authConfig == null) this.loginHandler = new EmbeddedLoginHandler();
@@ -52,9 +55,13 @@ public class SecurityService {
 		else this.loginHandler = new LDAPSecureLoginHandler();
 	}
 
-	public static synchronized SecurityService createInstance(AuthConfig ldapConfig) {
-		instance = new SecurityService(ldapConfig);
+	public static synchronized SecurityService createInstance(AuthConfig ldapConfig, Permissions permissions) {
+		instance = new SecurityService(ldapConfig, permissions);
 		return instance;
+	}
+	
+	public static synchronized SecurityService createInstance(AuthConfig ldapConfig) {
+		return createInstance(ldapConfig, new Permissions());
 	}
 	
 	public static SecurityService getInstance() {
@@ -244,6 +251,24 @@ public class SecurityService {
 		return highestRole;
 	}
 
+
+	public boolean check(Permissions.Operation operation, Object object) {
+		return check(getCurrentUserName(), this.permissions.getRequiredRole(operation), object, false, false);
+	}
+	
+	public boolean checkWithException(Permissions.Operation operation, Object object) {
+		return check(getCurrentUserName(), this.permissions.getRequiredRole(operation), object, false, true);
+	}
+	
+	public boolean checkWithDialog(Permissions.Operation operation, Object object) {
+		return check(getCurrentUserName(), this.permissions.getRequiredRole(operation), object, true, false);
+	}
+	
+	public boolean check(String userName, Permissions.Operation operation, Object object, boolean showDialog, boolean throwException) {
+		return check(userName, this.permissions.getRequiredRole(operation), object, showDialog, throwException);
+	}
+
+
 	/*
 	 * **************
 	 * Personal Permission API
@@ -344,6 +369,22 @@ public class SecurityService {
 		}
 		return matchingMemberships;
 	}
+	
+	/**
+	 * Helper method to get all groups the specified user is member of with
+	 * the role required by the specified operation.
+	 */
+	public Set<Group> getMemberships(String userName, Permissions.Operation operation) {
+		Set<Group> allMemberships = getMemberships(userName);
+		Set<Group> matchingMemberships = new HashSet<Group>();
+		String requiredRole = permissions.getRequiredRole(operation);
+		for (Group group : allMemberships) {
+			if (requiredRole == null || Roles.extendsRole(group.getRole(), requiredRole)) {
+				matchingMemberships.add(group);
+			}
+		}
+		return matchingMemberships;
+	}
 
 	/**
 	 * Find all teams a user is member of via at least one
@@ -353,7 +394,7 @@ public class SecurityService {
 	 * @return A Set of team names the user is member of.
 	 */
 	public Set<String> getTeams(String userName) {
-		Set<Group> groups = getMemberships(userName, null);
+		Set<Group> groups = getMemberships(userName, (String) null);
 		Set<String> teams = new HashSet<String>();
 		for (Group g: groups) {
 			teams.add(g.getTeam());
