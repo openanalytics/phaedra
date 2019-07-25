@@ -1,10 +1,12 @@
-package eu.openanalytics.phaedra.ui.project.cmd;
+package eu.openanalytics.phaedra.base.ui.util.dialog;
 
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.jface.databinding.dialog.TitleAreaDialogSupport;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
@@ -50,7 +52,7 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 			newShell.setText(title);
 		}
 	}
-
+	
 	@Override
 	protected Control createContents(Composite parent) {
 		Control control = super.createContents(parent);
@@ -65,6 +67,13 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 		if (dbValidation) {
 			TitleAreaDialogSupport.create(this, dbc);
 		}
+		getShell().addDisposeListener(new DisposeListener() {
+			@Override
+			public void widgetDisposed(DisposeEvent e) {
+				dbc.dispose();
+				dbc = null;
+			}
+		});
 		setMessage(null, -1);
 		
 		return control;

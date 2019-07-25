@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.AccessScope;
+import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDatabindingDialog;
 import eu.openanalytics.phaedra.project.vo.Project;
 
 public class EditProjectDialog extends TitleAreaDatabindingDialog {
@@ -113,9 +114,9 @@ public class EditProjectDialog extends TitleAreaDatabindingDialog {
 			label.setText("Description / Notes:");
 			GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(label);
 			
-			Text text = new Text(container, SWT.BORDER | SWT.MULTI | SWT.WRAP);
+			Text text = new Text(container, SWT.BORDER | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
 			text.setTextLimit(100);
-			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).hint(-1, 80).grab(true, true).applyTo(text);
+			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.FILL).hint(SWT.DEFAULT, convertHeightInCharsToPixels(4)).grab(true, true).applyTo(text);
 			descriptionControl = text;
 			descriptionControl.setEditable(canEdit);
 		}
