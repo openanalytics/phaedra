@@ -142,6 +142,9 @@ public class PlateService extends BaseJPAService {
 		experiment.setCreateDate(new Date());
 		experiment.setName("New Experiment");
 		experiment.setProtocol(protocol);
+		ProtocolClass protocolClass = protocol.getProtocolClass();
+		experiment.setMultiploMethod(protocolClass.getDefaultMultiploMethod());
+		experiment.setMultiploParameter(protocolClass.getDefaultMultiploParameter());
 		return experiment;
 	}
 

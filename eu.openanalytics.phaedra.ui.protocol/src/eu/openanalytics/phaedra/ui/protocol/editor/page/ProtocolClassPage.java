@@ -3,7 +3,13 @@ package eu.openanalytics.phaedra.ui.protocol.editor.page;
 import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.UpdateValueStrategy;
+import org.eclipse.core.databinding.beans.PojoProperties;
+import org.eclipse.core.databinding.observable.ChangeEvent;
+import org.eclipse.core.databinding.observable.IChangeListener;
+import org.eclipse.jface.databinding.viewers.ViewerProperties;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -25,6 +31,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.IMessageManager;
 import org.eclipse.ui.forms.editor.FormEditor;
@@ -41,6 +48,7 @@ import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.autocomplete.ComboAutoCompleteField;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
+import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
 import eu.openanalytics.phaedra.link.platedef.PlateDefinitionService;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
@@ -50,6 +58,8 @@ import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.editor.ProtocolClassEditor;
 import eu.openanalytics.phaedra.ui.protocol.editor.page.security.EditorsContentProvider;
+import eu.openanalytics.phaedra.ui.protocol.util.MultiploMethodToStringConverter;
+import eu.openanalytics.phaedra.ui.protocol.util.StringToMultiploMethodConverter;
 
 public class ProtocolClassPage extends FormPage {
 
@@ -67,9 +77,12 @@ public class ProtocolClassPage extends FormPage {
 	private ComboViewer defaultFeatureCmbViewer;
 	private ComboAutoCompleteField defaultFeatureAutoComplete;
 	
-	private CCombo comboHigerBound;
+	private CCombo comboHigherBound;
 	private CCombo comboLowerBound;
 
+	private ComboViewer defaultMultiploMethodViewer;
+	private Text defaultMultiploParameterControl;
+	
 	private ProtocolClass protocolClass;
 
 	private TreeViewer permissionsTreeViewer;
@@ -220,7 +233,7 @@ public class ProtocolClassPage extends FormPage {
 
 		toolkit.createLabel(compositeBase, "Default Link Source:", SWT.NONE);
 
-		comboDefaultLinkSource = new CCombo(compositeBase, SWT.BORDER | SWT.READ_ONLY);
+		comboDefaultLinkSource = new CCombo(compositeBase, SWT.READ_ONLY);
 		comboDefaultLinkSource.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e) {
@@ -237,7 +250,7 @@ public class ProtocolClassPage extends FormPage {
 		GridLayoutFactory.fillDefaults().numColumns(2).margins(1, 1).applyTo(subcomp);
 		toolkit.paintBordersFor(subcomp);
 		
-		comboDefaultCaptureConfig = new CCombo(subcomp, SWT.BORDER | SWT.READ_ONLY);
+		comboDefaultCaptureConfig = new CCombo(subcomp, SWT.READ_ONLY);
 		comboDefaultCaptureConfig.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(final SelectionEvent e) {
@@ -260,7 +273,7 @@ public class ProtocolClassPage extends FormPage {
 
 		toolkit.createLabel(compositeBase, "Low Control Type:", SWT.NONE);
 
-		comboLowerBound = new CCombo(compositeBase, SWT.BORDER | SWT.READ_ONLY);
+		comboLowerBound = new CCombo(compositeBase, SWT.READ_ONLY);
 		final GridData gd_comboLowerBound = new GridData(150, SWT.DEFAULT);
 		comboLowerBound.setLayoutData(gd_comboLowerBound);
 		comboLowerBound.setVisibleItemCount(20);
@@ -273,12 +286,12 @@ public class ProtocolClassPage extends FormPage {
 
 		toolkit.createLabel(compositeBase, "High Control Type:", SWT.NONE);
 
-		comboHigerBound = new CCombo(compositeBase, SWT.BORDER | SWT.READ_ONLY);
+		comboHigherBound = new CCombo(compositeBase, SWT.READ_ONLY);
 		final GridData gd_comboHigerBound = new GridData(150, SWT.DEFAULT);
-		comboHigerBound.setLayoutData(gd_comboHigerBound);
-		comboHigerBound.setVisibleItemCount(20);
-		toolkit.adapt(comboHigerBound, true, true);
-		comboHigerBound.addSelectionListener(new SelectionAdapter() {
+		comboHigherBound.setLayoutData(gd_comboHigerBound);
+		comboHigherBound.setVisibleItemCount(20);
+		toolkit.adapt(comboHigherBound, true, true);
+		comboHigherBound.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				markDirty();
@@ -286,6 +299,37 @@ public class ProtocolClassPage extends FormPage {
 		});
 
 		fillComboHigherAndLowerBounds();
+
+		new Label(compositeBase, SWT.NONE); new Label(compositeBase, SWT.NONE);
+		{	toolkit.createLabel(compositeBase, "Default Multiplo Method:", SWT.NONE);
+			
+			Composite line = toolkit.createComposite(compositeBase);
+			GridLayoutFactory.fillDefaults().numColumns(3).margins(1, 1).applyTo(line);
+			GridDataFactory.fillDefaults().grab(true, false).applyTo(line);
+			toolkit.paintBordersFor(line);
+			
+			CCombo combo = new CCombo(line, SWT.READ_ONLY);
+			combo.setLayoutData(new GridData(150, SWT.DEFAULT));
+			toolkit.adapt(combo, true, true);
+			ComboViewer viewer = new ComboViewer(combo);
+			viewer.setContentProvider(new ArrayContentProvider());
+			viewer.setLabelProvider(new LabelProvider() {
+				@Override
+				public String getText(Object element) { return ((CalculationService.MultiploMethod)element).name(); }
+			});
+			viewer.setInput(CalculationService.MultiploMethod.values());
+			defaultMultiploMethodViewer = viewer;
+			
+			toolkit.createLabel(line, "Parameter:", SWT.NONE);
+			
+			Text text = toolkit.createText(line, null, SWT.SINGLE);
+			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(text);
+			toolkit.adapt(text, true, true);
+			defaultMultiploParameterControl = text;
+			
+			PlatformUI.getWorkbench().getHelpSystem().setHelp(defaultMultiploMethodViewer.getControl(), "eu.openanalytics.phaedra.ui.help.viewProtocolClassSettings_MultiploMethod");
+			PlatformUI.getWorkbench().getHelpSystem().setHelp(defaultMultiploParameterControl, "eu.openanalytics.phaedra.ui.help.viewProtocolClassSettings_MultiploMethod");
+		}
 
 		final Section sectionTeamsAndUsers = toolkit.createSection(body, Section.TITLE_BAR | Section.DESCRIPTION | Section.EXPANDED | Section.TWISTIE);
 		sectionTeamsAndUsers.setDescription("The following users can EDIT this protocol class:");
@@ -372,23 +416,36 @@ public class ProtocolClassPage extends FormPage {
 		}
 
 		comboLowerBound.setItems(welltypes);
-		comboHigerBound.setItems(welltypes);
+		comboHigherBound.setItems(welltypes);
 	}
 
 	protected DataBindingContext initDataBindings() {
-
-		DataBindingContext ctx = new DataBindingContext();
-
-		FormEditorUtils.bindText(textName, protocolClass, "name", ctx);
-		FormEditorUtils.bindText(textDescription, protocolClass, "description", ctx);
-		FormEditorUtils.bindSelection(checkIsEditable, protocolClass, "editable", ctx);
-		FormEditorUtils.bindSelection(checkIsInDevelopment, protocolClass, "inDevelopment", ctx);
-		FormEditorUtils.bindSelection(comboDefaultLinkSource, protocolClass, "defaultLinkSource", ctx);
-		FormEditorUtils.bindSelection(comboDefaultCaptureConfig, protocolClass, "defaultCaptureConfig", ctx);
-		FormEditorUtils.bindSelection(comboHigerBound, protocolClass, "highWellTypeCode", ctx);
-		FormEditorUtils.bindSelection(comboLowerBound, protocolClass, "lowWellTypeCode", ctx);
-
-		return ctx;
+		DataBindingContext dbc = new DataBindingContext();
+		
+		FormEditorUtils.bindText(textName, protocolClass, "name", dbc);
+		FormEditorUtils.bindText(textDescription, protocolClass, "description", dbc);
+		FormEditorUtils.bindSelection(checkIsEditable, protocolClass, "editable", dbc);
+		FormEditorUtils.bindSelection(checkIsInDevelopment, protocolClass, "inDevelopment", dbc);
+		FormEditorUtils.bindSelection(comboDefaultLinkSource, protocolClass, "defaultLinkSource", dbc);
+		FormEditorUtils.bindSelection(comboDefaultCaptureConfig, protocolClass, "defaultCaptureConfig", dbc);
+		FormEditorUtils.bindSelection(comboHigherBound, protocolClass, "highWellTypeCode", dbc);
+		FormEditorUtils.bindSelection(comboLowerBound, protocolClass, "lowWellTypeCode", dbc);
+		
+		dbc.bindValue(ViewerProperties.singleSelection().observe(defaultMultiploMethodViewer),
+				PojoProperties.value("defaultMultiploMethod").observe(protocolClass),
+				new UpdateValueStrategy().setConverter(new MultiploMethodToStringConverter()),
+				new UpdateValueStrategy().setConverter(new StringToMultiploMethodConverter()) ).updateModelToTarget();
+		FormEditorUtils.bindText(defaultMultiploParameterControl, protocolClass, "defaultMultiploParameter", dbc);
+		
+		IChangeListener listener = new IChangeListener() {
+			@Override
+			public void handleChange(ChangeEvent event) {
+				markDirty();
+			}
+		};
+		dbc.getBindings().forEach((binding) -> ((Binding)binding).getModel().addChangeListener(listener));
+		
+		return dbc;
 	}
 
 }

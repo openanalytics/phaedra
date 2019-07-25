@@ -37,6 +37,8 @@ public class ObjectCopyFactory {
 		to.setDefaultCaptureConfig(from.getDefaultCaptureConfig());
 		to.setLowWellTypeCode(from.getLowWellTypeCode());
 		to.setMultiDimensionalSubwellData(from.isMultiDimensionalSubwellData());
+		to.setDefaultMultiploMethod(from.getDefaultMultiploMethod());
+		to.setDefaultMultiploParameter(from.getDefaultMultiploParameter());
 		to.setProtocols(new ArrayList<>(from.getProtocols()));
 		
 		copySettings(from.getFeatures(), to.getFeatures(), copyIds);

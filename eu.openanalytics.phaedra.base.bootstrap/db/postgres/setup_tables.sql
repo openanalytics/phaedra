@@ -105,7 +105,9 @@ CREATE TABLE phaedra.hca_protocolclass (
 	low_welltype				varchar(10),
 	high_welltype				varchar(10),
 	image_setting_id			bigint,
-	is_multi_dim_subwell_data 	boolean default false
+	is_multi_dim_subwell_data 	boolean default false,
+	default_multiplo_method		varchar(100),
+	default_multiplo_parameter	varchar(100)
 )
 TABLESPACE :tsNameData;
 

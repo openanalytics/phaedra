@@ -171,6 +171,12 @@
 <context id="viewProtocolClassSettings">
 <topic label="Protocol Class Editor" href="Topics/editors/settings_editors/protocoll_class_editor/intro.html"/>
 </context>
+<context id="viewProtocolClassSettings_MultiploMethod" title="Default Multiplo Method">
+   <description>The Multiplo method and its parameter to use when creating new experiments.</description>
+   <topic label="Multiplo Experiment (Multiplo Methods)" href="Topics/concepts/multiplo.html"/>
+   <topic label="Protocol Class Editor - General Settings" href="Topics/editors/settings_editors/protocoll_class_editor/general.html"/>
+   <topic label="Protocol Class Editor" href="Topics/editors/settings_editors/protocoll_class_editor/intro.html"/>
+</context>
 <context id="viewQueryEditor">
 <topic label="Query Framework" href="../PLUGINS_ROOT//Topics/editors/data_editors/queryFramework.html"/>
 </context>
