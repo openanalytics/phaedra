@@ -31,8 +31,9 @@ import eu.openanalytics.phaedra.base.ui.util.toolitem.DropdownToolItemFactory;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.base.util.threading.JobUtils;
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
+import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundGridInput;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundImageContentProvider;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundImageSelectionTransformer;
 import eu.openanalytics.phaedra.ui.curve.grid.tooltip.CompoundImageToolTip;
@@ -43,20 +44,20 @@ import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 public class CompoundImageGrid extends Composite {
 
 	private NatTable table;
-	private NatTableSelectionProvider<Compound> selectionProvider;
+	private NatTableSelectionProvider<CompoundWithGrouping> selectionProvider;
 	private CompoundImageContentProvider columnAccessor;
-	private FullFeaturedColumnHeaderLayerStack<Compound> columnHeaderLayer;
-	private Matcher<Compound> selectedMatcher;
+	private FullFeaturedColumnHeaderLayerStack<CompoundWithGrouping> columnHeaderLayer;
+	private Matcher<CompoundWithGrouping> selectedMatcher;
 	private boolean isShowSelectedOnly;
 
 	private IUIEventListener imageSettingListener;
 
-	public CompoundImageGrid(Composite parent, List<Compound> compounds, MenuManager menuMgr) {
+	public CompoundImageGrid(Composite parent, CompoundGridInput gridInput, MenuManager menuMgr) {
 		super(parent, SWT.NONE);
 
 		GridLayoutFactory.fillDefaults().margins(0, 0).applyTo(this);
 
-		columnAccessor = new CompoundImageContentProvider(compounds);
+		columnAccessor = new CompoundImageContentProvider(gridInput);
 
 		menuMgr.addMenuListener(manager -> {
 			if (CompoundImageGrid.this.isVisible()) {
@@ -97,14 +98,14 @@ public class CompoundImageGrid extends Composite {
 			}
 		});
 
-		NatTableBuilder<Compound> builder = new NatTableBuilder<>(columnAccessor, compounds);
+		NatTableBuilder<CompoundWithGrouping> builder = new NatTableBuilder<>(columnAccessor, gridInput.getGridCompounds());
 		table = builder
 				.resizeColumns(columnAccessor.getColumnWidths())
 				.hideColumns(columnAccessor.getDefaultHiddenColumns())
 				.addLinkedResizeSupport(1f, (w, h) -> loadWellImages(w, h), columnAccessor)
 				.addCustomCellPainters(columnAccessor.getCustomPainters())
 				.addConfiguration(columnAccessor.getCustomConfiguration())
-				.addSelectionProvider(new CompoundImageSelectionTransformer(columnAccessor))
+				.addSelectionProvider(new CompoundImageSelectionTransformer(gridInput, columnAccessor))
 				.build(this, false, menuMgr);
 		GridDataFactory.fillDefaults().grab(true, true).span(2,1).applyTo(table);
 

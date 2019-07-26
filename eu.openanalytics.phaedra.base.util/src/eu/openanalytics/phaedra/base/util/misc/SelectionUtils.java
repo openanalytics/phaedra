@@ -17,6 +17,8 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 
+import eu.openanalytics.phaedra.base.util.IListAdaptable;
+
 /**
  * A collection of utilities related to JFace selection events.
  */
@@ -48,11 +50,45 @@ public class SelectionUtils {
 	public static <E> E getSingleObject(ISelection selection, Class<E> clazz, boolean allowAdapting) {
 		if (selection instanceof IStructuredSelection) {
 			IStructuredSelection structuredSelection = (IStructuredSelection)selection;
-			Object selectedItem = structuredSelection.getFirstElement();
-			if (selectedItem == null || structuredSelection.size() != 1) {
+			if (structuredSelection.isEmpty()) {
 				return null;
 			}
-			return getAsClass(selectedItem, clazz, allowAdapting);
+			if (structuredSelection.size() == 1) {
+				return toSingleObject(structuredSelection.getFirstElement(), clazz, allowAdapting);
+			}
+			else if (allowAdapting) {
+				Iterator<?> iter = structuredSelection.iterator();
+				E single = toSingleObject(iter.next(), clazz, allowAdapting);
+				if (single == null) {
+					return null;
+				}
+				while (iter.hasNext()) {
+					E e = toSingleObject(iter.next(), clazz, allowAdapting);
+					if (!single.equals(e)) {
+						return null;
+					}
+				}
+				return single;
+			}
+		}
+		return null;
+	}
+	
+	private static <E> E toSingleObject(Object o, Class<E> clazz, boolean allowAdapting) {
+		if (o == null) {
+			return null;
+		}
+		if (clazz.isInstance(o)) {
+			return (E)o;
+		}
+		if (allowAdapting && o instanceof IAdaptable) {
+			if (o instanceof IListAdaptable) {
+				List<E> eList = ((IListAdaptable)o).getAdapterList(clazz);
+				if (eList != null) {
+					return (eList.size() == 1) ? eList.get(0) : null;
+				}
+			}
+			return ((IAdaptable)o).getAdapter(clazz);
 		}
 		return null;
 	}
@@ -69,15 +105,37 @@ public class SelectionUtils {
 	 * Get all elements of a selection that match the specified class.
 	 */
 	public static <E> List<E> getObjects(ISelection selection, Class<E> clazz, boolean allowAdapting) {
-		Set<E> elements = new LinkedHashSet<>();
+		Set<E> objects = new LinkedHashSet<>();
 		if (selection instanceof IStructuredSelection) {
 			IStructuredSelection struct = ((IStructuredSelection)selection);
-			for (Iterator<?> it = struct.iterator(); it.hasNext();) {
-				E element = getAsClass(it.next(), clazz, allowAdapting);
-				if (element != null) elements.add(element);
+			if (!struct.isEmpty()) {
+				for (Iterator<?> it = struct.iterator(); it.hasNext();) {
+					Object o = it.next();
+					if (o == null) {
+						continue;
+					}
+					if (clazz.isInstance(o)) {
+						objects.add((E)o);
+						continue;
+					}
+					if (allowAdapting && o instanceof IAdaptable) {
+						if (o instanceof IListAdaptable) {
+							List<E> eList = ((IListAdaptable)o).getAdapterList(clazz);
+							if (eList != null) {
+								objects.addAll(eList);
+								continue;
+							}
+						}
+						E e = ((IAdaptable)o).getAdapter(clazz);
+						if (e != null) {
+							objects.add(e);
+							continue;
+						}
+					}
+				}
 			}
 		}
-		return new ArrayList<>(elements);
+		return new ArrayList<>(objects);
 	}
 
 	/**
@@ -97,7 +155,7 @@ public class SelectionUtils {
 			return (E)o;
 		} else if (allowAdapting && o instanceof IAdaptable) {
 			IAdaptable adaptable = (IAdaptable)o;
-			E e = (E)adaptable.getAdapter(clazz);
+			E e = adaptable.getAdapter(clazz);
 			return e;
 		}
 		return null;

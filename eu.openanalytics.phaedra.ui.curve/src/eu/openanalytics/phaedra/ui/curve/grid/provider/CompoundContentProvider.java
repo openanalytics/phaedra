@@ -65,7 +65,6 @@ import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
 import eu.openanalytics.phaedra.model.curve.util.CurveComparators;
-import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.compound.CompoundInfoService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
@@ -81,34 +80,27 @@ import eu.openanalytics.phaedra.validation.ValidationService.EntityStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
-public class CompoundContentProvider extends RichColumnAccessor<Compound> implements ISelectionDataColumnAccessor<Compound> {
+public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrouping> implements ISelectionDataColumnAccessor<CompoundWithGrouping> {
 
-	static MultiploCompound getMultiploCompound(Compound c) {
-		if (c instanceof CompoundWithGrouping) {
-			c = ((CompoundWithGrouping) c).getDelegate();
-		}
-		return (c instanceof MultiploCompound) ? (MultiploCompound)c : null;
-	}
-
-	static String getBarcodes(Compound c) {
-		MultiploCompound multiploCompound = getMultiploCompound(c);
+	static String getBarcodes(CompoundWithGrouping gridCompound) {
+		MultiploCompound multiploCompound = CompoundGridInput.getMultiploCompound(gridCompound);
 		if (multiploCompound != null) {
 			return multiploCompound.getCompounds().stream()
 					.map((compound) -> compound.getPlate().getBarcode())
 					.collect(Collectors.joining(", "));
 		}
 		else {
-			return c.getPlate().getBarcode();
+			return gridCompound.getPlate().getBarcode();
 		}
 	}
 	
-	static int getSampleCount(Compound c) {
-		MultiploCompound multiploCompound = getMultiploCompound(c);
+	static int getSampleCount(CompoundWithGrouping gridCompound) {
+		MultiploCompound multiploCompound = CompoundGridInput.getMultiploCompound(gridCompound);
 		if (multiploCompound != null) {
 			return multiploCompound.getSampleCount();
 		}
 		else {
-			return c.getWells().size();
+			return gridCompound.getWells().size();
 		}
 	}
 
@@ -116,8 +108,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	private static final String CURVE_HEIGHT = "curveHeight";
 	private static final String CURVE_WIDTH = "curveWidth";
 
-	private List<Compound> compounds;
-	private List<Feature> features;
+	private CompoundGridInput gridInput;
 
 	private ColumnSpec[] columnSpecs;
 	private GridColumnGroup[] columnGroups;
@@ -133,9 +124,8 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	private int baseColumnCount;
 	private int structureColumnIndex;
 	
-	public CompoundContentProvider(List<Compound> compounds, List<Feature> features) {
-		this.compounds = compounds;
-		this.features = features;
+	public CompoundContentProvider(CompoundGridInput gridInput) {
+		this.gridInput = gridInput;
 
 		this.concFormat = ConcentrationFormat.LogMolar;
 		this.smilesImages = new HashMap<>();
@@ -150,7 +140,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, null, c -> c.getType()));
 		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, null, c -> c.getNumber()));
 		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, null, c -> c.getSaltform()));
-		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, null, c -> (c instanceof CompoundWithGrouping) ? ((CompoundWithGrouping)c).getGrouping() : ""));
+		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, null, c -> c.getGrouping()));
 		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, CompoundContentProvider::getSampleCount));
 		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, null, c -> {
 			if (smilesImages.containsKey(c)) return smilesImages.get(c);
@@ -162,7 +152,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		structureColumnIndex = baseColumnCount - 1;
 		
 		List<GridColumnGroup> columnGroupList = new ArrayList<>();
-		for (Feature feature: features) {
+		for (Feature feature: gridInput.getFeatures()) {
 			CurveFitSettings curveSettings = CurveFitService.getInstance().getSettings(feature);
 			if (curveSettings == null) continue;
 			ICurveFitModel model = CurveFitService.getInstance().getModel(curveSettings.getModelId());
@@ -242,14 +232,14 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	}
 
 	@Override
-	public Object getDataValue(Compound c, int columnIndex) {
+	public Object getDataValue(CompoundWithGrouping c, int columnIndex) {
 		ColumnSpec spec = columnSpecs[columnIndex];
 		if (spec.valueRenderer != null) return spec.valueRenderer.apply(c);
 		return null;
 	}
 
 	@Override
-	public Object getSelectionValue(Compound c, int column) {
+	public Object getSelectionValue(CompoundWithGrouping c, int column) {
 		if (column < baseColumnCount) return c;
 		else return getCurve(c, columnSpecs[column].feature);
 	}
@@ -273,7 +263,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	}
 
 	@Override
-	public String getTooltipText(Compound rowObject, int colIndex) {
+	public String getTooltipText(CompoundWithGrouping rowObject, int colIndex) {
 		if (rowObject == null) return columnSpecs[colIndex].tooltip;
 		if (columnSpecs[colIndex].tooltipRenderer != null) return columnSpecs[colIndex].tooltipRenderer.apply(rowObject);
 		return null;
@@ -410,9 +400,8 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	 * **********
 	 */
 
-	private Curve getCurve(Compound c, Feature f) {
-		CurveGrouping cg = (c instanceof CompoundWithGrouping) ? ((CompoundWithGrouping) c).getGrouping() : null;
-		return CurveFitService.getInstance().getCurve(c, f, cg, true);
+	private Curve getCurve(CompoundWithGrouping gridCompound, Feature f) {
+		return CurveFitService.getInstance().getCurve(gridCompound, f, gridCompound.getGrouping(), true);
 	}
 	
 	private ImageData makeSmilesImage(Compound c) {
@@ -439,7 +428,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		return null;
 	}
 
-	private ImageData getEMaxImage(Feature feature, Compound c) {
+	private ImageData getEMaxImage(Feature feature, CompoundWithGrouping c) {
 		Function<Well, Double> fvMapper = w -> CalculationService.getInstance()
 				.getAccessor(w.getPlate())
 				.getNumericValue(w, feature, feature.getNormalization());
@@ -468,7 +457,9 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
-
+			List<CompoundWithGrouping> compounds = gridInput.getGridCompounds();
+			List<Feature> features = gridInput.getFeatures();
+			
 			int curveCount = Math.min(compounds.size() * features.size(), 100000);
 			monitor.beginTask("Loading Curves", curveCount);
 
@@ -527,16 +518,16 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 		public int width;
 		public Feature feature;
 		public Definition paramDefinition;
-		public Function<Compound, Object> valueRenderer;
-		public Function<Compound, String> tooltipRenderer;
+		public Function<CompoundWithGrouping, Object> valueRenderer;
+		public Function<CompoundWithGrouping, String> tooltipRenderer;
 		public boolean defaultHidden;
 		
-		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition, Function<Compound, Object> valueRenderer) {
+		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition, Function<CompoundWithGrouping, Object> valueRenderer) {
 			this(name, tooltip, width, feature, paramDefinition, valueRenderer, null, false);
 		}
 		
 		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition,
-				Function<Compound, Object> valueRenderer, Function<Compound, String> tooltipRenderer, boolean defaultHidden) {
+				Function<CompoundWithGrouping, Object> valueRenderer, Function<CompoundWithGrouping, String> tooltipRenderer, boolean defaultHidden) {
 			super();
 			this.name = name;
 			this.tooltip = tooltip;

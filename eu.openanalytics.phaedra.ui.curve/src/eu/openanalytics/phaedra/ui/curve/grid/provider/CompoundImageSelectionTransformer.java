@@ -9,22 +9,21 @@ import java.util.Set;
 import org.eclipse.nebula.widgets.nattable.coordinate.PositionCoordinate;
 import org.eclipse.nebula.widgets.nattable.data.IRowDataProvider;
 
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 
 public class CompoundImageSelectionTransformer extends CompoundSelectionTransformer {
 
 	private CompoundImageContentProvider accessor;
 
-	public CompoundImageSelectionTransformer(CompoundImageContentProvider accessor) {
-		super(accessor);
+	public CompoundImageSelectionTransformer(CompoundGridInput gridInput, CompoundImageContentProvider accessor) {
+		super(gridInput, accessor);
 		this.accessor = accessor;
 	}
 
 	@Override
-	public List<?> transformOutgoingSelection(List<Compound> list, IRowDataProvider<Compound> dataProvider
-			, PositionCoordinate[] selectedCellPositions) {
-
+	public List<?> transformOutgoingSelection(List<CompoundWithGrouping> list, IRowDataProvider<CompoundWithGrouping> dataProvider,
+			PositionCoordinate[] selectedCellPositions) {
 		if (selectedCellPositions != null && selectedCellPositions.length > 0) {
 			// Make sure the Wells are send in order of Compound, Concentration.
 			Arrays.sort(selectedCellPositions, (c1, c2) -> {
@@ -38,7 +37,7 @@ public class CompoundImageSelectionTransformer extends CompoundSelectionTransfor
 			Set<Object> selection = new LinkedHashSet<>();
 			for (PositionCoordinate coord: selectedCellPositions) {
 				int colIndex = coord.getLayer().getColumnIndexByPosition(coord.columnPosition);
-				Compound rowObject = dataProvider.getRowObject(coord.rowPosition);
+				CompoundWithGrouping rowObject = dataProvider.getRowObject(coord.rowPosition);
 				Object value = accessor.getSelectionValue(rowObject, colIndex);
 				if (value != null) selection.add(value);
 				if (value instanceof Well) {

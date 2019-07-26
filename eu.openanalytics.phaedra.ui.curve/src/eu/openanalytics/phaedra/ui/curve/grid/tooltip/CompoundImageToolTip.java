@@ -11,12 +11,13 @@ import org.eclipse.swt.widgets.Composite;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.AdvancedNatTableToolTip;
 import eu.openanalytics.phaedra.base.ui.util.tooltip.IToolTipUpdate;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
+import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundImageContentProvider;
 import eu.openanalytics.phaedra.ui.wellimage.tooltip.WellToolTipLabelProvider;
 
 public class CompoundImageToolTip extends AdvancedNatTableToolTip {
 
-	public CompoundImageToolTip(NatTable table, CompoundImageContentProvider columnAccessor, IRowDataProvider<Compound> rowDataProvider) {
+	public CompoundImageToolTip(NatTable table, CompoundImageContentProvider columnAccessor, IRowDataProvider<CompoundWithGrouping> rowDataProvider) {
 		super(table);
 
 		setLabelProvider(new WellToolTipLabelProvider() {
@@ -55,7 +56,7 @@ public class CompoundImageToolTip extends AdvancedNatTableToolTip {
 						if (!(o instanceof Compound)) text = super.getText(o);
 						else text = null;
 					} else {
-						Compound rowObject = rowDataProvider.getRowObject(cell.getRowIndex());
+						CompoundWithGrouping rowObject = rowDataProvider.getRowObject(cell.getRowIndex());
 						text = columnAccessor.getTooltipText(rowObject, cell.getColumnIndex());
 					}
 				}
@@ -78,8 +79,8 @@ public class CompoundImageToolTip extends AdvancedNatTableToolTip {
 				}
 			}
 
-			private Object getImageObject(CompoundImageContentProvider columnAccessor, IRowDataProvider<Compound> rowDataProvider, ILayerCell cell) {
-				Compound compound = rowDataProvider.getRowObject(cell.getRowIndex());
+			private Object getImageObject(CompoundImageContentProvider columnAccessor, IRowDataProvider<CompoundWithGrouping> rowDataProvider, ILayerCell cell) {
+				CompoundWithGrouping compound = rowDataProvider.getRowObject(cell.getRowIndex());
 				return columnAccessor.getSelectionValue(compound, cell.getColumnIndex());
 			}
 		});

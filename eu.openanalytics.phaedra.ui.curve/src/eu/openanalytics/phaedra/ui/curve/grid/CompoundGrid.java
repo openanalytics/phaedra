@@ -1,7 +1,5 @@
 package eu.openanalytics.phaedra.ui.curve.grid;
 
-import java.util.List;
-
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -28,9 +26,9 @@ import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionProv
 import eu.openanalytics.phaedra.base.ui.util.toolitem.DropdownToolItemFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundContentProvider;
+import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundGridInput;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundSelectionTransformer;
 import eu.openanalytics.phaedra.ui.curve.grid.tooltip.CompoundToolTip;
 
@@ -39,10 +37,10 @@ public class CompoundGrid extends Composite {
 	private static final String[] compoundListCurveSizes = new String[] { "100 x 100", "150 x 150", "200 x 200", "250 x 250", "300 x 300" };
 
 	private NatTable table;
-	private FullFeaturedColumnHeaderLayerStack<Compound> columnHeaderLayer;
-	private NatTableSelectionProvider<Compound> selectionProvider;
+	private FullFeaturedColumnHeaderLayerStack<CompoundWithGrouping> columnHeaderLayer;
+	private NatTableSelectionProvider<CompoundWithGrouping> selectionProvider;
 	private CompoundContentProvider columnAccessor;
-	private Matcher<Compound> selectedMatcher;
+	private Matcher<CompoundWithGrouping> selectedMatcher;
 
 	private boolean isShowSelectedOnly;
 
@@ -50,20 +48,20 @@ public class CompoundGrid extends Composite {
 		DEFAULT_COLUMNS, SHOW_ALL, CURVES_ONLY
 	};
 
-	public CompoundGrid(Composite parent, List<Compound> compounds, List<Feature> features, MenuManager menuMgr) {
+	public CompoundGrid(Composite parent, CompoundGridInput gridInput, MenuManager menuMgr) {
 		super(parent, SWT.NONE);
 
 		GridLayoutFactory.fillDefaults().margins(0, 0).applyTo(this);
 
-		columnAccessor = new CompoundContentProvider(compounds, features);
+		columnAccessor = new CompoundContentProvider(gridInput);
 
-		NatTableBuilder<Compound> builder = new NatTableBuilder<>(columnAccessor, compounds);
+		NatTableBuilder<CompoundWithGrouping> builder = new NatTableBuilder<>(columnAccessor, gridInput.getGridCompounds());
 		table = builder
 				.resizeColumns(columnAccessor.getColumnWidths())
 				.hideColumns(columnAccessor.getDefaultHiddenColumns())
 				.addCustomCellPainters(columnAccessor.getCustomCellPainters())
 				.addConfiguration(columnAccessor.getCustomConfiguration())
-				.addSelectionProvider(new CompoundSelectionTransformer(columnAccessor))
+				.addSelectionProvider(new CompoundSelectionTransformer(gridInput, columnAccessor))
 				.build(this, false, menuMgr);
 		GridDataFactory.fillDefaults().grab(true, true).span(2,1).applyTo(table);
 

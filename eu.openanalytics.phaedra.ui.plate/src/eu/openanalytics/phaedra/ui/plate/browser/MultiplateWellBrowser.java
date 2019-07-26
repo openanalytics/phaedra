@@ -107,17 +107,15 @@ public class MultiplateWellBrowser extends EditorPart {
 		selectionListener = (part, selection) -> {
 			if (part == MultiplateWellBrowser.this) return;
 			List<Well> wells = SelectionUtils.getObjects(selection, Well.class);
-			if (wells != null && !wells.isEmpty()) {
-				tableViewer.setSelection(selection);
-			} else {
+			if (wells.isEmpty()) {
 				List<Compound> compounds = SelectionUtils.getObjects(selection, Compound.class);
-				if (compounds != null && !compounds.isEmpty()) {
+				if (!compounds.isEmpty()) {
 					wells = new ArrayList<Well>();
-					for (Compound c: compounds)
-						wells.addAll(c.getWells());
-					selection = new StructuredSelection(wells);
-					tableViewer.setSelection(selection);
+					for (Compound c: compounds) wells.addAll(c.getWells());
 				}
+			}
+			if (!wells.isEmpty()) {
+				tableViewer.setSelection(new StructuredSelection(wells));
 			}
 		};
 		getSite().getPage().addSelectionListener(selectionListener);

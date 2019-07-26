@@ -1,10 +1,6 @@
 package eu.openanalytics.phaedra.ui.curve.grid;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.ContributionItem;
@@ -28,33 +24,23 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 
-import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.util.view.DecoratedEditor;
-import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
-import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.model.curve.CurveFitService;
-import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
-import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
-import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
-import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
-import eu.openanalytics.phaedra.ui.curve.MultiploCompound;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundContentProvider;
+import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundGridInput;
 import eu.openanalytics.phaedra.ui.partsettings.decorator.SettingsDecorator;
-import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
-import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
+
 
 public class CompoundGridEditor extends DecoratedEditor {
+
+	private CompoundGridInput gridInput;
 
 	private CTabFolder tabFolder;
 	private CTabItem curveTab;
@@ -62,8 +48,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 
 	private CompoundGrid curveGrid;
 	private CompoundImageGrid imageGrid;
-
-	private List<Compound> compounds;
+	
 	private boolean imageTabInitialized;
 
 	private SelectionProviderIntermediate selectionProvider;
@@ -77,9 +62,9 @@ public class CompoundGridEditor extends DecoratedEditor {
 	public void createPartControl(Composite parent) {
 		GridLayoutFactory.fillDefaults().margins(0, 0).spacing(0, 0).applyTo(parent);
 
-		loadCompounds();
-		List<Feature> features = new ArrayList<>();
-		if (!compounds.isEmpty()) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(compounds.get(0)), CurveUtils.FEATURES_WITH_CURVES);
+		gridInput = new CompoundGridInput(((VOEditorInput)getEditorInput()).getValueObjects());
+		
+		setPartName(gridInput.getGridCompounds().size() + " compounds");
 
 		menuMgr = new MenuManager("#Popup");
 		menuMgr.setRemoveAllWhenShown(true);
@@ -100,7 +85,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 		curveTab = new CTabItem(tabFolder, SWT.NONE);
 		curveTab.setText("CRC View");
 
-		curveGrid = new CompoundGrid(tabFolder, compounds, features, menuMgr);
+		curveGrid = new CompoundGrid(tabFolder, gridInput, menuMgr);
 		curveTab.setControl(curveGrid);
 
 		imageTab = new CTabItem(tabFolder, SWT.NONE);
@@ -148,7 +133,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 		// Register menu manager with selection provider.
 		getEditorSite().registerContextMenu(menuMgr, selectionProvider);
 
-		addDecorator(new SettingsDecorator(this::getProtocol, this::getProperties, this::setProperties));
+		addDecorator(new SettingsDecorator(gridInput::getProtocol, this::getProperties, this::setProperties));
 		initDecorators(parent);
 		
 		ContributionItem item = new ContributionItem() {
@@ -176,13 +161,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 		super.dispose();
 	}
 
-	/**
-	 * TODO Should be removed, but it's used (in a dirty way) by CompoundGridEditorContentProvider
-	 */
-	public List<Compound> getCompounds() {
-		return compounds;
-	}
-	
+
 	/*
 	 * ****************
 	 * Loading & saving
@@ -227,52 +206,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 		return mgr;
 	}
 	
-	private void loadCompounds() {
-		VOEditorInput input = (VOEditorInput)getEditorInput();
-		compounds = new ArrayList<>();
-		List<Feature> features = null;
-		
-		for (IValueObject vo: input.getValueObjects()) {
-			Compound comp = (Compound) vo;
-			Compound compoundToAdd = null;
-			
-			if (features == null) features = CollectionUtils.findAll(ProtocolUtils.getFeatures(comp), CurveUtils.FEATURES_WITH_CURVES);
-			
-			List<Compound> multiploCompounds = CalculationService.getInstance().getMultiploCompounds(comp);
-			if (multiploCompounds.size() > 1) {
-				// If this is a multiplo compound, skip it if there is already a multiplo variant in the list.
-				Compound firstCompound = multiploCompounds.stream()
-						.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
-						.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
-						.findFirst().orElse(multiploCompounds.get(0));
-				Compound match = compounds.stream()
-						.map(c -> {
-							if (c instanceof CompoundWithGrouping) return ((CompoundWithGrouping) c).getDelegate();
-							else return c;
-						})
-						.filter(c -> c instanceof MultiploCompound)
-						.map(c -> (MultiploCompound) c)
-						.filter(c -> c.getCompounds().contains(comp))
-						.findAny().orElse(null);
-				if (match == null) compoundToAdd = new MultiploCompound(firstCompound, multiploCompounds);
-				else continue;
-			} else {
-				compoundToAdd = comp;
-			}
-			
-			// If there is grouping, add the compound once for each grouping.
-			Set<CurveGrouping> groupings = new HashSet<>();
-			for (Feature f: features) {
-				for (CurveGrouping cg: CurveFitService.getInstance().getGroupings(compoundToAdd, f)) groupings.add(cg);
-			}
-			for (CurveGrouping grouping: groupings) {
-				compounds.add(new CompoundWithGrouping(compoundToAdd, grouping));
-			}
-		}
-		
-		setPartName(compounds.size() + " compounds");
-	}
-
+	@Override
 	protected void fillContextMenu(IMenuManager manager) {
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -284,7 +218,7 @@ public class CompoundGridEditor extends DecoratedEditor {
 		} else if (tab == imageTab) {
 			if (!imageTabInitialized) {
 				imageTabInitialized = true;
-				imageGrid = new CompoundImageGrid(tabFolder, compounds, menuMgr);
+				imageGrid = new CompoundImageGrid(tabFolder, gridInput, menuMgr);
 				imageTab.setControl(imageGrid);
 				imageGrid.startPreLoading();
 			}
@@ -292,10 +226,6 @@ public class CompoundGridEditor extends DecoratedEditor {
 		}
 	}
 
-	private Protocol getProtocol() {
-		return compounds.stream().findAny().map(c -> (Protocol)c.getAdapter(Protocol.class)).orElse(null);
-	}
-	
 	private Properties getProperties() {
 		Properties properties = new Properties();
 		properties.addProperty("ACTIVE_TAB", tabFolder.getSelectionIndex());

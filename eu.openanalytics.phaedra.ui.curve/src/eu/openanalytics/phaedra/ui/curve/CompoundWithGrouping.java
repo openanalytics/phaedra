@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.ui.curve;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
@@ -82,6 +83,18 @@ public class CompoundWithGrouping extends Compound {
 	public String getValidationUser() {
 		return delegate.getValidationUser();
 	}
+	
+	
+	@Override
+	public <T> T getAdapter(Class<T> adapter) {
+		return delegate.getAdapter(adapter);
+	}
+	
+	@Override
+	public <T> List<T> getAdapterList(Class<T> type) {
+		return delegate.getAdapterList(type);
+	}
+	
 	
 	@Override
 	public String toString() {

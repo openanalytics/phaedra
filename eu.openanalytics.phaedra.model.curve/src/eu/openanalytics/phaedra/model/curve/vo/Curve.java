@@ -6,11 +6,13 @@ import java.util.List;
 
 import org.eclipse.core.runtime.PlatformObject;
 
+import eu.openanalytics.phaedra.base.util.IListAdaptable;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
-public class Curve extends PlatformObject {
+public class Curve extends PlatformObject implements IListAdaptable {
 
 	private long id;
 	
@@ -92,6 +94,24 @@ public class Curve extends PlatformObject {
 	public void setPlot(byte[] plot) {
 		this.plot = plot;
 	}
+
+
+	@Override
+	public <T> List<T> getAdapterList(Class<T> type) {
+		if (type == Plate.class) {
+			List<Compound> compounds = getCompounds();
+			List<Plate> plates = new ArrayList<Plate>(compounds.size());
+			for (Compound compound : compounds) {
+				plates.add(compound.getPlate());
+			}
+			return (List<T>) plates;
+		}
+		if (type == Compound.class) {
+			return (List<T>) getCompounds();
+		}
+		return null;
+	}
+	
 	
 	@Override
 	public String toString() {

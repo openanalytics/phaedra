@@ -1,7 +1,5 @@
 package eu.openanalytics.phaedra.ui.curve.grid.provider;
 
-import static eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundContentProvider.getMultiploCompound;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +50,6 @@ import eu.openanalytics.phaedra.base.ui.util.toolitem.DropdownToolItemFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
-import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -60,7 +57,7 @@ import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageSettings;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
-import eu.openanalytics.phaedra.ui.curve.MultiploCompound;
+import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 import eu.openanalytics.phaedra.ui.protocol.ImageSettingsService;
 import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.EntityStatus;
@@ -68,8 +65,8 @@ import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStat
 import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 //TODO Support multiplo: currently, only images from the first plate are shown.
-public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
-	implements ISelectionDataColumnAccessor<Compound>, ILinkedColumnAccessor<Compound> {
+public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWithGrouping>
+	implements ISelectionDataColumnAccessor<CompoundWithGrouping>, ILinkedColumnAccessor<CompoundWithGrouping> {
 
 	private static final String CHANNELS = "channels";
 	private static final String ROW_HEIGHT = "rowHeight";
@@ -77,7 +74,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 
 	private NatTable table;
 
-	private List<Compound> compounds;
+	private CompoundGridInput gridInput;
 	private List<String> concentrations;
 
 	private String[] columnNames;
@@ -95,11 +92,11 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	private int baseColumnCount;
 	private int imageColumnCount;
 
-	public CompoundImageContentProvider(List<Compound> compounds) {
-		this.compounds = compounds;
+	public CompoundImageContentProvider(CompoundGridInput gridInput) {
+		this.gridInput = gridInput;
 
-		if (!compounds.isEmpty()) {
-			ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(compounds.get(0));
+		if (!gridInput.isEmpty()) {
+			ImageSettings currentSettings = ImageSettingsService.getInstance().getCurrentSettings(gridInput.getProtocol());
 			this.channels = new boolean[currentSettings.getImageChannels().size()];
 			for (int i=0; i<channels.length; i++) {
 				channels[i] = currentSettings.getImageChannels().get(i).isShowInPlateView();
@@ -109,10 +106,10 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		wellsPerCompoundConc = new HashMap<>();
 		selectedWellPerCompoundConc = new HashMap<>();
 		concentrations = new ArrayList<>();
-		for (Compound c: compounds) {
-			if (c.getWells() == null || c.getWells().isEmpty()) continue;
-			for (Well w: c.getWells()) {
-				String key = getCompConcKey(c, getDisplayConc(w.getCompoundConcentration()));
+		for (CompoundWithGrouping gridCompound : gridInput.getGridCompounds()) {
+			if (gridCompound.getWells() == null || gridCompound.getWells().isEmpty()) continue;
+			for (Well w: gridCompound.getWells()) {
+				String key = getCompConcKey(gridCompound, getDisplayConc(w.getCompoundConcentration()));
 				CollectionUtils.addUnique(concentrations, getDisplayConc(w.getCompoundConcentration()));
 				if (!wellsPerCompoundConc.containsKey(key)) {
 					wellsPerCompoundConc.put(key, new ArrayList<Well>());
@@ -165,15 +162,15 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 
 	public float getImageAspectRatio() {
 		List<Well> wells = new ArrayList<>();
-		for (Compound c : compounds) {
-			wells.addAll(c.getWells());
+		for (CompoundWithGrouping gridCompound : gridInput.getGridCompounds()) {
+			wells.addAll(gridCompound.getWells());
 			if (wells.size() < 30) break;
 		}
 		return ImageRenderService.getInstance().getWellImageAspectRatio(wells);
 	}
 
 	@Override
-	public Object getDataValue(Compound c, int columnIndex) {
+	public Object getDataValue(CompoundWithGrouping c, int columnIndex) {
 		switch (columnIndex) {
 		case 0:
 			return c.getPlate().getExperiment().getName();
@@ -202,7 +199,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	}
 
 	@Override
-	public Object getSelectionValue(Compound rowObject, int column) {
+	public Object getSelectionValue(CompoundWithGrouping rowObject, int column) {
 		if (0 <= column - baseColumnCount) {
 			int imageIndex = column - baseColumnCount;
 			String conc = concentrations.get(imageIndex);
@@ -232,7 +229,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 	}
 
 	@Override
-	public String getTooltipText(Compound rowObject, int colIndex) {
+	public String getTooltipText(CompoundWithGrouping rowObject, int colIndex) {
 		if (rowObject == null) return columnTooltips[colIndex];
 
 		if (rowObject != null) {
@@ -267,9 +264,10 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 
 	public void fillChannelDropdown(ToolItem channelDropdown) {
 		DropdownToolItemFactory.clearChildren(channelDropdown);
-		if (compounds == null || compounds.isEmpty()) return;
-
-		ProtocolClass pClass = PlateUtils.getProtocolClass(compounds.get(0).getPlate());
+		if (gridInput.isEmpty()) {
+			return;
+		}
+		ProtocolClass pClass = gridInput.getProtocol().getProtocolClass();
 
 		Listener listener = event -> {
 			MenuItem selected = (MenuItem) event.widget;
@@ -511,24 +509,25 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
+			List<CompoundWithGrouping> compounds = gridInput.getGridCompounds();
 			monitor.beginTask("Loading Images", compounds.size());
 
 			// First, make an ordered list of plates (because we can only open 1 JP2K File at a time).
 			Set<Plate> plates = new HashSet<>();
-			for (Compound c: compounds) {
+			for (CompoundWithGrouping c: compounds) {
 				plates.add(c.getPlate());
 			}
 
 			plates.parallelStream().forEach(plate -> {
 				if (!plate.isImageAvailable()) return;
 
-				for (Compound c: compounds) {
-					if (c.getPlate() != plate) continue;
+				for (CompoundWithGrouping gridCompound : compounds) {
+					if (gridCompound.getPlate() != plate) continue;
 					if (monitor.isCanceled()) return;
 
 					BitSet imagesAvailable = new BitSet();
 
-					for (Well well: c.getWells()) {
+					for (Well well: gridCompound.getWells()) {
 						if (monitor.isCanceled()) return;
 						if (table != null && table.isDisposed());
 
@@ -543,7 +542,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 
 							// Caches the image.
 							getWellImageData(well);
-							String key = getCompConcKey(c, conc);
+							String key = getCompConcKey(gridCompound, conc);
 							selectedWellPerCompoundConc.put(key, well);
 						}
 					}

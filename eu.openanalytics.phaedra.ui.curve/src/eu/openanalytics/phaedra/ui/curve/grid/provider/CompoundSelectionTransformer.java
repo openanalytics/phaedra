@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.ui.curve.grid.provider;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,17 +16,21 @@ import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 
-public class CompoundSelectionTransformer extends ColumnSelectionTransformer<Compound> {
+public class CompoundSelectionTransformer extends ColumnSelectionTransformer<CompoundWithGrouping> {
 
-	private ISelectionDataColumnAccessor<Compound> accessor;
+	private CompoundGridInput gridInput;
+	
+	private ISelectionDataColumnAccessor<CompoundWithGrouping> accessor;
 
-	public CompoundSelectionTransformer(ISelectionDataColumnAccessor<Compound> accessor) {
+	public CompoundSelectionTransformer(CompoundGridInput gridInput, ISelectionDataColumnAccessor<CompoundWithGrouping> accessor) {
+		this.gridInput = gridInput;
 		this.accessor = accessor;
 	}
 
 	@Override
-	public List<Compound> transformIngoingSelection(ISelection selection) {
+	public List<CompoundWithGrouping> transformIngoingSelection(ISelection selection) {
 		// Accepted types: Curve, Compound, Well, Plate. Experiment is too big to handle.
 		Set<Compound> compounds = new HashSet<>(SelectionUtils.getObjects(selection, Compound.class));
 		if (compounds.isEmpty()) {
@@ -36,26 +41,33 @@ public class CompoundSelectionTransformer extends ColumnSelectionTransformer<Com
 				for (Plate plate : plates) compounds.addAll(plate.getCompounds());
 			}
 		}
-		return new ArrayList<>(compounds);
+		
+		List<CompoundWithGrouping> gridSelection = new ArrayList<>();
+		for (Compound compound : compounds) {
+			List<CompoundWithGrouping> gridCompounds = gridInput.getGridCompounds(compound);
+			for (CompoundWithGrouping gridCompound : gridCompounds) {
+				gridSelection.add(gridCompound);
+			}
+		}
+		if (gridSelection.isEmpty()) return null;
+		return new ArrayList<>(gridSelection);
 	}
 
 	@Override
-	public List<?> transformOutgoingSelection(List<Compound> list, IRowDataProvider<Compound> dataProvider
-			, PositionCoordinate[] selectedCellPositions) {
-
+	public List<?> transformOutgoingSelection(List<CompoundWithGrouping> list, IRowDataProvider<CompoundWithGrouping> dataProvider,
+			PositionCoordinate[] selectedCellPositions) {
 		if (selectedCellPositions != null && selectedCellPositions.length > 0) {
-			Set<Object> selection = new HashSet<>();
+			Set<Object> selection = new LinkedHashSet<>();
 			for (PositionCoordinate coord: selectedCellPositions) {
 				int colIndex = coord.getLayer().getColumnIndexByPosition(coord.columnPosition);
-				Compound rowObject = dataProvider.getRowObject(coord.rowPosition);
+				CompoundWithGrouping rowObject = dataProvider.getRowObject(coord.rowPosition);
 				Object value = accessor.getSelectionValue(rowObject, colIndex);
 				if (value != null) selection.add(value);
 			}
 			return new ArrayList<>(selection);
 		}
-
+		
 		return transformOutgoingSelection(list);
 	}
-
 
 }

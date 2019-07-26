@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.model.curve.vo;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,9 @@ import org.eclipse.persistence.annotations.JoinFetchType;
 import org.eclipse.persistence.config.CacheIsolationType;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
+import eu.openanalytics.phaedra.base.util.IListAdaptable;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 /**
@@ -37,7 +40,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 @Entity
 @Table(name="hca_curve", schema="phaedra")
 @Cache(isolation = CacheIsolationType.ISOLATED)
-public class CRCurve extends PlatformObject implements IValueObject {
+public class CRCurve extends PlatformObject implements IValueObject, IListAdaptable {
 
 	@Id
 	@Column(name="curve_id")
@@ -178,6 +181,23 @@ public class CRCurve extends PlatformObject implements IValueObject {
 	 * *******************
 	 */
 
+	@Override
+	public <T> List<T> getAdapterList(Class<T> type) {
+		if (type == Compound.class) {
+			return (List<T>) getCompounds();
+		}
+		if (type == Plate.class) {
+			List<Compound> compounds = getCompounds();
+			List<Plate> plates = new ArrayList<Plate>(compounds.size());
+			for (Compound compound : compounds) {
+				plates.add(compound.getPlate());
+			}
+			return (List<T>) plates;
+		}
+		return null;
+	}
+	
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;

@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.ui.curve;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -17,7 +18,10 @@ public class MultiploCompound extends Compound {
 	private static final long serialVersionUID = -3140625666817048509L;
 
 	private Compound delegate;
+	
 	private List<Compound> compounds;
+	
+	private volatile List<Well> wells;
 	
 	public MultiploCompound(Compound delegate, List<Compound> compounds) {
 		this.delegate = delegate;
@@ -40,6 +44,14 @@ public class MultiploCompound extends Compound {
 	@Override
 	public Plate getPlate() {
 		return delegate.getPlate();
+	}
+	
+	public List<Plate> getPlates() {
+		List<Plate> plates = new ArrayList<>(compounds.size());
+		for (Compound compound : compounds) {
+			plates.add(compound.getPlate());
+		}
+		return plates;
 	}
 	
 	@Override
@@ -67,6 +79,18 @@ public class MultiploCompound extends Compound {
 		return delegate.getWells();
 	}
 	
+	private List<Well> getAllWells() {
+		List<Well> wells = this.wells;
+		if (wells == null) {
+			wells = new ArrayList<>(compounds.size() * delegate.getWells().size());
+			for (Compound compound : compounds) {
+				wells.addAll(compound.getWells());
+			}
+			this.wells = wells;
+		}
+		return wells;
+	}
+	
 	@Override
 	public Date getValidationDate() {
 		return delegate.getValidationDate();
@@ -81,6 +105,22 @@ public class MultiploCompound extends Compound {
 	public String getValidationUser() {
 		return delegate.getValidationUser();
 	}
+	
+	
+	@Override
+	public <T> List<T> getAdapterList(Class<T> type) {
+		if (type == Plate.class) {
+			return (List<T>) getPlates();
+		}
+		if (type == Compound.class) {
+			return (List<T>) getCompounds();
+		}
+		if (type == Well.class) {
+			return (List<T>) getAllWells();
+		}
+		return null;
+	}
+	
 	
 	@Override
 	public String toString() {

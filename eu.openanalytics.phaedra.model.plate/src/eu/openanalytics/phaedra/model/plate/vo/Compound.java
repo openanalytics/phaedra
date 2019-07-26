@@ -27,12 +27,13 @@ import org.eclipse.persistence.annotations.JoinFetchType;
 
 import eu.openanalytics.phaedra.base.cache.IgnoreSizeOf;
 import eu.openanalytics.phaedra.base.db.IValueObject;
+import eu.openanalytics.phaedra.base.util.IListAdaptable;
 
 @Entity
 @Table(name="hca_plate_compound", schema="phaedra")
 @Cache(size=10000, expiry=3600000)
 @SequenceGenerator(name="hca_plate_compound_s", sequenceName="hca_plate_compound_s", schema="phaedra", allocationSize=1)
-public class Compound extends PlatformObject implements IValueObject, Serializable {
+public class Compound extends PlatformObject implements IValueObject, IListAdaptable, Serializable {
 
 	private static final long serialVersionUID = -1115498342680368047L;
 
@@ -144,7 +145,16 @@ public class Compound extends PlatformObject implements IValueObject, Serializab
 	 * Convenience methods
 	 * *******************
 	 */
-
+	
+	@Override
+	public <T> List<T> getAdapterList(Class<T> type) {
+		if (type == Well.class) {
+			return (List<T>) getWells();
+		}
+		return null;
+	}
+	
+	
 	@Override
 	public String toString() {
 		return type + " " + number;

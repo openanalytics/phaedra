@@ -87,16 +87,15 @@ public class QuickHeatmap extends DecoratedView {
 					setPartName(plate.getBarcode() + " - Quick Heatmap");
 				}
 				List<Well> wells = SelectionUtils.getObjects(selection, Well.class);
-				if (wells != null && !wells.isEmpty()) {
-					StructuredSelection newSelection = new StructuredSelection(wells);
-					gridViewer.setSelection(newSelection);
-				} else {
+				if (wells == null || wells.isEmpty()) {
 					List<Compound> compounds = SelectionUtils.getObjects(selection, Compound.class);
 					if (compounds != null && !compounds.isEmpty()) {
 						wells = new ArrayList<Well>();
 						for (Compound c: compounds) wells.addAll(c.getWells());
-						gridViewer.setSelection(new StructuredSelection(wells));
 					}
+				}
+				if (wells != null && !wells.isEmpty()) {
+					gridViewer.setSelection(new StructuredSelection(wells));
 				}
 			}
 		};

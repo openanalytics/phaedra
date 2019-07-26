@@ -241,17 +241,15 @@ public class WellBrowser extends EditorPart {
 		selectionListener = (part, selection) -> {
 			if (part == WellBrowser.this) return;
 			List<Well> wells = SelectionUtils.getObjects(selection, Well.class);
-			if (wells != null && !wells.isEmpty()) {
-				StructuredSelection newSelection = new StructuredSelection(wells);
-				selectionProvider.setSelection(newSelection);
-			} else {
+			if (wells == null) {
 				List<Compound> compounds = SelectionUtils.getObjects(selection, Compound.class);
-				if (compounds != null && !compounds.isEmpty()) {
+				if (!compounds.isEmpty()) {
 					wells = new ArrayList<Well>();
 					for (Compound c: compounds) wells.addAll(c.getWells());
-					selection = new StructuredSelection(wells);
-					selectionProvider.setSelection(selection);
 				}
+			}
+			if (!wells.isEmpty()) {
+				selectionProvider.setSelection(new StructuredSelection(wells));
 			}
 		};
 		getSite().getPage().addSelectionListener(selectionListener);
