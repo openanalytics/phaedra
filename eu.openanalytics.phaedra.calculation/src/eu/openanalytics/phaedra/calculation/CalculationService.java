@@ -438,6 +438,11 @@ public class CalculationService {
 		
 		None("This experiment does not contain any plates or compounds screened in multiplo.", plate -> Collections.emptyList()),
 		
+		AllPlates("All plates of the experiment form a single group of multiplo plates.",
+				(plate) -> {
+					return PlateService.getInstance().getPlates(plate.getExperiment());
+				}),
+		
 		Property("Multiplo plates are identified via a plate property, such as 'mother-id', that is"
 				+ " set on the plate during import or plate definition linking."
 				+ " The name of the property should be set as the multiplo parameter.",
@@ -446,7 +451,7 @@ public class CalculationService {
 				String propValue = PlateService.getInstance().getPlateProperty(plate, propName);
 				if (propValue == null || propValue.isEmpty()) return Collections.emptyList();
 	
-				return PlateService.streamableList(PlateService.getInstance().getPlates(plate.getExperiment())).stream()
+				return PlateService.getInstance().getPlates(plate.getExperiment()).stream()
 						.filter(p -> p != plate && propValue.equals(PlateService.getInstance().getPlateProperty(p, propName)))
 						.collect(Collectors.toList());
 		}),
@@ -462,7 +467,7 @@ public class CalculationService {
 				if (!m.matches() || m.groupCount() == 0) return Collections.emptyList();
 				String matchValue = m.group(1);
 				
-				return PlateService.streamableList(PlateService.getInstance().getPlates(plate.getExperiment())).stream()
+				return PlateService.getInstance().getPlates(plate.getExperiment()).stream()
 						.filter(p -> {
 							Matcher matcher = pattern.matcher(p.getBarcode());
 							return (p != plate && matcher.matches() && matcher.group(1).equals(matchValue));
