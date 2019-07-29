@@ -17,7 +17,7 @@ public class PctInhNegMedianNormalizer extends BaseNormalizer {
 
 	@Override
 	public String getDescription() {
-		return "value = 100 - ((rawValue - lowMedian) / (highMedian - lowMedian)) * 100";
+		return "value = 100 - (rawValue - lowMedian) / (highMedian - lowMedian) * 100";
 	}
 
 	@Override

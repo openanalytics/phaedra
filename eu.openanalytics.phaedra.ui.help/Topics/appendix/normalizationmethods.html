@@ -126,6 +126,27 @@
 
         </tr>
 
+        <tr>
+          <!-- Positive percent inhibition based on mean of controls -->
+          <td valign="top" headers="N10045">PIN[Pos Mean]</td><!-- %INH %INHIBITION -->
+          <td valign="top" headers="N1004B">(rawValue - lowMean) / (highMean - lowMean) * 100</td>
+        </tr>
+        <tr>
+          <!-- Positive percent inhibition based on median of controls -->
+          <td valign="top" headers="N10045">PIN[Pos Median]</td><!-- %INH %INHIBITION -->
+          <td valign="top" headers="N1004B">(rawValue - lowMedian) / (highMedian - lowMedian) * 100</td>
+        </tr>
+        <tr>
+          <!-- Negative percent inhibition based on mean of controls -->
+          <td valign="top" headers="N10045">PIN[Neg Mean]</td><!-- %INH %INHIBITION -->
+          <td valign="top" headers="N1004B">100 - (rawValue - lowMean) / (highMean - lowMean) * 100 = 100 - PIN[Pos Mean]</td>
+        </tr>
+        <tr>
+          <!-- Negative percent inhibition based on median of controls -->
+          <td valign="top" headers="N10045">PIN[Neg Median]</td><!-- %INH %INHIBITION -->
+          <td valign="top" headers="N1004B">100 - (rawValue - lowMedian) / (highMedian - lowMedian) * 100 = 100 - PIN[Pos Median]</td>
+        </tr>
+
       </table>
 
     </div>

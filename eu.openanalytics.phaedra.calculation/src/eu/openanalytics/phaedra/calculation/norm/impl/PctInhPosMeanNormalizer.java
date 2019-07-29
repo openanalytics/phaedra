@@ -17,7 +17,7 @@ public class PctInhPosMeanNormalizer extends BaseNormalizer {
 
 	@Override
 	public String getDescription() {
-		return "value = ((rawValue - lowMean) / (highMean - lowMean)) * 100";
+		return "value = (rawValue - lowMean) / (highMean - lowMean) * 100";
 	}
 
 	@Override
