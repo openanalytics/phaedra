@@ -536,7 +536,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 
 					for (Well well: gridCompound.getWells()) {
 						if (monitor.isCanceled()) return;
-						if (table != null && table.isDisposed());
+						if (table != null && table.isDisposed()) return;
 
 						String conc = getDisplayConc(well.getCompoundConcentration());
 						int index = concentrations.indexOf(conc);
