@@ -339,7 +339,9 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 	 */
 	private Well getCurrentWell(Compound c, String conc) {
 		String key = getCompConcKey(c, conc);
-		return selectedWellPerCompoundConc.get(key);
+		synchronized (selectedWellPerCompoundConc) {
+			return selectedWellPerCompoundConc.get(key);
+		}
 	}
 
 	/**
@@ -347,7 +349,9 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 	 */
 	public void replaceCurrentUsedWell(Well newWell) {
 		String key = getCompConcKey(newWell.getCompound(), getDisplayConc(newWell.getCompoundConcentration()));
-		selectedWellPerCompoundConc.put(key, newWell);
+		synchronized (selectedWellPerCompoundConc) {
+			selectedWellPerCompoundConc.put(key, newWell);
+		}
 		getWellImageData(newWell);
 		table.doCommand(new VisualRefreshCommand());
 	}
@@ -473,7 +477,10 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 					if (monitor.isCanceled()) return Status.CANCEL_STATUS;
 					List<Well> wells = wellsPerCompoundConc.get(compConc);
 					if (wells != null && wells.size() > 1) {
-						Well previousWell = selectedWellPerCompoundConc.get(compConc);
+						Well previousWell;
+						synchronized (selectedWellPerCompoundConc) {
+							previousWell = selectedWellPerCompoundConc.get(compConc);
+						}
 						int indexOf = wells.indexOf(previousWell) + index;
 
 						// Continues scrolling
@@ -543,7 +550,9 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 							// Caches the image.
 							getWellImageData(well);
 							String key = getCompConcKey(gridCompound, conc);
-							selectedWellPerCompoundConc.put(key, well);
+							synchronized (selectedWellPerCompoundConc) {
+								selectedWellPerCompoundConc.put(key, well);
+							}
 						}
 					}
 					Display.getDefault().asyncExec(() -> { if (table != null) { table.doCommand(new VisualRefreshCommand()); } });
