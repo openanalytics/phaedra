@@ -40,7 +40,7 @@ public abstract class BaseFileServer implements FSInterface {
 	@Override
 	public void copy(String from, String to) throws IOException {
 		if (!exists(from)) return;
-		upload(to, getInputStream(from));
+		safeModification(to, () -> doUpload(to, getInputStream(from), getLength(from)));
 	}
 	
 	@Override
