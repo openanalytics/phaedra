@@ -109,7 +109,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 		for (CompoundWithGrouping gridCompound : gridInput.getGridCompounds()) {
 			if (gridCompound.getWells() == null || gridCompound.getWells().isEmpty()) continue;
 			for (Well w: gridCompound.getWells()) {
-				String key = getCompConcKey(gridCompound, getDisplayConc(w.getCompoundConcentration()));
+				String key = getCompConcKey(gridCompound.getFirstCompound(), getDisplayConc(w.getCompoundConcentration()));
 				CollectionUtils.addUnique(concentrations, getDisplayConc(w.getCompoundConcentration()));
 				if (!wellsPerCompoundConc.containsKey(key)) {
 					wellsPerCompoundConc.put(key, new ArrayList<Well>());
@@ -173,13 +173,13 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 	public Object getDataValue(CompoundWithGrouping c, int columnIndex) {
 		switch (columnIndex) {
 		case 0:
-			return c.getPlate().getExperiment().getName();
+			return c.getExperiment().getName();
 		case 1:
 			return CompoundContentProvider.getBarcodes(c);
 		case 2:
-			return c.getPlate().getValidationStatus();
+			return CompoundContentProvider.getPlateValidationStatus(c);
 		case 3:
-			return c.getValidationStatus();
+			return CompoundContentProvider.getValidationStatus(c);
 		case 4:
 			return c.getType();
 		case 5:
@@ -187,12 +187,12 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 		case 6:
 			return c.getSaltform();
 		case 7:
-			return CompoundContentProvider.getSampleCount(c);
+			return c.getWellCount();
 		}
 
 		int imageIndex = columnIndex - baseColumnCount;
 		String conc = concentrations.get(imageIndex);
-		Well well = getCurrentWell(c, conc);
+		Well well = getCurrentWell(c.getFirstCompound(), conc);
 
 		if (well == null) return null;
 		return getWellImageData(well);
@@ -203,7 +203,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 		if (0 <= column - baseColumnCount) {
 			int imageIndex = column - baseColumnCount;
 			String conc = concentrations.get(imageIndex);
-			Well well = getCurrentWell(rowObject, conc);
+			Well well = getCurrentWell(rowObject.getFirstCompound(), conc);
 			if (well != null) return well;
 		}
 		return rowObject;
@@ -233,7 +233,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 		if (rowObject == null) return columnTooltips[colIndex];
 
 		if (rowObject != null) {
-			if (colIndex == 2) return CompoundValidationStatus.getByCode(rowObject.getValidationStatus()).toString();
+			if (colIndex == 2) return CompoundValidationStatus.getByCode(CompoundContentProvider.getPlateValidationStatus(rowObject)).toString();
 		}
 		return null;
 	}
@@ -522,21 +522,20 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 			// First, make an ordered list of plates (because we can only open 1 JP2K File at a time).
 			Set<Plate> plates = new HashSet<>();
 			for (CompoundWithGrouping c: compounds) {
-				plates.add(c.getPlate());
+				plates.addAll(c.getPlates());
 			}
 
 			plates.parallelStream().forEach(plate -> {
 				if (!plate.isImageAvailable()) return;
 
+				BitSet imagesAvailable = new BitSet();
 				for (CompoundWithGrouping gridCompound : compounds) {
-					if (gridCompound.getPlate() != plate) continue;
-					if (monitor.isCanceled()) return;
-
-					BitSet imagesAvailable = new BitSet();
-
+					imagesAvailable.clear();
+					
 					for (Well well: gridCompound.getWells()) {
 						if (monitor.isCanceled()) return;
 						if (table != null && table.isDisposed()) return;
+						if (well.getPlate() != plate) continue;
 
 						String conc = getDisplayConc(well.getCompoundConcentration());
 						int index = concentrations.indexOf(conc);
@@ -549,7 +548,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 
 							// Caches the image.
 							getWellImageData(well);
-							String key = getCompConcKey(gridCompound, conc);
+							String key = getCompConcKey(gridCompound.getFirstCompound(), conc);
 							synchronized (selectedWellPerCompoundConc) {
 								selectedWellPerCompoundConc.put(key, well);
 							}

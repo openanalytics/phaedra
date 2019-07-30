@@ -14,12 +14,14 @@ import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
+import eu.openanalytics.phaedra.model.plate.compound.ICompoundView;
+import eu.openanalytics.phaedra.model.plate.compound.MultiploCompoundView;
+import eu.openanalytics.phaedra.model.plate.compound.SingleCompoundView;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
-import eu.openanalytics.phaedra.ui.curve.MultiploCompound;
 import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
 
@@ -29,29 +31,21 @@ public class CompoundGridInput {
 	/**
 	 * List with the CompoundWithGrouping of a compound (simple or multiplo)
 	 */
-	private static interface ICompoundItem {
-		
-		public Compound getCompound();
+	private static interface ICompoundItem extends ICompoundView {
 		
 		public ArrayList<CompoundWithGrouping> getGridCompounds();
 		
-		public boolean includesV(Compound candidate);
-		public boolean includesM(MultiploCompound candidate);
+		public boolean includes(Compound candidate);
+		public boolean includes(MultiploCompoundView candidate);
 		
 	}
 	
-	private static class SingleCompoundItem implements ICompoundItem {
+	private static class SingleCompoundItem extends SingleCompoundView implements ICompoundItem {
 		
-		private final Compound compound;
 		private final ArrayList<CompoundWithGrouping> gridCompounds = new ArrayList<>(0);
 		
 		SingleCompoundItem(Compound compound) {
-			this.compound = compound;
-		}
-		
-		@Override
-		public Compound getCompound() {
-			return compound;
+			super(compound);
 		}
 		
 		@Override
@@ -60,29 +54,23 @@ public class CompoundGridInput {
 		}
 		
 		@Override
-		public boolean includesV(Compound candidate) {
-			return compound.equals(candidate);
+		public boolean includes(Compound candidate) {
+			return getFirstCompound().equals(candidate);
 		}
 		
 		@Override
-		public boolean includesM(MultiploCompound candidate) {
+		public boolean includes(MultiploCompoundView candidate) {
 			return false;
 		}
 		
 	}
 	
-	private static class MultiploCompoundItem implements ICompoundItem {
+	private static class MultiploCompoundItem extends MultiploCompoundView implements ICompoundItem {
 		
-		private final MultiploCompound compound;
 		private final ArrayList<CompoundWithGrouping> gridCompounds = new ArrayList<>(0);
 		
 		MultiploCompoundItem(List<Compound> compounds, Compound firstCompound) {
-			this.compound = new MultiploCompound(firstCompound, compounds);
-		}
-		
-		@Override
-		public MultiploCompound getCompound() {
-			return compound;
+			super(compounds, firstCompound);
 		}
 		
 		@Override
@@ -91,13 +79,13 @@ public class CompoundGridInput {
 		}
 		
 		@Override
-		public boolean includesV(Compound candidate) {
-			return compound.getCompounds().contains(candidate);
+		public boolean includes(Compound candidate) {
+			return getCompounds().contains(candidate);
 		}
 		
 		@Override
-		public boolean includesM(MultiploCompound candidate) {
-			return compound.getCompounds().equals(candidate.getCompounds());
+		public boolean includes(MultiploCompoundView candidate) {
+			return equals(candidate);
 		}
 		
 	}
@@ -110,6 +98,12 @@ public class CompoundGridInput {
 		
 		public Key(Compound compound) {
 			this.experimentId = compound.getPlate().getExperiment().getId();
+			this.type = compound.getType();
+			this.number = compound.getNumber();
+		}
+		
+		public Key(ICompoundView compound) {
+			this.experimentId = compound.getExperiment().getId();
 			this.type = compound.getType();
 			this.number = compound.getNumber();
 		}
@@ -139,11 +133,11 @@ public class CompoundGridInput {
 	}
 	
 	
-	public static MultiploCompound getMultiploCompound(Compound compound) {
-		if (compound instanceof CompoundWithGrouping) {
-			compound = ((CompoundWithGrouping) compound).getDelegate();
+	public static MultiploCompoundView getMultiploCompound(ICompoundView gridCompound) {
+		if (gridCompound instanceof CompoundWithGrouping) {
+			gridCompound = ((CompoundWithGrouping) gridCompound).getUnderlyingView();
 		}
-		return (compound instanceof MultiploCompound) ? (MultiploCompound)compound : null;
+		return (gridCompound instanceof MultiploCompoundView) ? (MultiploCompoundView)gridCompound : null;
 	}
 	
 	
@@ -167,7 +161,7 @@ public class CompoundGridInput {
 		List<ICompoundItem> items = compoundItems.get(new Key(compound));
 		if (items == null || items.isEmpty()) return false;
 		for (ICompoundItem item : items) {
-			if (item.includesV(compound)) {
+			if (item.includes(compound)) {
 				return true;
 			}
 		}
@@ -175,7 +169,7 @@ public class CompoundGridInput {
 	}
 	
 	private void addItem(ICompoundItem item) {
-		Key key = new Key(item.getCompound());
+		Key key = new Key(item);
 		List<ICompoundItem> items = compoundItems.get(key);
 		if (items == null) {
 			items = new ArrayList<>(1);
@@ -216,13 +210,13 @@ public class CompoundGridInput {
 			// If there is grouping, add the compound once for each grouping.
 			Set<CurveGrouping> groupings = new HashSet<>();
 			for (Feature f: features) {
-				for (CurveGrouping cg: CurveFitService.getInstance().getGroupings(item.getCompound(), f)) groupings.add(cg);
+				for (CurveGrouping cg: CurveFitService.getInstance().getGroupings(item.getFirstCompound(), f)) groupings.add(cg);
 			}
 			
 			ArrayList<CompoundWithGrouping> gridCompounds = item.getGridCompounds();
 			gridCompounds.ensureCapacity(groupings.size());
 			for (CurveGrouping grouping: groupings) {
-				CompoundWithGrouping gridCompound = new CompoundWithGrouping(item.getCompound(), grouping);
+				CompoundWithGrouping gridCompound = new CompoundWithGrouping(item, grouping);
 				gridCompounds.add(gridCompound);
 				compounds.add(gridCompound);
 			}
@@ -257,11 +251,34 @@ public class CompoundGridInput {
 	 */
 	public List<CompoundWithGrouping> getGridCompounds(Compound compound) {
 		List<ICompoundItem> items = compoundItems.get(new Key(compound));
-		if (items == null || items.isEmpty()) return Collections.emptyList();
-		
-		if (compound instanceof CompoundWithGrouping) {
-			CompoundWithGrouping groupingCompound = (CompoundWithGrouping)compound;
-			ICompoundItem item = getItem(groupingCompound.getDelegate());
+		if (items != null) {
+			for (ICompoundItem item : items) {
+				if (item.includes(compound)) {
+					return item.getGridCompounds();
+				}
+			}
+		}
+		return Collections.emptyList();
+	}
+	
+//	public List<CompoundWithGrouping> getGridCompounds(Well well) {
+//		List<CompoundWithGrouping> gridCompounds = getGridCompounds(well.getCompound());
+//		if (gridCompounds.isEmpty()) return Collections.emptyList();
+//		List<CompoundWithGrouping> wellCompounds = new ArrayList<>(1 + gridCompounds.size() / 2);
+//		for (CompoundWithGrouping gridCompound : gridCompounds) {
+//			if (gridCompound.getWells().contains(well)) wellCompounds.add(gridCompound);
+//		}
+//		return wellCompounds;
+//	}
+	
+	/**
+	 * Returns a list with the grid compounds (row elements) for the specified compound.
+	 * @return a list with the compounds (empty, if the compound is not part of this input)
+	 */
+	public List<CompoundWithGrouping> getGridCompounds(ICompoundView compoundView) {
+		if (compoundView instanceof CompoundWithGrouping) {
+			CompoundWithGrouping groupingCompound = (CompoundWithGrouping)compoundView;
+			ICompoundItem item = getItem(groupingCompound.getUnderlyingView());
 			if (item != null) {
 				for (CompoundWithGrouping gridCompound : item.getGridCompounds()) {
 					if (gridCompound.getGrouping().equals(groupingCompound.getGrouping())) {
@@ -272,7 +289,7 @@ public class CompoundGridInput {
 			return Collections.emptyList();
 		}
 		else {
-			ICompoundItem item = getItem(compound);
+			ICompoundItem item = getItem(compoundView);
 			if (item != null) {
 				return item.getGridCompounds();
 			}
@@ -280,19 +297,20 @@ public class CompoundGridInput {
 		}
 	}
 	
-	private ICompoundItem getItem(Compound compound) {
-		List<ICompoundItem> items = compoundItems.get(new Key(compound));
+	private ICompoundItem getItem(ICompoundView compoundView) {
+		List<ICompoundItem> items = compoundItems.get(new Key(compoundView));
 		if (items != null) {
-			if (compound instanceof MultiploCompound) {
-				MultiploCompound multiploCompound = (MultiploCompound)compound;
+			if (compoundView instanceof MultiploCompoundView) {
+				MultiploCompoundView multiploCompound = (MultiploCompoundView)compoundView;
 				for (ICompoundItem item : items) {
-					if (item.includesM(multiploCompound)) {
+					if (item.includes(multiploCompound)) {
 						return item;
 					}
 				}
-			} else {
+			}
+			else if (compoundView.getCompounds().size() == 1){
 				for (ICompoundItem item : items) {
-					if (item.includesV(compound)) {
+					if (item.includes(compoundView.getFirstCompound())) {
 						return item;
 					}
 				}

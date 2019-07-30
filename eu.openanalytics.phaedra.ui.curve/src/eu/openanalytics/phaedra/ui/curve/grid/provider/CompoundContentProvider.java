@@ -67,13 +67,14 @@ import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
 import eu.openanalytics.phaedra.model.curve.util.CurveComparators;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.compound.CompoundInfoService;
+import eu.openanalytics.phaedra.model.plate.compound.ICompoundView;
+import eu.openanalytics.phaedra.model.plate.compound.MultiploCompoundView;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
-import eu.openanalytics.phaedra.ui.curve.MultiploCompound;
 import eu.openanalytics.phaedra.ui.curve.grid.GridColumnGroup;
 import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.EntityStatus;
@@ -83,26 +84,25 @@ import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrouping> implements ISelectionDataColumnAccessor<CompoundWithGrouping> {
 
 	static String getBarcodes(CompoundWithGrouping gridCompound) {
-		MultiploCompound multiploCompound = CompoundGridInput.getMultiploCompound(gridCompound);
-		if (multiploCompound != null) {
-			return multiploCompound.getCompounds().stream()
+		ICompoundView item = gridCompound.getUnderlyingView();
+		if (item instanceof MultiploCompoundView) {
+			return item.getCompounds().stream()
 					.map((compound) -> compound.getPlate().getBarcode())
 					.collect(Collectors.joining(", "));
 		}
 		else {
-			return gridCompound.getPlate().getBarcode();
+			return item.getFirstCompound().getPlate().getBarcode();
 		}
 	}
 	
-	static int getSampleCount(CompoundWithGrouping gridCompound) {
-		MultiploCompound multiploCompound = CompoundGridInput.getMultiploCompound(gridCompound);
-		if (multiploCompound != null) {
-			return multiploCompound.getSampleCount();
-		}
-		else {
-			return gridCompound.getWells().size();
-		}
+	static int getValidationStatus(CompoundWithGrouping gridCompound) {
+		return gridCompound.getFirstCompound().getValidationStatus();
 	}
+	
+	static int getPlateValidationStatus(CompoundWithGrouping gridCompound) {
+		return gridCompound.getFirstCompound().getPlate().getValidationStatus();
+	}
+	
 
 
 	private static final String CURVE_HEIGHT = "curveHeight";
@@ -131,21 +131,23 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		this.smilesImages = new HashMap<>();
 
 		List<ColumnSpec> columnSpecList = new ArrayList<>();
-		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, null, c -> c.getPlate().getExperiment().getName()));
+		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, null, c -> c.getExperiment().getName()));
 		columnSpecList.add(new ColumnSpec("Plate(s)", null, 85, null, null, CompoundContentProvider::getBarcodes));
-		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, null, c -> c.getPlate().getValidationStatus(),
-				c -> PlateValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString(), false));
-		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, null, c -> c.getValidationStatus(),
-				c -> CompoundValidationStatus.getByCode(c.getValidationStatus()).toString(), false));
+		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, null, CompoundContentProvider::getPlateValidationStatus,
+				c -> PlateValidationStatus.getByCode(getPlateValidationStatus(c)).toString(), false));
+		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, null, CompoundContentProvider::getValidationStatus,
+				c -> CompoundValidationStatus.getByCode(getValidationStatus(c)).toString(), false));
 		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, null, c -> c.getType()));
 		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, null, c -> c.getNumber()));
 		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, null, c -> c.getSaltform()));
 		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, null, c -> c.getGrouping()));
-		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, CompoundContentProvider::getSampleCount));
+		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, c -> c.getWellCount()));
 		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, null, c -> {
-			if (smilesImages.containsKey(c)) return smilesImages.get(c);
-			ImageData img = makeSmilesImage(c);
-			smilesImages.put(c, img);
+			ImageData img = smilesImages.get(c.getFirstCompound());
+			if (img == null) {
+				img = makeSmilesImage(c.getFirstCompound());
+				smilesImages.put(c.getFirstCompound(), img);
+			}
 			return img;
 		}));
 		baseColumnCount = columnSpecList.size();
@@ -401,12 +403,11 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 	 */
 
 	private Curve getCurve(CompoundWithGrouping gridCompound, Feature f) {
-		return CurveFitService.getInstance().getCurve(gridCompound, f, gridCompound.getGrouping(), true);
+		return CurveFitService.getInstance().getCurve(gridCompound.getFirstCompound(), f, gridCompound.getGrouping(), true);
 	}
 	
 	private ImageData makeSmilesImage(Compound c) {
 		String smiles = CompoundInfoService.getInstance().getInfo(c).getSmiles();
-
 		Image img = null;
 		try {
 			Molecule mol = MolImporter.importMol(smiles);

@@ -1,67 +1,29 @@
 package eu.openanalytics.phaedra.ui.curve;
 
-import java.util.Date;
 import java.util.List;
-import java.util.stream.Stream;
 
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
-import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.plate.compound.ICompoundView;
+import eu.openanalytics.phaedra.model.plate.compound.WrappedCompoundView;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 
 /**
  * Wraps a Compound with information about its groupings.
- * Note that this is only meant to be used as a read-only object in UI components (e.g. NatTables).
- * Do not attempt to modify or save instances of this object!
  */
-public class CompoundWithGrouping extends Compound {
-
-	private static final long serialVersionUID = -5826402159760468561L;
+public class CompoundWithGrouping extends WrappedCompoundView {
 	
-	private Compound delegate;
+	
 	private CurveGrouping grouping;
 	
-	public CompoundWithGrouping(Compound delegate, CurveGrouping grouping) {
-		this.delegate = delegate;
+	
+	public CompoundWithGrouping(ICompoundView delegate, CurveGrouping grouping) {
+		super(delegate);
 		this.grouping = grouping;
 	}
 	
+	
 	public CurveGrouping getGrouping() {
 		return grouping;
-	}
-	
-	public Compound getDelegate() {
-		return delegate;
-	}
-	
-	@Override
-	public long getId() {
-		return delegate.getId();
-	}
-	
-	@Override
-	public Plate getPlate() {
-		return delegate.getPlate();
-	}
-	
-	@Override
-	public String getType() {
-		return delegate.getType();
-	}
-	
-	@Override
-	public String getNumber() {
-		return delegate.getNumber();
-	}
-
-	@Override
-	public String getSaltform() {
-		return delegate.getSaltform();
-	}
-	
-	@Override
-	public String getDescription() {
-		return delegate.getDescription();
 	}
 	
 	@Override
@@ -70,52 +32,27 @@ public class CompoundWithGrouping extends Compound {
 	}
 	
 	@Override
-	public Date getValidationDate() {
-		return delegate.getValidationDate();
+	public int getWellCount() {
+		return delegate.getWellCount();
 	}
 	
-	@Override
-	public int getValidationStatus() {
-		return delegate.getValidationStatus();
-	}
-	
-	@Override
-	public String getValidationUser() {
-		return delegate.getValidationUser();
-	}
-	
-	
-	@Override
-	public <T> T getAdapter(Class<T> adapter) {
-		return delegate.getAdapter(adapter);
-	}
-	
-	@Override
-	public <T> List<T> getAdapterList(Class<T> type) {
-		return delegate.getAdapterList(type);
-	}
-	
-	
-	@Override
-	public String toString() {
-		return getType() + " " + getNumber();
-	}
 	
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (getId() ^ (getId() >>> 32));
-		return result;
+		int hash = delegate.hashCode();
+		hash = 31 * hash + grouping.hashCode();
+		return hash;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj) return true;
-		if (obj == null) return false;
-		if (!(obj instanceof Compound)) return false;
-		Compound other = (Compound) obj;
-		if (getId() != other.getId()) return false;
-		return true;
+		if (obj instanceof CompoundWithGrouping) {
+			CompoundWithGrouping other = (CompoundWithGrouping) obj;
+			return (delegate.equals(other.delegate)
+					&& grouping.equals(other.grouping));
+		}
+		return false;
 	}
+	
 }
