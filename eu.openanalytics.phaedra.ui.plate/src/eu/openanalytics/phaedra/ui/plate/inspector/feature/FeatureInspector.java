@@ -479,7 +479,10 @@ public class FeatureInspector extends ViewPart {
 					if (currentColorMethod != null)
 						currentColorMethod.initialize(data);
 
-					Display.getDefault().syncExec(() -> colorMethodLegend.setColorMethod(currentColorMethod));
+					Display.getDefault().syncExec(() -> {
+						if (colorMethodLegend == null || colorMethodLegend.isDisposed()) return;
+						colorMethodLegend.setColorMethod(currentColorMethod);
+					});
 
 					if (monitor.isCanceled()) return Status.CANCEL_STATUS;
 					return Status.OK_STATUS;
