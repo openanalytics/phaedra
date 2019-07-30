@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html lang="en-us" xml:lang="en-us">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="copyright" content="(C) Copyright 2005" />
+<meta name="DC.rights.owner" content="(C) Copyright 2005" />
+<meta name="DC.Type" content="topic"/>
+<meta name="DC.Title" content="Multiplo Experiment"/>
+<meta name="DC.Format" content="XHTML"/>
+<link href="../../commonltr.css" type="text/css" rel="stylesheet" />
+<link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<title>Multiplo Experiment</title>
+</head>
+<body>
+  <h1>Multiplo Experiment</h1>
+  
+  <p>A multiplo experiment is an <a href="experiment.html">experiment</a> where compounds are
+  tested in duplo or triplo across multiple <a href="plate.html">plates</a>.</p>
+  <p>By default, such a compound will be fitted on a separate dose-response curve for each plate.
+  If you want to pool the data points together and fit a single curve on all points over multiple
+  plates, you have to configure the experiment as a multiplo experiment.</p>
+  
+  
+  <h3>Methods</h3>
+  <p>The following Multiplo Methods are available in Phaedra:</p>
+  
+  <h4>AllPlates</h4>
+  <p>All plates of the experiment form a single pool of multiplo plates.</p>
+  
+  <h4>Property</h4>
+  <p>Multiplo plates are identified via a plate property, such as 'mother-id', that is
+  set on the plate during import or plate definition linking.</p>
+  <p>The name of the property should be set as the multiplo parameter.</p>
+  
+  <h4>BarcodePattern</h4>
+  <p>Multiplo plates are identified via their barcode, or a portion of their barcode.</p>
+  <p>A regular expression containing at least one group should be set as the multiplo parameter.</p>
+  
+</body>
+</html>

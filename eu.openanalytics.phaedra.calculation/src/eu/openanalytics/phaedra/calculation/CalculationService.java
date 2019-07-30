@@ -438,7 +438,7 @@ public class CalculationService {
 		
 		None("This experiment does not contain any plates or compounds screened in multiplo.", plate -> Collections.emptyList()),
 		
-		AllPlates("All plates of the experiment form a single group of multiplo plates.",
+		AllPlates("All plates of the experiment form a single pool of multiplo plates.",
 				(plate) -> {
 					return PlateService.getInstance().getPlates(plate.getExperiment());
 				}),

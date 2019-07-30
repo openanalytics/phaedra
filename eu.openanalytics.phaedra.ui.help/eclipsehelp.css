@@ -88,6 +88,7 @@ ul.simple { list-style-type: none }
 .boldItalic { font-weight: bold; font-style: italic; }
 .italic { font-style: italic; }
 .underlined { text-decoration: underline; }
+.def { font-weight: bold; }
 .uicontrol { font-weight: bold; }
 .parmname { font-weight: bold; }
 .kwd { font-weight: bold; }

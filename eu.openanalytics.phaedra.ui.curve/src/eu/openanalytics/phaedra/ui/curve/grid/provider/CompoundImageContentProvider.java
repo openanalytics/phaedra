@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.curve.grid.provider;
 
+import static eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundContentProvider.getMultiploCompound;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,8 +41,8 @@ import org.eclipse.swt.widgets.ToolItem;
 
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.FunctionDisplayConverter;
-import eu.openanalytics.phaedra.base.ui.nattable.misc.RichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.LinkedResizeSupport.ILinkedColumnAccessor;
+import eu.openanalytics.phaedra.base.ui.nattable.misc.RichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.Flag;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.FlagFilter;
@@ -176,8 +178,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		case 0:
 			return c.getPlate().getExperiment().getName();
 		case 1:
-			if (c instanceof MultiploCompound) return "<Multiplo>";
-			return c.getPlate().getBarcode();
+			return CompoundContentProvider.getBarcodes(c);
 		case 2:
 			return c.getPlate().getValidationStatus();
 		case 3:
@@ -189,8 +190,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<Compound>
 		case 6:
 			return c.getSaltform();
 		case 7:
-			if (c instanceof MultiploCompound) return ((MultiploCompound) c).getSampleCount();
-			return c.getWells().size();
+			return CompoundContentProvider.getSampleCount(c);
 		}
 
 		int imageIndex = columnIndex - baseColumnCount;

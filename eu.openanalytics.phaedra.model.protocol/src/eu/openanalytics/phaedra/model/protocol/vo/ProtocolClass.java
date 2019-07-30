@@ -92,6 +92,12 @@ public class ProtocolClass extends PlatformObject implements IValueObject, IOwne
 	@Column(name="is_multi_dim_subwell_data")
 	private boolean multiDimensionalSubwellData;
 
+	@Column(name="default_multiplo_method")
+	private String defaultMultiploMethod;
+	
+	@Column(name="default_multiplo_parameter")
+	private String defaultMultiploParameter;
+
 	/*
 	 * *****************
 	 * Getters & setters
@@ -233,6 +239,22 @@ public class ProtocolClass extends PlatformObject implements IValueObject, IOwne
 
 	public void setMultiDimensionalSubwellData(boolean multiDimensionalSubwellData) {
 		this.multiDimensionalSubwellData = multiDimensionalSubwellData;
+	}
+
+	public String getDefaultMultiploMethod() {
+		return defaultMultiploMethod;
+	}
+	
+	public void setDefaultMultiploMethod(String name) {
+		this.defaultMultiploMethod = name;
+	}
+	
+	public String getDefaultMultiploParameter() {
+		return defaultMultiploParameter;
+	}
+	
+	public void setDefaultMultiploParameter(String parameter) {
+		this.defaultMultiploParameter = parameter;
 	}
 
 	/*

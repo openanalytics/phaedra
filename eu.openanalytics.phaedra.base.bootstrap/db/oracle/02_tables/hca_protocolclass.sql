@@ -16,7 +16,9 @@ create table hca_protocolclass (
 	low_welltype				varchar2(10), 
 	high_welltype				varchar2(10),
 	image_setting_id			number,
-	is_multi_dim_subwell_data 	number(1) default 0
+	is_multi_dim_subwell_data 	number(1) default 0,
+	default_multiplo_method		varchar2(100),
+	default_multiplo_parameter	varchar2(100)
 )
 tablespace phaedra_d;
 

@@ -28,6 +28,7 @@ import org.eclipse.nebula.widgets.nattable.data.convert.DefaultDisplayConverter;
 import org.eclipse.nebula.widgets.nattable.filterrow.FilterRowDataLayer;
 import org.eclipse.nebula.widgets.nattable.filterrow.config.FilterRowConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.painter.cell.AbstractCellPainter;
+import org.eclipse.nebula.widgets.nattable.painter.cell.TextPainter;
 import org.eclipse.nebula.widgets.nattable.sort.SortConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.graphics.Image;
@@ -82,6 +83,36 @@ import eu.openanalytics.phaedra.wellimage.ImageRenderService;
 
 public class CompoundContentProvider extends RichColumnAccessor<Compound> implements ISelectionDataColumnAccessor<Compound> {
 
+	static MultiploCompound getMultiploCompound(Compound c) {
+		if (c instanceof CompoundWithGrouping) {
+			c = ((CompoundWithGrouping) c).getDelegate();
+		}
+		return (c instanceof MultiploCompound) ? (MultiploCompound)c : null;
+	}
+
+	static String getBarcodes(Compound c) {
+		MultiploCompound multiploCompound = getMultiploCompound(c);
+		if (multiploCompound != null) {
+			return multiploCompound.getCompounds().stream()
+					.map((compound) -> compound.getPlate().getBarcode())
+					.collect(Collectors.joining(", "));
+		}
+		else {
+			return c.getPlate().getBarcode();
+		}
+	}
+	
+	static int getSampleCount(Compound c) {
+		MultiploCompound multiploCompound = getMultiploCompound(c);
+		if (multiploCompound != null) {
+			return multiploCompound.getSampleCount();
+		}
+		else {
+			return c.getWells().size();
+		}
+	}
+
+
 	private static final String CURVE_HEIGHT = "curveHeight";
 	private static final String CURVE_WIDTH = "curveWidth";
 
@@ -111,16 +142,16 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 
 		List<ColumnSpec> columnSpecList = new ArrayList<>();
 		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, null, c -> c.getPlate().getExperiment().getName()));
-		columnSpecList.add(new ColumnSpec("Plate", null, 85, null, null, c -> (getMultiploCompound(c) == null) ? c.getPlate().getBarcode() : "<Multiplo>"));
+		columnSpecList.add(new ColumnSpec("Plate(s)", null, 85, null, null, CompoundContentProvider::getBarcodes));
 		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, null, c -> c.getPlate().getValidationStatus(),
 				c -> PlateValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString(), false));
 		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, null, c -> c.getValidationStatus(),
-				c -> CompoundValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString(), false));
+				c -> CompoundValidationStatus.getByCode(c.getValidationStatus()).toString(), false));
 		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, null, c -> c.getType()));
 		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, null, c -> c.getNumber()));
 		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, null, c -> c.getSaltform()));
 		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, null, c -> (c instanceof CompoundWithGrouping) ? ((CompoundWithGrouping)c).getGrouping() : ""));
-		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, c -> (getMultiploCompound(c) == null) ? c.getWells().size() : getMultiploCompound(c).getSampleCount()));
+		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, CompoundContentProvider::getSampleCount));
 		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, null, c -> {
 			if (smilesImages.containsKey(c)) return smilesImages.get(c);
 			ImageData img = makeSmilesImage(c);
@@ -256,6 +287,7 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	@Override
 	public Map<int[], AbstractCellPainter> getCustomCellPainters() {
 		Map<int[], AbstractCellPainter> painters = new HashMap<>();
+		painters.put(new int[] { 1 }, new TextPainter(true, true));
 		painters.put(new int[] { 2 }, new FlagCellPainter("plate",
 				new FlagMapping(FlagFilter.Negative, Flag.Red),
 				new FlagMapping(FlagFilter.Zero, Flag.White),
@@ -381,12 +413,6 @@ public class CompoundContentProvider extends RichColumnAccessor<Compound> implem
 	private Curve getCurve(Compound c, Feature f) {
 		CurveGrouping cg = (c instanceof CompoundWithGrouping) ? ((CompoundWithGrouping) c).getGrouping() : null;
 		return CurveFitService.getInstance().getCurve(c, f, cg, true);
-	}
-	
-	private MultiploCompound getMultiploCompound(Compound c) {
-		if (c instanceof MultiploCompound) return (MultiploCompound) c;
-		if (c instanceof CompoundWithGrouping) return getMultiploCompound(((CompoundWithGrouping) c).getDelegate());
-		return null;
 	}
 	
 	private ImageData makeSmilesImage(Compound c) {
