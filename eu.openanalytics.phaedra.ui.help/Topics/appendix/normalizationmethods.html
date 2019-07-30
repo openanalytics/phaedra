@@ -147,6 +147,26 @@
           <td valign="top" headers="N1004B">100 - (rawValue - lowMedian) / (highMedian - lowMedian) * 100 = 100 - PIN[Pos Median]</td>
         </tr>
 
+        <tr>
+          <!-- Z-Score based on all samples (common Z-Score) -->
+          <td valign="top" headers="N10045">ZScore</td>
+          <td valign="top" headers="N1004B">(rawValue - mean) / sd</td>
+        </tr>
+        <tr>
+          <!-- Z-Score based on low controls -->
+          <td valign="top" headers="N10045">ZScore[L]</td>
+          <td valign="top" headers="N1004B">(rawValue - lowMean) / lowSd</td>
+        </tr>
+        <tr>
+          <!-- Robust Z-Score based on all samples -->
+          <td valign="top" headers="N10045">ZScore[Rob]</td>
+          <td valign="top" headers="N1004B">(rawValue - median) / (1.4826 * mad)</td>
+        </tr>
+        <tr>
+          <!-- Robust Z-Score based on low controls -->
+          <td valign="top" headers="N10045">ZScore[Rob L]</td>
+          <td valign="top" headers="N1004B">(rawValue - lowMedian) / (1.4826 * lowMad)</td>
+        </tr>
       </table>
 
     </div>

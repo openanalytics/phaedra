@@ -13,21 +13,28 @@ public class NormalizationUtils {
 		String type = "LC";
 		if (key.getFeature() instanceof Feature) type = ProtocolUtils.getLowType((Feature)key.getFeature());
 		if (type == null) throw new NormalizationException("No Low Control type configured");
-		return getStat(stat, type, key);
+		return getControlsStat(stat, type, key);
 	}
 	
 	public static double getHighStat(String stat, NormalizationKey key) throws NormalizationException {
 		String type = "HC";
 		if (key.getFeature() instanceof Feature) type = ProtocolUtils.getHighType((Feature)key.getFeature());
 		if (type == null) throw new NormalizationException("No High Control type configured");
-		return getStat(stat, type, key);
+		return getControlsStat(stat, type, key);
 	}
 	
-	private static double getStat(String stat, String wellType, NormalizationKey key) {
+	private static double getControlsStat(String stat, String wellType, NormalizationKey key) {
 		Plate plate = SelectionUtils.getAsClass(key.getDataToNormalize(), Plate.class);
 		StatQuery query = new StatQuery(stat, plate, key.getFeature(), wellType, null);
 		double result = StatService.getInstance().calculate(query);
 		if (Double.isNaN(result)) throw new NormalizationException("No valid controls of type " + wellType);
 		return result;
 	}
+	
+	public static double getAllStat(String stat, NormalizationKey key) throws NormalizationException {
+		Plate plate = SelectionUtils.getAsClass(key.getDataToNormalize(), Plate.class);
+		StatQuery query = new StatQuery(stat, plate, key.getFeature(), null, null);
+		return StatService.getInstance().calculate(query);
+	}
+	
 }

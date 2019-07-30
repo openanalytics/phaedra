@@ -157,6 +157,22 @@
             id="PIN[Neg Median]"
             class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhNegMedianNormalizer">
       </normalizer>
+      <normalizer
+            id="ZScore"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreNormalizer">
+      </normalizer>
+      <normalizer
+            id="ZScore[L]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreLowNormalizer">
+      </normalizer>
+      <normalizer
+            id="ZScore[Rob]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobNormalizer">
+      </normalizer>
+      <normalizer
+            id="ZScore[Rob L]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobLowNormalizer">
+      </normalizer>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.calculation.annotationCreator">
