@@ -53,6 +53,8 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		new Definition("pIC50 UCL"),
 		new Definition("pIC20", null, false, ParameterType.Concentration, null, null),
 		new Definition("pIC80", null, false, ParameterType.Concentration, null, null),
+		new Definition("eMin", null, false, ParameterType.Numeric, null, null),
+		new Definition("eMin Conc", null, false, ParameterType.Concentration, null, null),
 		new Definition("eMax", null, true, ParameterType.Numeric, null, null),
 		new Definition("eMax Conc", null, true, ParameterType.Concentration, null, null),
 		new Definition("Hill", null, true, ParameterType.Numeric, null, null),
@@ -218,9 +220,11 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			CurveParameter.find(outParams, "AIC").numericValue = RUtils.getDoubleFromList(results, "AIC", 3);
 			CurveParameter.find(outParams, "BIC").numericValue = RUtils.getDoubleFromList(results, "BIC", 3);
 
-			double[] eMax = calculateEmax(output, input);
-			CurveParameter.find(outParams, "eMax").numericValue = eMax[0];
-			CurveParameter.find(outParams, "eMax Conc").numericValue = eMax[1];
+			double[] eMinMax = calculateEMinMax(output, input);
+			CurveParameter.find(outParams, "eMin").numericValue = eMinMax[0];
+			CurveParameter.find(outParams, "eMin Conc").numericValue = eMinMax[1];
+			CurveParameter.find(outParams, "eMax").numericValue = eMinMax[2];
+			CurveParameter.find(outParams, "eMax Conc").numericValue = eMinMax[3];
 			
 			rServi.evalVoid("library(Cairo)", null);
 			CairoPdfGraphic graphic = new CairoPdfGraphic();
@@ -243,14 +247,11 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		}
 	}
 	
-	private static double[] calculateEmax(Curve curve, CurveFitInput input) {
-		double emaxConcentration = Double.NaN;
-		double emaxEffect = Double.NaN;
-
+	/** @return { eMinEffect, eMinConcentration, eMaxEffect, eMaxConcentration } */
+	private static double[] calculateEMinMax(Curve curve, CurveFitInput input) {
 		Map<Double, List<Double>> avgPointMap = new HashMap<Double, List<Double>>();
-		int points = input.getValid().length;
-
-		for (int point = 0; point < points; point++) {
+		int pointCount = input.getValid().length;
+		for (int point = 0; point < pointCount; point++) {
 			if ((input.getValid()[point]) && (!Double.isNaN(input.getValues()[point]))) {
 				if (!avgPointMap.containsKey(input.getConcs()[point])) {
 					avgPointMap.put(input.getConcs()[point], new ArrayList<Double>());
@@ -273,25 +274,33 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			avgValues[index] = avg;
 			index++;
 		}
-
-		Value type = CurveParameter.find(input.getSettings().getExtraParameters(), "Type");
-		boolean ascending = (type == null) ? true : type.stringValue.equals("A");
-		if (ascending) {
-			for (int i = 0; i < avgConcs.length; i++) {
-				if ((avgValues[i] > emaxEffect) || (Double.isNaN(emaxEffect))) {
-					emaxEffect = avgValues[i];
-					emaxConcentration = avgConcs[i];
-				}
+		
+		double eMinEffect = Double.NaN;
+		double eMinConcentration = Double.NaN;
+		double eMaxEffect = Double.NaN;
+		double eMaxConcentration = Double.NaN;
+		for (int i = 0; i < avgConcs.length; i++) {
+			if (Double.isNaN(eMinEffect)) {
+				eMinEffect = avgValues[i];
+				eMinConcentration = avgConcs[i];
+				eMaxEffect = avgValues[i];
+				eMaxConcentration = avgConcs[i];
 			}
-		} else {
-			for (int i = 0; i < avgConcs.length; i++) {
-				if ((avgValues[i] < emaxEffect) || (Double.isNaN(emaxEffect))) {
-					emaxEffect = avgValues[i];
-					emaxConcentration = avgConcs[i];
-				}
+			else if ((avgValues[i] < eMinEffect)) {
+				eMinEffect = avgValues[i];
+				eMinConcentration = avgConcs[i];
+			}
+			else if ((avgValues[i] > eMaxEffect)) {
+				eMaxEffect = avgValues[i];
+				eMaxConcentration = avgConcs[i];
 			}
 		}
 		
-		return new double[] { emaxEffect, emaxConcentration };
+		Value type = CurveParameter.find(input.getSettings().getExtraParameters(), "Type");
+		boolean ascending = (type == null) ? true : type.stringValue.equals("A");
+		return (ascending) ?
+				new double[] { eMinEffect, eMinConcentration, eMaxEffect, eMaxConcentration } :
+				new double[] { eMaxEffect, eMaxConcentration, eMinEffect, eMinConcentration };
 	}
+	
 }
