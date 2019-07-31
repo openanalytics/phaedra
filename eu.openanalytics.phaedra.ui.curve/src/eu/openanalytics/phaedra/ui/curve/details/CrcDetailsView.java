@@ -222,6 +222,7 @@ public class CrcDetailsView extends DecoratedView {
 		prefListener = (event) -> {
 			if (event.getProperty().startsWith("CRC_")) update();
 		};
+		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(prefListener);
 		
 		splitComp.setWeights(new int[] { 50, 50 });
 		if (getSite() != null) createToolBar(parent);
