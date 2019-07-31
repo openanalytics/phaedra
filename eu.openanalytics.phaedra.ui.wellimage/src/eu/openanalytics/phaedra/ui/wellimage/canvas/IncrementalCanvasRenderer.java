@@ -160,7 +160,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 						state.getChannels());
 				if (cancelled) return;
 				callback.accept(this, data);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				EclipseLog.error("Failed to render image", e, Activator.PLUGIN_ID);
 			}
 		}
@@ -196,7 +196,7 @@ public class IncrementalCanvasRenderer implements ICanvasRenderer {
 						state.getChannels());
 				if (cancelled) return;
 				callback.accept(this, data);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				EclipseLog.error("Failed to render image", e, Activator.PLUGIN_ID);
 			}
 		}
