@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.model.curve;
 
+import java.util.List;
+
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 
 public interface ICurveFitModel {
@@ -12,7 +14,8 @@ public interface ICurveFitModel {
 	public String getDescription();
 	
 	public CurveParameter.Definition[] getInputParameters();
-	public CurveParameter.Definition[] getOutputParameters();
+	public List<CurveParameter.Definition> getOutputParameters(CurveFitSettings fitSettings);
+	public List<CurveParameter.Definition> getOutputKeyParameters();
 	
 	public CurveFitErrorCode[] getErrorCodes();
 	

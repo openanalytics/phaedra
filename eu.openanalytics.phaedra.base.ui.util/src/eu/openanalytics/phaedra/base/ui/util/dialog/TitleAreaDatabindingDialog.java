@@ -5,6 +5,9 @@ import org.eclipse.jface.databinding.dialog.TitleAreaDialogSupport;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
@@ -55,13 +58,14 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 	
 	@Override
 	protected Control createContents(Composite parent) {
+		dbc = new DataBindingContext();
+		
 		Control control = super.createContents(parent);
 		
 		if (title != null) {
 			setTitle(title);
 		}
 		
-		dbc = new DataBindingContext();
 		initDatabinding(dbc);
 		dbc.updateTargets();
 		if (dbValidation) {
@@ -78,7 +82,16 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 		
 		return control;
 	}
-
+	
+	protected Composite createDialogAreaComposite(Composite parent) {
+		Composite area = new Composite((Composite) super.createDialogArea(parent), SWT.NONE);
+		GridDataFactory.fillDefaults().grab(true,true).applyTo(area);
+		GridLayoutFactory.fillDefaults()
+				.margins(convertVerticalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN), convertVerticalDLUsToPixels(IDialogConstants.VERTICAL_MARGIN))
+				.applyTo(area);
+		return area;
+	}
+	
 	@Override
 	public void setMessage(String newMessage, int newType) {
 		if (newMessage == null || newMessage.isEmpty()) {
@@ -96,8 +109,12 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 	public void setErrorMessage(String newMessage) {
 		setMessage(newMessage, IMessageProvider.ERROR);
 	}
-
-
+	
+	
+	protected DataBindingContext getDataBindingContext() {
+		return this.dbc;
+	}
+	
 	protected void initDatabinding(DataBindingContext dbc) {
 	}
 

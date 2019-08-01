@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.export.core.query;
 
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
@@ -87,8 +88,9 @@ public class QueryBuilder {
 				String baseCurveQuery = " (SELECT c.${propertyName} FROM PHAEDRA.HCA_CURVE C WHERE C.CURVE_ID = WC.CURVE_ID) AS ${columnAlias},";
 				appendIfIncludes(ExportSettings.Includes.CurveProperties, settings, sb, baseCurveQuery, "MODEL_ID", "MODEL");
 				
-				for (Definition def: model.getOutputParameters()) {
-					if (!def.key && !settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) continue;
+				List<Definition> outputParamDefs = (settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) ?
+						model.getOutputParameters(fitSettings) : model.getOutputKeyParameters();
+				for (Definition def: outputParamDefs) {
 					if (def.type == ParameterType.Binary) continue;
 					
 					String basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"

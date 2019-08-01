@@ -5,12 +5,13 @@ Bundle-SymbolicName: eu.openanalytics.phaedra.model.curve.osb;singleton:=true
 Bundle-Version: 1.0.7.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.model.curve.osb.Activator
 Bundle-Vendor: OpenAnalytics
-Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime,
+Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.model.curve;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.r.rservi;bundle-version="1.0.0",
  eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0"
+ eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
+ org.eclipse.core.databinding,
+ org.eclipse.ui
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy

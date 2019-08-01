@@ -21,6 +21,7 @@ import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
@@ -338,6 +339,7 @@ public class CurveDAO {
 	
 	private void applyProperties(Curve curve, List<?> resultSet) {
 		ICurveFitModel model = CurveFitService.getInstance().getModel(curve.getModelId());
+		List<Definition> outputParameterDefs = model.getOutputParameters(CurveFitService.getInstance().getSettings(curve));
 		
 		List<Value> properties = new ArrayList<>();
 		for (Object record: resultSet) {
@@ -347,7 +349,7 @@ public class CurveDAO {
 			if (curveId != curve.getId()) continue;
 
 			String name = (String) row[1];
-			Definition def = Arrays.stream(model.getOutputParameters()).filter(p -> p.name.equals(name)).findAny().orElse(null);
+			Definition def = CurveParameter.find(outputParameterDefs, name);
 			if (def == null) continue;
 			
 			double numericValue = row[2] == null ? Double.NaN : (Double) row[2];
@@ -357,11 +359,11 @@ public class CurveDAO {
 			Value property = new Value(def, stringValue, numericValue, binaryValue);
 			properties.add(property);
 		}
-
+		
 		// Sort the properties as they are defined in the model.
-		Value[] orderedValues = new Value[model.getOutputParameters().length];
+		Value[] orderedValues = new Value[outputParameterDefs.size()];
 		for (int i = 0; i < orderedValues.length; i++) {
-			Definition def = model.getOutputParameters()[i];
+			Definition def = outputParameterDefs.get(i);
 			orderedValues[i] = properties.stream()
 					.filter(v -> v.definition == def).findAny()
 					.orElse(new Value(def, null, Double.NaN, null));

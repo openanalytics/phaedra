@@ -21,7 +21,6 @@ import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
@@ -31,6 +30,7 @@ import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.AccessScope;
 import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDatabindingDialog;
 import eu.openanalytics.phaedra.project.vo.Project;
+
 
 public class EditProjectDialog extends TitleAreaDatabindingDialog {
 
@@ -87,8 +87,8 @@ public class EditProjectDialog extends TitleAreaDatabindingDialog {
 	}
 
 	@Override
-	protected Control createDialogArea(Composite parent) {
-		Composite dialogArea = (Composite)super.createDialogArea(parent);
+	protected Composite createDialogArea(Composite parent) {
+		Composite dialogArea = super.createDialogAreaComposite(parent);
 		
 		Composite content = createEditProject(dialogArea);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(content);
@@ -98,7 +98,7 @@ public class EditProjectDialog extends TitleAreaDatabindingDialog {
 
 	private Composite createEditProject(Composite parent) {
 		Composite container = new Composite(parent, SWT.NONE);
-		GridLayoutFactory.fillDefaults().margins(5, 5).numColumns(2).applyTo(container);
+		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(container);
 		
 		{	Label label = new Label(container, SWT.NONE);
 			label.setText("Name:");

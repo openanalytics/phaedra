@@ -158,7 +158,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 			ICurveFitModel model = CurveFitService.getInstance().getModel(curveSettings.getModelId());
 			if (model == null) continue;
 			
-			Definition[] params = Arrays.stream(model.getOutputParameters()).filter(d -> d.key).toArray(i -> new Definition[i]);
+			List<Definition> params = model.getOutputKeyParameters();
 			for (Definition param: params) {
 				columnSpecList.add(new ColumnSpec(param.name, param.description, 60, feature, param, c -> {
 					Curve curve = getCurve(c, feature);
@@ -176,7 +176,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 			//TODO eMax is an OSB-specific parameter.
 			columnSpecList.add(new ColumnSpec("eMax Image", null, 100, feature, null, c -> getEMaxImage(feature, c), null, true));
 			
-			int indexStart = columnSpecList.size() - (params.length + 2);
+			int indexStart = columnSpecList.size() - (params.size() + 2);
 			columnGroupList.add(new GridColumnGroup(feature.getDisplayName(), IntStream.range(indexStart, columnSpecList.size()).toArray()));
 		}
 		

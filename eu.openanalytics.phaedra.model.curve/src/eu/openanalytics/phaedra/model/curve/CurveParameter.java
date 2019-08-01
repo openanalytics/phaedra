@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
+import java.util.List;
+
+import org.eclipse.core.databinding.validation.IValidator;
+import org.eclipse.core.databinding.validation.ValidationStatus;
+import org.eclipse.core.runtime.IStatus;
 
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
@@ -22,13 +27,14 @@ public class CurveParameter {
 		public boolean key;
 		public ParameterType type;
 		public IParameterValueRenderer valueRenderer;
-		public IParameterValueRestriction valueRestriction;
+		/** Supported: ParameterValueList, org.eclipse.core.databinding.validation.IValidator<String>, org.eclipse.core.databinding.conversion.IConverter<String, String> */
+		public Object valueRestriction;
 		
 		public Definition(String name) {
 			this(name, null, false, ParameterType.Numeric, null, null);
 		}
 		
-		public Definition(String name, String description, boolean key, ParameterType type, IParameterValueRenderer valueRenderer, IParameterValueRestriction valueRestriction) {
+		public Definition(String name, String description, boolean key, ParameterType type, IParameterValueRenderer valueRenderer, Object valueRestriction) {
 			this.name = name;
 			this.description = description;
 			this.key = key;
@@ -138,6 +144,8 @@ public class CurveParameter {
 		}
 	}
 	
+	/*-- Value Renderer --*/
+	
 	public static interface IParameterValueRenderer {
 		public String render(Value value, Curve curve, ConcentrationFormat format);
 	}
@@ -178,12 +186,10 @@ public class CurveParameter {
 	
 	private static final IParameterValueRenderer DEFAULT_RENDERER = new BaseValueRenderer();
 	
-	public static interface IParameterValueRestriction {
-		public String[] getAllowedValues();
-		public double[] getAllowedRange();
-	}
 	
-	public static class ParameterValueList implements IParameterValueRestriction {
+	/*-- Value Restriction --*/
+	
+	public static class ParameterValueList {
 		
 		private String[] allowedValues;
 		
@@ -191,15 +197,44 @@ public class CurveParameter {
 			this.allowedValues = allowedValues;
 		}
 		
-		@Override
 		public String[] getAllowedValues() {
 			return allowedValues;
 		}
 		
-		@Override
-		public double[] getAllowedRange() {
-			return null;
+	}
+	
+	public static class NumericValueValidator implements IValidator {
+		
+		private String name;
+		
+		public NumericValueValidator(String name) {
+			this.name = name;
 		}
+		
+		@Override
+		public IStatus validate(Object value) {
+			String input = (String)value;
+			if (!input.isEmpty() && !NumberUtils.isNumeric(input)) {
+				return ValidationStatus.error(String.format("Enter a number for %1$s.", name));
+			}
+			return ValidationStatus.ok();
+		}
+		
+	}
+	
+	
+	public static int indexOf(List<Definition> defs, String name) {
+		for (int i = 0; i < defs.size(); i++) {
+			if (defs.get(i).name.equals(name)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	public static Definition find(List<Definition> defs, String name) {
+		int idx = indexOf(defs, name);
+		return (idx >= 0) ? defs.get(idx) : null;
 	}
 	
 	public static boolean isCensored(Definition def) {
@@ -231,7 +266,7 @@ public class CurveParameter {
 			return value.stringValue;
 		case Numeric:
 		case Concentration:
-			return String.valueOf(value.numericValue);
+			return (Double.isNaN(value.numericValue)) ? null : String.valueOf(value.numericValue);
 		default:
 			// Note: input parameters cannot be binary. Only output parameters, see CurveDAO.
 			return null;

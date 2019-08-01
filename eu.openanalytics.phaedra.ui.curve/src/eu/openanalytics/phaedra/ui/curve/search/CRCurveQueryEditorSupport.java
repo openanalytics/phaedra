@@ -44,6 +44,7 @@ public class CRCurveQueryEditorSupport extends AbstractQueryEditorSupport {
 	@Override
 	public void customize(NatTable table) {
 		table.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 				ISelection sel = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getSelectionService().getSelection();
 				CRCurve curve = SelectionUtils.getFirstObject(sel, CRCurve.class);
@@ -69,8 +70,7 @@ public class CRCurveQueryEditorSupport extends AbstractQueryEditorSupport {
 			colNames.add("Fit Error");
 			
 			Arrays.stream(CurveFitService.getInstance().getFitModels())
-					.flatMap(s -> Arrays.stream(CurveFitService.getInstance().getModel(s).getOutputParameters()))
-					.filter(d -> d.key)
+					.flatMap(s -> CurveFitService.getInstance().getModel(s).getOutputKeyParameters().stream())
 					.distinct()
 					.sorted((d1, d2) -> d1.name.compareTo(d2.name))
 					.forEach(def -> colNames.add(def.name));
@@ -81,11 +81,11 @@ public class CRCurveQueryEditorSupport extends AbstractQueryEditorSupport {
 		public Object getDataValue(CRCurve curve, int columnIndex) {
 			switch (columnIndex) {
 			case 0:
-				return ((Protocol) curve.getAdapter(Protocol.class)).getName();
+				return curve.getAdapter(Protocol.class).getName();
 			case 1:
-				return ((Experiment) curve.getAdapter(Experiment.class)).getName();
+				return curve.getAdapter(Experiment.class).getName();
 			case 2:
-				return ((Plate) curve.getAdapter(Plate.class)).getBarcode();
+				return curve.getAdapter(Plate.class).getBarcode();
 			case 3:
 				return curve.getFeature();
 			case 4:

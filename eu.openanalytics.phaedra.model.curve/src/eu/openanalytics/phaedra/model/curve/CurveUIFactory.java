@@ -1,18 +1,26 @@
 package eu.openanalytics.phaedra.model.curve;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.UpdateValueStrategy;
+import org.eclipse.core.databinding.conversion.IConverter;
+import org.eclipse.core.databinding.observable.Observables;
 import org.eclipse.core.databinding.observable.map.ObservableMap;
+import org.eclipse.core.databinding.observable.value.AbstractObservableValue;
+import org.eclipse.core.databinding.validation.IValidator;
+import org.eclipse.jface.databinding.fieldassist.ControlDecorationSupport;
+import org.eclipse.jface.databinding.swt.WidgetProperties;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -21,7 +29,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -84,12 +92,13 @@ public class CurveUIFactory {
 		
 		Composite additionParamCmp = new Composite(area, SWT.NONE);
 		GridDataFactory.fillDefaults().span(2, 1).grab(true, true).applyTo(additionParamCmp);
-		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(additionParamCmp);
-		
+		{	GridLayout layout = GridLayoutFactory.fillDefaults().numColumns(2).create();
+			layout.horizontalSpacing = Math.max(layout.horizontalSpacing, 8);
+			additionParamCmp.setLayout(layout);
+		}
+
 		// Input & listeners
-		
-		Map<String, String> observableInput = (bindingCtx == null) ? new HashMap<>() : feature.getCurveSettings();
-		CurveSettingsMap observableMap = new CurveSettingsMap(observableInput);
+		CurveSettingsMap observableMap = (customSettings == null) ? new CurveSettingsMap(feature.getCurveSettings()) : null;
 		
 		String[] models = CurveFitService.getInstance().getFitModels();
 		String[] allModels = new String[models.length + 1];
@@ -109,7 +118,7 @@ public class CurveUIFactory {
 		groupBy2Cmb.setItems(annotations);
 		groupBy3Cmb.setItems(annotations);
 		
-		if (bindingCtx != null) {
+		if (bindingCtx != null && observableMap != null) {
 			FormEditorUtils.bindSelectionToMap(modelCmb, observableMap, CurveFitSettings.MODEL, bindingCtx);
 			FormEditorUtils.bindSelectionToMap(groupBy1Cmb, observableMap, CurveFitSettings.GROUP_BY_1, bindingCtx);
 			FormEditorUtils.bindSelectionToMap(groupBy2Cmb, observableMap, CurveFitSettings.GROUP_BY_2, bindingCtx);
@@ -127,6 +136,7 @@ public class CurveUIFactory {
 		}
 		
 		SelectionAdapter onModelSelection = new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				for (Control child: additionParamCmp.getChildren()) child.dispose();
 				
@@ -138,52 +148,70 @@ public class CurveUIFactory {
 					modelDescriptionLbl.setText(model.getDescription());
 					
 					for (CurveParameter.Definition param: model.getInputParameters()) {
+						Value value;
+						if (customSettings != null) {
+							value = CurveParameter.find(customSettings.getExtraParameters(), param.name);
+							if (value == null) continue;
+						} else value = null;
+						
 						Label lbl = new Label(additionParamCmp, SWT.NONE);
 						lbl.setText(param.name + ":");
+						lbl.setToolTipText(param.description);
 						
-						if (param.valueRestriction == null || param.valueRestriction.getAllowedValues() == null) {
-							Text txt = new Text(additionParamCmp, SWT.BORDER);
-							GridDataFactory.fillDefaults().grab(true, false).applyTo(txt);
-							
-							if (param.valueRestriction != null && param.valueRestriction.getAllowedRange() != null) {
-								double[] allowedRange = param.valueRestriction.getAllowedRange();
-								txt.addModifyListener(event -> {
-									String value = txt.getText();
-									String newValue = null;
-									if (!NumberUtils.isNumeric(value)) newValue = "";
-									double numVal = Double.parseDouble(value);
-									if (numVal < allowedRange[0]) newValue = String.valueOf(allowedRange[0]);
-									if (numVal > allowedRange[1]) newValue = String.valueOf(allowedRange[1]);
-									if (newValue != null) txt.setText(newValue);
-								});
-							}
-							
-							if (dirtyListener != null) txt.addModifyListener(event -> dirtyListener.handleEvent(null));
-							if (bindingCtx != null) FormEditorUtils.bindTextToMap(txt, observableMap, param.name, bindingCtx);
-							else if (customSettings != null) {
-								Value value = CurveParameter.find(customSettings.getExtraParameters(), param.name);
-								if (value != null) {
-									txt.setText(CurveParameter.getValueAsString(value));
-									txt.addModifyListener(event -> CurveParameter.setValueFromString(value, txt.getText()));
-								}
-							}
-							txt.requestLayout();
-						} else {
-							String[] allowedValues = param.valueRestriction.getAllowedValues();
+						if (param.valueRestriction instanceof CurveParameter.ParameterValueList) { // combo
+							String[] allowedValues = ((CurveParameter.ParameterValueList)param.valueRestriction).getAllowedValues();
 							CCombo cmb = new CCombo(additionParamCmp, SWT.BORDER | SWT.READ_ONLY);
 							GridDataFactory.fillDefaults().grab(true, false).applyTo(cmb);
 							cmb.setItems(allowedValues);
 							
 							if (dirtyListener != null) cmb.addModifyListener(event -> dirtyListener.handleEvent(null));
-							if (bindingCtx != null) FormEditorUtils.bindSelectionToMap(cmb, observableMap, param.name, bindingCtx);
-							else if (customSettings != null) {
-								Value value = CurveParameter.find(customSettings.getExtraParameters(), param.name);
-								if (value != null) {
-									cmb.select(cmb.indexOf(CurveParameter.getValueAsString(value)));
-									cmb.addModifyListener(event -> CurveParameter.setValueFromString(value, cmb.getText()));
+							if (bindingCtx != null) {
+								UpdateValueStrategy targetToModel = new UpdateValueStrategy();
+								if (param.valueRestriction instanceof IValidator) {
+									targetToModel.setAfterGetValidator((IValidator)param.valueRestriction);
 								}
+								Binding bindValue = bindingCtx.bindValue(WidgetProperties.selection().observe(cmb),
+										(value != null) ?
+												new ParamValueObservable(value) :
+												Observables.observeMapEntry(observableMap, param.name),
+										targetToModel, null);
+								ControlDecorationSupport.create(bindValue, SWT.TOP | SWT.LEFT);
+							}
+							else if (value != null) {
+								cmb.select(cmb.indexOf(CurveParameter.getValueAsString(value)));
+								cmb.addModifyListener(event -> CurveParameter.setValueFromString(value, cmb.getText()));
 							}
 							cmb.requestLayout();
+						}
+						else { // text field
+							Text txt = new Text(additionParamCmp, SWT.BORDER);
+							GridDataFactory.fillDefaults().grab(true, false).applyTo(txt);
+							
+							if (dirtyListener != null) txt.addModifyListener(event -> dirtyListener.handleEvent(null));
+							if (bindingCtx != null) {
+								UpdateValueStrategy targetToModel = new UpdateValueStrategy();
+								if (param.valueRestriction instanceof IValidator) {
+									targetToModel.setAfterGetValidator((IValidator)param.valueRestriction);
+								}
+								else if (param.type == ParameterType.Numeric) {
+									targetToModel.setAfterGetValidator(new CurveParameter.NumericValueValidator(param.name));
+								}
+								if (param.valueRestriction instanceof IConverter) {
+									targetToModel.setConverter((IConverter)param.valueRestriction);
+								}
+								Binding bindValue = bindingCtx.bindValue(WidgetProperties.text(SWT.Modify).observe(txt),
+										(value != null) ?
+												new ParamValueObservable(value) :
+												Observables.observeMapEntry(observableMap, param.name),
+										targetToModel, null);
+								ControlDecorationSupport.create(bindValue, SWT.TOP | SWT.LEFT);
+							}
+							else if (value != null) {
+								String s = CurveParameter.getValueAsString(value);
+								if (s != null) txt.setText(s);
+								txt.addModifyListener(event -> CurveParameter.setValueFromString(value, txt.getText()));
+							}
+							txt.requestLayout();
 						}
 					}
 				}
@@ -203,6 +231,7 @@ public class CurveUIFactory {
 		onModelSelection.widgetSelected(null);
 		return area;
 	}
+	
 	
 	private static class CurveSettingsMap extends ObservableMap<String, String> {
 		
@@ -232,4 +261,30 @@ public class CurveUIFactory {
 			wrappedMap.putAll(m);
 		}
 	}
+	
+	private static class ParamValueObservable extends AbstractObservableValue<String> {
+		
+		private final CurveParameter.Value paramValue;
+		
+		public ParamValueObservable(CurveParameter.Value paramValue) {
+			this.paramValue = paramValue;
+		}
+		
+		@Override
+		public Object getValueType() {
+			return String.class;
+		}
+		
+		@Override
+		protected String doGetValue() {
+			return CurveParameter.getValueAsString(this.paramValue);
+		}
+		
+		@Override
+		protected void doSetValue(String value) {
+			CurveParameter.setValueFromString(this.paramValue, value);
+		}
+		
+	}
+	
 }

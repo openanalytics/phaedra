@@ -6,8 +6,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
+import org.eclipse.core.databinding.conversion.IConverter;
+import org.eclipse.core.databinding.validation.IValidator;
+import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.statet.rj.data.RDataFrame;
 import org.eclipse.statet.rj.data.RList;
 import org.eclipse.statet.rj.data.RObject;
@@ -23,6 +30,7 @@ import eu.openanalytics.phaedra.model.curve.AbstractCurveFitModel;
 import eu.openanalytics.phaedra.model.curve.CurveFitErrorCode;
 import eu.openanalytics.phaedra.model.curve.CurveFitException;
 import eu.openanalytics.phaedra.model.curve.CurveFitInput;
+import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
@@ -34,11 +42,14 @@ public class OSBFitModel extends AbstractCurveFitModel {
 
 	private static final int MIN_SAMPLES_FOR_FIT = 4;
 	
+	
 	private static final Definition[] IN_PARAMS = {
 		new Definition("Method", null, false, ParameterType.String, null, new CurveParameter.ParameterValueList("OLS", "LIN", "CENS")),
 		new Definition("Type", null, false, ParameterType.String, null, new CurveParameter.ParameterValueList("A", "D")),
 		new Definition("Lower bound"),
-		new Definition("Upper bound")
+		new Definition("Upper bound"),
+		new Definition("Custom pICx", "Specify comma separated percent x of additional pICx measures.",
+				false, ParameterType.String, null, new PICxRestriction())
 	};
 	
 	private static final Definition[] OUT_PARAMS = {
@@ -68,6 +79,9 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		new Definition("Confidence Band", null, false, ParameterType.Binary, null, null),
 		new Definition("Weights", null, false, ParameterType.Binary, null, null)
 	};
+	private static final List<Definition> OUT_PARAMS_LIST = Arrays.asList(OUT_PARAMS);
+	private static final List<Definition> OUT_KEY_PARAMS_LIST = Arrays.asList(OUT_PARAMS_LIST.stream().filter((def) -> def.key).toArray(Definition[]::new));
+	
 	
 	private String modelId;
 	private String description;
@@ -98,8 +112,34 @@ public class OSBFitModel extends AbstractCurveFitModel {
 	}
 
 	@Override
-	public Definition[] getOutputParameters() {
-		return OUT_PARAMS;
+	public List<Definition> getOutputParameters(CurveFitSettings fitSettings) {
+		if (fitSettings != null) {
+			Value picxValue = CurveParameter.find(fitSettings.getExtraParameters(), "Custom pICx");
+			if (picxValue != null && picxValue.stringValue != null) {
+				Set<Integer> percents = parseICxParam(picxValue.stringValue);
+				if (percents != null && !percents.isEmpty()) {
+					percents.add(20);
+					percents.add(80);
+					
+					Definition[] params = new Definition[OUT_PARAMS.length + percents.size() - 2];
+					int insert = CurveParameter.indexOf(OUT_PARAMS_LIST, "pIC20");
+					System.arraycopy(OUT_PARAMS, 0, params, 0, insert);
+					int i = insert;
+					for (Integer percent : percents) {
+						params[i++] = new Definition("pIC" + percent, null, false, ParameterType.Concentration, null, null);
+					}
+					insert += 2;
+					System.arraycopy(OUT_PARAMS, insert, params, i, OUT_PARAMS.length - insert);
+					return Arrays.asList(params);
+				}
+			}
+		}
+		return OUT_PARAMS_LIST;
+	}
+	
+	@Override
+	public List<Definition> getOutputKeyParameters() {
+		return OUT_KEY_PARAMS_LIST;
 	}
 
 	@Override
@@ -145,7 +185,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			}
 			
 			Value[] inParams = input.getSettings().getExtraParameters();
-			Value[] outParams = Arrays.stream(getOutputParameters()).map(def -> new Value(def, null, Double.NaN, null)).toArray(i -> new Value[i]);
+			Value[] outParams = getOutputParameters(input.getSettings()).stream().map(def -> new Value(def, null, Double.NaN, null)).toArray(i -> new Value[i]);
 			output.setOutputParameters(outParams);
 			
 			// Use manual bounds, or plate bounds if manual bounds are NaN.
@@ -185,10 +225,19 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			CurveParameter.find(outParams, "Method Fallback").stringValue = RUtils.getStringFromList(results, "METHOD");
 			
 			if (!getId().equals("PLOTONLY")) {
-				RObject pic20Obj = rServi.evalData("pICx(VALUE, x=20)", null);
-				CurveParameter.find(outParams, "pIC20").numericValue = -RUtils.getDoubleFromVector(pic20Obj,0);
-				RObject pic80Obj = rServi.evalData("pICx(VALUE, x=80)", null);
-				CurveParameter.find(outParams, "pIC80").numericValue = -RUtils.getDoubleFromVector(pic80Obj,0);
+				for (Value value : outParams) {
+					String name = value.definition.name;
+					if (name.startsWith("pIC") && !name.startsWith("pIC50")) {
+						try {
+							int p = Integer.parseInt(name.substring(3));
+							FunctionCall rCall = rServi.createFunctionCall("pICx");
+							rCall.add("VALUE");
+							rCall.addInt("x", p);
+							RObject picObj = rCall.evalData(null);
+							value.numericValue = -RUtils.getDoubleFromVector(picObj, 0);
+						} catch (NumberFormatException e) {}
+					}
+				}
 			}
 			
 			output.setErrorCode(RUtils.getIntegerFromList(results, "ERROR"));
@@ -301,6 +350,59 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		return (ascending) ?
 				new double[] { eMinEffect, eMinConcentration, eMaxEffect, eMaxConcentration } :
 				new double[] { eMaxEffect, eMaxConcentration, eMinEffect, eMinConcentration };
+	}
+	
+	
+	private static Set<Integer> parseICxParam(String value) {
+		try {
+			Set<Integer> percents = new TreeSet<>();
+			value = value.trim();
+			if (!value.isEmpty()) {
+				String[] strings = value.split(",");
+				for (int i = 0; i < strings.length; i++) {
+					String s = strings[i].trim();
+					if (s.isEmpty()) continue;
+					int p = Integer.parseInt(s);
+					if (p > 0 && p < 100) {
+						if (p != 50) percents.add(p);
+					} else {
+						return null;
+					}
+				}
+			}
+			return percents;
+		} catch (NumberFormatException e) {
+			return null;
+		}
+	}
+	
+	private static class PICxRestriction implements IValidator, IConverter {
+		
+		@Override
+		public Object getFromType() {
+			return String.class;
+		}
+		
+		@Override
+		public Object getToType() {
+			return String.class;
+		}
+		
+		@Override
+		public IStatus validate(Object value) {
+			if (parseICxParam((String)value) == null) {
+				return ValidationStatus.error("Enter comma separated integer percent values for Custom pICx.");
+			}
+			return ValidationStatus.ok();
+		}
+		
+		@Override
+		public Object convert(Object fromObject) {
+			Set<Integer> percents = parseICxParam((String)fromObject);
+			if (percents == null) return null;
+			return percents.stream().map((p) -> p.toString()).collect(Collectors.joining(", "));
+		}
+		
 	}
 	
 }
