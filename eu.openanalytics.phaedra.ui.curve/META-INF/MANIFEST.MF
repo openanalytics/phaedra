@@ -28,7 +28,8 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.base.ui.search;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
  chemaxon.marvin;bundle-version="1.0.0",
- org.openscada.ui.breadcrumbs
+ org.openscada.ui.breadcrumbs,
+ org.eclipse.jface.databinding
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.ui.curve,

@@ -1,5 +1,9 @@
 package eu.openanalytics.phaedra.ui.curve.prefs;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.StringConverter;
@@ -19,6 +23,9 @@ public class Prefs extends AbstractPreferenceInitializer {
 
 	public final static String CRC_SHOW_WEIGHTS = "CRC_SHOW_WEIGHTS";
 	
+	public static final String CRC_TABLE_FAVORITES_NAMES = "CRC_TABLE_FAVORITES_NAMES";
+	
+	
 	@Override
 	public void initializeDefaultPreferences() {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
@@ -31,5 +38,16 @@ public class Prefs extends AbstractPreferenceInitializer {
 		store.setDefault(CRC_CURVE_THICKNESS, 2);
 		
 		store.setDefault(CRC_SHOW_WEIGHTS, false);
+		
+		store.setDefault(CRC_TABLE_FAVORITES_NAMES, "");
 	}
+	
+	
+	public static List<String> toNameList(String prefValue) {
+		if (prefValue == null || prefValue.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return Arrays.asList(prefValue.split("\\,"));
+	}
+	
 }

@@ -435,6 +435,12 @@
             id="eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage"
             name="Dose-Response Curves">
       </page>
+      <page
+            id="eu.openanalytics.phaedra.ui.curve.prefs.PropertyPreferencePage"
+            category="eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage"
+            name="Property Table"
+            class="eu.openanalytics.phaedra.ui.curve.prefs.PropertyPreferencePage">
+      </page>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.base.ui.gridviewer.gridLayer">

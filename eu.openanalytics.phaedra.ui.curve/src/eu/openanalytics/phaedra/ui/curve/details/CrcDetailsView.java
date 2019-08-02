@@ -1,6 +1,8 @@
 package eu.openanalytics.phaedra.ui.curve.details;
 
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -9,6 +11,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
@@ -71,6 +74,7 @@ import eu.openanalytics.phaedra.ui.curve.cmd.CmdUtil;
 import eu.openanalytics.phaedra.ui.curve.cmd.EditCurve;
 import eu.openanalytics.phaedra.ui.curve.cmd.ResetCurve;
 import eu.openanalytics.phaedra.ui.curve.prefs.PreferencePage;
+import eu.openanalytics.phaedra.ui.curve.prefs.Prefs;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
@@ -92,7 +96,13 @@ public class CrcDetailsView extends DecoratedView {
 	private WellSelectionProvider selectionProvider = new WellSelectionProvider();
 	
 	private Curve currentCurve;
-
+	
+	
+	public Curve getCurve() {
+		return currentCurve;
+	}
+	
+	
 	@Override
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		super.init(site, memento);
@@ -104,7 +114,7 @@ public class CrcDetailsView extends DecoratedView {
 		super.saveState(memento);
 		splitComp.save(memento);
 	}
-
+	
 	@Override
 	public void createPartControl(Composite parent) {
 		GridLayoutFactory.fillDefaults().numColumns(1).spacing(0, 0).applyTo(parent);
@@ -155,8 +165,20 @@ public class CrcDetailsView extends DecoratedView {
 		infoTable.setContentProvider(new ArrayContentProvider());
 		infoTable.setInput(CurveTextProvider.getColumns(null));
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(infoTable.getTable());
-
+		
 		tooltip = new DefaultToolTip(infoTable.getControl(), SWT.NONE, true);
+		{	MenuManager menuManager = new MenuManager();
+			menuManager.add(new Action("Customize table...") {
+				@Override
+				public void run() {
+					PreferencesUtil.createPreferenceDialogOn(infoTable.getControl().getShell(),
+							"eu.openanalytics.phaedra.ui.curve.prefs.PropertyPreferencePage",
+							null, null).open();
+				}
+			});
+			Menu menu = menuManager.createContextMenu(infoTable.getTable());
+			infoTable.getTable().setMenu(menu);
+		}
 
 		// Listen to incoming Curve selections.
 		selectionListener = (part, selection) -> {
@@ -279,7 +301,7 @@ public class CrcDetailsView extends DecoratedView {
 
 		super.fillContextMenu(manager);
 	}
-
+	
 	/*
 	 * Non-public helpers
 	 * ******************
@@ -291,7 +313,8 @@ public class CrcDetailsView extends DecoratedView {
 	 */
 	private void update() {
 		// SplitComposite uses visibility to hide components. Prevent setInput() from resetting visibility.
-		infoTable.setInput(CurveTextProvider.getColumns(currentCurve));
+		infoTable.setInput(CurveTextProvider.getColumns(currentCurve,
+				Prefs.toNameList(Activator.getDefault().getPreferenceStore().getString(Prefs.CRC_TABLE_FAVORITES_NAMES)) ));
 		infoTable.getTable().setVisible(splitComp.isVisible(2));
 
 		// Refresh the chart.
@@ -337,6 +360,12 @@ public class CrcDetailsView extends DecoratedView {
 			@Override
 			public String getText(Object element) {
 				return ((CurveTextField) element).getLabel();
+			}
+		});
+		config[0].setSorter(new Comparator<CurveTextField>() {
+			@Override
+			public int compare(CurveTextField e1, CurveTextField e2) {
+				return Collator.getInstance().compare(e1.getLabel(), e2.getLabel());
 			}
 		});
 		config[1] = ColumnConfigFactory.create("Value", ColumnDataType.String, 250);

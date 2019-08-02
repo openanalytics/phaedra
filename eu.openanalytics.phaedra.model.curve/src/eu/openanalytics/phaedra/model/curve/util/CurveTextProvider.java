@@ -1,10 +1,14 @@
 package eu.openanalytics.phaedra.model.curve.util;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
+
 
 public class CurveTextProvider {
 
@@ -27,6 +31,34 @@ public class CurveTextProvider {
 		}
 		return allFields;
 	}
+	
+	public static List<CurveTextField> getColumns(Curve curve, List<String> favorites) {
+		Value[] values = (curve == null) ? new Value[0] : curve.getOutputParameters();
+		List<CurveTextField> unordered = new ArrayList<>(BASE_COLUMNS.length + values.length);
+		for (CurveTextField field : BASE_COLUMNS) {
+			unordered.add(field);
+		}
+		for (Value value : values) {
+			unordered.add(new CurveTextField(value.definition.name, c -> CurveParameter.renderValue(value, curve, null)));
+		}
+		
+		if (favorites.isEmpty()) return unordered;
+		
+		List<CurveTextField> ordered = new ArrayList<>(unordered.size());
+		for (String name : favorites) {
+			for (Iterator<CurveTextField> iter = unordered.iterator(); iter.hasNext();) {
+				CurveTextField field = iter.next();
+				if (field.getLabel().equals(name)) {
+					ordered.add(field);
+					iter.remove();
+					break;
+				}
+			}
+		}
+		ordered.addAll(unordered);
+		return ordered;
+	}
+	
 	
 	public static class CurveTextField {
 		private String label;
