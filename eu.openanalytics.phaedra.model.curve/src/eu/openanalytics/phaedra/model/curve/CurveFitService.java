@@ -432,32 +432,51 @@ public class CurveFitService extends BaseJPAService {
 		CurveFitSettings settings = (CurveFitSettings) curveCustomSettingsCache.get(key);
 		return (settings == null) ? getSettings(curve.getFeature()) : settings;
 	}
+	
+	public CurveFitSettings getWorkingCopy(CurveFitSettings settings) {
+		CurveFitSettings workingCopy = new CurveFitSettings();
+		copy(settings, workingCopy);
+		return workingCopy;
+	}
 
 	/**
 	 * Save the overriding curve fit settings for the given dose-response curve.
 	 * 
 	 * @param curve The curve to save settings for.
-	 * @param settings The settings to save, or null to clear any previous settings.
+	 * @param workingCopy The settings to save, or <code>null</code> to clear any previous settings.
 	 */
-	public void updateCurveSettings(Curve curve, CurveFitSettings settings) {
+	public void updateCurveSettings(Curve curve, CurveFitSettings workingCopy) {
 		for (Compound c: curve.getCompounds()) {
 			if (PlateApprovalStatus.APPROVED.matches(c.getPlate())) throw new IllegalStateException("Cannot change settings: plate is approved");
 		}
 		
-		if (settings != null) {
+		if (workingCopy != null) {
 			// If new settings are identical to the defaults, treat it as a reset.
 			CurveFitSettings defaults = getSettings(curve.getFeature());
-			if (defaults.equals(settings)) settings = null;
+			if (defaults.equals(workingCopy)) workingCopy = null;
 		}
 		
 		customSettingsDAO.clearSettings(curve.getId());
 		CacheKey key = new CacheKey(curve.getId());
-		if (settings == null) {
+		if (workingCopy == null) {
 			curveCustomSettingsCache.remove(key);
 		} else {
+			CurveFitSettings settings = new CurveFitSettings();
+			copy(workingCopy, settings);
 			customSettingsDAO.saveSettings(curve.getId(), settings);
 			curveCustomSettingsCache.put(key, settings);
 		}
+	}
+	
+	private void copy(CurveFitSettings from, CurveFitSettings to) {
+		to.setModelId(from.getModelId());
+		to.setGroupingFeatures(from.getGroupingFeatures());
+		CurveParameter.Value[] fromExtraParams = from.getExtraParameters();
+		CurveParameter.Value[] toExtraParams = new CurveParameter.Value[fromExtraParams.length];
+		for (int i = 0; i < fromExtraParams.length; i++) {
+			toExtraParams[i] = new CurveParameter.Value(fromExtraParams[i]);
+		}
+		to.setExtraParameters(toExtraParams);
 	}
 
 	/**
@@ -505,6 +524,7 @@ public class CurveFitService extends BaseJPAService {
 		return input;
 	}
 	
+	@Override
 	protected EntityManager getEntityManager() {
 		return Screening.getEnvironment().getEntityManager();
 	}

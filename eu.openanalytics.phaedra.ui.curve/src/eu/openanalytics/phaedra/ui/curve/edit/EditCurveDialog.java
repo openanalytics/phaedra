@@ -35,8 +35,12 @@ public class EditCurveDialog extends TitleAreaDialog {
 	
 	public EditCurveDialog(Shell parentShell, Curve[] curves) {
 		super(parentShell);
-		if (curves == null) throw new IllegalArgumentException("No curve(s) selected.");
+		if (curves == null || curves.length == 0) throw new IllegalArgumentException("No curve(s) selected.");
 		this.curves = curves;
+		
+		CurveFitService curveFitService = CurveFitService.getInstance();
+		CurveFitSettings curveSettings = curveFitService.getSettings(curves[0]);
+		customizedSettings = (curveSettings != null) ? curveFitService.getWorkingCopy(curveSettings) : null;
 	}
 
 	@Override
@@ -51,10 +55,7 @@ public class EditCurveDialog extends TitleAreaDialog {
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(area);
 		GridLayoutFactory.fillDefaults().margins(5, 5).applyTo(area);
 		
-		if (curves.length > 0) {
-			customizedSettings = CurveFitService.getInstance().getSettings(curves[0]);
-			CurveUIFactory.createFields(area, curves[0].getFeature(), customizedSettings, null, null);
-		}
+		CurveUIFactory.createFields(area, curves[0].getFeature(), customizedSettings, null, null);
 		
 		String message = "You can change the settings for the selected curve(s) using the fields below.";
 		if (curves.length > 1) {

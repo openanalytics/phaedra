@@ -80,6 +80,13 @@ public class CurveParameter {
 			this.binaryValue = binaryValue;
 		}
 		
+		public Value(Value org) {
+			this.definition = org.definition;
+			this.stringValue = org.stringValue;
+			this.numericValue = org.numericValue;
+			this.binaryValue = org.binaryValue;
+		}
+		
 		@Override
 		public int hashCode() {
 			final int prime = 31;
