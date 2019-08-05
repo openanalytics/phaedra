@@ -3,8 +3,8 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
-/** Z-Score based on all samples (common Z-Score) */
-public class ZScoreNormalizer extends BaseNormalizer {
+/** Robust Z-Score based on samples */
+public class ZScoreRobSamplesNormalizer extends BaseNormalizer {
 	
 	private static int CENTER = 0;
 	private static int SCALE = 1;
@@ -12,19 +12,19 @@ public class ZScoreNormalizer extends BaseNormalizer {
 	
 	@Override
 	public String getId() {
-		return "ZScore";
+		return "ZScoreRob[S]";
 	}
 	
 	@Override
 	public String getDescription() {
-		return "value = (rawValue - mean) / sd";
+		return "value = (rawValue - samplesMedian) / (1.4826 * samplesMAD)";
 	}
 	
 	@Override
 	protected double[] calculateControls(NormalizationKey key) {
-		double mean = NormalizationUtils.getAllStat("mean", key);
-		double sd = NormalizationUtils.getAllStat("stdev", key);
-		return new double[] { mean, sd };
+		double median = NormalizationUtils.getSamplesStat("median", key);
+		double mad = NormalizationUtils.getSamplesStat("mad", key);
+		return new double[] { median, mad * 1.4826 };
 	}
 	
 	@Override

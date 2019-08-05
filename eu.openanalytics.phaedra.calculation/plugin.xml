@@ -158,19 +158,19 @@
             class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhNegMedianNormalizer">
       </normalizer>
       <normalizer
-            id="ZScore"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreNormalizer">
+            id="ZScore[S]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreSamplesNormalizer">
       </normalizer>
       <normalizer
             id="ZScore[L]"
             class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreLowNormalizer">
       </normalizer>
       <normalizer
-            id="ZScore[Rob]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobNormalizer">
+            id="ZScoreRob[S]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesNormalizer">
       </normalizer>
       <normalizer
-            id="ZScore[Rob L]"
+            id="ZScoreRob[L]"
             class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobLowNormalizer">
       </normalizer>
    </extension>

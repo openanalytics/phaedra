@@ -12,7 +12,7 @@ public class ZScoreRobLowNormalizer extends BaseNormalizer {
 	
 	@Override
 	public String getId() {
-		return "ZScore[Rob L]";
+		return "ZScoreRob[L]";
 	}
 	
 	@Override

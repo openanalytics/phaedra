@@ -6,6 +6,7 @@ import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 public class NormalizationUtils {
 
@@ -31,9 +32,9 @@ public class NormalizationUtils {
 		return result;
 	}
 	
-	public static double getAllStat(String stat, NormalizationKey key) throws NormalizationException {
+	public static double getSamplesStat(String stat, NormalizationKey key) throws NormalizationException {
 		Plate plate = SelectionUtils.getAsClass(key.getDataToNormalize(), Plate.class);
-		StatQuery query = new StatQuery(stat, plate, key.getFeature(), null, null);
+		StatQuery query = new StatQuery(stat, plate, key.getFeature(), WellType.SAMPLE, null);
 		return StatService.getInstance().calculate(query);
 	}
 	

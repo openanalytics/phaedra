@@ -148,9 +148,9 @@
         </tr>
 
         <tr>
-          <!-- Z-Score based on all samples (common Z-Score) -->
-          <td valign="top" headers="N10045">ZScore</td>
-          <td valign="top" headers="N1004B">(rawValue - mean) / sd</td>
+          <!-- Z-Score based on samples -->
+          <td valign="top" headers="N10045">ZScore[S]</td>
+          <td valign="top" headers="N1004B">(rawValue - samplesMean) / samplesSD</td>
         </tr>
         <tr>
           <!-- Z-Score based on low controls -->
@@ -158,13 +158,13 @@
           <td valign="top" headers="N1004B">(rawValue - lowMean) / lowSd</td>
         </tr>
         <tr>
-          <!-- Robust Z-Score based on all samples -->
-          <td valign="top" headers="N10045">ZScore[Rob]</td>
-          <td valign="top" headers="N1004B">(rawValue - median) / (1.4826 * mad)</td>
+          <!-- Robust Z-Score based on samples -->
+          <td valign="top" headers="N10045">ZScoreRob[S]</td>
+          <td valign="top" headers="N1004B">(rawValue - samplesMedian) / (1.4826 * samplesMAD)</td>
         </tr>
         <tr>
           <!-- Robust Z-Score based on low controls -->
-          <td valign="top" headers="N10045">ZScore[Rob L]</td>
+          <td valign="top" headers="N10045">ZScoreRob[L]</td>
           <td valign="top" headers="N1004B">(rawValue - lowMedian) / (1.4826 * lowMad)</td>
         </tr>
       </table>
