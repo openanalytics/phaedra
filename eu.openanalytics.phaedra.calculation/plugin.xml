@@ -173,6 +173,10 @@
             id="ZScoreRob[L]"
             class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobLowNormalizer">
       </normalizer>
+      <normalizer
+            id="MedianPolish"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.MedianPolishNormalizer">
+      </normalizer>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.calculation.annotationCreator">

@@ -46,7 +46,9 @@ public class FormulaUtils {
 			s = s.replace("(X_S)", "_{\\welltype{S}}");
 			s = s.replace("(X_HC)", "_{\\welltype{HC}}");
 			s = s.replace("(X_LC)", "_{\\welltype{LC}}");
+			s = s.replace("RESIDUAL_VALUE", "\\epsilon_{ij}");
 			s = s.replace("·", "\\cdot");
+			s = s.replace("  ", "\\quad");
 			return s;
 		}
 		
@@ -119,7 +121,10 @@ public class FormulaUtils {
 			new Formula(new ZScoreRobSamplesNormalizer(),
 					frac("X_VALUE - Median(X_S)",   "1.4826 · MAD(X_S)") ),
 			new Formula(new ZScoreRobLowNormalizer(),
-					frac("X_VALUE - Median(X_LC)",  "1.4826 · MAD(X_LC)") )
+					frac("X_VALUE - Median(X_LC)",  "1.4826 · MAD(X_LC)") ),
+			
+			new Formula(new MedianPolishNormalizer(),
+					"X_VALUE - RESIDUAL_VALUE  \\text{with $RESIDUAL_VALUE$ residual of median polish}" )
 			
 			);
 	

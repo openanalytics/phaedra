@@ -18,7 +18,8 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.base.pref.store,
  eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.scripting.jep;bundle-version="1.0.0",
- org.apache.commons.math;bundle-version="2.0.0"
+ org.apache.commons.math;bundle-version="2.0.0",
+ org.apache.commons.math3;bundle-version="3.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.calculation,
