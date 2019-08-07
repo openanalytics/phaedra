@@ -3,7 +3,11 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
-/** Robust Z-Score based on samples */
+
+/**
+ * Robust Z-Score based on samples
+ * (rawValue - samplesMedian) / (1.4826 * samplesMAD)
+ */
 public class ZScoreRobSamplesNormalizer extends BaseNormalizer {
 	
 	private static int CENTER = 0;
@@ -17,7 +21,7 @@ public class ZScoreRobSamplesNormalizer extends BaseNormalizer {
 	
 	@Override
 	public String getDescription() {
-		return "value = (rawValue - samplesMedian) / (1.4826 * samplesMAD)";
+		return "Robust Z-score based on samples";
 	}
 	
 	@Override

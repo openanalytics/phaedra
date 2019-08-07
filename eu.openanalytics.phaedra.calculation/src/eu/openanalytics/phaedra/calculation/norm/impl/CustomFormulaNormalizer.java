@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 
 import javax.script.ScriptException;
 
+import eu.openanalytics.phaedra.base.util.misc.FormulaDescriptor;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
@@ -16,7 +17,8 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class CustomFormulaNormalizer implements INormalizer {
-
+	
+	
 	@Override
 	public String getId() {
 		return NormalizationService.NORMALIZATION_CUSTOM;
@@ -26,7 +28,12 @@ public class CustomFormulaNormalizer implements INormalizer {
 	public String getDescription() {
 		return "(value depends on the custom normalization formula)";
 	}
-
+	
+	@Override
+	public FormulaDescriptor getFormulaDescriptor() {
+		return null;
+	}
+	
 	@Override
 	public NormalizedGrid calculate(NormalizationKey key) throws NormalizationException {
 		

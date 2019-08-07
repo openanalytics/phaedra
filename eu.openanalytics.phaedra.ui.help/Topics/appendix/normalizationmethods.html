@@ -10,6 +10,17 @@
 <meta content="Normalization_Methods_334" name="DC.Identifier" />
 <link href="../../commonltr.css" type="text/css" rel="stylesheet" />
 <link href="../../eclipsehelp.css" type="text/css" rel="stylesheet" />
+<style>
+table.mltable {border-collapse: collapse;
+border: 1px solid;
+padding: 0px;
+}
+table.mltable th, table.mltable td {padding: 5px;
+text-align: left;
+}
+table.mltable tr.rowgroup-first th, table.mltable tr.rowgroup-first td {border-top: 1px solid;
+}
+</style>
 <title>Normalization Methods</title>
 </head>
 <body id="Normalization_Methods_334"><a name="Normalization_Methods_334"><!-- --></a>
@@ -26,150 +37,51 @@
 
     <p>The predefined methods that are available in Phaedra are listed below.</p>
 
-    <div class="p">
-      <table summary="" cellspacing="0" cellpadding="4" border="0" class="simpletablenoborder">
-        <tr>
-          <th valign="bottom" align="left" id="N10045">Method</th>
 
-          <th valign="bottom" align="left" id="N1004B">Formula</th>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%Effect</td>
-
-          <td valign="top" headers="N1004B">( rawValue - lowMedian ) / ( highMedian - lowMedian ) * 100</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%Effect(100-x)</td>
-
-          <td valign="top" headers="N1004B">100 - %Effect</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%Effect(-x)</td>
-
-          <td valign="top" headers="N1004B">- %Effect</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%Effect(x-100)</td>
-
-          <td valign="top" headers="N1004B">%Effect - 100</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">Sigma[H]</td>
-
-          <td valign="top" headers="N1004B">( rawValue - highMedian ) / highStdDev</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">Sigma[L] </td>
-
-          <td valign="top" headers="N1004B">( raw - lowMedian ) / lowStdDev</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTLMin</td>
-
-          <td valign="top" headers="N1004B">%Effect</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTL</td>
-
-          <td valign="top" headers="N1004B">rawValue / highMedian * 100</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTL[L] </td>
-
-          <td valign="top" headers="N1004B">( ( rawValue - lowMedian ) / lowMedian ) * 100</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTL[L=0]</td>
-
-          <td valign="top" headers="N1004B">%CTL[L]</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTL[INV L=0]</td>
-
-          <td valign="top" headers="N1004B">- %CTL[L]</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTL[L=100]</td>
-
-          <td valign="top" headers="N1004B">( rawValue - lowMedian ) * 100</td>
-
-        </tr>
-
-        <tr>
-          <td valign="top" headers="N10045">%CTL[H=0] </td>
-
-          <td valign="top" headers="N1004B">( ( highMedian - rawValue ) / highMedian ) * 100</td>
-
-        </tr>
-
-        <tr>
-          <!-- Positive percent inhibition based on mean of controls -->
-          <td valign="top" headers="N10045">PIN[Pos Mean]</td><!-- %INH %INHIBITION -->
-          <td valign="top" headers="N1004B">(rawValue - lowMean) / (highMean - lowMean) * 100</td>
-        </tr>
-        <tr>
-          <!-- Positive percent inhibition based on median of controls -->
-          <td valign="top" headers="N10045">PIN[Pos Median]</td><!-- %INH %INHIBITION -->
-          <td valign="top" headers="N1004B">(rawValue - lowMedian) / (highMedian - lowMedian) * 100</td>
-        </tr>
-        <tr>
-          <!-- Negative percent inhibition based on mean of controls -->
-          <td valign="top" headers="N10045">PIN[Neg Mean]</td><!-- %INH %INHIBITION -->
-          <td valign="top" headers="N1004B">100 - (rawValue - lowMean) / (highMean - lowMean) * 100 = 100 - PIN[Pos Mean]</td>
-        </tr>
-        <tr>
-          <!-- Negative percent inhibition based on median of controls -->
-          <td valign="top" headers="N10045">PIN[Neg Median]</td><!-- %INH %INHIBITION -->
-          <td valign="top" headers="N1004B">100 - (rawValue - lowMedian) / (highMedian - lowMedian) * 100 = 100 - PIN[Pos Median]</td>
-        </tr>
-
-        <tr>
-          <!-- Z-Score based on samples -->
-          <td valign="top" headers="N10045">ZScore[S]</td>
-          <td valign="top" headers="N1004B">(rawValue - samplesMean) / samplesSD</td>
-        </tr>
-        <tr>
-          <!-- Z-Score based on low controls -->
-          <td valign="top" headers="N10045">ZScore[L]</td>
-          <td valign="top" headers="N1004B">(rawValue - lowMean) / lowSd</td>
-        </tr>
-        <tr>
-          <!-- Robust Z-Score based on samples -->
-          <td valign="top" headers="N10045">ZScoreRob[S]</td>
-          <td valign="top" headers="N1004B">(rawValue - samplesMedian) / (1.4826 * samplesMAD)</td>
-        </tr>
-        <tr>
-          <!-- Robust Z-Score based on low controls -->
-          <td valign="top" headers="N10045">ZScoreRob[L]</td>
-          <td valign="top" headers="N1004B">(rawValue - lowMedian) / (1.4826 * lowMad)</td>
-        </tr>
-      </table>
-
-    </div>
+<table class="mltable"><!-- autogenerated -->
+<tr class="rowgroup-first"><th>%EFFECT</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctEffectNormalizer.svg" alt="normalized = (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%EFFECT (-x)</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/MinusPctEffectNormalizer.svg" alt="normalized = - (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%EFFECT (x-100)</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctEffectMinus100Normalizer.svg" alt="normalized = (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100 - 100"/></td></tr>
+<tr class="rowgroup-first"><th>%EFFECT (100-x)</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctEffectInverseNormalizer.svg" alt="normalized = 100 - (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTL</th><td>Robust percent of high control with 0% = 0, 100% = HC</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctCtlNormalizer.svg" alt="normalized = (x/Median(X_HC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTL[H=0]</th><td>Robust percent of high control with 0% = HC, 100% = 0</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctHighCtl0Normalizer.svg" alt="normalized = (Median(X_HC) - x/Median(X_HC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTL[L]</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctLowCtlNormalizer.svg" alt="normalized = (x - Median(X_LC)/Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTL[L=0]</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctLowCtl0Normalizer.svg" alt="normalized = (x - Median(X_LC)/Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTL[L=100]</th><td>Robust percent of low control with 0% = 0, 100% = LC</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctLowCtl100Normalizer.svg" alt="normalized = (x/Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTL[INV L=0]</th><td>Robust percent of low control with 0% = LC, 100% = 0</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctInvLowCtl0Normalizer.svg" alt="normalized = - (x - Median(X_LC)/Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>%CTLmin</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctCtlMinNormalizer.svg" alt="normalized = (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>Sigma[H]</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/SigmaHighNormalizer.svg" alt="normalized = (x - Median(X_HC)/SD(X_HC))"/></td></tr>
+<tr class="rowgroup-first"><th>Sigma[L]</th><td></td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/SigmaLowNormalizer.svg" alt="normalized = (x - Median(X_LC)/SD(X_LC))"/></td></tr>
+<tr class="rowgroup-first"><th>PIN[Pos Mean]</th><td>Positive percent inhibition based on mean of controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctInhPosMeanNormalizer.svg" alt="normalized = (x - Mean(X_LC)/Mean(X_HC) - Mean(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>PIN[Pos Median]</th><td>Positive percent inhibition based on median of controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctInhPosMedianNormalizer.svg" alt="normalized = (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>PIN[Neg Mean]</th><td>Negative percent inhibition based on mean of controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctInhNegMeanNormalizer.svg" alt="normalized = 100 - (x - Mean(X_LC)/Mean(X_HC) - Mean(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>PIN[Neg Median]</th><td>Negative percent inhibition based on median of controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/PctInhNegMedianNormalizer.svg" alt="normalized = 100 - (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
+<tr class="rowgroup-first"><th>ZScore[S]</th><td>Z-score based on samples</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/ZScoreSamplesNormalizer.svg" alt="normalized = (x - Mean(X_S)/SD(X_S))"/></td></tr>
+<tr class="rowgroup-first"><th>ZScore[L]</th><td>Z-score based on low/negative controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/ZScoreLowNormalizer.svg" alt="normalized = (x - Mean(X_LC)/SD(X_LC))"/></td></tr>
+<tr class="rowgroup-first"><th>ZScoreRob[S]</th><td>Robust Z-score based on samples</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/ZScoreRobSamplesNormalizer.svg" alt="normalized = (x - Median(X_S)/1.4826 · MAD(X_S))"/></td></tr>
+<tr class="rowgroup-first"><th>ZScoreRob[L]</th><td>Robust Z-score based on low/negative controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/ZScoreRobLowNormalizer.svg" alt="normalized = (x - Median(X_LC)/1.4826 · MAD(X_LC))"/></td></tr>
+</table>
 
     <div class="p">
       <div class="note"><span class="notetitle">Note:</span> While custom normalization methods are supported, they should be used with great care. Contact a Phaedra administrator before setting a custom normalization formula.</div>

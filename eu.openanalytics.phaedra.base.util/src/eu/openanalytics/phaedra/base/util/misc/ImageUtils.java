@@ -405,6 +405,47 @@ public class ImageUtils {
 
 		return swtImage;
 	}
+	
+	/**
+	 * Returns the given SVG as Image.
+	 * @param data The SVG.
+	 * @param w The max width of the created Image, or <code>-1</code> for no limit.
+	 * @param h The max height of the created Image, or <code>-1</code> for no limit.
+	 * @param bgColor The background color for the Image (Optional).
+	 * @return
+	 */
+	public static Image getSVGAsImageMaxSize(byte[] data, int w, int h, Color bgColor) {
+		BufferedImage img = null;
+		try {
+			// Transcode the SVG input
+			InputStream input = new ByteArrayInputStream(data);
+			TranscoderInput transcoderInput = new TranscoderInput(input);
+
+			BufferedImageTranscoder transcoder = new BufferedImageTranscoder();
+			if (w != -1) transcoder.addTranscodingHint(ImageTranscoder.KEY_MAX_WIDTH, Float.valueOf(w));
+			if (h != -1) transcoder.addTranscodingHint(ImageTranscoder.KEY_MAX_HEIGHT, Float.valueOf(h));
+			transcoder.transcode(transcoderInput, null);
+			img = transcoder.getImage();
+		} catch (TranscoderException e) {
+			// Will return a blank image.
+			img = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		}
+
+		Image swtImage = AWTImageConverter.convert(null, img);
+
+		if (bgColor != null) {
+			Image tempImage = swtImage;
+			swtImage = new Image(null, img.getWidth(), img.getHeight());
+			GC gc = new GC(swtImage);
+			gc.setBackground(bgColor);
+			gc.fillRectangle(0, 0, img.getWidth(), img.getHeight());
+			gc.drawImage(tempImage, 0, 0);
+			gc.dispose();
+			tempImage.dispose();
+		}
+
+		return swtImage;
+	}
 
 	/**
 	 * <p>Rotate given {@link ImageData}</p>

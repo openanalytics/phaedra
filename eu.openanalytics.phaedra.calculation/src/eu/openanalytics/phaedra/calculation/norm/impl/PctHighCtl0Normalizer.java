@@ -3,6 +3,10 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
+
+/**
+ * ((highMedian - rawValue) / highMedian) * 100
+ */
 public class PctHighCtl0Normalizer extends BaseNormalizer {
 
 	@Override
@@ -12,7 +16,7 @@ public class PctHighCtl0Normalizer extends BaseNormalizer {
 
 	@Override
 	public String getDescription() {
-		return "value = ((highMedian - rawValue) / highMedian) * 100";
+		return "Robust percent of high control with 0% = HC, 100% = 0";
 	}
 
 	@Override

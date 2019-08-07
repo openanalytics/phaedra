@@ -49,9 +49,11 @@ import eu.openanalytics.phaedra.base.ui.colormethod.ColorMethodRegistry;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
+import eu.openanalytics.phaedra.base.ui.util.misc.FormulaDisplay;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
+import eu.openanalytics.phaedra.calculation.norm.INormalizer;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService.NormalizationScope;
 import eu.openanalytics.phaedra.model.curve.CurveUIFactory;
@@ -96,6 +98,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	private Button predefinedNormBtn;
 	private Button customNormBtn;
 	private CCombo comboNormalization;
+	private FormulaDisplay normFormulaDisplay;
 	private CCombo customNormLanguage;
 	private CCombo normScopeCmb;
 	private Text customNormTxt;
@@ -366,19 +369,30 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		comboNormalization.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		comboNormalization.setItems(NormalizationService.getInstance().getNormalizations());
 		comboNormalization.setVisibleItemCount(20);
-		toolkit.adapt(comboNormalization, true, true);
+		toolkit.adapt(comboNormalization, true, false);
+		comboNormalization.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateNormFormula();
+			}
+		});
+		
+		new Label(normalizationCmp, SWT.NONE);
+		normFormulaDisplay = new FormulaDisplay(normalizationCmp);
+		normFormulaDisplay.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
+		toolkit.adapt(normFormulaDisplay, false, false);
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "Low Control Type:", SWT.NONE);
 		comboLowType = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY);
 		comboLowType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		toolkit.adapt(comboLowType, true, true);
+		toolkit.adapt(comboLowType, true, false);
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "High Control Type:", SWT.NONE);
 		comboHighType = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY);
 		comboHighType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
-		toolkit.adapt(comboHighType, true, true);
+		toolkit.adapt(comboHighType, true, false);
 
 		customNormBtn = toolkit.createButton(normalizationCmp, "Custom method:", SWT.RADIO);
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(customNormBtn);
@@ -671,6 +685,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		
 		boolean isCustomNorm = NormalizationService.NORMALIZATION_CUSTOM.equals(feature.getNormalization());
 		toggleNormalizationButtons(isCustomNorm);
+		updateNormFormula();
 	}
 
 	@Override
@@ -780,6 +795,12 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		} else {
 			comboNormalization.select(comboNormalization.indexOf(feature.getNormalization()));
 		}
+		updateNormFormula();
+	}
+	
+	private void updateNormFormula() {
+		INormalizer normalizer = NormalizationService.getInstance().getNormalizer(comboNormalization.getText());
+		normFormulaDisplay.setFormula((normalizer != null) ? normalizer.getFormulaDescriptor() : null);
 	}
 	
 	private DataBindingContext initDataBindings() {
