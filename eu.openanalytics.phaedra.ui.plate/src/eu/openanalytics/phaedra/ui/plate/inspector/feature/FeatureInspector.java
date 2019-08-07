@@ -46,6 +46,7 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfigurati
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.autocomplete.ComboAutoCompleteField;
+import eu.openanalytics.phaedra.base.ui.util.misc.FormulaTooltip;
 import eu.openanalytics.phaedra.base.ui.util.misc.ImageBlinker;
 import eu.openanalytics.phaedra.base.ui.util.split.SplitComposite;
 import eu.openanalytics.phaedra.base.ui.util.split.SplitCompositeFactory;
@@ -55,6 +56,7 @@ import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.base.util.threading.JobUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
+import eu.openanalytics.phaedra.calculation.norm.INormalizer;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -79,6 +81,7 @@ public class FeatureInspector extends ViewPart {
 	private ComboViewer groupCmb;
 	private ComboViewer featureCmb;
 	private ComboViewer normalizationCmb;
+	private FormulaTooltip normalizationTooltip;
 
 	private Label groupWarningLbl;
 	private DefaultToolTip groupWarningTooltip;
@@ -189,8 +192,8 @@ public class FeatureInspector extends ViewPart {
 		normalizationCmb.setContentProvider(new ArrayContentProvider());
 		normalizationCmb.setLabelProvider(new LabelProvider());
 		normalizationCmb.addSelectionChangedListener(e -> selectNewNormalization(SelectionUtils.getFirstObject(e.getSelection(), String.class)));
-		combo = normalizationCmb.getCombo();
-		GridDataFactory.fillDefaults().grab(true, false).align(SWT.FILL, SWT.CENTER).applyTo(combo);
+		normalizationTooltip = new FormulaTooltip(normalizationCmb.getCombo());
+		GridDataFactory.fillDefaults().grab(true, false).align(SWT.FILL, SWT.CENTER).applyTo(normalizationCmb.getControl());
 
 		// Color method
 
@@ -305,7 +308,10 @@ public class FeatureInspector extends ViewPart {
 	}
 
 	private void selectNewNormalization(String n) {
+		INormalizer normalizer = NormalizationService.getInstance().getNormalizer(normalizationCmb.getCombo().getText());
+		
 		ProtocolUIService.getInstance().setCurrentNormalization(n);
+		normalizationTooltip.setFormula((normalizer != null) ? normalizer.getFormulaDescriptor() : null);
 	}
 
 	private void initializeFields() {

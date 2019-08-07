@@ -39,7 +39,12 @@ public class NormalizationService {
 	public static NormalizationService getInstance() {
 		return instance;
 	}
-
+	
+	
+	public INormalizer getNormalizer(String id) {
+		return normalizationRegistry.getNormalizer(id);
+	}
+	
 	/**
 	 * <p>Get the available normalization methods.</p>
 	 *

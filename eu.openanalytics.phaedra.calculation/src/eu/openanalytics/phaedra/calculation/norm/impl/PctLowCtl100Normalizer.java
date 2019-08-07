@@ -3,6 +3,10 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
+
+/**
+ * (rawValue / lowMedian) * 100
+ */
 public class PctLowCtl100Normalizer extends BaseNormalizer {
 
 	@Override
@@ -12,7 +16,7 @@ public class PctLowCtl100Normalizer extends BaseNormalizer {
 
 	@Override
 	public String getDescription() {
-		return "value = (rawValue / lowMedian) * 100";
+		return "Robust percent of low control with 0% = 0, 100% = LC";
 	}
 
 	@Override

@@ -1,6 +1,13 @@
 package eu.openanalytics.phaedra.calculation.norm.impl;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import org.osgi.framework.BundleReference;
+
+import eu.openanalytics.phaedra.base.util.misc.FormulaDescriptor;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
+import eu.openanalytics.phaedra.base.util.misc.UrlFormulaDescriptor;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.calculation.norm.INormalizer;
@@ -13,8 +20,36 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
 
-public abstract class BaseNormalizer implements INormalizer {
 
+public abstract class BaseNormalizer implements INormalizer {
+	
+	
+	private FormulaDescriptor formulaDescr;
+	
+	
+	public BaseNormalizer() {
+		formulaDescr = createFormulaDescriptor();
+	}
+	
+	protected FormulaDescriptor createFormulaDescriptor() {
+		ClassLoader classLoader = getClass().getClassLoader();
+		if (classLoader instanceof BundleReference) {
+			try {
+				String bundleId = ((BundleReference) classLoader).getBundle().getSymbolicName();
+				return new UrlFormulaDescriptor(
+						new URL("platform:/plugin/" + bundleId + "/formulas/" + getClass().getSimpleName() + ".svg"));
+			} catch (MalformedURLException e) {}
+		}
+		return null;
+	}
+	
+	
+	@Override
+	public FormulaDescriptor getFormulaDescriptor() {
+		return formulaDescr;
+	}
+	
+	
 	@Override
 	public NormalizedGrid calculate(NormalizationKey key) throws NormalizationException {
 		Plate plate = SelectionUtils.getAsClass(key.getDataToNormalize(), Plate.class);

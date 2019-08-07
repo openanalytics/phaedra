@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.calculation.norm;
 
+import eu.openanalytics.phaedra.base.util.misc.FormulaDescriptor;
 import eu.openanalytics.phaedra.calculation.Activator;
 import eu.openanalytics.phaedra.calculation.norm.cache.NormalizedGrid;
 
@@ -13,6 +14,8 @@ public interface INormalizer {
 	public String getId();
 	
 	public String getDescription();
+	
+	public FormulaDescriptor getFormulaDescriptor();
 	
 	public NormalizedGrid calculate(NormalizationKey key) throws NormalizationException;
 }

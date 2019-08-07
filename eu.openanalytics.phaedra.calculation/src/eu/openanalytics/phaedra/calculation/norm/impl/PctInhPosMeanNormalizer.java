@@ -3,7 +3,11 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
-/** Positive Percent Inhibition based on mean of controls */
+
+/**
+ * Positive Percent Inhibition based on mean of controls
+ * (rawValue - lowMean) / (highMean - lowMean) * 100
+ */
 public class PctInhPosMeanNormalizer extends BaseNormalizer {
 
 	private static int HIGH_STAT = 0;
@@ -17,7 +21,7 @@ public class PctInhPosMeanNormalizer extends BaseNormalizer {
 
 	@Override
 	public String getDescription() {
-		return "value = (rawValue - lowMean) / (highMean - lowMean) * 100";
+		return "Positive percent inhibition based on mean of controls";
 	}
 
 	@Override
