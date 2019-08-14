@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.w3c.dom.Document;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
@@ -15,6 +17,8 @@ import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 
+import eu.openanalytics.phaedra.base.environment.IEnvironment;
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureException;
@@ -47,7 +51,21 @@ public class SQSScannerType extends BaseScannerType {
 		if (cfg.queue == null || cfg.queue.isEmpty()) throw new ScanException("Invalid scanner configuration: no queue specified");
 		
 		monitor.subTask(String.format("Polling %s for max %d messages", cfg.queue, cfg.maxMsgPerRun));
-		AmazonSQS sqs = AmazonSQSClientBuilder.defaultClient();
+		
+		BasicAWSCredentials credentials = null;
+		try {
+			IEnvironment env = Screening.getEnvironment();
+			String key = env.getConfig().getValue(env.getName(), "fs", "user");
+			String secret = env.getConfig().resolvePassword(env.getName(), "fs");
+			credentials = new BasicAWSCredentials(key, secret);
+		} catch (IOException e) {
+			throw new ScanException("Failed to load API key credentials", e);
+		}
+		AmazonSQS sqs = AmazonSQSClientBuilder
+				.standard()
+				.withCredentials(new AWSStaticCredentialsProvider(credentials))
+				.build();
+
 		ReceiveMessageRequest req = new ReceiveMessageRequest(cfg.queue).withMaxNumberOfMessages(cfg.maxMsgPerRun);
 		ReceiveMessageResult res = sqs.receiveMessage(req);
 		for (Message msg: res.getMessages()) {
@@ -88,7 +106,7 @@ public class SQSScannerType extends BaseScannerType {
 			modCfg.getParameters().setParameter("script.id", cfg.downloadScriptId);
 			modCfg.getParameters().setParameter("s3.bucket", s3Bucket);
 			modCfg.getParameters().setParameter("s3.path", s3Path);
-			modCfg.getParameters().setParameter("s3.key.pattern", cfg.s3KeyPattern);
+			if (cfg.s3KeyPattern != null) modCfg.getParameters().setParameter("s3.key.pattern", cfg.s3KeyPattern);
 			
 			IModule module = ModuleFactory.createModule(modCfg);
 			module.configure(modCfg);
@@ -113,7 +131,7 @@ public class SQSScannerType extends BaseScannerType {
 		cfg.createMissingSubWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingSubWellFeatures", "false"));
 		cfg.captureConfig = getConfigValue(doc, "/config/captureConfig", null);
 		cfg.protocolId = Long.valueOf(getConfigValue(doc, "/config/protocolId", "0"));
-		cfg.s3KeyPattern = getConfigValue(doc, "/config/s3KeyPattern", ".*");
+		cfg.s3KeyPattern = getConfigValue(doc, "/config/s3KeyPattern", null);
 		cfg.downloadScriptId = getConfigValue(doc, "/config/downloadScriptId", "download.s3.files");
 		return cfg;
 	}
