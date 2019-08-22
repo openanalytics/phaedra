@@ -15,10 +15,9 @@ import org.eclipse.swt.widgets.Composite;
 import com.google.common.base.Objects;
 
 import eu.openanalytics.phaedra.base.util.misc.FormulaDescriptor;
-import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 
 
-public class FormulaDisplay extends Canvas {
+public class FormulaDisplay extends Canvas implements IFormulaRenderer {
 	
 	
 	private FormulaDescriptor descriptor;
@@ -78,9 +77,9 @@ public class FormulaDisplay extends Canvas {
 	}
 	
 	private void updateImage() {
-		if (image == null && descriptor != null && descriptor.getSvg() != null) {
+		if (image == null) {
 			Point size = getSize();
-			image = ImageUtils.getSVGAsImageMaxSize(descriptor.getSvg(), size.x, size.y, backgroundColor);
+			image = renderFormula(descriptor, size, backgroundColor);
 		}
 	}
 	

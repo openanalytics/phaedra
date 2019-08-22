@@ -37,7 +37,8 @@ public abstract class BaseNormalizer implements INormalizer {
 			try {
 				String bundleId = ((BundleReference) classLoader).getBundle().getSymbolicName();
 				return new UrlFormulaDescriptor(
-						new URL("platform:/plugin/" + bundleId + "/formulas/" + getClass().getSimpleName() + ".svg"));
+						new URL("platform:/plugin/" + bundleId + "/formulas/" + getClass().getSimpleName() + ".svg"),
+						new URL("platform:/plugin/" + bundleId + "/formulas/" + getClass().getSimpleName() + ".png"));
 			} catch (MalformedURLException e) {}
 		}
 		return null;

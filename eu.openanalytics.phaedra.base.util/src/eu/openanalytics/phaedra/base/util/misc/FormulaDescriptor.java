@@ -17,4 +17,7 @@ public class FormulaDescriptor {
 		return null;
 	}
 	
+	public byte[] getPng() {
+		return null;
+	}
 }

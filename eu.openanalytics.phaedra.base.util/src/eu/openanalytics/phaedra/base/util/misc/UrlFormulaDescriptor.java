@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.base.util.misc;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -8,15 +9,17 @@ import eu.openanalytics.phaedra.base.util.Activator;
 
 
 /**
- * Graphic representation of a formula read from SVG file.
+ * Graphic representation of a formula read from SVG or PNG file.
  */
 public class UrlFormulaDescriptor extends FormulaDescriptor {
 	
-	
-	private URL url;
+	private URL svgUrl;
+	private URL pngUrl;
 	
 	private boolean loaded;
+	
 	private byte[] svg;
+	private byte[] png;
 	
 	
 	/**
@@ -24,24 +27,39 @@ public class UrlFormulaDescriptor extends FormulaDescriptor {
 	 * 
 	 * @param url the url of the SVG file
 	 */
-	public UrlFormulaDescriptor(URL url) {
-		this.url = url;
+	public UrlFormulaDescriptor(URL svgUrl, URL pngUrl) {
+		this.svgUrl = svgUrl;
+		this.pngUrl = pngUrl;
 	}
 	
 	
 	public URL getUrl() {
-		return url;
+		return svgUrl;
 	}
 	
 	@Override
 	public byte[] getSvg() {
 		if (!loaded) {
-			loadSvg();
+			load();
 		}
 		return svg;
 	}
 	
-	private void loadSvg() {
+	@Override
+	public byte[] getPng() {
+		if (!loaded) {
+			load();
+		}
+		return png;
+	}
+	
+	private void load() {
+		svg = loadBytes(svgUrl);
+		png = loadBytes(pngUrl);
+	}
+	
+	private byte[] loadBytes(URL url) {
+		if (url == null) return null;
 		try (InputStream in = url.openConnection().getInputStream()) {
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			byte[] b = new byte[4096];
@@ -49,13 +67,16 @@ public class UrlFormulaDescriptor extends FormulaDescriptor {
 			while ((n = in.read(b)) > 0) {
 				out.write(b, 0, n);
 			}
-			svg = out.toByteArray();
+			return out.toByteArray();
+		} catch (FileNotFoundException e) {
+			// Do not log this exception.
 		} catch (Exception e) {
-			EclipseLog.error(String.format("Failed to load SVG of formula from '%1$s'.", url),
+			EclipseLog.error(String.format("Failed to load image of formula from '%1$s'.", url),
 					e, Activator.getDefault() );
 		} finally {
-			loaded = false;
+			loaded = true;
 		}
+		return null;
 	}
 	
 }
