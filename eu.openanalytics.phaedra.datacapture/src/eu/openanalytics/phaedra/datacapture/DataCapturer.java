@@ -61,7 +61,10 @@ public class DataCapturer {
 			
 			IModule[] preModules = (IModule[]) task.getParameters().get(DataCaptureParameter.PreModules.name());
 			if (preModules != null && preModules.length > 0) {
-				for (IModule preModule: preModules) modulesToExecute.add(preModule);
+				for (IModule preModule: preModules) {
+					if (modules.length > 0) preModule.getConfig().setParentConfig(modules[0].getConfig().getParentConfig());
+					modulesToExecute.add(preModule);
+				}
 			}
 			
 			// Find out if any modules have to be skipped.
