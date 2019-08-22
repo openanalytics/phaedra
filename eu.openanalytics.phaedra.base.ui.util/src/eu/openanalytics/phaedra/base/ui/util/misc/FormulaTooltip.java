@@ -17,10 +17,9 @@ import org.eclipse.swt.widgets.Label;
 import com.google.common.base.Objects;
 
 import eu.openanalytics.phaedra.base.util.misc.FormulaDescriptor;
-import eu.openanalytics.phaedra.base.util.misc.ImageUtils;
 
 
-public class FormulaTooltip extends ToolTip {
+public class FormulaTooltip extends ToolTip implements IFormulaRenderer {
 	
 	
 	private Control control;
@@ -69,8 +68,7 @@ public class FormulaTooltip extends ToolTip {
 	
 	@Override
 	protected boolean shouldCreateToolTip(Event event) {
-		return (super.shouldCreateToolTip(event)
-				&& descriptor != null && descriptor.getSvg() != null);
+		return (super.shouldCreateToolTip(event) && canRenderFormula(descriptor));
 	}
 	
 	@Override
@@ -104,8 +102,9 @@ public class FormulaTooltip extends ToolTip {
 	}
 	
 	private void updateImage() {
-		if (image == null && descriptor != null && descriptor.getSvg() != null) {
-			image = ImageUtils.getSVGAsImageMaxSize(descriptor.getSvg(), 500, 100, display.getParent().getBackground());
+		if (image == null) {
+			Point size = new Point(500, 100);
+			image = renderFormula(descriptor, size, display.getParent().getBackground());
 		}
 		display.setImage(image);
 	}
