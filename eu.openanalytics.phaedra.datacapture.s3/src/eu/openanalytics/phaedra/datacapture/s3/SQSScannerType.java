@@ -111,6 +111,9 @@ public class SQSScannerType extends BaseScannerType {
 			IModule module = ModuleFactory.createModule(modCfg);
 			module.configure(modCfg);
 
+			modCfg.getParameters().setParameter("output.path.variable", "s3.files.downloaded");
+			task.getParameters().put("source.path", "${s3.files.downloaded}");
+			
 			task.getParameters().put(DataCaptureParameter.PreModules.name(), new IModule[] { module });
 			task.getParameters().put(DataCaptureParameter.CreateMissingWellFeatures.name(), cfg.createMissingWellFeatures);
 			task.getParameters().put(DataCaptureParameter.CreateMissingSubWellFeatures.name(), cfg.createMissingSubWellFeatures);
