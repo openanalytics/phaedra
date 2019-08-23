@@ -168,7 +168,7 @@ public class CrcDetailsView extends DecoratedView {
 		
 		tooltip = new DefaultToolTip(infoTable.getControl(), SWT.NONE, true);
 		{	MenuManager menuManager = new MenuManager();
-			menuManager.add(new Action("Customize table...") {
+			menuManager.add(new Action("Customize Table...") {
 				@Override
 				public void run() {
 					PreferencesUtil.createPreferenceDialogOn(infoTable.getControl().getShell(),

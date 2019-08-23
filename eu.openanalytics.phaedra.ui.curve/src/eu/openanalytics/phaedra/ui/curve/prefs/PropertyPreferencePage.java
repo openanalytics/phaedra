@@ -149,7 +149,7 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(buttons);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.TOP).applyTo(buttons);
 		
-		addButton = addButton(buttons, "Add property...", this::addProperty);
+		addButton = addButton(buttons, "Add Property...", this::addProperty);
 		removeButton = addButton(buttons, "Remove", this::removeProperty);
 		upButton = addButton(buttons, "Up", this::movePropertyUp);
 		downButton = addButton(buttons, "Down", this::movePropertyDown);
