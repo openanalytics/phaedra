@@ -26,8 +26,8 @@ public class ZScoreRobSamplesNormalizer extends BaseNormalizer {
 	
 	@Override
 	protected double[] calculateControls(NormalizationKey key) {
-		double median = NormalizationUtils.getSamplesStat("median", key);
-		double mad = NormalizationUtils.getSamplesStat("mad", key);
+		double median = NormalizationUtils.getSamplesLowStat("median", key);
+		double mad = NormalizationUtils.getSamplesLowStat("mad", key);
 		return new double[] { median, mad * 1.4826 };
 	}
 	

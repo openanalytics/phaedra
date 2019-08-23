@@ -26,8 +26,8 @@ public class ZScoreSamplesNormalizer extends BaseNormalizer {
 	
 	@Override
 	protected double[] calculateControls(NormalizationKey key) {
-		double mean = NormalizationUtils.getSamplesStat("mean", key);
-		double sd = NormalizationUtils.getSamplesStat("stdev", key);
+		double mean = NormalizationUtils.getSamplesLowStat("mean", key);
+		double sd = NormalizationUtils.getSamplesLowStat("stdev", key);
 		return new double[] { mean, sd };
 	}
 	
