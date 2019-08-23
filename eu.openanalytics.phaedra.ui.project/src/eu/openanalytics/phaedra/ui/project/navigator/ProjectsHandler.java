@@ -21,9 +21,9 @@ public class ProjectsHandler extends AbstractProjectElementHandler {
 	public boolean matches(IElement element) {
 		switch (element.getId()) {
 		case ProjectProvider.PROJECTS_ROOT_ID:
-		case ProjectProvider.PRIVATE_PROJECTS_ID:
-		case ProjectProvider.TEAM_PROJECTS_ID:
-		case ProjectProvider.PUBLIC_PROJECTS_ID:
+//		case ProjectProvider.PRIVATE_PROJECTS_ID:
+//		case ProjectProvider.TEAM_PROJECTS_ID:
+//		case ProjectProvider.PUBLIC_PROJECTS_ID:
 			return true;
 		default:
 			return false;
