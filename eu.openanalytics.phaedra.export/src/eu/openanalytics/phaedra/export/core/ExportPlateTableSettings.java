@@ -42,9 +42,6 @@ public class ExportPlateTableSettings extends BaseExportExperimentsSettings impl
 	
 	private List<Feature> features = new ArrayList<>();
 	
-	private String library;
-	private String plateQualifier;
-	
 	private boolean filterValidation;
 	private String validationUser;
 	private Date validationDateFrom;
@@ -69,26 +66,6 @@ public class ExportPlateTableSettings extends BaseExportExperimentsSettings impl
 	public List<Feature> getFeatures() {
 		return this.features;
 	}
-	
-	
-	@Override
-	public String getLibrary() {
-		return library;
-	}
-	@Override
-	public void setLibrary(String library) {
-		this.library = library;
-	}
-	
-	@Override
-	public String getPlateQualifier() {
-		return plateQualifier;
-	}
-	@Override
-	public void setPlateQualifier(String plateQualifier) {
-		this.plateQualifier = plateQualifier;
-	}
-	
 	
 	@Override
 	public boolean getFilterValidation() {

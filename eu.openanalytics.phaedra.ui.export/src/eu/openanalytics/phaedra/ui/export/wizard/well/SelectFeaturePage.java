@@ -15,7 +15,7 @@ public class SelectFeaturePage extends AbstractExperimentsPage {
 	
 	public SelectFeaturePage(ExportSettings settings) {
 		super("Select Features", settings);
-		setDescription("Step 1/4: Select the features you want to export.");
+		setDescription("Step 1/4: Select the features to export.");
 		
 		this.settings = settings;
 	}

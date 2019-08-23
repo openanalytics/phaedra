@@ -33,6 +33,8 @@ public class ExperimentsPage extends AbstractExperimentsPage {
 		addExperimentsInfo(container);
 		
 		addFeatureSelection(container, settings.getFeatures());
+		
+		setPageComplete(false);
 	}
 	
 	
@@ -48,6 +50,12 @@ public class ExperimentsPage extends AbstractExperimentsPage {
 				setFeatureSelection(Collections.singleton(currentFeature));
 			}
 		}
+	}
+	
+	@Override
+	protected boolean validateSettings() {
+		return super.validateSettings()
+				&& (!settings.getFeatures().isEmpty());
 	}
 	
 }

@@ -10,8 +10,6 @@ import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.export.core.ExportPlateTableSettings;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
 import eu.openanalytics.phaedra.export.core.IFilterPlatesSettings;
-import eu.openanalytics.phaedra.export.core.filter.LibraryFilter;
-import eu.openanalytics.phaedra.export.core.filter.QualifierFilter;
 import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.export.core.util.SQLUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
@@ -194,16 +192,6 @@ public class QueryBuilder {
 	}
 
 	private void addPlateFilters(StringBuilder sb, IFilterPlatesSettings settings) {
-		String library = settings.getLibrary();
-		if (library != null && !library.equals(LibraryFilter.ALL)) {
-			sb.append(" AND EXTRACTVALUE(P.DATA_XML,'/data/properties/property[@key=\"plate-library\"]/@value') = '" + library + "'");
-		}
-
-		String plateQualifier = settings.getPlateQualifier();
-		if (plateQualifier != null && !plateQualifier.equals(QualifierFilter.ALL)) {
-			sb.append(" AND EXTRACTVALUE(P.DATA_XML,'/data/properties/property[@key=\"plate-qualifier\"]/@value') = '" + plateQualifier + "'");
-		}
-
 		if (settings.getFilterValidation()) {
 			Date from = settings.getValidationDateFrom();
 			Date to = settings.getValidationDateTo();

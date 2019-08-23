@@ -51,9 +51,6 @@ public class ExportSettings implements IExportExperimentsSettings, IFilterPlates
 	public List<Experiment> experiments;
 	public List<Feature> features = new ArrayList<>();
 	
-	public String library;
-	public String plateQualifier;
-	
 	public boolean filterValidation;
 	public String validationUser;
 	public Date validationDateFrom;
@@ -119,26 +116,6 @@ public class ExportSettings implements IExportExperimentsSettings, IFilterPlates
 	public void setFileType(String fileType) {
 		this.fileType = fileType;
 	}
-	
-	
-	@Override
-	public String getLibrary() {
-		return library;
-	}
-	@Override
-	public void setLibrary(String library) {
-		this.library = library;
-	}
-	
-	@Override
-	public String getPlateQualifier() {
-		return plateQualifier;
-	}
-	@Override
-	public void setPlateQualifier(String plateQualifier) {
-		this.plateQualifier = plateQualifier;
-	}
-	
 	
 	@Override
 	public boolean getFilterValidation() {

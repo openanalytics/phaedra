@@ -52,9 +52,9 @@ public abstract class AbstractExperimentsPage extends BaseExportWizardPage {
 	}
 	
 	public AbstractExperimentsPage(IExportExperimentsSettings settings, int stepNum, int stepTotal) {
-		this("Check Selection", settings);
+		this("Select Features", settings);
 		
-		setDescription(String.format("Step %1$s/%2$s: Check selection of data to export.", stepNum, stepTotal));
+		setDescription(String.format("Step %1$s/%2$s: Select the features to export.", stepNum, stepTotal));
 	}
 
 

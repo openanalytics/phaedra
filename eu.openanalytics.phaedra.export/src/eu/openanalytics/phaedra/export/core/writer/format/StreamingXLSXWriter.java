@@ -128,7 +128,7 @@ public class StreamingXLSXWriter implements IExportWriter {
 	
 
 	private void writeMainTable() throws IOException {
-		Sheet sh = wb.createSheet("Sheet1");
+		Sheet sh = wb.createSheet("Data");
 		
 		// First row: headers
 		Row row = sh.createRow(0);

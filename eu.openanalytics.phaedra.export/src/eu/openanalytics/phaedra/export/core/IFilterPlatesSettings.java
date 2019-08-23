@@ -4,14 +4,6 @@ import java.util.Date;
 
 public interface IFilterPlatesSettings extends IExportExperimentsSettings {
 	
-	
-	String getLibrary();
-	void setLibrary(String library);
-	
-	String getPlateQualifier();
-	void setPlateQualifier(String qualifier);
-	
-	
 	boolean getFilterValidation();
 	void setFilterValidation(boolean enable);
 	

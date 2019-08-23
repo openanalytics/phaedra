@@ -6,27 +6,19 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.MouseAdapter;
-import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.export.core.IFilterPlatesSettings;
-import eu.openanalytics.phaedra.export.core.filter.LibraryFilter;
-import eu.openanalytics.phaedra.export.core.filter.QualifierFilter;
 import eu.openanalytics.phaedra.ui.export.widget.EuroCalendarCombo;
 
 public class FilterPlatesPage extends BaseExportWizardPage {
 	
 	private IFilterPlatesSettings settings;
-	
-	private Combo libraryCombo;
-	private Combo qualifierCombo;
 	
 	private Button filterOnValidationChk;
 	private Text validationUserTxt;
@@ -55,23 +47,6 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 		GridLayoutFactory.fillDefaults().margins(10,10).numColumns(2).applyTo(container);
 		setControl(container);
 
-		Label label = new Label(container, SWT.NONE);
-		label.setText("Library:");
-		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.CENTER).hint(100, SWT.DEFAULT).applyTo(label);
-
-		libraryCombo = new Combo(container, SWT.BORDER | SWT.READ_ONLY);
-		GridDataFactory.fillDefaults().grab(true,false).applyTo(libraryCombo);
-		
-		label = new Label(container, SWT.NONE);
-		label.setText("Plate Qualifier:");
-		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.CENTER).applyTo(label);
-
-		qualifierCombo = new Combo(container, SWT.BORDER | SWT.READ_ONLY);
-		GridDataFactory.fillDefaults().applyTo(qualifierCombo);
-
-		label = new Label(container, SWT.SEPARATOR | SWT.SHADOW_OUT | SWT.HORIZONTAL);
-		GridDataFactory.fillDefaults().span(2,1).applyTo(label);
-		
 		filterOnValidationChk = new Button(container, SWT.CHECK);
 		filterOnValidationChk.setText("Filter on Validation");
 		GridDataFactory.fillDefaults().span(2,1).applyTo(filterOnValidationChk);
@@ -86,7 +61,7 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 			}
 		});
 		
-		label = new Label(container, SWT.NONE);
+		Label label = new Label(container, SWT.NONE);
 		label.setText("Validated by User:");
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.CENTER).applyTo(label);
 
@@ -181,50 +156,9 @@ public class FilterPlatesPage extends BaseExportWizardPage {
 		loadDialogSettings();
 	}
 	
-	
-	@Override
-	protected void pageAboutToShow(boolean firstTime) {
-		if (!firstTime) return;
-		
-		libraryCombo.setItems(new String[] {"<All>"});
-		libraryCombo.setData("loaded", Boolean.FALSE);
-		libraryCombo.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if ((Boolean) libraryCombo.getData("loaded")) return;
-				String[] libraries = new LibraryFilter(settings.getExperiments()).getLibraries();
-				libraryCombo.setItems(libraries);
-				libraryCombo.setData("loaded", Boolean.TRUE);
-				if (libraryCombo.getItemCount() > 0) libraryCombo.select(0);
-			}
-		});
-		if (libraryCombo.getItemCount() > 0) libraryCombo.select(0);
-		
-		qualifierCombo.setItems(new String[] {"<All>"});
-		qualifierCombo.setData("loaded", Boolean.FALSE);
-		qualifierCombo.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseDown(MouseEvent e) {
-				if ((Boolean) qualifierCombo.getData("loaded")) return;
-				String[] qualifiers = new QualifierFilter(settings.getExperiments()).getQualifiers();
-				qualifierCombo.setItems(qualifiers);
-				qualifierCombo.setData("loaded", Boolean.TRUE);
-				if (qualifierCombo.getItemCount() > 0) qualifierCombo.select(0);
-			}
-		});
-		if (qualifierCombo.getItemCount() > 0) qualifierCombo.select(0);
-	}
-	
 	@Override
 	public void collectSettings() {
-		int index;
 		Calendar date;
-		
-		index = libraryCombo.getSelectionIndex();
-		settings.setLibrary((index != -1) ? libraryCombo.getItem(index) : null);
-		
-		index = qualifierCombo.getSelectionIndex();
-		settings.setPlateQualifier((index != -1) ? qualifierCombo.getItem(index) : null);
 		
 		settings.setFilterValidation(filterOnValidationChk.getSelection());
 		settings.setValidationUser(validationUserTxt.getText());

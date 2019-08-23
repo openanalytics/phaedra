@@ -57,7 +57,7 @@ public class FilterWellsPage extends BaseExportWizardPage {
 	
 	public FilterWellsPage(ExportSettings settings) {
 		super("Filter Wells and Compounds");
-		setDescription("Step 3/4:  Select filters for the wells and compounds you want to export.");
+		setDescription("Step 3/4:  Select filters for the wells and compounds to export.");
 		
 		this.settings = settings;
 	}

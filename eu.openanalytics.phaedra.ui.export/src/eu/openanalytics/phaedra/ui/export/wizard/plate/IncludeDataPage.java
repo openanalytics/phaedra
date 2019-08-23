@@ -18,8 +18,8 @@ public class IncludeDataPage extends AbstractFileSelectionPage {
 	private ExportPlateTableSettings settings;
 	
 	public IncludeDataPage(ExportPlateTableSettings settings, int stepNum, int stepTotal) {
-		super("Data to Include", settings, "plates");
-		setDescription(String.format("Step %1$s/%2$s: Select additional data to export.", stepNum, stepTotal));
+		super("Statistics to Include", settings, "plates");
+		setDescription(String.format("Step %1$s/%2$s: Select the plate statistics to export.", stepNum, stepTotal));
 		
 		this.settings = settings;
 	}
