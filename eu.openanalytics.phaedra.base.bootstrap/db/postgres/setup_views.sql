@@ -97,8 +97,8 @@ create or replace view phaedra.hca_upload_compounds_todo as
 	where pc.plate_id = p.plate_id and p.experiment_id = e.experiment_id and e.protocol_id = pr.protocol_id
 	and pc.validate_status >= 0 and pc.upload_status = 0 and p.approve_status > 1 and p.upload_status = 0 and pr.upload_system is not null;
 
-grant select on phaedra.hca_upload_compounds_todo to phaedraprod;
-grant select on phaedra.hca_upload_compounds_todo to phaedra_readonly;
+grant select on phaedra.hca_upload_compounds_todo to :accountNameRead;
+grant select on phaedra.hca_upload_compounds_todo to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
@@ -107,5 +107,5 @@ create or replace view phaedra.hca_upload_wells_todo as
 	from phaedra.hca_plate_well w, phaedra.hca_upload_compounds_todo cu
 	where w.platecompound_id = cu.platecompound_id and w.is_valid not in (-1, -2, -8);
 
-grant select on phaedra.hca_upload_wells_todo to phaedraprod;
-grant select on phaedra.hca_upload_wells_todo to phaedra_readonly;
+grant select on phaedra.hca_upload_wells_todo to :accountNameRead;
+grant select on phaedra.hca_upload_wells_todo to :accountNameRead;

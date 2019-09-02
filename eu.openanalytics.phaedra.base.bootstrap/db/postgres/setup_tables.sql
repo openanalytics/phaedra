@@ -65,7 +65,7 @@ CREATE SEQUENCE phaedra.hca_image_channel_s
 
 GRANT INSERT, UPDATE, DELETE ON phaedra.hca_image_channel to :accountNameWrite;
 GRANT SELECT, USAGE ON phaedra.hca_image_channel_s to :accountNameWrite;
-GRANT SELECT ON phaedra. hca_image_channel to :accountNameRead;
+GRANT SELECT ON phaedra.hca_image_channel to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ ALTER TABLE phaedra.hca_image_channel_config
 	ON DELETE CASCADE;
 
 GRANT INSERT, UPDATE, DELETE ON phaedra.hca_image_channel_config to :accountNameWrite;
-GRANT SELECT ON phaedra. hca_image_channel_config to :accountNameRead;
+GRANT SELECT ON phaedra.hca_image_channel_config to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
@@ -1066,7 +1066,7 @@ ALTER TABLE phaedra.hca_mail_list_member
 	USING INDEX TABLESPACE :tsNameIndex;
 
 GRANT INSERT, UPDATE, DELETE ON phaedra.hca_mail_list_member to :accountNameWrite;
-GRANT SELECT ON phaedra. hca_mail_list_member to :accountNameRead;
+GRANT SELECT ON phaedra.hca_mail_list_member to :accountNameRead;
 
 -- -----------------------------------------------------------------------
 
