@@ -207,6 +207,17 @@ public class SubWellService  {
 //		long duration = System.currentTimeMillis() - start;
 //		EclipseLog.info(String.format("Data preload (%d wells, %d features): %d ms", wellsToLoad.size(), features.size(), duration), Activator.getContext().getBundle());
 	}
+
+	/**
+	 * Duplicate the subwell data from one plate to another.
+	 * If the target plate already has subwelldata, an error will be thrown.
+	 * 
+	 * @param from The source plate
+	 * @param to The target plate
+	 */
+	public void cloneData(Plate from, Plate to) {
+		dataSource.cloneData(from, to);
+	}
 	
 	/**
 	 * Update the subwell data for a set of wells in a single transaction.

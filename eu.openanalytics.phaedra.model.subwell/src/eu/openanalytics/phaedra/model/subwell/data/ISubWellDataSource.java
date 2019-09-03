@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.cache.SubWellDataCache;
@@ -17,6 +18,8 @@ public interface ISubWellDataSource {
 	public String[] getStringData(Well well, SubWellFeature feature);
 	
 	public void updateData(Map<SubWellFeature, Map<Well, Object>> data);
+	
+	public void cloneData(Plate from, Plate to);
 	
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache, IProgressMonitor monitor);
 	

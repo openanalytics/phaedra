@@ -149,6 +149,20 @@ public class HDF5Datasource implements ISubWellDataSource {
 	}
 	
 	@Override
+	public void cloneData(Plate from, Plate to) {
+		try {
+			String fromHDF5Path = getDataPath(from);
+			String toHDF5Path = getDataPath(to);
+			if (Screening.getEnvironment().getFileServer().exists(toHDF5Path)) {
+				throw new RuntimeException("Cannot copy subwell data: target plate already has a subwell data file");
+			}
+			Screening.getEnvironment().getFileServer().copy(fromHDF5Path, toHDF5Path);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to copy subwell data file", e);
+		}
+	}
+	
+	@Override
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache, IProgressMonitor monitor) {
 		IProgressMonitor monitorToUse = (monitor == null) ? new NullProgressMonitor() : monitor;
 		monitorToUse.beginTask("Loading subwell data for " + wells.size() + " wells", wells.size() + 5);

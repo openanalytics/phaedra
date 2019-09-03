@@ -29,6 +29,7 @@ import org.postgresql.jdbc.PgConnection;
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
@@ -71,6 +72,25 @@ public class DBDataSource implements ISubWellDataSource {
 		return null;
 	}
 
+	@Override
+	public void cloneData(Plate from, Plate to) {
+		String sql = String.format("insert into %s.%s"
+				+ " (select w2.well_id as well_id, fv.feature_id, fv.num_val"
+				+ " from %s.hca_plate_well w1, %s.hca_plate_well w2, %s.%s fv"
+				+ " where w1.plate_id = " + from.getId() + " and w2.plate_id = " + to.getId()
+				+ " and w1.row_nr = w2.row_nr and w1.col_nr = w2.col_nr"
+				+ " and w1.well_id = fv.well_id)",
+				SCHEMA, DATA_TABLE, SCHEMA, SCHEMA, SCHEMA, DATA_TABLE);
+		try (Connection conn = getConnection()) {
+			try (Statement stmt = conn.createStatement()) {
+				stmt.execute(sql);
+				conn.commit();
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException("Failed to copy subwell data", e);
+		}
+	}
+	
 	@Override
 	public void preloadData(List<Well> wells, List<SubWellFeature> features, SubWellDataCache cache, IProgressMonitor monitor) {
 		if (wells.isEmpty() || features.isEmpty()) return;
