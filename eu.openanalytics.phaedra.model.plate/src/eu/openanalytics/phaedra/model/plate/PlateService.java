@@ -389,56 +389,56 @@ public class PlateService extends BaseJPAService {
 			return null;
 		}
 		
-//		monitor.subTask("Copying well data");
-//		List<FeatureValue> wellData = getWellData(plate);
-//		List<FeatureValue> newData = new ArrayList<>();
-//		for (FeatureValue v: wellData) {
-//			FeatureValue newV = new FeatureValue();
-//			newV.setFeature(v.getFeature());
-//			newV.setWell(PlateUtils.getWell(copy, v.getWell().getRow(), v.getWell().getColumn()));
-//			newV.setRawNumericValue(v.getRawNumericValue());
-//			newV.setNormalizedValue(v.getNormalizedValue());
-//			newV.setRawStringValue(v.getRawStringValue());
-//			newData.add(newV);
-//		}
-//		monitor.worked(10);
-//		
-//		for (Feature f: PlateUtils.getFeatures(plate)) {
-//			if (monitor.isCanceled()) {
-//				deletePlate(copy);
-//				return null;
-//			}
-//			
-//			List<FeatureValue> featureData = newData.stream().filter(v -> v.getFeature() == f).collect(Collectors.toList());
-//			if (f.isNumeric()) {
-//				double[] rawData = new double[PlateUtils.getWellCount(copy)];
-//				featureData.stream().forEach(v -> rawData[PlateUtils.getWellNr(v.getWell())-1] = v.getRawNumericValue());
-//				featureValueDAO.insertValues(copy, f, rawData, null, null);
-//				// Note: normalized values are saved later (during recalculation)
-//			} else {
-//				String[] rawData = new String[PlateUtils.getWellCount(copy)];
-//				featureData.stream().forEach(v -> rawData[PlateUtils.getWellNr(v.getWell())-1] = v.getRawStringValue());
-//				featureValueDAO.insertValues(copy, f, null, rawData, null);
-//			}
-//		}
-//		monitor.worked(20);
-//		
-//		monitor.subTask("Copying images");
-//		if (plate.isImageAvailable()) {
-//			try {
-//				String fromImagePath = getImageFSPath(plate);
-//				String toImagePath = getPlateFSPath(copy) + "/" + copy.getId() + "." + FileUtils.getExtension(fromImagePath);
-//				Screening.getEnvironment().getFileServer().copy(fromImagePath, toImagePath);
-//			} catch (IOException e) {
-//				deletePlate(copy);
-//				throw new RuntimeException("Failed to clone plate: error while copying image", e);
-//			}
-//		}
-//		monitor.worked(30);
-//		if (monitor.isCanceled()) {
-//			deletePlate(copy);
-//			return null;
-//		}
+		monitor.subTask("Copying well data");
+		List<FeatureValue> wellData = getWellData(plate);
+		List<FeatureValue> newData = new ArrayList<>();
+		for (FeatureValue v: wellData) {
+			FeatureValue newV = new FeatureValue();
+			newV.setFeature(v.getFeature());
+			newV.setWell(PlateUtils.getWell(copy, v.getWell().getRow(), v.getWell().getColumn()));
+			newV.setRawNumericValue(v.getRawNumericValue());
+			newV.setNormalizedValue(v.getNormalizedValue());
+			newV.setRawStringValue(v.getRawStringValue());
+			newData.add(newV);
+		}
+		monitor.worked(10);
+		
+		for (Feature f: PlateUtils.getFeatures(plate)) {
+			if (monitor.isCanceled()) {
+				deletePlate(copy);
+				return null;
+			}
+			
+			List<FeatureValue> featureData = newData.stream().filter(v -> v.getFeature() == f).collect(Collectors.toList());
+			if (f.isNumeric()) {
+				double[] rawData = new double[PlateUtils.getWellCount(copy)];
+				featureData.stream().forEach(v -> rawData[PlateUtils.getWellNr(v.getWell())-1] = v.getRawNumericValue());
+				featureValueDAO.insertValues(copy, f, rawData, null, null);
+				// Note: normalized values are saved later (during recalculation)
+			} else {
+				String[] rawData = new String[PlateUtils.getWellCount(copy)];
+				featureData.stream().forEach(v -> rawData[PlateUtils.getWellNr(v.getWell())-1] = v.getRawStringValue());
+				featureValueDAO.insertValues(copy, f, null, rawData, null);
+			}
+		}
+		monitor.worked(20);
+		
+		monitor.subTask("Copying images");
+		if (plate.isImageAvailable()) {
+			try {
+				String fromImagePath = getImageFSPath(plate);
+				String toImagePath = getPlateFSPath(copy) + "/" + copy.getId() + "." + FileUtils.getExtension(fromImagePath);
+				Screening.getEnvironment().getFileServer().copy(fromImagePath, toImagePath);
+			} catch (IOException e) {
+				deletePlate(copy);
+				throw new RuntimeException("Failed to clone plate: error while copying image", e);
+			}
+		}
+		monitor.worked(30);
+		if (monitor.isCanceled()) {
+			deletePlate(copy);
+			return null;
+		}
 
 		monitor.subTask("Copying subwell data");
 		if (plate.isSubWellDataAvailable()) {
