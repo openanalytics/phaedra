@@ -440,7 +440,8 @@ public class CalculationService {
 		
 		AllPlates("All plates of the experiment form a single pool of multiplo plates.",
 				(plate) -> {
-					return PlateService.getInstance().getPlates(plate.getExperiment());
+					return PlateService.getInstance().getPlates(plate.getExperiment()).stream()
+						.filter(p -> p != plate).collect(Collectors.toList());
 				}),
 		
 		Property("Multiplo plates are identified via a plate property, such as 'mother-id', that is"

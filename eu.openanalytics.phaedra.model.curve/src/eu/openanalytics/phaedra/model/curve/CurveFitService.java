@@ -335,7 +335,12 @@ public class CurveFitService extends BaseJPAService {
 		}
 		
 		Curve curve = getCurve(compound, feature, grouping, false);
-		if (curve == null) curve = new Curve();
+		if (curve == null) {
+			curve = new Curve();
+		} else if (!CollectionUtils.equalsIgnoreOrder(compounds, curve.getCompounds())) {
+			// The existing multiplo curve no longer matches, e.g. because the plate moved. Use a new curve instead.
+			curve = new Curve();
+		}
 		curve.setCompounds(compounds);
 		curve.setFeature(feature);
 		

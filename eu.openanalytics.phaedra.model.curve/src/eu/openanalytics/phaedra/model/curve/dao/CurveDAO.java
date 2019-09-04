@@ -194,20 +194,17 @@ public class CurveDAO {
 		String statement = "insert into phaedra.hca_curve(" + StringUtils.createSeparatedString(CURVE_COLUMNS, ",") + ")"
 				+ " values(" + curve.getId() + ", " + StringUtils.createSeparatedString(arr, ",") + ")";
 		
-		PreparedStatement ps = null;
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
-			ps = conn.prepareStatement(statement);
-			setStatementArgs(ps, curve);
-			ps.execute();
+			try (PreparedStatement ps = conn.prepareStatement(statement)) {
+				setStatementArgs(ps, curve);
+				ps.execute();
+			}
+			insertCurveCompounds(curve, conn);
+			insertCurveProperties(curve, conn);
 			conn.commit();
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
-		} finally {
-			if (ps != null) try { ps.close(); } catch (SQLException e) {}
 		}
-		
-		insertCurveCompounds(curve);
-		insertCurveProperties(curve);
 	}
 	
 	private void updateCurve(Curve curve) {
@@ -216,31 +213,21 @@ public class CurveDAO {
 		String updateColumnsString = StringUtils.createSeparatedString(updateColumns, "=?,");
 		String statement = "update phaedra.hca_curve set " + updateColumnsString + "=? where curve_id = " + curve.getId();
 		
-		PreparedStatement ps = null;
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
-			ps = conn.prepareStatement(statement);
-			setStatementArgs(ps, curve);
-			ps.execute();
+			try (PreparedStatement ps = conn.prepareStatement(statement)) {
+				setStatementArgs(ps, curve);
+				ps.execute();
+			}
+			try (Statement stmt = conn.createStatement()) {
+				stmt.execute("delete from phaedra.hca_curve_compound where curve_id = " + curve.getId());
+				stmt.execute("delete from phaedra.hca_curve_property where curve_id = " + curve.getId());
+			}
+			insertCurveCompounds(curve, conn);
+			insertCurveProperties(curve, conn);
 			conn.commit();
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
-		} finally {
-			if (ps != null) try { ps.close(); } catch (SQLException e) {}
 		}
-		
-		Statement stmt = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
-			stmt = conn.createStatement();
-			stmt.execute("delete from phaedra.hca_curve_property where curve_id = " + curve.getId());
-			stmt.execute("delete from phaedra.hca_curve_compound where curve_id = " + curve.getId());
-			conn.commit();
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		} finally {
-			if (stmt != null) try { stmt.close(); } catch (SQLException e) {}
-		}
-		insertCurveProperties(curve);
-		insertCurveCompounds(curve);
 	}
 	
 	private void setStatementArgs(PreparedStatement ps, Curve curve) throws SQLException {
@@ -258,18 +245,15 @@ public class CurveDAO {
 		else ps.setBinaryStream(9, new ByteArrayInputStream(curve.getPlot()), curve.getPlot().length);
 	}
 	
-	private void insertCurveProperties(Curve curve) {
+	private void insertCurveProperties(Curve curve, Connection conn) throws SQLException {
 		Value[] properties = curve.getOutputParameters();
 		if (properties == null || properties.length == 0) return;
 		
-		PreparedStatement ps = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
-			String[] arr = new String[CURVE_PROPERTY_COLUMNS.length];
-			Arrays.fill(arr, "?");
-			ps = conn.prepareStatement("insert into phaedra.hca_curve_property"
+		String[] arr = new String[CURVE_PROPERTY_COLUMNS.length];
+		Arrays.fill(arr, "?");
+		try (PreparedStatement ps = conn.prepareStatement("insert into phaedra.hca_curve_property"
 					+ " (" + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",") + " )"
-					+ " values (" + StringUtils.createSeparatedString(arr, ",") + ")");
-			
+					+ " values (" + StringUtils.createSeparatedString(arr, ",") + ")")) {
 			
 			for (int i = 0; i < properties.length; i++) {
 				Value p = properties[i];
@@ -289,29 +273,17 @@ public class CurveDAO {
 			}
 			
 			ps.executeBatch();
-			conn.commit();
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		} finally {
-			if (ps != null) try { ps.close(); } catch (SQLException e) {}
 		}
 	}
 	
-	private void insertCurveCompounds(Curve curve) {
-		PreparedStatement ps = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
-			ps = conn.prepareStatement("insert into phaedra.hca_curve_compound (curve_id, platecompound_id) values (?, ?)");
+	private void insertCurveCompounds(Curve curve, Connection conn) throws SQLException {
+		try (PreparedStatement ps = conn.prepareStatement("insert into phaedra.hca_curve_compound (curve_id, platecompound_id) values (?, ?)")) {
 			for (Compound compound: curve.getCompounds()) {
 				ps.setLong(1, curve.getId());
 				ps.setLong(2, compound.getId());
 				ps.addBatch();
 			}
 			ps.executeBatch();
-			conn.commit();
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		} finally {
-			if (ps != null) try { ps.close(); } catch (SQLException e) {}
 		}
 	}
 	
