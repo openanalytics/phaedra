@@ -6,10 +6,11 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.api.client.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.util,
  org.apache.httpcomponents.httpclient;bundle-version="4.3.6",
  org.apache.httpcomponents.httpcore;bundle-version="4.3.3",
  com.google.gson;bundle-version="2.2.3",
- eu.openanalytics.phaedra.base.util
+ org.apache.commons.lang3;bundle-version="3.2.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: eu.openanalytics.phaedra.api.client
 Bundle-ActivationPolicy: lazy
