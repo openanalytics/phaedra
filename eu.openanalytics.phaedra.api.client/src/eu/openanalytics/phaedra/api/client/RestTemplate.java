@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.api.client;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -81,7 +82,7 @@ public class RestTemplate implements AutoCloseable {
 	private <T> T executeRequestForObject(HttpUriRequest request, Class<T> objectClass) throws IOException {
 		Pair<String, T> returnValue = new MutablePair<>("returnValue", null);
 		executeRequest(request, (statusCode, headers, responseBody) -> {
-			returnValue.setValue(gson.fromJson(new InputStreamReader(responseBody), objectClass));
+			returnValue.setValue(gson.fromJson(new InputStreamReader(responseBody, StandardCharsets.UTF_8), objectClass));
 		});
 		return returnValue.getValue();
 	}
@@ -90,7 +91,7 @@ public class RestTemplate implements AutoCloseable {
 		Pair<String, String> returnValue = new MutablePair<>("returnValue", null);
 		executeRequest(request, (statusCode, headers, responseBody) -> {
 			byte[] bytes = StreamUtils.readAll(responseBody);
-			returnValue.setValue(new String(bytes));
+			returnValue.setValue(new String(bytes, StandardCharsets.UTF_8));
 		});
 		return returnValue.getValue();
 	}
