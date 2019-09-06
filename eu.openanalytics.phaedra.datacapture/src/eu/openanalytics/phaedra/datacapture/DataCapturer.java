@@ -23,10 +23,15 @@ import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.datacapture.module.IModule;
 import eu.openanalytics.phaedra.datacapture.module.ModuleFactory;
 import eu.openanalytics.phaedra.datacapture.store.IDataCaptureStore;
+import eu.openanalytics.phaedra.datacapture.util.MissingFeaturesHelper;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
+import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
+import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 
 public class DataCapturer {
 
@@ -201,8 +206,9 @@ public class DataCapturer {
 		reading.setExperiment(experiment.getName());
 		
 		try {
-			DataCaptureHookManager.postCapture(ctx, reading, plate);
+			checkMissingFeatures(ctx, reading, plate);
 			ctx.getStore(reading).finish(plate);
+			DataCaptureHookManager.postCapture(ctx, reading, plate);
 			reading.setLinkStatus(1);
 			ctx.getLogger().completed(reading, ctx.getReadingSourceId(reading));
 		} finally {
@@ -241,5 +247,20 @@ public class DataCapturer {
 		
 		PlateService.getInstance().updatePlate(plate);
 		return plate;
+	}
+	
+	private void checkMissingFeatures(DataCaptureContext ctx, PlateReading reading, Plate plate) throws DataCaptureException {
+		IDataCaptureStore store = ctx.getStore(reading);
+		ProtocolClass pClass = ProtocolUtils.getProtocolClass(plate);
+		
+		Boolean createMissing = (Boolean) ctx.getTask().getParameters().get(DataCaptureParameter.CreateMissingWellFeatures.name());
+		if (createMissing != null && createMissing.booleanValue()) {
+			new MissingFeaturesHelper(store, pClass, Feature.class).createMissingFeatures();
+		}
+		
+		createMissing = (Boolean) ctx.getTask().getParameters().get(DataCaptureParameter.CreateMissingSubWellFeatures.name());
+		if (createMissing != null && createMissing.booleanValue()) {
+			new MissingFeaturesHelper(store, pClass, SubWellFeature.class).createMissingFeatures();
+		}
 	}
 }

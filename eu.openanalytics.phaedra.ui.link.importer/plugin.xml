@@ -58,11 +58,10 @@
       </importWizard>
    </extension>
    <extension
-         point="eu.openanalytics.phaedra.base.hook.hook">
-      <hook
-            class="eu.openanalytics.phaedra.ui.link.importer.addfeature.PostCaptureAddMissingFeaturesUI"
-            hookPointId="eu.openanalytics.phaedra.datacapture.dcHookPoint">
-      </hook>
+         point="eu.openanalytics.phaedra.datacapture.missingFeaturesHandler">
+      <missingFeaturesHandler
+            class="eu.openanalytics.phaedra.ui.link.importer.addfeature.UIMissingFeaturesHandler">
+      </missingFeaturesHandler>
    </extension>
 
 </plugin>

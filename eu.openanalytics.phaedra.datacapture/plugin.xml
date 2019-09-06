@@ -3,6 +3,7 @@
 <plugin>
    <extension-point id="module" name="Module" schema="schema/module.exsd"/>
    <extension-point id="fieldLayoutSource" name="FieldLayoutSource" schema="schema/fieldLayoutSource.exsd"/>
+   <extension-point id="missingFeaturesHandler" name="MissingFeaturesHandler" schema="schema/missingFeaturesHandler.exsd"/>
    <extension
          point="eu.openanalytics.phaedra.datacapture.module">
       <module
@@ -63,13 +64,6 @@
       <hookPoint
             id="eu.openanalytics.phaedra.datacapture.dcHookPoint">
       </hookPoint>
-   </extension>
-   <extension
-         point="eu.openanalytics.phaedra.base.hook.hook">
-      <hook
-            class="eu.openanalytics.phaedra.datacapture.hook.PostCaptureAddMissingFeaturesHeadless"
-            hookPointId="eu.openanalytics.phaedra.datacapture.dcHookPoint">
-      </hook>
    </extension>
 
 </plugin>

@@ -7,6 +7,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
@@ -102,6 +105,27 @@ public class MissingFeaturesHelper {
 		return retVal.get() == Window.OK;
 	}
 
+	public void createMissingFeatures() throws DataCaptureException {
+		List<FeatureDefinition> missingFeatures = findMissingFeatures();
+		if (missingFeatures.isEmpty()) return;
+		
+		boolean isHandled = false;
+		IConfigurationElement[] config = Platform.getExtensionRegistry().getConfigurationElementsFor(IMissingFeaturesHandler.EXT_PT_ID);
+		for (IConfigurationElement el : config) {
+			try {
+				Object o = el.createExecutableExtension(IMissingFeaturesHandler.ATTR_CLASS);
+				if (o instanceof IMissingFeaturesHandler) {
+					isHandled = ((IMissingFeaturesHandler) o).handle(missingFeatures, this);
+				}
+			} catch (CoreException e) {
+				throw new IllegalArgumentException("Invalid handler: " + el.getAttribute(IMissingFeaturesHandler.ATTR_CLASS));
+			}
+			if (isHandled) break;
+		}
+		
+		if (!isHandled) createMissingFeatures(missingFeatures);
+	}
+	
 	public void createMissingFeatures(List<FeatureDefinition> missingFeatures) {
 		if (missingFeatures.isEmpty()) return;
 		if (!ProtocolService.getInstance().canEditProtocolClass(pClass)) return;

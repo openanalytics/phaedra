@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
-import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
 import eu.openanalytics.phaedra.calculation.WellDataAccessor.CacheableFeatureValue;
@@ -222,7 +221,6 @@ public class PlateDataAccessor implements Serializable {
 				value = getCachedValue(w, f);
 				if (value == null) {
 					// Load the value from the database.
-					EclipseLog.debug(String.format("Cache miss for well %d feature %d", w.getId(), f.getId()), PlateDataAccessor.class);
 					loadData(Arrays.asList(f));
 					// Now value is guaranteed to be not null. It's either a valid value, or MISSING_VALUE.
 					value = getCachedValue(w, f);
@@ -298,7 +296,6 @@ public class PlateDataAccessor implements Serializable {
 	}
 
 	private void cacheValues(Feature f, List<FeatureValue> values) {
-		EclipseLog.debug(String.format("Caching %d values for feature %d", values == null ? 0 : values.size(), f.getId()), PlateDataAccessor.class);
 		if (values == null) {
 			wells.forEach(w -> getCachedMap(w, true).put(f.getId(), MISSING_VALUE));
 			return;
