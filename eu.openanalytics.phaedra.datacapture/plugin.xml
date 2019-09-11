@@ -65,5 +65,18 @@
             id="eu.openanalytics.phaedra.datacapture.dcHookPoint">
       </hookPoint>
    </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.hook.hook">
+      <hook
+            class="eu.openanalytics.phaedra.datacapture.hook.PostCaptureLinkPlatedefHook"
+            hookPointId="eu.openanalytics.phaedra.datacapture.dcHookPoint"
+            priority="0">
+      </hook>
+      <hook
+            class="eu.openanalytics.phaedra.datacapture.hook.PostCaptureScriptHook"
+            hookPointId="eu.openanalytics.phaedra.datacapture.dcHookPoint"
+            priority="1">
+      </hook>
+   </extension>
 
 </plugin>
