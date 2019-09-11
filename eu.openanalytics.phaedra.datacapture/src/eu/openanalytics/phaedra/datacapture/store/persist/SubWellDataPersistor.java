@@ -6,8 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.fs.store.IFileStore;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
+import eu.openanalytics.phaedra.datacapture.Activator;
 import eu.openanalytics.phaedra.datacapture.DataCaptureException;
 import eu.openanalytics.phaedra.datacapture.store.DefaultDataCaptureStore;
 import eu.openanalytics.phaedra.model.plate.PlateService;
@@ -22,7 +24,8 @@ public class SubWellDataPersistor extends BaseDataPersistor {
 
 	@Override
 	public void persist(IFileStore store, Plate plate) throws DataCaptureException, IOException {
-
+		EclipseLog.info(String.format("Thread %s running %s", Thread.currentThread().getName(), this.getClass().getName()), Activator.PLUGIN_ID);
+		
 		String[] keys = getNames(store, DefaultDataCaptureStore.WELL_SWDATA_PREFIX);
 
 		String[] featureNames = Arrays.stream(keys)

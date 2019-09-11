@@ -58,9 +58,28 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	public void finish(Plate plate) throws DataCaptureException {
 		try {
 			store.switchMode();
-			for (IDataPersistor persistor: getDataPersistors()) {
-				persistor.persist(store, plate);
+			
+			IDataPersistor[] persistors = {
+					new PlateDataPersistor(),
+					new WellDataPersistor(),
+					new SubWellDataPersistor(),
+					new ImageDataPersistor()
+			};
+			if (isHDF5Store()) {
+				persistors[2] = new SubWellHDF5DataPersistor();
+				for (IDataPersistor persistor: persistors) {
+					persistor.persist(store, plate);
+				}
+			} else {
+				Arrays.stream(persistors).parallel().forEach(p -> {
+					try {
+						p.persist(store, plate);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				});
 			}
+			
 			cleanupTempFolders();
 		} catch (IOException e) {
 			throw new DataCaptureException("Failed to save persist captured data", e);
@@ -193,22 +212,15 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	}
 	
 	private void initializeFileStore() throws IOException {
-		if (SubWellService.getInstance().isHDF5DataSource()) {
+		if (isHDF5Store()) {
 			store = new HDF5FileStore();
 		} else {
 			store = FileStoreFactory.open(null, AccessMode.WRITE, null);			
 		}
 	}
-
-	private IDataPersistor[] getDataPersistors() {
-		IDataPersistor[] persistors = {
-				new PlateDataPersistor(),
-				new WellDataPersistor(),
-				new SubWellDataPersistor(),
-				new ImageDataPersistor()
-		};
-		if (SubWellService.getInstance().isHDF5DataSource()) persistors[2] = new SubWellHDF5DataPersistor();
-		return persistors;
+	
+	private boolean isHDF5Store() {
+		return (SubWellService.getInstance().isHDF5DataSource());
 	}
 
 	private void cleanupTempFolders() {
