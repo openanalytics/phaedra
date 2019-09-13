@@ -59,6 +59,7 @@ public class RestTemplate implements AutoCloseable {
 	public <T> T postForObject(String url, String body, Class<T> objectClass) throws IOException {
 		HttpPost post = new HttpPost(url);
 		post.setEntity(new StringEntity(body));
+		post.addHeader("Content-Type", "application/json");
 		return executeRequestForObject(post, objectClass);
 	}
 	
@@ -114,6 +115,7 @@ public class RestTemplate implements AutoCloseable {
 							code,
 							headers,
 							body);
+					break;
 				case HttpStatus.SC_NOT_FOUND:
 					throw new IOException("Requested item not found");
 				case HttpStatus.SC_INTERNAL_SERVER_ERROR: 

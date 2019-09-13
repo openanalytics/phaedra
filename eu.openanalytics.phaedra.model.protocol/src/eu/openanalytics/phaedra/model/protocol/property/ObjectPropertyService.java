@@ -340,7 +340,7 @@ public class ObjectPropertyService extends BaseJPAService {
 	
 	private String appendUpsert(String sql) {
 		if (JDBCUtils.isPostgres()) {
-			sql += " on conflict do update"
+			sql += " on conflict (object_class, object_id, property_name) do update"
 				+ " set numeric_value = excluded.numeric_value, string_value = excluded.string_value, binary_value = excluded.binary_value";
 		} else if (JDBCUtils.isOracle()) {
 			sql += " on duplicate key update"
