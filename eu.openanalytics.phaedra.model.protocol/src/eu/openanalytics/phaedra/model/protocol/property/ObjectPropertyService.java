@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -80,6 +81,7 @@ public class ObjectPropertyService extends BaseJPAService {
 		return properties;
 	}
 	
+	
 	public float getNumericValue(String objectType, long objectId, String propertyName) {
 		checkPermission(objectType, objectId, true);
 		BigDecimal value = getValue(objectType, objectId, propertyName, "numeric_value", rs -> rs.getBigDecimal(1));
@@ -111,6 +113,7 @@ public class ObjectPropertyService extends BaseJPAService {
 		return (byte[][]) getValues(objectType, objectIds, propertyName, "binary_value");
 	}
 	
+	
 	public void setValue(String objectType, long objectId, String propertyName, float numericValue) {
 		checkPermission(objectType, objectId, true);
 		setValueObject(objectType, objectId, propertyName, numericValue);
@@ -124,6 +127,11 @@ public class ObjectPropertyService extends BaseJPAService {
 	public void setValue(String objectType, long objectId, String propertyName, byte[] binaryValue) {
 		checkPermission(objectType, objectId, true);
 		setValueObject(objectType, objectId, propertyName, binaryValue);
+	}
+	
+	public void setValues(String objectType, long objectId, Map<String,Object> values) {
+		checkPermission(objectType, objectId, true);
+		setValueObjects(objectType, objectId, values);
 	}
 	
 	public void setValues(String objectType, long[] objectIds, String propertyName, float[] numericValues) {
@@ -141,6 +149,7 @@ public class ObjectPropertyService extends BaseJPAService {
 		setValueObjects(objectType, objectIds, propertyName, binaryValues);
 	}
 	
+	
 	public void deleteValue(String objectType, long objectId, String propertyName) {
 		checkPermission(objectType, objectId, true);
 		String sql = String.format("delete from %s.%s where object_class = '%s' and object_id = %d and property_name =  '%s'",
@@ -152,6 +161,13 @@ public class ObjectPropertyService extends BaseJPAService {
 		checkPermission(objectType, objectId, true);
 		String sql = String.format("delete from %s.%s where object_class = '%s' and object_id = %d",
 				DB_SCHEMA, DB_TABLE, objectType, objectId);
+		execute(sql, null, false);
+	}
+	
+	public void deleteValues(String objectType, long objectId, String propertyNamePrefix) {
+		checkPermission(objectType, objectId, true);
+		String sql = String.format("delete from %s.%s where object_class = '%s' and object_id = %d and property_name like '%s%%'",
+				DB_SCHEMA, DB_TABLE, objectType, objectId, propertyNamePrefix);
 		execute(sql, null, false);
 	}
 	
@@ -294,6 +310,29 @@ public class ObjectPropertyService extends BaseJPAService {
 				else stmt.setNull(2, Types.FLOAT);
 				stmt.setString(3, (values instanceof String[]) ? ((String[]) values)[i] : null);
 				stmt.setBytes(4, (values instanceof byte[][]) ? ((byte[][]) values)[i] : null);
+				stmt.addBatch();
+			}
+		}, true);
+	}
+	
+	private void setValueObjects(String objectType, long objectId, Map<String,Object> values) {
+		String propNames = values.keySet().stream().map(k -> "'" + k + "'").collect(Collectors.joining(","));
+		String sql = String.format("delete from %s.%s where object_class = '%s' and object_id = %d and property_name in (%s)",
+				DB_SCHEMA, DB_TABLE, objectType, objectId, propNames);
+		execute(sql, null, false);
+		
+		sql = String.format(
+				"insert into %s.%s (object_class, object_id, property_name, numeric_value, string_value, binary_value) values ('%s', %d, ?, ?, ?, ?)",
+				DB_SCHEMA, DB_TABLE, objectType, objectId);
+		execute(sql, stmt -> {
+			for (Entry<String,Object> entry: values.entrySet()) {
+				Object value = entry.getValue();
+				
+				stmt.setString(1, entry.getKey());
+				if (value instanceof Float && value != null) stmt.setFloat(2, ((Float) value).floatValue());
+				else stmt.setNull(2, Types.FLOAT);
+				stmt.setString(3, (value instanceof String) ? ((String) value) : null);
+				stmt.setBytes(4, (value instanceof byte[]) ? ((byte[]) value) : null);
 				stmt.addBatch();
 			}
 		}, true);
