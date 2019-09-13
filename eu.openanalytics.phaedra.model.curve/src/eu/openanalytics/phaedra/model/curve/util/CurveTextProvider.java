@@ -1,13 +1,17 @@
 package eu.openanalytics.phaedra.model.curve.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
+import eu.openanalytics.phaedra.model.plate.vo.Compound;
+import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
 
 
 public class CurveTextProvider {
@@ -21,27 +25,37 @@ public class CurveTextProvider {
 	};
 	
 	public static CurveTextField[] getColumns(Curve curve) {
+		// First, the base properties
+		List<CurveTextField> allFields = new ArrayList<>();
+		Arrays.stream(BASE_COLUMNS).forEach(c -> allFields.add(c));
+		
+		// Then, the curve fit properties
 		Value[] values = curve == null ? new Value[0] : curve.getOutputParameters();
-		CurveTextField[] allFields = new CurveTextField[BASE_COLUMNS.length + values.length];
-		System.arraycopy(BASE_COLUMNS, 0, allFields, 0, BASE_COLUMNS.length);
-		for (int i = 0; i < values.length; i++) {
-			int offset = i + BASE_COLUMNS.length;
-			Value v = values[i];
-			allFields[offset] = new CurveTextField(v.definition.name, c -> CurveParameter.renderValue(v, curve, null));
+		Arrays.stream(values).forEach(v -> {
+			allFields.add(new CurveTextField(v.definition.name, c -> CurveParameter.renderValue(v, curve, null)));
+		});
+		
+		// Last, the custom compound properties
+		if (curve != null && !curve.getCompounds().isEmpty()) {
+			Compound c = curve.getCompounds().get(0);
+			Map<String, Object> extraProps = ObjectPropertyService.getInstance().getProperties(Compound.class.getName(), c.getId());
+			List<String> propNames = new ArrayList<>(extraProps.keySet());
+			propNames.sort(null);
+			for (String name: propNames) {
+				allFields.add(new CurveTextField(name, cu -> String.valueOf(extraProps.get(name))));
+			}
 		}
-		return allFields;
+		
+		return allFields.toArray(new CurveTextField[allFields.size()]);
 	}
 	
 	public static List<CurveTextField> getColumns(Curve curve, List<String> favorites) {
-		Value[] values = (curve == null) ? new Value[0] : curve.getOutputParameters();
-		List<CurveTextField> unordered = new ArrayList<>(BASE_COLUMNS.length + values.length);
-		for (CurveTextField field : BASE_COLUMNS) {
-			unordered.add(field);
-		}
-		for (Value value : values) {
-			unordered.add(new CurveTextField(value.definition.name, c -> CurveParameter.renderValue(value, curve, null)));
-		}
+		CurveTextField[] columns = getColumns(curve);
 		
+		List<CurveTextField> unordered = new ArrayList<>();
+		for (int i = 0; i < columns.length; i++) {
+			unordered.add(columns[i]);
+		}
 		if (favorites.isEmpty()) return unordered;
 		
 		List<CurveTextField> ordered = new ArrayList<>(unordered.size());
