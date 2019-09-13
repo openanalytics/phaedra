@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.scripting.api.IScriptAPIProvider;
+import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 
 public class ScriptAPI implements IScriptAPIProvider {
@@ -13,6 +14,7 @@ public class ScriptAPI implements IScriptAPIProvider {
 		Map<String, Object> utils = new HashMap<>();
 		utils.put("ProtocolService", ProtocolService.getInstance());
 		utils.put("ProtocolUtils", ProtocolUtils.class);
+		utils.put("ObjectPropertyService", ObjectPropertyService.getInstance());
 		return utils;
 	}
 

@@ -1501,3 +1501,21 @@ alter table phaedra.hca_project_experiment
 
 grant insert, update, delete on phaedra.hca_project_experiment to phaedra_role_crud;
 grant select on phaedra.hca_project_experiment to phaedra_role_read;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_object_property (
+	object_class		varchar(200) not null,
+	object_id 			bigint not null,
+	property_name		varchar(200) not null,
+	numeric_value 		double precision,
+	string_value		text,
+	binary_value		bytea
+);
+
+alter table phaedra.hca_object_property
+	add constraint hca_object_property_pk
+	primary key ( object_class, object_id, property_name );
+
+grant insert, update, delete on phaedra.hca_object_property to phaedra_role_crud;
+grant select on phaedra.hca_object_property to phaedra_role_read;

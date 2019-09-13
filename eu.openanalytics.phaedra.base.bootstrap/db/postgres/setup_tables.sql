@@ -1681,3 +1681,22 @@ alter table phaedra.hca_project_experiment
 
 grant insert, update, delete on phaedra.hca_project_experiment to :accountNameWrite;
 grant select on phaedra.hca_project_experiment to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_object_property (
+	object_class		text not null,
+	object_id 			bigint not null,
+	property_name		text not null,
+	numeric_value 		double precision,
+	string_value		text,
+	binary_value		bytea
+) tablespace :tsNameData;
+
+alter table phaedra.hca_object_property
+	add constraint hca_object_property_pk
+	primary key ( object_class, object_id, property_name )
+	using index tablespace :tsNameIndex;
+
+grant insert, update, delete on phaedra.hca_object_property to :accountNameWrite;
+grant select on phaedra.hca_object_property to :accountNameRead;
