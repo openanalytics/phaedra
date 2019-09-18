@@ -49,13 +49,10 @@ public class ZippedFileStore implements IFileStore {
 
 	@Override
 	public void close() throws Exception {
-		if (mode == AccessMode.READ) {
-			inputEntries.clear();
-			try { input.close(); } catch (IOException e) {}
-		} else {
-			try { output.close(); } catch (IOException e) {}
-			FileUtils.deleteRecursive(new File(tempOutputPath).getParentFile());
-		}
+		if (inputEntries != null) inputEntries.clear();
+		if (input != null) try { input.close(); } catch (IOException e) {}
+		if (output != null) try { output.close(); } catch (IOException e) {}
+		if (tempOutputPath != null) FileUtils.deleteRecursive(new File(tempOutputPath).getParentFile());
 	}
 	
 	@Override
