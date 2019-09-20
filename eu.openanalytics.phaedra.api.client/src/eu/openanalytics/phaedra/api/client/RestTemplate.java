@@ -25,6 +25,7 @@ import com.google.gson.GsonBuilder;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
+//TODO support other POST body content types besides json
 public class RestTemplate implements AutoCloseable {
 
 	private static CloseableHttpClient client;
@@ -66,12 +67,14 @@ public class RestTemplate implements AutoCloseable {
 	public String postForString(String url, String body) throws IOException {
 		HttpPost post = new HttpPost(url);
 		post.setEntity(new StringEntity(body));
+		post.addHeader("Content-Type", "application/json");
 		return executeRequestForString(post);
 	}
 	
 	public void post(String url, String body, ResponseConsumer responseConsumer) throws IOException {
 		HttpPost post = new HttpPost(url);
 		post.setEntity(new StringEntity(body));
+		post.addHeader("Content-Type", "application/json");
 		executeRequest(post, responseConsumer);
 	}
 	
@@ -106,15 +109,17 @@ public class RestTemplate implements AutoCloseable {
 			
 			switch (code) {
 				case HttpStatus.SC_OK:
-					Map<String,String> headers = new HashMap<>();
-					for (Header header: response.getAllHeaders()) {
-						headers.put(header.getName(), header.getValue());
+					if (responseConsumer != null) {
+						Map<String,String> headers = new HashMap<>();
+						for (Header header: response.getAllHeaders()) {
+							headers.put(header.getName(), header.getValue());
+						}
+						InputStream body = response.getEntity() == null ? null : response.getEntity().getContent();
+						responseConsumer.consume(
+								code,
+								headers,
+								body);
 					}
-					InputStream body = response.getEntity() == null ? null : response.getEntity().getContent();
-					responseConsumer.consume(
-							code,
-							headers,
-							body);
 					break;
 				case HttpStatus.SC_NOT_FOUND:
 					throw new IOException("Requested item not found");
