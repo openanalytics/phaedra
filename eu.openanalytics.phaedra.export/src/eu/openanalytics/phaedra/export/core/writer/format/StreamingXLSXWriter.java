@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,39 +17,18 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 
-import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.export.core.BaseExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.ExportSettings;
 import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.export.core.statistics.Statistics;
+import eu.openanalytics.phaedra.export.core.util.ExportInfo;
+import eu.openanalytics.phaedra.export.core.util.ExportInfo.Info;
 import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
 import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
-import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 
 public class StreamingXLSXWriter implements IExportWriter {
-	
-	
-	private static class Info {
-		
-		String name;
-		byte valueType;
-		List<?> values;
-		
-		public Info(String name, byte valueType, List<?> values) {
-			this.name= name;
-			this.valueType = valueType;
-			this.values = values;
-		}
-		
-		public Info(String name, byte valueType, Object value) {
-			this.name= name;
-			this.valueType = valueType;
-			this.values = Collections.singletonList(value);
-		}
-		
-	}
 	
 	/** For SubWellDataXLSXWriter */
 	public static void writeExportInfo(Collection<Experiment> experiments, Date timestamp, SXSSFWorkbook wb) {
@@ -63,7 +41,6 @@ public class StreamingXLSXWriter implements IExportWriter {
 	
 	
 	private Date timestamp;
-	private Protocol protocol;
 	
 	private IExportExperimentsSettings settings;
 	private IValueConverter valueConverter;
@@ -78,9 +55,7 @@ public class StreamingXLSXWriter implements IExportWriter {
 	public void initialize(IExportExperimentsSettings settings) {
 		this.settings = settings;
 		this.featureResults = new ArrayList<>();
-		
 		this.timestamp = new Date();
-		this.protocol = settings.getExperiments().get(0).getProtocol();
 	}
 	
 	@Override
@@ -183,18 +158,7 @@ public class StreamingXLSXWriter implements IExportWriter {
 	
 	
 	private void writeExportInfo() {
-		Info[] infos = new Info[] {
-				new Info("Protocol ID", QueryResult.DOUBLE_VALUE, (double)protocol.getId()),
-				new Info("Protocol Name", QueryResult.STRING_VALUE, protocol.getName()),
-				new Info("Protocol Class ID", QueryResult.DOUBLE_VALUE, (double)protocol.getProtocolClass().getId()),
-				new Info("Protocol Class Name", QueryResult.STRING_VALUE, protocol.getProtocolClass().getName()),
-				new Info("Experiment ID", QueryResult.DOUBLE_VALUE,
-						settings.getExperiments().stream().map((experiment) -> (double)experiment.getId()).collect(Collectors.toList())), 
-				new Info("Experiment Name", QueryResult.STRING_VALUE,
-						settings.getExperiments().stream().map((experiment) -> experiment.getName()).collect(Collectors.toList())), 
-				new Info("Export User", QueryResult.STRING_VALUE, SecurityService.getInstance().getCurrentUserName()),
-				new Info("Export Timestamp", QueryResult.TIMESTAMP_VALUE, this.timestamp) };
-		
+		Info[] infos = ExportInfo.get(settings.getExperiments(), timestamp);
 		Sheet sheet = wb.createSheet("Info");
 		for (int i = 0; i < infos.length; i++) {
 			Info info = infos[i];

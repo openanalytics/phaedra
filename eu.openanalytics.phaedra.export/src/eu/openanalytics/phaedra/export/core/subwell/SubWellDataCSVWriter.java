@@ -3,10 +3,12 @@ package eu.openanalytics.phaedra.export.core.subwell;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -16,7 +18,9 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
 import au.com.bytecode.opencsv.CSVWriter;
+import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
@@ -117,14 +121,6 @@ public class SubWellDataCSVWriter implements IExportWriter {
 				for (int i = rowStart; i < rowEnd; i++) {
 					if (subsetProc == null || rnd.nextDouble() < subsetProc) {
 						String[] data = rowMap.get(i);
-
-						// TODO: Remove this HARDCODED check for AR Cell Classes.
-//						if (features.get(0).getDisplayName().equalsIgnoreCase("cell classes")) {
-//							if (data == null || data.length < 5 || data[5] == null || data[5].isEmpty() || Float.isNaN(new Float(data[5])) || new Float(data[5]) < 1) {
-//								continue;
-//							}
-//						}
-
 						writer.writeNext(data);
 					}
 				}
@@ -132,6 +128,17 @@ public class SubWellDataCSVWriter implements IExportWriter {
 
 				monitor.worked(1);
 			}
+			
+			String destPath = eu.openanalytics.phaedra.export.core.writer.format.CSVWriter.getDestinationPath(settings.getFileLocation(), "Info");
+			try (CSVWriter infoWriter = new CSVWriter(new FileWriter(destPath), ',')) {
+				List<Experiment> experiments = PlateService.streamableList(wells).stream()
+						.map(w -> w.getPlate().getExperiment())
+						.distinct()
+						.collect(Collectors.toList());
+				Date timestamp = new Date();
+				eu.openanalytics.phaedra.export.core.writer.format.CSVWriter.writeExportInfo(experiments, timestamp, infoWriter);
+			}
+			
 		} catch (IOException e) {
 			Display.getDefault().asyncExec(new Runnable() {
 				@Override

@@ -3,6 +3,8 @@ package eu.openanalytics.phaedra.export.core.writer.format;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,8 +13,11 @@ import eu.openanalytics.phaedra.export.core.ExportSettings;
 import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.export.core.statistics.Statistics;
+import eu.openanalytics.phaedra.export.core.util.ExportInfo;
+import eu.openanalytics.phaedra.export.core.util.ExportInfo.Info;
 import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
 import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
+import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 
 public class CSVWriter implements IExportWriter {
 	
@@ -20,6 +25,7 @@ public class CSVWriter implements IExportWriter {
 	private char quoteChar;
 	private char escapeChar;
 	
+	private Date timestamp;
 	private IExportExperimentsSettings settings;
 	private IValueConverter valueConverter;
 	
@@ -39,6 +45,7 @@ public class CSVWriter implements IExportWriter {
 	@Override
 	public void initialize(IExportExperimentsSettings settings) throws IOException {
 		this.settings = settings;
+		this.timestamp = new Date();
 		this.featureResults = new ArrayList<>();
 	}
 	
@@ -62,6 +69,11 @@ public class CSVWriter implements IExportWriter {
 		try {
 			writeMainTable();
 			
+			try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(
+					new FileWriter(getDestinationPath(settings.getDestinationPath(), "Info")), columnSeparator, quoteChar, escapeChar)) {
+				writeExportInfo(settings.getExperiments(), timestamp, writer);
+			}
+			
 			if (settings instanceof ExportSettings) {
 				writeWellsExportAdditions();
 			}
@@ -75,7 +87,27 @@ public class CSVWriter implements IExportWriter {
 		// Nothing to do
 	}
 	
-
+	public static void writeExportInfo(List<Experiment> experiments, Date timestamp, au.com.bytecode.opencsv.CSVWriter writer) throws IOException {
+		Info[] infos = ExportInfo.get(experiments, timestamp);
+		int maxValueSize = Arrays.stream(infos).mapToInt(i -> i.values.size()).max().orElse(1);
+		String[] rowData = new String[1 + maxValueSize];
+		for (int i = 0; i < infos.length; i++) {
+			Arrays.fill(rowData, null);
+			Info info = infos[i];
+			rowData[0] = info.name;
+			for (int valueIdx = 0; valueIdx < info.values.size(); valueIdx++) {
+				rowData[1 + valueIdx] = String.valueOf(info.values.get(valueIdx));
+			}
+			writer.writeNext(rowData);
+		}
+	}
+	
+	public static String getDestinationPath(String destinationPath, String sub) {
+		String extension = FileUtils.getExtension(destinationPath);
+		destinationPath = destinationPath.substring(0, destinationPath.lastIndexOf('.'));
+		return destinationPath + '_' + sub + '.' + extension;
+	}
+	
 	protected boolean needQuoting() {
 		return true;
 	}
@@ -119,8 +151,9 @@ public class CSVWriter implements IExportWriter {
 		if (settings.includes.contains(ExportSettings.Includes.PlateStatistics)
 				&& !featureResults.isEmpty()) {
 			// Write statistics into separate file.
-			try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(new FileWriter(getDestinationPath(settings, "Statistics")),
-					columnSeparator, quoteChar, escapeChar)) {
+			try (au.com.bytecode.opencsv.CSVWriter writer = new au.com.bytecode.opencsv.CSVWriter(
+					new FileWriter(getDestinationPath(settings.getDestinationPath(), "Statistics")), columnSeparator, quoteChar, escapeChar)) {
+				
 				Statistics stats = featureResults.get(0).getStatistics();
 				List<String> statNames = stats.getStatNames().stream().sorted().collect(Collectors.toList());
 				
@@ -140,13 +173,6 @@ public class CSVWriter implements IExportWriter {
 				}
 			}
 		}
-	}
-	
-	private String getDestinationPath(IExportExperimentsSettings settings, String sub) {
-		String destinationPath = settings.getDestinationPath();
-		String extension = FileUtils.getExtension(destinationPath);
-		destinationPath = destinationPath.substring(0, destinationPath.lastIndexOf('.'));
-		return destinationPath + '_' + sub + '.' + extension;
 	}
 	
 	private String formatValue(double value) {
