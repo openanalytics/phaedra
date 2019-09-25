@@ -23,7 +23,7 @@ public class IncludeDataPage extends AbstractFileSelectionPage {
 	private Button compoundSplitChk;
 	
 	public IncludeDataPage(ExportSettings settings, int stepNum, int stepTotal) {
-		super("Data to Include", settings, null);
+		super("Data to Include", settings, "Welldata");
 		setDescription(String.format("Step %1$s/%2$s: Select additional data to export.", stepNum, stepTotal));
 		
 		this.settings = settings;

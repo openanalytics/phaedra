@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.export.subwell.wizard.pages;
 
+import java.util.List;
+
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -12,6 +14,8 @@ import org.eclipse.swt.widgets.Composite;
 import eu.openanalytics.phaedra.base.ui.util.misc.FileSelector;
 import eu.openanalytics.phaedra.export.core.subwell.ExportSettings;
 import eu.openanalytics.phaedra.export.core.subwell.IExportWriter;
+import eu.openanalytics.phaedra.export.core.util.FileNameUtils;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
 
 public class FileLocationPage extends WizardPage implements IWizardPage {
 
@@ -20,13 +24,15 @@ public class FileLocationPage extends WizardPage implements IWizardPage {
 	private FileSelector fileSelector;
 	
 	private ExportSettings settings;
+	private List<Well> wells;
 
-	public FileLocationPage(ExportSettings settings) {
+	public FileLocationPage(ExportSettings settings, List<Well> wells) {
 		super(PAGE_NAME);
 		setTitle(PAGE_NAME);
 		setDescription("Select a location to which the file will be saved");
 		
 		this.settings = settings;
+		this.wells = wells;
 	}
 
 	@Override
@@ -42,7 +48,10 @@ public class FileLocationPage extends WizardPage implements IWizardPage {
 		}
 		fileSelector = new FileSelector(container, SWT.SAVE, extensions);
 		fileSelector.setSelectedFile(null);
-		fileSelector.setSuggestedName("export.xlsx");
+		
+		Well sample = (wells == null || wells.isEmpty()) ? null : wells.get(0);
+		fileSelector.setSuggestedName(FileNameUtils.proposeName(sample, "Subwelldata") + ".xlsx");
+		
 		fileSelector.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

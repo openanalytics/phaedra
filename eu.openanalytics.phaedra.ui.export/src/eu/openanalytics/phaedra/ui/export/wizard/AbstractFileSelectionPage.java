@@ -26,6 +26,7 @@ import org.eclipse.swt.widgets.Text;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.ISettingsOption;
+import eu.openanalytics.phaedra.export.core.util.FileNameUtils;
 import eu.openanalytics.phaedra.export.core.writer.WriterFactory;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
@@ -39,7 +40,7 @@ public abstract class AbstractFileSelectionPage extends BaseExportWizardPage {
 	private String[] fileTypes;
 	private String fileType;
 	
-	private String fileNameProposal;
+	private String fileNameSuffix;
 	
 	private Text pathTxt;
 	private Button browseBtn;
@@ -49,11 +50,11 @@ public abstract class AbstractFileSelectionPage extends BaseExportWizardPage {
 	private CheckboxTableViewer includeOptionTableViewer;
 	
 	public AbstractFileSelectionPage(String pageName, IExportExperimentsSettings settings,
-			/*@Nullable*/String fileNameProposal) {
+			/*@Nullable*/String fileNameSuffix) {
 		super(pageName);
 		
 		this.settings = settings;
-		this.fileNameProposal = fileNameProposal;
+		this.fileNameSuffix = fileNameSuffix;
 		
 		setFileTypes(WriterFactory.getAvailableFileTypes());
 	}
@@ -72,10 +73,8 @@ public abstract class AbstractFileSelectionPage extends BaseExportWizardPage {
 		if (settings.getDestinationPath() != null) {
 			return WriterFactory.removeFileType(settings.getDestinationPath());
 		}
-		if (protocol != null) {
-			return (fileNameProposal != null) ? protocol.getName() + ' ' + fileNameProposal : protocol.getName();
-		}
-		return (fileNameProposal != null) ? fileNameProposal : "export";
+		Experiment exp = (settings.getExperiments() == null || settings.getExperiments().isEmpty()) ? null : settings.getExperiments().get(0);
+		return FileNameUtils.proposeName(exp, fileNameSuffix);
 	}
 	
 	public Composite createFileSelection(Composite parent) {

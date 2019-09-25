@@ -33,7 +33,7 @@ public class SubWellDataExportWizard extends Wizard {
 		super.addPages();
 		addPage(new FeatureSelectionPage(pClass, settings));
 		addPage(new SettingsSelectionPage(settings));
-		addPage(new FileLocationPage(settings));
+		addPage(new FileLocationPage(settings, wells));
 	}
 
 	@Override
