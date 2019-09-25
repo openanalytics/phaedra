@@ -90,7 +90,7 @@ public class SubWellDataXLSXWriter implements IExportWriter {
 
 		// We will manually flush rows.
 		SXSSFWorkbook wb = new SXSSFWorkbook(-1);
-		SXSSFSheet sheet = wb.createSheet("Subwell Data");
+		SXSSFSheet sheet = wb.createSheet("Data");
 
 		int rowStart = 0;
 		int rowEnd = 1;
