@@ -16,12 +16,12 @@ public class ZScoreRobSamplesNormalizer extends BaseNormalizer {
 	
 	@Override
 	public String getId() {
-		return "ZScoreRob[S]";
+		return "ZScoreRob[S/L]";
 	}
 	
 	@Override
 	public String getDescription() {
-		return "Robust Z-score based on samples";
+		return "Robust Z-score based on samples and low controls";
 	}
 	
 	@Override
