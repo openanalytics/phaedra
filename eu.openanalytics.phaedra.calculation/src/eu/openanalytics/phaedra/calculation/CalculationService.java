@@ -27,10 +27,11 @@ import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.calculation.formula.CalculationFormula;
-import eu.openanalytics.phaedra.calculation.formula.CalculationFormulaLanguage;
-import eu.openanalytics.phaedra.calculation.formula.CalculationFormulaScope;
-import eu.openanalytics.phaedra.calculation.formula.CalculationFormulaType;
+import eu.openanalytics.phaedra.calculation.formula.FormulaUtils;
+import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
+import eu.openanalytics.phaedra.calculation.formula.model.InputType;
+import eu.openanalytics.phaedra.calculation.formula.model.Language;
+import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 import eu.openanalytics.phaedra.calculation.hook.CalculationHookManager;
 import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
@@ -274,60 +275,43 @@ public class CalculationService {
 		return MultiploMethod.get(exp) != MultiploMethod.None;
 	}
 	
-	/**
-	 * TODO types CalculatedSubWellFeature and Other will not result in a double[] per plate!
-	 * For Other, it is not known, for CalculatedSubWellFeature it's a float[] per well.
-	 * 
-	 * @param plate
-	 * @param formulaId
-	 * @return
-	 * @throws CalculationException
-	 */
-	public double[] evaluateFormula(Plate plate, long formulaId) throws CalculationException {
-		CalculationFormula formula = getFormula(formulaId);
-		if (formula == null) throw new CalculationException("No formula found with id " + formulaId);
-		
-		CalculationFormulaLanguage language = CalculationFormulaLanguage.get(formula.getLanguage());
+	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
+		Language language = FormulaUtils.getLanguage(formula);
 		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
 		
-		CalculationFormulaType type = CalculationFormulaType.getForCode(formula.getType());
-		if (type == null) throw new CalculationException("Invalid formula type: " + formula.getType());
+		InputType type = FormulaUtils.getInputType(formula);
+		if (type == null) throw new CalculationException("Invalid formula type: " + formula.getInputType());
 		
-		CalculationFormulaScope scope = CalculationFormulaScope.getForCode(formula.getScope());
+		Scope scope = FormulaUtils.getScope(formula);
 		if (scope == null) throw new CalculationException("Invalid formula scope: " + formula.getScope());
 
-		double[] output = new double[PlateUtils.getWellCount(plate)];
-		List<IValueObject> variableValues = new ArrayList<>();
+		// Assemble script input
+		
+		List<IValueObject> inputEntities = new ArrayList<>();
 		switch (scope) {
 		case PerWell:
-			variableValues.addAll(plate.getWells());
+			inputEntities.addAll(plate.getWells());
 			break;
 		case PerPlate:
-			variableValues.add(plate);
+			inputEntities.add(plate);
 			break;
 		}
 		
-		variableValues.parallelStream().forEach(value -> {
+		// Evaluate the formula
+		double[] output = new double[inputEntities.size()];
+		inputEntities.parallelStream().forEach(inputValue -> {
 			try {
-				Map<String, Object> context = buildContext(formula, plate);
-				Object retVal = ScriptService.getInstance().executeScript(formula.getBody(), context, language.getId());
-				type.handleReturnValue(value, retVal, output, scope);
+				Map<String, Object> context = language.buildContext(inputValue, formula, plate, feature);
+				Object outputValue = ScriptService.getInstance().executeScript(formula.getFormula(), context, language.getId());
+				int index = inputEntities.indexOf(inputValue);
+				output[index] = language.transformFormulaOutput(inputValue, outputValue, formula);
 			} catch (ScriptException | CalculationException | NumberFormatException e) {
 				//TODO log
 			}
 		});
 		
+		//TODO sort output?
 		return output;
-	}
-	
-	private CalculationFormula getFormula(long id) {
-		//TODO
-		return null;
-	}
-	
-	private Map<String, Object> buildContext(CalculationFormula formula, Plate plate) {
-		//TODO
-		return null;
 	}
 	
 	/* package */ List<FeatureValue> runCalculatedFeature(Feature f, Plate p) {

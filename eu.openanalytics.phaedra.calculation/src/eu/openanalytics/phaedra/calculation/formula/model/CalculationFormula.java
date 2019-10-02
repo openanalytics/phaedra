@@ -1,4 +1,4 @@
-package eu.openanalytics.phaedra.calculation.formula;
+package eu.openanalytics.phaedra.calculation.formula.model;
 
 public class CalculationFormula {
 
@@ -7,10 +7,11 @@ public class CalculationFormula {
 	private String description;
 	private int version;
 
-	private String body;
+	private String formula;
 	private String language;
-	private int type;
+	
 	private int scope;
+	private int inputType;
 	
 	public long getId() {
 		return id;
@@ -36,11 +37,11 @@ public class CalculationFormula {
 	public void setVersion(int version) {
 		this.version = version;
 	}
-	public String getBody() {
-		return body;
+	public String getFormula() {
+		return formula;
 	}
-	public void setBody(String body) {
-		this.body = body;
+	public void setFormula(String formula) {
+		this.formula = formula;
 	}
 	public String getLanguage() {
 		return language;
@@ -48,17 +49,16 @@ public class CalculationFormula {
 	public void setLanguage(String language) {
 		this.language = language;
 	}
-	public int getType() {
-		return type;
-	}
-	public void setType(int type) {
-		this.type = type;
-	}
 	public int getScope() {
 		return scope;
 	}
 	public void setScope(int scope) {
 		this.scope = scope;
 	}
-	
+	public int getInputType() {
+		return inputType;
+	}
+	public void setInputType(int inputType) {
+		this.inputType = inputType;
+	}
 }
