@@ -19,5 +19,5 @@ public interface Language {
 	public String getLabel();
 	
 	public Map<String, Object> buildContext(IValueObject inputValue, CalculationFormula formula, Plate plate, Feature feature);
-	public double transformFormulaOutput(IValueObject inputValue, Object outputValue, CalculationFormula formula);
+	public void transformFormulaOutput(IValueObject inputValue, Object outputValue, CalculationFormula formula, Map<String, Object> context, double[] outputArray);
 }

@@ -28,7 +28,10 @@ public enum Scope {
 	}
 	
 	public static Scope get(int code) {
-		return PerWell;
+		for (Scope s: values()) {
+			if (s.code == code) return s;
+		}
+		return null;
 	}
 	
 }

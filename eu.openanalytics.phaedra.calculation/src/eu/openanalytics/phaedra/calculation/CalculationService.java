@@ -276,17 +276,16 @@ public class CalculationService {
 	}
 	
 	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
+		// Validate the formula
 		Language language = FormulaUtils.getLanguage(formula);
 		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
-		
 		InputType type = FormulaUtils.getInputType(formula);
 		if (type == null) throw new CalculationException("Invalid formula type: " + formula.getInputType());
-		
 		Scope scope = FormulaUtils.getScope(formula);
 		if (scope == null) throw new CalculationException("Invalid formula scope: " + formula.getScope());
-
-		// Assemble script input
+		if (formula.getFormula() == null || formula.getFormula().trim().isEmpty()) throw new CalculationException("Invalid formula: no script body");
 		
+		// Assemble script input
 		List<IValueObject> inputEntities = new ArrayList<>();
 		switch (scope) {
 		case PerWell:
@@ -296,21 +295,26 @@ public class CalculationService {
 			inputEntities.add(plate);
 			break;
 		}
+
+		double[] output = new double[plate.getWells().size()];
+		Arrays.fill(output, Double.NaN);
 		
 		// Evaluate the formula
-		double[] output = new double[inputEntities.size()];
+		long startTime = System.currentTimeMillis();
 		inputEntities.parallelStream().forEach(inputValue -> {
 			try {
 				Map<String, Object> context = language.buildContext(inputValue, formula, plate, feature);
 				Object outputValue = ScriptService.getInstance().executeScript(formula.getFormula(), context, language.getId());
-				int index = inputEntities.indexOf(inputValue);
-				output[index] = language.transformFormulaOutput(inputValue, outputValue, formula);
-			} catch (ScriptException | CalculationException | NumberFormatException e) {
-				//TODO log
+				language.transformFormulaOutput(inputValue, outputValue, formula, context, output);
+			} catch (CalculationException e) {
+				throw e;
+			} catch (ScriptException | NumberFormatException e) {
+				throw new CalculationException("Formula evaluation failed on " + inputValue, e);
 			}
 		});
+		long duration = System.currentTimeMillis() - startTime;
+		EclipseLog.debug(String.format("Formula %s evaluated on %s, feature %s in %d ms", formula.getName(), plate, feature, duration), CalculationService.class);
 		
-		//TODO sort output?
 		return output;
 	}
 	

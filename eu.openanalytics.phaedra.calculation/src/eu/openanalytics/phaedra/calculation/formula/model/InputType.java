@@ -45,6 +45,9 @@ public enum InputType {
 	}
 	
 	public static InputType get(int code) {
-		return RawValue;
+		for (InputType t: values()) {
+			if (t.code == code) return t;
+		}
+		return null;
 	}
 }

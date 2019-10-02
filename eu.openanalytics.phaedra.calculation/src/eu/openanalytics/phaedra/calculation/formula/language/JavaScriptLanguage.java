@@ -9,6 +9,7 @@ import eu.openanalytics.phaedra.calculation.formula.FormulaUtils;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.model.plate.PlateService;
+import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -42,12 +43,15 @@ public class JavaScriptLanguage extends BaseLanguage {
 			context.put("inputValue", type.getInputValue(well, feature));
 		} else if (inputValue instanceof Plate) {
 			Well[] wells = PlateService.streamableList(plate.getWells())
-					.stream().toArray(i -> new Well[i]);
+					.stream()
+					.sorted(PlateUtils.WELL_NR_SORTER)
+					.toArray(i -> new Well[i]);
 			long[] wellIds = Arrays.stream(wells).mapToLong(w -> w.getId()).toArray();
 			double[] inputValues = Arrays.stream(wells).mapToDouble(w -> type.getInputValue(w, feature)).toArray();
 			context.put("wellIds", wellIds);
 			context.put("wells", wells);
 			context.put("inputValues", inputValues);
+			context.put("outputValues", new double[inputValues.length]);
 		} else {
 			throw new IllegalArgumentException(String.format("Formula language %s does not support input type %s", getLabel(), inputValue.getClass()));
 		}
@@ -56,10 +60,21 @@ public class JavaScriptLanguage extends BaseLanguage {
 	}
 
 	@Override
-	public double transformFormulaOutput(IValueObject inputValue, Object outputValue, CalculationFormula formula) {
-		if (outputValue == null) return Double.NaN;
-		else if (outputValue instanceof Number) return ((Number) outputValue).doubleValue();
-		else return Double.parseDouble(String.valueOf(outputValue));
+	public void transformFormulaOutput(IValueObject inputValue, Object outputValue, CalculationFormula formula, Map<String, Object> context, double[] outputArray) {
+		switch (FormulaUtils.getScope(formula)) {
+		case PerWell:
+			Well well = (Well) inputValue;
+			int index = PlateUtils.getWellNr(well) - 1;
+			outputArray[index] = getAsDouble(outputValue);
+			break;
+		case PerPlate:
+		default:
+			Plate plate = (Plate) inputValue;
+			double[] outputValues = (double[]) context.get("outputValues");
+			for (index=0; index<outputArray.length; index++) {
+				well = PlateUtils.getWell(plate, index + 1);
+				outputArray[index] = outputValues[index];
+			}
+		}
 	}
-
 }
