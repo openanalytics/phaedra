@@ -1519,3 +1519,29 @@ alter table phaedra.hca_object_property
 
 grant insert, update, delete on phaedra.hca_object_property to phaedra_role_crud;
 grant select on phaedra.hca_object_property to phaedra_role_read;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_calculation_formula (
+	formula_id 			bigint not null,
+	formula_name		text not null,
+	description			text,
+	author				text,
+	formula				text,
+	language			text,
+	scope				integer,
+	input_type			integer
+);
+
+alter table phaedra.hca_calculation_formula
+	add constraint hca_calculation_formula_pk
+	primary key ( formula_id );
+
+create sequence phaedra.hca_calculation_formula_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+	
+grant insert, update, delete on phaedra.hca_calculation_formula to phaedra_role_crud;
+grant select on phaedra.hca_calculation_formula to phaedra_role_read;

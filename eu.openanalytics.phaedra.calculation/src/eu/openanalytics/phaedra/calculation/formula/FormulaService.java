@@ -1,0 +1,88 @@
+package eu.openanalytics.phaedra.calculation.formula;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+
+import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
+import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.calculation.CalculationException;
+import eu.openanalytics.phaedra.calculation.formula.language.JavaScriptLanguage;
+import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
+import eu.openanalytics.phaedra.calculation.formula.model.InputType;
+import eu.openanalytics.phaedra.calculation.formula.model.Language;
+import eu.openanalytics.phaedra.calculation.formula.model.Scope;
+
+//TODO apply security? should be cross-pclass, so apply security based on author
+//TODO apply versioning?
+public class FormulaService extends BaseJPAService {
+
+	private static final String DEFAULT_LANGUAGE_ID = "javaScript";
+	
+	private static FormulaService instance = new FormulaService();
+	
+	private Map<String, Language> languages;
+	
+	private FormulaService() {
+		// Hidden constructor
+		languages = new HashMap<>();
+		languages.put(DEFAULT_LANGUAGE_ID, new JavaScriptLanguage());
+	}
+	
+	public static FormulaService getInstance() {
+		return instance;
+	}
+	
+	@Override
+	protected EntityManager getEntityManager() {
+		return Screening.getEnvironment().getEntityManager();
+	}
+	
+	public CalculationFormula getFormula(long id) {
+		return getEntity(CalculationFormula.class, id);
+	}
+	
+	public CalculationFormula getFormulaByName(String name) {
+		return getEntity("select c from CalculationFormula c where c.name = ?1", CalculationFormula.class, name);
+	}
+
+	public String[] getFormulaNames() {
+		return streamableList(getList(CalculationFormula.class)).stream().map(c -> c.getName()).sorted().toArray(i -> new String[i]);
+	}
+	
+	public CalculationFormula createFormula() {
+		CalculationFormula formula = new CalculationFormula();
+		formula.setName("New formula");
+		formula.setInputType(InputType.RawValue.getCode());
+		formula.setScope(Scope.PerWell.getCode());
+		formula.setLanguage(DEFAULT_LANGUAGE_ID);
+		return formula;
+	}
+	
+	public void updateFormula(CalculationFormula formula) {
+		checkFormulaValid(formula);
+		save(formula);
+	}
+	
+	public void deleteFormula(CalculationFormula formula) {
+		delete(formula);
+	}
+
+	public void checkFormulaValid(CalculationFormula formula) throws CalculationException {
+		if (formula == null) throw new CalculationException("Invalid formula: null");
+		if (formula.getName() == null || formula.getName().trim().isEmpty()) throw new CalculationException("Invalid formula: empty name");
+		Language language = getLanguage(formula.getLanguage());
+		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
+		InputType type = FormulaUtils.getInputType(formula);
+		if (type == null) throw new CalculationException("Invalid formula type: " + formula.getInputType());
+		Scope scope = FormulaUtils.getScope(formula);
+		if (scope == null) throw new CalculationException("Invalid formula scope: " + formula.getScope());
+		if (formula.getFormula() == null || formula.getFormula().trim().isEmpty()) throw new CalculationException("Invalid formula: no formula body");
+	}
+	
+	public Language getLanguage(String languageId) {
+		if (languageId == null) return null;
+		return languages.get(languageId);
+	}
+}

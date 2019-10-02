@@ -228,5 +228,14 @@
             name="Annotations">
       </page>
    </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.db.persistenceModel">
+      <persistenceModel
+            name="CalculationFormulae">
+         <entityClass
+               class="eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula">
+         </entityClass>
+      </persistenceModel>
+   </extension>
 
 </plugin>

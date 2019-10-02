@@ -27,11 +27,10 @@ import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.formula.FormulaUtils;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
-import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
-import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 import eu.openanalytics.phaedra.calculation.hook.CalculationHookManager;
 import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
@@ -275,19 +274,17 @@ public class CalculationService {
 		return MultiploMethod.get(exp) != MultiploMethod.None;
 	}
 	
+	public double[] evaluateFormula(Plate plate, Feature feature, long formulaId) throws CalculationException {
+		return evaluateFormula(plate, feature, FormulaService.getInstance().getFormula(formulaId));
+	}
+	
 	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
 		// Validate the formula
-		Language language = FormulaUtils.getLanguage(formula);
-		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
-		InputType type = FormulaUtils.getInputType(formula);
-		if (type == null) throw new CalculationException("Invalid formula type: " + formula.getInputType());
-		Scope scope = FormulaUtils.getScope(formula);
-		if (scope == null) throw new CalculationException("Invalid formula scope: " + formula.getScope());
-		if (formula.getFormula() == null || formula.getFormula().trim().isEmpty()) throw new CalculationException("Invalid formula: no script body");
+		FormulaService.getInstance().checkFormulaValid(formula);
 		
 		// Assemble script input
 		List<IValueObject> inputEntities = new ArrayList<>();
-		switch (scope) {
+		switch (FormulaUtils.getScope(formula)) {
 		case PerWell:
 			inputEntities.addAll(plate.getWells());
 			break;
@@ -301,6 +298,7 @@ public class CalculationService {
 		
 		// Evaluate the formula
 		long startTime = System.currentTimeMillis();
+		Language language = FormulaService.getInstance().getLanguage(formula.getLanguage());
 		inputEntities.parallelStream().forEach(inputValue -> {
 			try {
 				Map<String, Object> context = language.buildContext(inputValue, formula, plate, feature);

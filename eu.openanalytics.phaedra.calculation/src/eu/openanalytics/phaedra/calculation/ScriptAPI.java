@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.scripting.api.IScriptAPIProvider;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.validation.ValidationService;
 
@@ -15,6 +16,7 @@ public class ScriptAPI implements IScriptAPIProvider {
 		utils.put("CalculationService", CalculationService.getInstance());
 		utils.put("ValidationService", ValidationService.getInstance());
 		utils.put("StatService", StatService.getInstance());
+		utils.put("FormulaService", FormulaService.getInstance());
 		return utils;
 	}
 
