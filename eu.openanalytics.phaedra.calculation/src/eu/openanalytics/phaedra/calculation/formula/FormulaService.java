@@ -18,7 +18,6 @@ import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 
-//TODO apply versioning?
 public class FormulaService extends BaseJPAService {
 
 	private static final String DEFAULT_LANGUAGE_ID = JavaScriptLanguage.ID;
@@ -80,6 +79,11 @@ public class FormulaService extends BaseJPAService {
 	public void updateFormula(CalculationFormula formula) {
 		checkCanEditFormula(formula);
 		validateFormula(formula);
+		
+		CalculationFormula conflict = getFormulaByName(formula.getName());
+		if (conflict != null && conflict.getId() != formula.getId()) {
+			throw new IllegalArgumentException(String.format("A formula named %s already exists", formula.getName()));
+		}
 		save(formula);
 	}
 	
@@ -91,7 +95,6 @@ public class FormulaService extends BaseJPAService {
 	public void validateFormula(CalculationFormula formula) throws CalculationException {
 		if (formula == null) throw new CalculationException("Invalid formula: null");
 		if (formula.getName() == null || formula.getName().trim().isEmpty()) throw new CalculationException("Invalid formula: empty name");
-		//TODO check for duplicate names
 		Language language = getLanguage(formula.getLanguage());
 		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
 		language.validateFormula(formula);
