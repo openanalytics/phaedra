@@ -57,6 +57,12 @@ public class CalculationFormula {
 	public void setDescription(String description) {
 		this.description = description;
 	}
+	public String getAuthor() {
+		return author;
+	}
+	public void setAuthor(String author) {
+		this.author = author;
+	}
 	public String getFormula() {
 		return formula;
 	}

@@ -7,6 +7,8 @@ import javax.persistence.EntityManager;
 
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
+import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.formula.language.JEPLanguage;
 import eu.openanalytics.phaedra.calculation.formula.language.JavaScriptLanguage;
@@ -16,7 +18,6 @@ import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 
-//TODO apply security? should be cross-pclass, so apply security based on author
 //TODO apply versioning?
 public class FormulaService extends BaseJPAService {
 
@@ -61,21 +62,36 @@ public class FormulaService extends BaseJPAService {
 		formula.setInputType(InputType.RawValue.getCode());
 		formula.setScope(Scope.PerWell.getCode());
 		formula.setLanguage(DEFAULT_LANGUAGE_ID);
+		formula.setAuthor(SecurityService.getInstance().getCurrentUserName());
 		return formula;
 	}
 	
+	public boolean canEditFormula(CalculationFormula formula) {
+		String currentUser = SecurityService.getInstance().getCurrentUserName();
+		String author = formula.getAuthor();
+		return (author == null || author.equalsIgnoreCase(currentUser) || SecurityService.getInstance().isGlobalAdmin());
+	}
+	
+	public void checkCanEditFormula(CalculationFormula formula) {
+		if (!canEditFormula(formula)) throw new PermissionDeniedException(
+				String.format("Only the author, %s, can modify the formula %s", formula.getAuthor(), formula.getName()));
+	}
+	
 	public void updateFormula(CalculationFormula formula) {
+		checkCanEditFormula(formula);
 		validateFormula(formula);
 		save(formula);
 	}
 	
 	public void deleteFormula(CalculationFormula formula) {
+		checkCanEditFormula(formula);
 		delete(formula);
 	}
 
 	public void validateFormula(CalculationFormula formula) throws CalculationException {
 		if (formula == null) throw new CalculationException("Invalid formula: null");
 		if (formula.getName() == null || formula.getName().trim().isEmpty()) throw new CalculationException("Invalid formula: empty name");
+		//TODO check for duplicate names
 		Language language = getLanguage(formula.getLanguage());
 		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
 		language.validateFormula(formula);
