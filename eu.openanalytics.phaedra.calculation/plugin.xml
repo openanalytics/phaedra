@@ -236,6 +236,12 @@
                class="eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula">
          </entityClass>
       </persistenceModel>
+      <persistenceModel
+            name="HitCalling">
+         <entityClass
+               class="eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule">
+         </entityClass>
+      </persistenceModel>
    </extension>
 
 </plugin>
