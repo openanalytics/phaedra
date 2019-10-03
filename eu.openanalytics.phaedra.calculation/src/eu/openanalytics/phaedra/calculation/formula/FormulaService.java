@@ -8,7 +8,9 @@ import javax.persistence.EntityManager;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.calculation.CalculationException;
+import eu.openanalytics.phaedra.calculation.formula.language.JEPLanguage;
 import eu.openanalytics.phaedra.calculation.formula.language.JavaScriptLanguage;
+import eu.openanalytics.phaedra.calculation.formula.language.RLanguage;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
@@ -18,7 +20,7 @@ import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 //TODO apply versioning?
 public class FormulaService extends BaseJPAService {
 
-	private static final String DEFAULT_LANGUAGE_ID = "javaScript";
+	private static final String DEFAULT_LANGUAGE_ID = JavaScriptLanguage.ID;
 	
 	private static FormulaService instance = new FormulaService();
 	
@@ -27,7 +29,9 @@ public class FormulaService extends BaseJPAService {
 	private FormulaService() {
 		// Hidden constructor
 		languages = new HashMap<>();
-		languages.put(DEFAULT_LANGUAGE_ID, new JavaScriptLanguage());
+		languages.put(JavaScriptLanguage.ID, new JavaScriptLanguage());
+		languages.put(JEPLanguage.ID, new JEPLanguage());
+		languages.put(RLanguage.ID, new RLanguage());
 	}
 	
 	public static FormulaService getInstance() {
@@ -48,7 +52,7 @@ public class FormulaService extends BaseJPAService {
 	}
 
 	public String[] getFormulaNames() {
-		return streamableList(getList(CalculationFormula.class)).stream().map(c -> c.getName()).sorted().toArray(i -> new String[i]);
+		return streamableList(getList("select c.name from CalculationFormula c", String.class)).stream().sorted().toArray(i -> new String[i]);
 	}
 	
 	public CalculationFormula createFormula() {
@@ -61,7 +65,7 @@ public class FormulaService extends BaseJPAService {
 	}
 	
 	public void updateFormula(CalculationFormula formula) {
-		checkFormulaValid(formula);
+		validateFormula(formula);
 		save(formula);
 	}
 	
@@ -69,11 +73,12 @@ public class FormulaService extends BaseJPAService {
 		delete(formula);
 	}
 
-	public void checkFormulaValid(CalculationFormula formula) throws CalculationException {
+	public void validateFormula(CalculationFormula formula) throws CalculationException {
 		if (formula == null) throw new CalculationException("Invalid formula: null");
 		if (formula.getName() == null || formula.getName().trim().isEmpty()) throw new CalculationException("Invalid formula: empty name");
 		Language language = getLanguage(formula.getLanguage());
 		if (language == null) throw new CalculationException("Invalid formula language: " + formula.getLanguage());
+		language.validateFormula(formula);
 		InputType type = FormulaUtils.getInputType(formula);
 		if (type == null) throw new CalculationException("Invalid formula type: " + formula.getInputType());
 		Scope scope = FormulaUtils.getScope(formula);

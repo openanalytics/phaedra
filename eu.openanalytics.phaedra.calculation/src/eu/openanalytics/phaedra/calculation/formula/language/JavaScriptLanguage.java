@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.calculation.formula.language;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
@@ -12,13 +11,15 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 
 public class JavaScriptLanguage extends BaseLanguage {
 
+	public static final String ID = "javaScript";
+	
 	@Override
 	public String getId() {
-		return "javaScript";
+		return ID;
 	}
 
 	@Override
@@ -27,33 +28,25 @@ public class JavaScriptLanguage extends BaseLanguage {
 	}
 
 	@Override
-	public Map<String, Object> buildContext(IValueObject inputValue, CalculationFormula formula, Plate plate, Feature feature) {
-		Map<String, Object> context = new HashMap<>();
-		context.put("featureId", feature.getId());
+	protected Map<String, Object> buildContext(CalculationFormula formula, IValueObject inputValue, IFeature feature) {
+		Map<String, Object> context = super.buildContext(formula, inputValue, feature);
 		context.put("feature", feature);
-		context.put("plateId", plate.getId());
-		context.put("plate", plate);
 		
 		InputType type = FormulaUtils.getInputType(formula);
-		
 		if (inputValue instanceof Well) {
 			Well well = (Well) inputValue;
-			context.put("wellId", well.getId());
+			context.put("plate", well.getPlate());
 			context.put("well", well);			
-			context.put("inputValue", type.getInputValue(well, feature));
 		} else if (inputValue instanceof Plate) {
+			Plate plate = (Plate) inputValue;
+			context.put("plate", plate);
 			Well[] wells = PlateService.streamableList(plate.getWells())
 					.stream()
 					.sorted(PlateUtils.WELL_NR_SORTER)
 					.toArray(i -> new Well[i]);
-			long[] wellIds = Arrays.stream(wells).mapToLong(w -> w.getId()).toArray();
 			double[] inputValues = Arrays.stream(wells).mapToDouble(w -> type.getInputValue(w, feature)).toArray();
-			context.put("wellIds", wellIds);
 			context.put("wells", wells);
-			context.put("inputValues", inputValues);
 			context.put("outputValues", new double[inputValues.length]);
-		} else {
-			throw new IllegalArgumentException(String.format("Formula language %s does not support input type %s", getLabel(), inputValue.getClass()));
 		}
 		
 		return context;
@@ -69,10 +62,8 @@ public class JavaScriptLanguage extends BaseLanguage {
 			break;
 		case PerPlate:
 		default:
-			Plate plate = (Plate) inputValue;
 			double[] outputValues = (double[]) context.get("outputValues");
 			for (index=0; index<outputArray.length; index++) {
-				well = PlateUtils.getWell(plate, index + 1);
 				outputArray[index] = outputValues[index];
 			}
 		}

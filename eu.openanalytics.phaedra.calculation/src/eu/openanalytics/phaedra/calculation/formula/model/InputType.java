@@ -4,6 +4,7 @@ import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 
 public enum InputType {
 
@@ -32,13 +33,13 @@ public enum InputType {
 		return description;
 	}
 	
-	public double getInputValue(Well well, Feature feature) {
+	public double getInputValue(Well well, IFeature feature) {
 		PlateDataAccessor accessor = CalculationService.getInstance().getAccessor(well.getPlate());
 		switch(this) {
 		case RawValue:
-			return accessor.getNumericValue(well, feature, null);
+			return accessor.getNumericValue(well, (Feature) feature, null);
 		case NormalizedValue:
-			return accessor.getNumericValue(well, feature, feature.getNormalization());
+			return accessor.getNumericValue(well, (Feature) feature, ((Feature) feature).getNormalization());
 		default:
 			return Double.NaN;
 		}

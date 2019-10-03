@@ -1,11 +1,9 @@
 package eu.openanalytics.phaedra.calculation.formula.model;
 
-import java.util.Map;
-
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.scripting.engine.IScriptEngine;
-import eu.openanalytics.phaedra.model.plate.vo.Plate;
-import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.calculation.CalculationException;
+import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 
 /**
  * This class represents a supported calculation formula language.
@@ -18,6 +16,8 @@ public interface Language {
 	
 	public String getLabel();
 	
-	public Map<String, Object> buildContext(IValueObject inputValue, CalculationFormula formula, Plate plate, Feature feature);
-	public void transformFormulaOutput(IValueObject inputValue, Object outputValue, CalculationFormula formula, Map<String, Object> context, double[] outputArray);
+	public void validateFormula(CalculationFormula formula) throws CalculationException;
+	
+	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output) throws CalculationException;
+	
 }

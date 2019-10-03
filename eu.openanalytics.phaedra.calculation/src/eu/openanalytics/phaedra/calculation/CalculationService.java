@@ -280,7 +280,7 @@ public class CalculationService {
 	
 	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
 		// Validate the formula
-		FormulaService.getInstance().checkFormulaValid(formula);
+		FormulaService.getInstance().validateFormula(formula);
 		
 		// Assemble script input
 		List<IValueObject> inputEntities = new ArrayList<>();
@@ -300,15 +300,7 @@ public class CalculationService {
 		long startTime = System.currentTimeMillis();
 		Language language = FormulaService.getInstance().getLanguage(formula.getLanguage());
 		inputEntities.parallelStream().forEach(inputValue -> {
-			try {
-				Map<String, Object> context = language.buildContext(inputValue, formula, plate, feature);
-				Object outputValue = ScriptService.getInstance().executeScript(formula.getFormula(), context, language.getId());
-				language.transformFormulaOutput(inputValue, outputValue, formula, context, output);
-			} catch (CalculationException e) {
-				throw e;
-			} catch (ScriptException | NumberFormatException e) {
-				throw new CalculationException("Formula evaluation failed on " + inputValue, e);
-			}
+			language.evaluateFormula(formula, inputValue, feature, output);
 		});
 		long duration = System.currentTimeMillis() - startTime;
 		EclipseLog.debug(String.format("Formula %s evaluated on %s, feature %s in %d ms", formula.getName(), plate, feature, duration), CalculationService.class);
