@@ -12,6 +12,7 @@ import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
@@ -19,7 +20,9 @@ import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 
 public class HitCallService extends BaseJPAService {
 
@@ -59,15 +62,17 @@ public class HitCallService extends BaseJPAService {
 		return getEntity(HitCallRule.class, id);
 	}
 	
-	public HitCallRule createRule() {
+	public HitCallRule createRule(ProtocolClass protocolClass) {
 		HitCallRule rule = new HitCallRule();
+		rule.setProtocolClass(protocolClass);
 		rule.setName("New rule");
+		checkCanEditRule(rule);
 		return rule;
 	}
 	
-	public boolean canEditRule(HitCallRule formula) {
-		//TODO apply security to rules. Bind to protocol class?
-		return (SecurityService.getInstance().isGlobalAdmin());
+	public boolean canEditRule(HitCallRule rule) {
+		if (rule.getProtocolClass() == null) return false;
+		return ProtocolService.getInstance().canEditProtocolClass(rule.getProtocolClass());
 	}
 	
 	public void checkCanEditRule(HitCallRule rule) {
@@ -97,10 +102,13 @@ public class HitCallService extends BaseJPAService {
 	}
 	
 	public double[] runHitCalling(List<HitCallRule> rules, Plate plate, Feature feature) throws CalculationException {
+		SecurityService.getInstance().checkWithException(Permissions.PLATE_CALCULATE, plate);
+		//TODO Trigger a pre-calculation hook? Or let CalculationService deal with that, but then this method should never be called outside recalc.
+		
 		if (rules == null || rules.isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
 		if (plate == null) throw new CalculationException("Cannot perform hit calling: no plate provided");
 		if (feature == null) throw new CalculationException("Cannot perform hit calling: no feature provided");
-
+		
 		clearCache(plate, feature);
 		CacheKey key = createCacheKey(plate, feature);
 		double[] hitValues = null;
@@ -112,6 +120,9 @@ public class HitCallService extends BaseJPAService {
 			boolean isFirstRule = (rule == rules.get(0));
 			if (isFirstRule) hitValues = new double[ruleHitValues.length];
 			
+			// If any rule evaluates to 0, the outcome is 0
+			// Otherwise, the outcome is 1
+			//TODO Support different mechanisms, also including non-binary outcomes.
 			for (int i = 0; i < ruleHitValues.length; i++) {
 				if (ruleHitValues[i] >= rule.getThreshold()) {
 					if (isFirstRule) hitValues[i] = 1.0;

@@ -1582,6 +1582,7 @@ create table phaedra.hca_hit_call_rule (
 	rule_id 			bigint not null,
 	rule_name			text not null,
 	formula_id			bigint not null,
+	protocolclass_id	bigint not null,
 	threshold 			double precision
 );
 
@@ -1589,6 +1590,18 @@ alter table phaedra.hca_hit_call_rule
 	add constraint hca_hit_call_rule_pk
 	primary key ( rule_id );
 
+alter table phaedra.hca_hit_call_rule
+	add constraint hca_hit_call_rule_fk_formula
+	foreign key (formula_id)
+	references phaedra.hca_calculation_formula(formula_id)
+	on delete cascade;
+	
+alter table phaedra.hca_hit_call_rule
+	add constraint hca_hit_call_rule_fk_pclass
+	foreign key (protocolclass_id)
+	references phaedra.hca_protocolclass(protocolclass_id)
+	on delete cascade;
+	
 create sequence phaedra.hca_hit_call_rule_s
 	increment by 1
 	start with 1
