@@ -1581,7 +1581,7 @@ GRANT SELECT ON phaedra.hca_hit_call_value to phaedra_role_read;
 
 create table phaedra.hca_hit_call_ruleset (
 	ruleset_id 			bigint not null,
-	protocolclass_id	bigint not null
+	feature_id			bigint not null
 );
 
 alter table phaedra.hca_hit_call_ruleset
@@ -1589,9 +1589,9 @@ alter table phaedra.hca_hit_call_ruleset
 	primary key ( ruleset_id );
 
 alter table phaedra.hca_hit_call_ruleset
-	add constraint hca_hit_call_ruleset_fk_pclass
-	foreign key (protocolclass_id)
-	references phaedra.hca_protocolclass(protocolclass_id)
+	add constraint hca_hit_call_ruleset_fk_feature
+	foreign key (feature_id)
+	references phaedra.hca_feature(feature_id)
 	on delete cascade;
 	
 create sequence phaedra.hca_hit_call_ruleset_s

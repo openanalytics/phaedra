@@ -21,7 +21,6 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
-import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 
 public class HitCallService extends BaseJPAService {
 
@@ -49,36 +48,36 @@ public class HitCallService extends BaseJPAService {
 		return getEntity(HitCallRuleset.class, rulesetId);
 	}
 	
-	public HitCallRuleset getRulesetForProtocolClass(long protocolClassId) {
-		return getEntity("select rs from HitCallRuleset rs where rs.protocolClass.id = ?1", HitCallRuleset.class, protocolClassId);
+	public HitCallRuleset getRulesetForFeature(long featureId) {
+		return getEntity("select rs from HitCallRuleset rs where rs.feature.id = ?1", HitCallRuleset.class, featureId);
 	}
 	
-	public HitCallRuleset createRuleset(ProtocolClass protocolClass) {
-		if (protocolClass == null) throw new IllegalArgumentException("Cannot create ruleset: null protocolclass");
-		if (getRulesetForProtocolClass(protocolClass.getId()) != null) throw new IllegalArgumentException(
-				String.format("Cannot create ruleset: a ruleset already exists for protocolclass %s", protocolClass));
+	public HitCallRuleset createRuleset(Feature feature) {
+		if (feature == null) throw new IllegalArgumentException("Cannot create ruleset: null feature");
+		if (getRulesetForFeature(feature.getId()) != null) throw new IllegalArgumentException(
+				String.format("Cannot create ruleset: a ruleset already exists for feature %s", feature));
 		HitCallRuleset ruleset = new HitCallRuleset();
-		ruleset.setProtocolClass(protocolClass);
+		ruleset.setFeature(feature);
 		ruleset.setRules(new ArrayList<>());
 		checkCanEditRuleset(ruleset);
 		return ruleset;
 	}
 	
 	public boolean canEditRuleset(HitCallRuleset ruleset) {
-		if (ruleset.getProtocolClass() == null) return false;
-		return ProtocolService.getInstance().canEditProtocolClass(ruleset.getProtocolClass());
+		if (ruleset.getFeature() == null) return false;
+		return ProtocolService.getInstance().canEditProtocolClass(ruleset.getFeature().getProtocolClass());
 	}
 	
 	public void checkCanEditRuleset(HitCallRuleset ruleset) {
 		if (!canEditRuleset(ruleset)) throw new PermissionDeniedException(
-				String.format("No permission to modify the ruleset for protocolclass %s", ruleset.getProtocolClass()));
+				String.format("No permission to modify the ruleset for feature %s", ruleset.getFeature()));
 	}
 	
 	public void updateRuleset(HitCallRuleset ruleset) {
 		checkCanEditRuleset(ruleset);
+		validateRuleset(ruleset);
 		for (int i = 0; i < ruleset.getRules().size(); i++) {
 			HitCallRule rule = ruleset.getRules().get(i);
-			validateRule(rule);
 			rule.setSequence(i+1);
 		}
 		save(ruleset);
@@ -99,6 +98,12 @@ public class HitCallService extends BaseJPAService {
 		return rule;
 	}
 	
+	public void validateRuleset(HitCallRuleset ruleset) throws CalculationException {
+		if (ruleset == null) throw new CalculationException("Invalid ruleset: null");
+		if (ruleset.getFeature() == null) throw new CalculationException("Invalid ruleset: no feature specified");
+		for (HitCallRule rule: ruleset.getRules()) validateRule(rule);
+	}
+	
 	public void validateRule(HitCallRule rule) throws CalculationException {
 		if (rule == null) throw new CalculationException("Invalid rule: null");
 		if (rule.getName() == null || rule.getName().trim().isEmpty()) throw new CalculationException("Invalid rule: empty name");
@@ -106,13 +111,14 @@ public class HitCallService extends BaseJPAService {
 	}
 	
 	//TODO Only CalculationService#calculate should be allowed to call this method
-	public double[] runHitCalling(HitCallRuleset ruleset, Plate plate, Feature feature) throws CalculationException {
+	public double[] runHitCalling(HitCallRuleset ruleset, Plate plate) throws CalculationException {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CALCULATE, plate);
 		
 		if (ruleset == null || ruleset.getRules() == null || ruleset.getRules().isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
 		if (plate == null) throw new CalculationException("Cannot perform hit calling: no plate provided");
-		if (feature == null) throw new CalculationException("Cannot perform hit calling: no feature provided");
+		validateRuleset(ruleset);
 		
+		Feature feature = ruleset.getFeature();
 		clearCache(plate, feature);
 		CacheKey key = createCacheKey(plate, feature);
 		double[] hitValues = null;

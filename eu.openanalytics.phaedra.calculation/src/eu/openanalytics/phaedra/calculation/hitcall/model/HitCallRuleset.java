@@ -22,7 +22,7 @@ import org.eclipse.persistence.annotations.JoinFetchType;
 import eu.openanalytics.phaedra.base.cache.IgnoreSizeOf;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
-import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 @Entity
 @Table(name="hca_hit_call_ruleset", schema="phaedra")
@@ -34,11 +34,11 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator="hca_hit_call_ruleset_s")
 	private long id;
 	
-	@IgnoreSizeOf
 	@JoinFetch(JoinFetchType.INNER)
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name="protocolclass_id")
-	private ProtocolClass protocolClass;
+	@JoinColumn(name="feature_id")
+	private Feature feature;
+	
 	
 	@IgnoreSizeOf
 	@OneToMany(mappedBy="ruleset", fetch=FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
@@ -51,11 +51,11 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	public void setId(long id) {
 		this.id = id;
 	}
-	public ProtocolClass getProtocolClass() {
-		return protocolClass;
+	public Feature getFeature() {
+		return feature;
 	}
-	public void setProtocolClass(ProtocolClass protocolClass) {
-		this.protocolClass = protocolClass;
+	public void setFeature(Feature feature) {
+		this.feature = feature;
 	}
 	public List<HitCallRule> getRules() {
 		return rules;
@@ -66,14 +66,14 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	
 	@Override
 	public String[] getOwners() {
-		ProtocolClass pClass = getProtocolClass();
-		if (pClass != null) return pClass.getOwners();
+		Feature feature = getFeature();
+		if (feature != null) return feature.getOwners();
 		return new String[0];
 	}
 
 	@Override
 	public IValueObject getParent() {
-		return getProtocolClass();
+		return getFeature();
 	}
 	
 	@Override
@@ -100,6 +100,6 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	
 	@Override
 	public String toString() {
-		return String.format("Ruleset %d [pclass %s] [%d rules]", id, protocolClass, (rules == null) ? 0 : rules.size());
+		return String.format("Ruleset %d [feature %s] [%d rules]", id, feature, (rules == null) ? 0 : rules.size());
 	}
 }
