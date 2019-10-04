@@ -13,7 +13,7 @@ import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.calculation.CalculationException;
-import eu.openanalytics.phaedra.calculation.CalculationService;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
 import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -105,9 +105,9 @@ public class HitCallService extends BaseJPAService {
 		if (rule.getFormula() == null) throw new CalculationException("Invalid rule: no formula");
 	}
 	
+	//TODO Only CalculationService#calculate should be allowed to call this method
 	public double[] runHitCalling(HitCallRuleset ruleset, Plate plate, Feature feature) throws CalculationException {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CALCULATE, plate);
-		//TODO Trigger a pre-calculation hook? Or let CalculationService deal with that, but then this method should never be called outside recalc.
 		
 		if (ruleset == null || ruleset.getRules() == null || ruleset.getRules().isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
 		if (plate == null) throw new CalculationException("Cannot perform hit calling: no plate provided");
@@ -119,7 +119,7 @@ public class HitCallService extends BaseJPAService {
 		
 		for (HitCallRule rule: ruleset.getRules()) {
 			if (rule.getFormula() == null) throw new CalculationException(String.format("Cannot perform hit calling: rule %s has no formula", rule.getName()));
-			double[] ruleHitValues = CalculationService.getInstance().evaluateFormula(plate, feature, rule.getFormula());
+			double[] ruleHitValues = FormulaService.getInstance().evaluateFormula(plate, feature, rule.getFormula());
 			
 			boolean isFirstRule = (rule == ruleset.getRules().get(0));
 			if (isFirstRule) hitValues = new double[ruleHitValues.length];

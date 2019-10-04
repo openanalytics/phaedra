@@ -1,16 +1,21 @@
 package eu.openanalytics.phaedra.calculation.formula;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
 
+import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.CalculationException;
+import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.formula.language.JEPLanguage;
 import eu.openanalytics.phaedra.calculation.formula.language.JavaScriptLanguage;
 import eu.openanalytics.phaedra.calculation.formula.language.RLanguage;
@@ -18,6 +23,8 @@ import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class FormulaService extends BaseJPAService {
 
@@ -113,5 +120,39 @@ public class FormulaService extends BaseJPAService {
 	public Language getLanguage(String languageId) {
 		if (languageId == null) return null;
 		return languages.get(languageId);
+	}
+	
+	public double[] evaluateFormula(Plate plate, Feature feature, long formulaId) throws CalculationException {
+		return evaluateFormula(plate, feature, FormulaService.getInstance().getFormula(formulaId));
+	}
+	
+	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
+		// Validate the formula
+		FormulaService.getInstance().validateFormula(formula);
+		
+		// Assemble script input
+		List<IValueObject> inputEntities = new ArrayList<>();
+		switch (FormulaUtils.getScope(formula)) {
+		case PerWell:
+			inputEntities.addAll(plate.getWells());
+			break;
+		case PerPlate:
+			inputEntities.add(plate);
+			break;
+		}
+
+		double[] output = new double[plate.getWells().size()];
+		Arrays.fill(output, Double.NaN);
+		
+		// Evaluate the formula
+		long startTime = System.currentTimeMillis();
+		Language language = FormulaService.getInstance().getLanguage(formula.getLanguage());
+		inputEntities.parallelStream().forEach(inputValue -> {
+			language.evaluateFormula(formula, inputValue, feature, output);
+		});
+		long duration = System.currentTimeMillis() - startTime;
+		EclipseLog.debug(String.format("Formula %s evaluated on %s, feature %s in %d ms", formula.getName(), plate, feature, duration), CalculationService.class);
+		
+		return output;
 	}
 }

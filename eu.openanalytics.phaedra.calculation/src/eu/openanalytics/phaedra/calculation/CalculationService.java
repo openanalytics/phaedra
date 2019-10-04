@@ -19,7 +19,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -27,10 +26,6 @@ import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.calculation.formula.FormulaService;
-import eu.openanalytics.phaedra.calculation.formula.FormulaUtils;
-import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
-import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.hook.CalculationHookManager;
 import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
@@ -272,40 +267,6 @@ public class CalculationService {
 	 */
 	public boolean isMultiplo(Experiment exp) {
 		return MultiploMethod.get(exp) != MultiploMethod.None;
-	}
-	
-	public double[] evaluateFormula(Plate plate, Feature feature, long formulaId) throws CalculationException {
-		return evaluateFormula(plate, feature, FormulaService.getInstance().getFormula(formulaId));
-	}
-	
-	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
-		// Validate the formula
-		FormulaService.getInstance().validateFormula(formula);
-		
-		// Assemble script input
-		List<IValueObject> inputEntities = new ArrayList<>();
-		switch (FormulaUtils.getScope(formula)) {
-		case PerWell:
-			inputEntities.addAll(plate.getWells());
-			break;
-		case PerPlate:
-			inputEntities.add(plate);
-			break;
-		}
-
-		double[] output = new double[plate.getWells().size()];
-		Arrays.fill(output, Double.NaN);
-		
-		// Evaluate the formula
-		long startTime = System.currentTimeMillis();
-		Language language = FormulaService.getInstance().getLanguage(formula.getLanguage());
-		inputEntities.parallelStream().forEach(inputValue -> {
-			language.evaluateFormula(formula, inputValue, feature, output);
-		});
-		long duration = System.currentTimeMillis() - startTime;
-		EclipseLog.debug(String.format("Formula %s evaluated on %s, feature %s in %d ms", formula.getName(), plate, feature, duration), CalculationService.class);
-		
-		return output;
 	}
 	
 	/* package */ List<FeatureValue> runCalculatedFeature(Feature f, Plate p) {
