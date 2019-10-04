@@ -3,12 +3,16 @@ package eu.openanalytics.phaedra.validation.action.plate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.model.log.ObjectLogService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.validation.Activator;
 import eu.openanalytics.phaedra.validation.IValidationAction;
 import eu.openanalytics.phaedra.validation.ValidationException;
 import eu.openanalytics.phaedra.validation.ValidationService;
@@ -73,7 +77,7 @@ public abstract class AbstractPlateAction implements IValidationAction {
 		plate.setValidationStatus(newStatus.getCode());
 		plate.setValidationDate(changeDate);
 		plate.setValidationUser(userName);
-		if (remark != null && !remark.isEmpty()) plate.setDescription(remark);
+		appendRemarkToDescription(plate, remark, INVALIDATION_REMARK_PATTERN, "Invalidated");
 	}
 	
 	protected void applyApprovalStatus(Plate plate, PlateApprovalStatus newStatus, String remark) {
@@ -87,7 +91,32 @@ public abstract class AbstractPlateAction implements IValidationAction {
 		plate.setApprovalStatus(statusToSet.getCode());
 		plate.setApprovalDate(changeDate);
 		plate.setApprovalUser(userName);
-		if (remark != null && !remark.isEmpty()) plate.setDescription(remark);
+		appendRemarkToDescription(plate, remark, DISAPPROVAL_REMARK_PATTERN, "Disapproved");
+	}
+	
+	private static final Pattern INVALIDATION_REMARK_PATTERN = Pattern.compile("(.*)Invalidated:.*;(.*)");
+	private static final Pattern DISAPPROVAL_REMARK_PATTERN = Pattern.compile("(.*)Disapproved:.*;(.*)");
+	
+	protected void appendRemarkToDescription(Plate plate, String remark, Pattern pattern, String keyword) {
+		String currentDescription = plate.getDescription();
+		String newDescription = currentDescription;
+		if (remark == null || remark.trim().isEmpty()) {
+			// Remove any invalidation/disapproval remark from the description
+			if (currentDescription == null || currentDescription.trim().isEmpty()) return;
+			else {
+				Matcher matcher = pattern.matcher(currentDescription);
+				if (matcher.matches()) newDescription = (matcher.group(1) + " " + matcher.group(2)).trim();
+			}
+		} else {
+			// Add or replace the invalidation/disapproval remark in the description
+			if (currentDescription == null) currentDescription = "";
+			String append = " " + keyword + ": " + remark + ";";
+			Matcher matcher = pattern.matcher(currentDescription);
+			if (matcher.matches()) newDescription = (matcher.group(1) + append + matcher.group(2)).trim();
+			else newDescription = (currentDescription + append).trim();
+		}
+		EclipseLog.info(String.format("Changed description from '%s' to '%s'", currentDescription, newDescription), Activator.PLUGIN_ID);
+		plate.setDescription(newDescription);
 	}
 	
 	protected void logValidationChange(Plate plate, String remark, int oldStatus) {
