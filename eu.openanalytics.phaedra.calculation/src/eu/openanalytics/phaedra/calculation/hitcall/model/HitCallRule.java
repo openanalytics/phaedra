@@ -11,6 +11,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
+
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
@@ -31,6 +34,7 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	@Column(name="ruleset_sequence")
 	private int sequence;
 	
+	@BatchFetch(BatchFetchType.JOIN)
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="formula_id")
 	private CalculationFormula formula;

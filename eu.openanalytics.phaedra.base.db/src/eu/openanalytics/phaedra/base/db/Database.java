@@ -37,7 +37,7 @@ public class Database {
 			throw new RuntimeException("Failed to open database connection", e);
 		}
 		
-		entityManagerFactory = new PersistenceProvider().createEntityManagerFactory(PersistenceXMLClassLoader.MODEL_NAME, createJPAProperties());
+		entityManagerFactory = new PersistenceProvider().createEntityManagerFactory(PersistenceXMLClassLoader.MODEL_NAME, createJPAProperties(cfg));
 		entityManager = new LockingEntityManager(entityManagerFactory.createEntityManager());
 		
 		PatchedEclipselinkService.getInstance().setEntityManagerLock(((LockingEntityManager)entityManager).getLock());
@@ -61,7 +61,7 @@ public class Database {
 	 * **********
 	 */
 	
-	private Map<String, Object> createJPAProperties() {
+	private Map<String, Object> createJPAProperties(DatabaseConfig cfg) {
 		int totalConnections = Activator.getDefault().getPreferenceStore().getInt(Prefs.DB_POOL_SIZE);
 		int jpaConnections = Math.max(1, totalConnections / 2);
 		
@@ -76,7 +76,10 @@ public class Database {
 		properties.put(PersistenceUnitProperties.SESSION_CUSTOMIZER, JPASessionCustomizer.class.getName());
 		properties.put(JPASessionCustomizer.PROP_CONNECTION_POOL, connectionPoolManager);
 		
-		properties.put(PersistenceUnitProperties.LOGGING_LEVEL, "severe");
+		String logLevel = cfg.get(DatabaseConfig.JPA_LOG_LEVEL);
+		if (logLevel == null || logLevel.isEmpty()) logLevel = "severe";
+		
+		properties.put(PersistenceUnitProperties.LOGGING_LEVEL, logLevel);
 		properties.put(PersistenceUnitProperties.LOGGING_TIMESTAMP, "false");
 		properties.put(PersistenceUnitProperties.LOGGING_SESSION, "false");
 		properties.put(PersistenceUnitProperties.LOGGING_THREAD, "false");

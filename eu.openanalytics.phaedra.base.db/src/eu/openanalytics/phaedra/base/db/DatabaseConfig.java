@@ -10,6 +10,8 @@ public class DatabaseConfig extends ConfigResolver {
 	
 	public static final String CONN_PARAM_PREFIX = "connection.parameter.";
 	
+	public static final String JPA_LOG_LEVEL = "jpa.logging";
+	
 	public DatabaseConfig() {
 		super("phaedra.db.");
 	}

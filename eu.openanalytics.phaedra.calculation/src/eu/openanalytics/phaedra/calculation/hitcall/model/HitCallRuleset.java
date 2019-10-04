@@ -16,6 +16,8 @@ import javax.persistence.OrderColumn;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 import org.eclipse.persistence.annotations.JoinFetch;
 import org.eclipse.persistence.annotations.JoinFetchType;
 
@@ -39,8 +41,8 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	@JoinColumn(name="feature_id")
 	private Feature feature;
 	
-	
 	@IgnoreSizeOf
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="ruleset", fetch=FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
 	@OrderColumn(name="ruleset_sequence")
 	private List<HitCallRule> rules;

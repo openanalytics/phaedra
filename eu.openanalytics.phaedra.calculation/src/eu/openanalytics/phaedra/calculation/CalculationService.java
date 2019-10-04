@@ -26,6 +26,8 @@ import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
+import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 import eu.openanalytics.phaedra.calculation.hook.CalculationHookManager;
 import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
@@ -174,6 +176,9 @@ public class CalculationService {
 			List<Feature> features = PlateUtils.getFeatures(plate);
 			Collections.sort(features, ProtocolUtils.FEATURE_CALC_SEQUENCE);
 
+			long protocolClassId = ProtocolUtils.getProtocolClass(plate).getId();
+			Map<Long, HitCallRuleset> hitCallRulesets = HitCallService.getInstance().getRulesetsForProtocolClass(protocolClassId);
+			
 			for (Feature f: features) {
 				if (!f.isNumeric()) continue;
 
@@ -203,6 +208,10 @@ public class CalculationService {
 						}
 					}
 				}
+				
+				// Perform hit calling, if the feature has any hit calling rules attached to it.
+				HitCallRuleset hitCallRuleset = hitCallRulesets.get(f.getId());
+				if (hitCallRuleset != null) HitCallService.getInstance().runHitCalling(hitCallRuleset, plate);
 			}
 
 			// Calculate and save persistent stats (i.e. "quick-access" stats)

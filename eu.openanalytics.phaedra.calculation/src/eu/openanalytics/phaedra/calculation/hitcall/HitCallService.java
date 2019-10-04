@@ -1,6 +1,9 @@
 package eu.openanalytics.phaedra.calculation.hitcall;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
@@ -50,6 +53,13 @@ public class HitCallService extends BaseJPAService {
 	
 	public HitCallRuleset getRulesetForFeature(long featureId) {
 		return getEntity("select rs from HitCallRuleset rs where rs.feature.id = ?1", HitCallRuleset.class, featureId);
+	}
+	
+	public Map<Long, HitCallRuleset> getRulesetsForProtocolClass(long protocolClassId) {
+		Map<Long, HitCallRuleset> rulesetsPerFeature = new HashMap<>();
+		List<HitCallRuleset> rulesets = streamableList(getList("select rs from HitCallRuleset rs where rs.feature.protocolClass.id = ?1", HitCallRuleset.class, protocolClassId));
+		for (HitCallRuleset rs: rulesets) rulesetsPerFeature.put(rs.getFeature().getId(), rs);
+		return rulesetsPerFeature;
 	}
 	
 	public HitCallRuleset createRuleset(Feature feature) {
