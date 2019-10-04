@@ -24,6 +24,9 @@ public class CalculationFormula {
 	@Column(name="description")
 	private String description;
 	
+	@Column(name="category")
+	private String category;
+	
 	@Column(name="author")
 	private String author;
 	
@@ -56,6 +59,12 @@ public class CalculationFormula {
 	}
 	public void setDescription(String description) {
 		this.description = description;
+	}
+	public String getCategory() {
+		return category;
+	}
+	public void setCategory(String category) {
+		this.category = category;
 	}
 	public String getAuthor() {
 		return author;

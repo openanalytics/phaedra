@@ -1526,6 +1526,7 @@ create table phaedra.hca_calculation_formula (
 	formula_id 			bigint not null,
 	formula_name		text not null,
 	description			text,
+	category			text,
 	author				text,
 	formula				text,
 	language			text,

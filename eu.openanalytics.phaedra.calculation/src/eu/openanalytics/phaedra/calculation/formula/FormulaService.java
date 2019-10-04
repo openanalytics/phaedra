@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.calculation.formula;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -51,6 +52,10 @@ public class FormulaService extends BaseJPAService {
 		return getEntity("select c from CalculationFormula c where c.name = ?1", CalculationFormula.class, name);
 	}
 
+	public List<CalculationFormula> getFormulae(String category) {
+		return streamableList(getList("select c from CalculationFormula c where c.category = ?1", CalculationFormula.class, category));
+	}
+	
 	public String[] getFormulaNames() {
 		return streamableList(getList("select c.name from CalculationFormula c", String.class)).stream().sorted().toArray(i -> new String[i]);
 	}
