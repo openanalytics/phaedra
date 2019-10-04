@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.calculation.hitcall;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.ArrayList;
 
 import javax.persistence.EntityManager;
 
@@ -15,8 +14,8 @@ import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
+import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -46,66 +45,71 @@ public class HitCallService extends BaseJPAService {
 		return instance;
 	}
 	
-	public CalculationFormula getFormula(long id) {
-		return getEntity(CalculationFormula.class, id);
+	public HitCallRuleset getRuleset(long rulesetId) {
+		return getEntity(HitCallRuleset.class, rulesetId);
 	}
 	
-	public CalculationFormula getFormulaByName(String name) {
-		return getEntity("select c from CalculationFormula c where c.name = ?1", CalculationFormula.class, name);
-	}
-
-	public String[] getFormulaNames() {
-		return streamableList(getList("select c.name from CalculationFormula c", String.class)).stream().sorted().toArray(i -> new String[i]);
+	public HitCallRuleset getRulesetForProtocolClass(long protocolClassId) {
+		return getEntity("select rs from HitCallRuleset rs where rs.protocolClass.id = ?1", HitCallRuleset.class, protocolClassId);
 	}
 	
-	public HitCallRule getRule(long id) {
-		return getEntity(HitCallRule.class, id);
+	public HitCallRuleset createRuleset(ProtocolClass protocolClass) {
+		if (protocolClass == null) throw new IllegalArgumentException("Cannot create ruleset: null protocolclass");
+		if (getRulesetForProtocolClass(protocolClass.getId()) != null) throw new IllegalArgumentException(
+				String.format("Cannot create ruleset: a ruleset already exists for protocolclass %s", protocolClass));
+		HitCallRuleset ruleset = new HitCallRuleset();
+		ruleset.setProtocolClass(protocolClass);
+		ruleset.setRules(new ArrayList<>());
+		checkCanEditRuleset(ruleset);
+		return ruleset;
 	}
 	
-	public HitCallRule createRule(ProtocolClass protocolClass) {
+	public boolean canEditRuleset(HitCallRuleset ruleset) {
+		if (ruleset.getProtocolClass() == null) return false;
+		return ProtocolService.getInstance().canEditProtocolClass(ruleset.getProtocolClass());
+	}
+	
+	public void checkCanEditRuleset(HitCallRuleset ruleset) {
+		if (!canEditRuleset(ruleset)) throw new PermissionDeniedException(
+				String.format("No permission to modify the ruleset for protocolclass %s", ruleset.getProtocolClass()));
+	}
+	
+	public void updateRuleset(HitCallRuleset ruleset) {
+		checkCanEditRuleset(ruleset);
+		for (int i = 0; i < ruleset.getRules().size(); i++) {
+			HitCallRule rule = ruleset.getRules().get(i);
+			validateRule(rule);
+			rule.setSequence(i+1);
+		}
+		save(ruleset);
+	}
+	
+	public void deleteRuleset(HitCallRuleset ruleset) {
+		checkCanEditRuleset(ruleset);
+		delete(ruleset);
+	}
+	
+	public HitCallRule createRule(HitCallRuleset ruleset) {
+		checkCanEditRuleset(ruleset);
 		HitCallRule rule = new HitCallRule();
-		rule.setProtocolClass(protocolClass);
+		rule.setRuleset(ruleset);
 		rule.setName("New rule");
-		checkCanEditRule(rule);
+		rule.setSequence(ruleset.getRules().size() + 1);
+		ruleset.getRules().add(rule);
 		return rule;
 	}
 	
-	public boolean canEditRule(HitCallRule rule) {
-		if (rule.getProtocolClass() == null) return false;
-		return ProtocolService.getInstance().canEditProtocolClass(rule.getProtocolClass());
-	}
-	
-	public void checkCanEditRule(HitCallRule rule) {
-		if (!canEditRule(rule)) throw new PermissionDeniedException(String.format("No permission to modify the rule %s", rule.getName()));
-	}
-	
-	public void updateRule(HitCallRule rule) {
-		checkCanEditRule(rule);
-		validateRule(rule);
-		save(rule);
-	}
-	
-	public void deleteRule(HitCallRule rule) {
-		checkCanEditRule(rule);
-		delete(rule);
-	}
-
 	public void validateRule(HitCallRule rule) throws CalculationException {
 		if (rule == null) throw new CalculationException("Invalid rule: null");
 		if (rule.getName() == null || rule.getName().trim().isEmpty()) throw new CalculationException("Invalid rule: empty name");
 		if (rule.getFormula() == null) throw new CalculationException("Invalid rule: no formula");
 	}
 	
-	
-	public double[] runHitCalling(HitCallRule rule, Plate plate, Feature feature) throws CalculationException {
-		return runHitCalling(Collections.singletonList(rule), plate, feature);
-	}
-	
-	public double[] runHitCalling(List<HitCallRule> rules, Plate plate, Feature feature) throws CalculationException {
+	public double[] runHitCalling(HitCallRuleset ruleset, Plate plate, Feature feature) throws CalculationException {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CALCULATE, plate);
 		//TODO Trigger a pre-calculation hook? Or let CalculationService deal with that, but then this method should never be called outside recalc.
 		
-		if (rules == null || rules.isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
+		if (ruleset == null || ruleset.getRules() == null || ruleset.getRules().isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
 		if (plate == null) throw new CalculationException("Cannot perform hit calling: no plate provided");
 		if (feature == null) throw new CalculationException("Cannot perform hit calling: no feature provided");
 		
@@ -113,18 +117,17 @@ public class HitCallService extends BaseJPAService {
 		CacheKey key = createCacheKey(plate, feature);
 		double[] hitValues = null;
 		
-		for (HitCallRule rule: rules) {
+		for (HitCallRule rule: ruleset.getRules()) {
 			if (rule.getFormula() == null) throw new CalculationException(String.format("Cannot perform hit calling: rule %s has no formula", rule.getName()));
 			double[] ruleHitValues = CalculationService.getInstance().evaluateFormula(plate, feature, rule.getFormula());
 			
-			boolean isFirstRule = (rule == rules.get(0));
+			boolean isFirstRule = (rule == ruleset.getRules().get(0));
 			if (isFirstRule) hitValues = new double[ruleHitValues.length];
 			
 			// If any rule evaluates to 0, the outcome is 0
 			// Otherwise, the outcome is 1
-			//TODO Support different mechanisms, also including non-binary outcomes.
 			for (int i = 0; i < ruleHitValues.length; i++) {
-				if (ruleHitValues[i] >= rule.getThreshold()) {
+				if (!Double.isNaN(ruleHitValues[i]) && ruleHitValues[i] >= rule.getThreshold()) {
 					if (isFirstRule) hitValues[i] = 1.0;
 					else hitValues[i] = Math.min(hitValues[i], 1.0);
 				} else {

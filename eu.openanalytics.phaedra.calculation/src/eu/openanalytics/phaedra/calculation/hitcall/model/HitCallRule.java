@@ -11,14 +11,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
-import org.eclipse.persistence.annotations.JoinFetch;
-import org.eclipse.persistence.annotations.JoinFetchType;
-
-import eu.openanalytics.phaedra.base.cache.IgnoreSizeOf;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
-import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 
 @Entity
 @Table(name="hca_hit_call_rule", schema="phaedra")
@@ -32,9 +27,10 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	
 	@Column(name="rule_name")
 	private String name;
+
+	@Column(name="ruleset_sequence")
+	private int sequence;
 	
-	@IgnoreSizeOf
-	@JoinFetch(JoinFetchType.INNER)
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="formula_id")
 	private CalculationFormula formula;
@@ -42,11 +38,9 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	@Column(name="threshold")
 	private double threshold;
 	
-	@IgnoreSizeOf
-	@JoinFetch(JoinFetchType.INNER)
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name="protocolclass_id")
-	private ProtocolClass protocolClass;
+	@JoinColumn(name="ruleset_id")
+	private HitCallRuleset ruleset;
 	
 	public long getId() {
 		return id;
@@ -60,6 +54,12 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	public void setName(String name) {
 		this.name = name;
 	}
+	public int getSequence() {
+		return sequence;
+	}
+	public void setSequence(int sequence) {
+		this.sequence = sequence;
+	}
 	public CalculationFormula getFormula() {
 		return formula;
 	}
@@ -72,23 +72,21 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	public void setThreshold(double threshold) {
 		this.threshold = threshold;
 	}
-	public ProtocolClass getProtocolClass() {
-		return protocolClass;
+	public HitCallRuleset getRuleset() {
+		return ruleset;
 	}
-	public void setProtocolClass(ProtocolClass protocolClass) {
-		this.protocolClass = protocolClass;
+	public void setRuleset(HitCallRuleset ruleset) {
+		this.ruleset = ruleset;
 	}
 	
 	@Override
 	public String[] getOwners() {
-		ProtocolClass pClass = getProtocolClass();
-		if (pClass != null) return pClass.getOwners();
-		return new String[0];
+		return ruleset.getOwners();
 	}
 
 	@Override
 	public IValueObject getParent() {
-		return getProtocolClass();
+		return ruleset.getParent();
 	}
 	
 	@Override

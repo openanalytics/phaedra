@@ -1578,11 +1578,38 @@ GRANT SELECT ON phaedra.hca_hit_call_value to phaedra_role_read;
 
 -- ---------------------------------------------------------------------------
 
+create table phaedra.hca_hit_call_ruleset (
+	ruleset_id 			bigint not null,
+	protocolclass_id	bigint not null
+);
+
+alter table phaedra.hca_hit_call_ruleset
+	add constraint hca_hit_call_ruleset_pk
+	primary key ( ruleset_id );
+
+alter table phaedra.hca_hit_call_ruleset
+	add constraint hca_hit_call_ruleset_fk_pclass
+	foreign key (protocolclass_id)
+	references phaedra.hca_protocolclass(protocolclass_id)
+	on delete cascade;
+	
+create sequence phaedra.hca_hit_call_ruleset_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+	
+grant insert, update, delete on phaedra.hca_hit_call_ruleset to phaedra_role_crud;
+grant select on phaedra.hca_hit_call_ruleset to phaedra_role_read;
+
+-- ---------------------------------------------------------------------------
+
 create table phaedra.hca_hit_call_rule (
 	rule_id 			bigint not null,
 	rule_name			text not null,
 	formula_id			bigint not null,
-	protocolclass_id	bigint not null,
+	ruleset_id			bigint not null,
+	ruleset_sequence	integer not null,
 	threshold 			double precision
 );
 
@@ -1597,9 +1624,9 @@ alter table phaedra.hca_hit_call_rule
 	on delete cascade;
 	
 alter table phaedra.hca_hit_call_rule
-	add constraint hca_hit_call_rule_fk_pclass
-	foreign key (protocolclass_id)
-	references phaedra.hca_protocolclass(protocolclass_id)
+	add constraint hca_hit_call_rule_fk_ruleset
+	foreign key (ruleset_id)
+	references phaedra.hca_hit_call_ruleset(ruleset_id)
 	on delete cascade;
 	
 create sequence phaedra.hca_hit_call_rule_s

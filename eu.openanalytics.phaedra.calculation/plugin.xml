@@ -241,6 +241,9 @@
          <entityClass
                class="eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule">
          </entityClass>
+         <entityClass
+               class="eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset">
+         </entityClass>
       </persistenceModel>
    </extension>
 
