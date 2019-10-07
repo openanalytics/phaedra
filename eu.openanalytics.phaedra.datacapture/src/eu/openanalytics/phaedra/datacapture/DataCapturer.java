@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
 import eu.openanalytics.phaedra.base.environment.Screening;
@@ -107,7 +108,7 @@ public class DataCapturer {
 				for (IModule module: modulesToExecute) {
 					try {
 						ctx.setActiveModule(module);
-						module.postCapture(ctx, mon.split(progressPerModule));
+						module.postCapture(ctx, mon.isCanceled() ? new NullProgressMonitor() : mon.split(progressPerModule));
 					} catch (Throwable t) {
 						ctx.getLogger().warn("Post-process of module '" + module.getId() + "' failed: " + t.getMessage());
 					} finally {

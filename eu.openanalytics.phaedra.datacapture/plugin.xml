@@ -14,6 +14,10 @@
             class="eu.openanalytics.phaedra.datacapture.montage.MontageModule"
             type="MontageModule">
       </module>
+      <module
+            class="eu.openanalytics.phaedra.datacapture.module.MergePlanesModule"
+            type="MergePlanesModule">
+      </module>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.base.db.persistenceModel">
