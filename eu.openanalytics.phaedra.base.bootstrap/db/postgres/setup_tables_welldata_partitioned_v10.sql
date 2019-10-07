@@ -57,17 +57,13 @@ grant SELECT on phaedra.hca_feature_value_part_current to :accountNameRead;
 -- To split a partition
 -- -----------------------------------------------------------------------
 
---alter table phaedra.hca_feature_value
---	detach partition hca_feature_value_part_current;
+-- select min(well_id) from phaedra.hca_feature_value_part_<current>;
+-- select max(well_id) from phaedra.hca_feature_value_part_<current>;
 
---alter table phaedra.hca_feature_value_part_current rename to hca_feature_value_part_xxx;
-
---create table phaedra.hca_feature_value_part_current
---	partition of phaedra.hca_feature_value
---	for values from bbb to 9223372036854775807;
+-- alter table phaedra.hca_feature_value detach partition phaedra.hca_feature_value_part_<current>;
+-- alter table phaedra.hca_feature_value attach partition phaedra.hca_feature_value_part_<current>
+--	for values from (min) to (max+1);
 	
--- Add constraints and index here
-
---alter table phaedra.hca_feature_value
---	attach partition hca_feature_value_part_xxx
---	for values from aaa to bbb;
+-- create table phaedra.hca_feature_value_part_<new>
+--	partition of phaedra.hca_feature_value
+--	for values from (max+1) to (9223372036854775807);
