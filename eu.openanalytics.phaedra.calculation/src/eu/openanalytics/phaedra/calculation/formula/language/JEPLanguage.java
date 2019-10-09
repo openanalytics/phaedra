@@ -1,10 +1,12 @@
 package eu.openanalytics.phaedra.calculation.formula.language;
 
+import java.util.Map;
+
 import eu.openanalytics.phaedra.base.db.IValueObject;
+import eu.openanalytics.phaedra.base.scripting.jep.JEPScriptEngine;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
-import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
@@ -30,10 +32,19 @@ public static final String ID = "jep";
 	}
 
 	@Override
-	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output) throws CalculationException {
+	protected Map<String, Object> buildContext(CalculationFormula formula, IValueObject inputValue, IFeature feature) {
+		Map<String, Object> context = super.buildContext(formula, inputValue, feature);
 		Well well = (Well) inputValue;
-		Object outputValue = JEPCalculation.evaluate(formula.getFormula(), well);
+		context.put(JEPScriptEngine.CONTEXT_DATA_OBJECT, well);
+		//TODO
+		context.put("threshold", 0.5);
+		return context;
+	}
+	
+	@Override
+	protected void transformFormulaOutput(IValueObject inputValue, Object outputValue, CalculationFormula formula, Map<String, Object> context, double[] outputArray) {
+		Well well = (Well) inputValue;
 		int index = PlateUtils.getWellNr(well) - 1;
-		output[index] = getAsDouble(outputValue);
+		outputArray[index] = getAsDouble(outputValue);
 	}
 }

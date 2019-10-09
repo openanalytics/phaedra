@@ -27,8 +27,10 @@ public abstract class BaseLanguage implements Language {
 	}
 
 	@Override
-	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output) throws CalculationException {
+	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output, Map<String, Object> params) throws CalculationException {
 		Map<String, Object> context = buildContext(formula, inputValue, feature);
+		if (params != null) context.putAll(params);
+		
 		Object outputValue = null;
 		try {
 			outputValue = ScriptService.getInstance().executeScript(formula.getFormula(), context, getId());
@@ -74,6 +76,8 @@ public abstract class BaseLanguage implements Language {
 		double doubleValue = Double.NaN;
 		if (outputValue instanceof Number) {
 			doubleValue = ((Number) outputValue).doubleValue();
+		} else if (outputValue instanceof Boolean) {
+			doubleValue = ((Boolean) outputValue) ? 1.0 : 0.0;
 		} else if (outputValue != null) {
 			try {
 				doubleValue = Double.parseDouble(String.valueOf(outputValue));

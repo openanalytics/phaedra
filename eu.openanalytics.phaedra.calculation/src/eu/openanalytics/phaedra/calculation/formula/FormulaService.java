@@ -122,11 +122,11 @@ public class FormulaService extends BaseJPAService {
 		return languages.get(languageId);
 	}
 	
-	public double[] evaluateFormula(Plate plate, Feature feature, long formulaId) throws CalculationException {
-		return evaluateFormula(plate, feature, FormulaService.getInstance().getFormula(formulaId));
+	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
+		return evaluateFormula(plate, feature, formula, null);
 	}
 	
-	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula) throws CalculationException {
+	public double[] evaluateFormula(Plate plate, Feature feature, CalculationFormula formula, Map<String, Object> params) throws CalculationException {
 		// Validate the formula
 		FormulaService.getInstance().validateFormula(formula);
 		
@@ -148,7 +148,7 @@ public class FormulaService extends BaseJPAService {
 		long startTime = System.currentTimeMillis();
 		Language language = FormulaService.getInstance().getLanguage(formula.getLanguage());
 		inputEntities.parallelStream().forEach(inputValue -> {
-			language.evaluateFormula(formula, inputValue, feature, output);
+			language.evaluateFormula(formula, inputValue, feature, output, params);
 		});
 		long duration = System.currentTimeMillis() - startTime;
 		EclipseLog.debug(String.format("Formula %s evaluated on %s, feature %s in %d ms", formula.getName(), plate, feature, duration), CalculationService.class);

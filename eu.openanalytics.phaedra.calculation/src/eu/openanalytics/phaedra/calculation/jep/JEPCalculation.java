@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.script.ScriptException;
 
 import eu.openanalytics.phaedra.base.scripting.api.ScriptService;
+import eu.openanalytics.phaedra.base.scripting.jep.JEPScriptEngine;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 
 public class JEPCalculation {
@@ -16,6 +17,12 @@ public class JEPCalculation {
 	 */
 	public static float evaluate(String expression, Object data) throws CalculationException {
 		Object result = eval(expression, data);
+		if (result instanceof Float) return (Float) result;
+		else return Float.NaN;
+	}
+	
+	public static float evaluate(String expression, Map<String, Object> context) throws CalculationException {
+		Object result = eval(expression, context);
 		if (result instanceof Float) return (Float) result;
 		else return Float.NaN;
 	}
@@ -33,9 +40,13 @@ public class JEPCalculation {
 		return values;
 	}
 
-	private static Object eval(String expression, Object object) throws CalculationException {
+	private static Object eval(String expression, Object dataObject) throws CalculationException {
 		Map<String, Object> context = new HashMap<>();
-		context.put("data", object);
+		context.put(JEPScriptEngine.CONTEXT_DATA_OBJECT, dataObject);
+		return eval(expression, context);
+	}
+	
+	private static Object eval(String expression, Map<String, Object> context) throws CalculationException {
 		try {
 			return ScriptService.getInstance().executeScript(expression, context, "jep");
 		} catch (ScriptException e) {

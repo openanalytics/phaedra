@@ -135,19 +135,22 @@ public class HitCallService extends BaseJPAService {
 		
 		for (HitCallRule rule: ruleset.getRules()) {
 			if (rule.getFormula() == null) throw new CalculationException(String.format("Cannot perform hit calling: rule %s has no formula", rule.getName()));
-			double[] ruleHitValues = FormulaService.getInstance().evaluateFormula(plate, feature, rule.getFormula());
+			
+			Map<String, Object> params = new HashMap<>();
+			params.put("threshold", rule.getThreshold());
+			
+			double[] ruleHitValues = FormulaService.getInstance().evaluateFormula(plate, feature, rule.getFormula(), params);
 			
 			boolean isFirstRule = (rule == ruleset.getRules().get(0));
 			if (isFirstRule) hitValues = new double[ruleHitValues.length];
 			
-			// If any rule evaluates to 0, the outcome is 0
-			// Otherwise, the outcome is 1
 			for (int i = 0; i < ruleHitValues.length; i++) {
-				if (!Double.isNaN(ruleHitValues[i]) && ruleHitValues[i] >= rule.getThreshold()) {
-					if (isFirstRule) hitValues[i] = 1.0;
-					else hitValues[i] = Math.min(hitValues[i], 1.0);
-				} else {
+				if (Double.isNaN(ruleHitValues[i])) {
 					hitValues[i] = 0;
+				} else if (isFirstRule) {
+					hitValues[i] = ruleHitValues[i];;
+				} else {
+					hitValues[i] = Math.min(hitValues[i], ruleHitValues[i]);
 				}
 			}
 		}

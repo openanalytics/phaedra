@@ -17,6 +17,8 @@ import eu.openanalytics.phaedra.base.scripting.jep.parse.JEPParser;
 
 public class JEPScriptEngine extends BaseScriptEngine {
 
+	public static final String CONTEXT_DATA_OBJECT = "data";
+	
 	@Override
 	public void initialize() throws ScriptException {
 		String label = getLabel();
@@ -34,8 +36,7 @@ public class JEPScriptEngine extends BaseScriptEngine {
 
 	@Override
 	public Object eval(String script, Map<String, Object> objects) throws ScriptException {
-		Object data = objects.get("data");
-		return executeJEP(script, data);
+		return executeJEP(script, objects);
 	}
 
 	@Override
@@ -51,10 +52,10 @@ public class JEPScriptEngine extends BaseScriptEngine {
 	 * @return Any of the following: float, float[], String, String[]
 	 * @throws ScriptException If the evaluation fails for any reason
 	 */
-	private Object executeJEP(String expr, Object object) throws ScriptException {
+	private Object executeJEP(String expr, Map<String, Object> objects) throws ScriptException {
 		Object retVal = null;
 		try {
-			JEP jep = JEPParser.parse(expr, object);
+			JEP jep = JEPParser.parse(expr, objects);
 			Node node = jep.getTopNode();
 			retVal = jep.evaluate(node);
 		} catch (ParseException e) {

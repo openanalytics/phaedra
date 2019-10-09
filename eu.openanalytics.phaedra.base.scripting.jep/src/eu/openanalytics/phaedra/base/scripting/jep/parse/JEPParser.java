@@ -1,7 +1,9 @@
 package eu.openanalytics.phaedra.base.scripting.jep.parse;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.script.ScriptException;
 
@@ -16,6 +18,7 @@ import org.nfunk.jep.JEP;
 import org.nfunk.jep.function.Comparative;
 
 import eu.openanalytics.phaedra.base.scripting.jep.JEPFunction;
+import eu.openanalytics.phaedra.base.scripting.jep.JEPScriptEngine;
 import eu.openanalytics.phaedra.base.scripting.jep.functions.CostumComparative;
 import eu.openanalytics.phaedra.base.scripting.jep.functions.Count;
 import eu.openanalytics.phaedra.base.scripting.jep.functions.CstOp;
@@ -39,8 +42,14 @@ import eu.openanalytics.phaedra.base.scripting.jep.functions.Var;
 
 public class JEPParser {
 
-	public static JEP parse(String expression, Object object) throws ScriptException {
-		return parseExpression(expression, object);
+	public static JEP parse(String expression, Object dataObject) throws ScriptException {
+		Map<String, Object> context = new HashMap<>();
+		context.put(JEPScriptEngine.CONTEXT_DATA_OBJECT, dataObject);
+		return parse(expression, context);
+	}
+	
+	public static JEP parse(String expression, Map<String, Object> context) throws ScriptException {
+		return parseExpression(expression, context);
 	}
 
 	/*
@@ -48,7 +57,7 @@ public class JEPParser {
 	 * **********
 	 */
 
-	private static JEP parseExpression(String expression, Object obj) throws ScriptException {
+	private static JEP parseExpression(String expression, Map<String, Object> context) throws ScriptException {
 
 		JEP jep = createJEP();
 
@@ -58,7 +67,7 @@ public class JEPParser {
 
 		List<IScanner> scanners = loadScanners();
 		for (IScanner scanner: scanners) {
-			VarReference[] refs = scanner.scan(jepExpression, obj);
+			VarReference[] refs = scanner.scan(jepExpression, context);
 			if (refs == null) continue;
 			for (VarReference ref: refs) {
 				ref.execute(jepExpression);

@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.calculation.formula.model;
 
+import java.util.Map;
+
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.scripting.engine.IScriptEngine;
 import eu.openanalytics.phaedra.calculation.CalculationException;
@@ -18,6 +20,6 @@ public interface Language {
 	
 	public void validateFormula(CalculationFormula formula) throws CalculationException;
 	
-	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output) throws CalculationException;
+	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output, Map<String, Object> params) throws CalculationException;
 	
 }

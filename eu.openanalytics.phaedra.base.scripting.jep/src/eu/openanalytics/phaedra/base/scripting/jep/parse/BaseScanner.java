@@ -9,6 +9,7 @@ import javax.script.ScriptException;
 
 import org.lsmp.djep.vectorJep.values.MVector;
 
+import eu.openanalytics.phaedra.base.scripting.jep.JEPScriptEngine;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 
 public abstract class BaseScanner<ENTITY> implements IScanner {
@@ -29,47 +30,47 @@ public abstract class BaseScanner<ENTITY> implements IScanner {
 		this.refCount = 0;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public VarReference[] scan(JEPExpression expression, Object obj) throws ScriptException {
-
+	public VarReference[] scan(JEPExpression expression, Map<String, Object> context) throws ScriptException {
+		Object dataObject = null;
+		if (context != null) dataObject = context.get(JEPScriptEngine.CONTEXT_DATA_OBJECT);
+		if (!isValidObject(dataObject)) return null;
+		
 		List<VarReference> refs = new ArrayList<>();
+		
+		String expressionToParse = expression.getExpression();
+		int offset = 0;
+		char varSign = getVarSign();
 
-		if (isValidObject(obj)) {
-			String expressionToParse = expression.getExpression();
-			int offset = 0;
-			char varSign = getVarSign();
+		while (offset < expressionToParse.length()) {
 
-			while (offset < expressionToParse.length()) {
-
-				int start = expressionToParse.indexOf(varSign, offset);
-				if (start < offset) {
-					break;
-				}
-
-				int end = expressionToParse.indexOf(varSign, start + 1);
-				if (end < start) {
-					throw new ScriptException("No closing " + varSign + " for: \""
-							+ expressionToParse.substring(start, Math.max(expressionToParse.length(), start + 10)) + "\"");
-				}
-
-				String refToReplace = expressionToParse.substring(start, end + 1);
-
-				// Use the cache to avoid creating the same ref twice.
-				if (!refCache.containsKey(refToReplace)) {
-					VarReference ref = createRef(refToReplace, (ENTITY) obj);
-					refCache.put(refToReplace, ref);
-					if (ref != null) refs.add(ref);
-				}
-
-				offset = Math.min(end + 1, expressionToParse.length());
+			int start = expressionToParse.indexOf(varSign, offset);
+			if (start < offset) {
+				break;
 			}
+
+			int end = expressionToParse.indexOf(varSign, start + 1);
+			if (end < start) {
+				throw new ScriptException("No closing " + varSign + " for: \""
+						+ expressionToParse.substring(start, Math.max(expressionToParse.length(), start + 10)) + "\"");
+			}
+
+			String refToReplace = expressionToParse.substring(start, end + 1);
+
+			// Use the cache to avoid creating the same ref twice.
+			if (!refCache.containsKey(refToReplace)) {
+				VarReference ref = createRef(refToReplace, context);
+				refCache.put(refToReplace, ref);
+				if (ref != null) refs.add(ref);
+			}
+
+			offset = Math.min(end + 1, expressionToParse.length());
 		}
 
 		return refs.toArray(new VarReference[refs.size()]);
 	}
 
-	protected VarReference createRef(String substring, ENTITY obj) {
+	protected VarReference createRef(String substring, Map<String, Object> context) {
 		String fieldName = substring.substring(1, substring.length() - 1);
 		String refToReplace = substring;
 		String refName = createRefName();
@@ -82,7 +83,7 @@ public abstract class BaseScanner<ENTITY> implements IScanner {
 			System.arraycopy(parts, 1, subParts, 0, subParts.length);
 			parts = subParts;
 		}
-		Object value = getValueForRef(scope, parts, obj);
+		Object value = getValueForRef(scope, parts, context);
 
 		VarReference ref = null;
 		if (value != null) ref = new VarReference(refToReplace, refName, value);
@@ -95,6 +96,13 @@ public abstract class BaseScanner<ENTITY> implements IScanner {
 	}
 
 	protected abstract char getVarSign();
+
+	@SuppressWarnings("unchecked")
+	protected Object getValueForRef(String scope, String[] fieldNames, Map<String, Object> context) {
+		if (context == null) return null;
+		Object dataObject = context.get(JEPScriptEngine.CONTEXT_DATA_OBJECT);
+		return getValueForRef(scope, fieldNames, (ENTITY) dataObject);
+	}
 
 	protected abstract Object getValueForRef(String scope, String[] fieldNames, ENTITY obj);
 	

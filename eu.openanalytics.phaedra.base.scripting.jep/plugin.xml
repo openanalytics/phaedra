@@ -10,5 +10,12 @@
             label="JEP">
       </scriptEngine>
    </extension>
+   <extension
+         point="eu.openanalytics.phaedra.base.scripting.jep.jepScanner">
+      <jepScanner
+            class="eu.openanalytics.phaedra.base.scripting.jep.parse.ContextVarScanner"
+            name="eu.openanalytics.phaedra.base.scripting.jep.parse.ContextVarScanner">
+      </jepScanner>
+   </extension>
 
 </plugin>
