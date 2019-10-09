@@ -28,6 +28,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class FormulaService extends BaseJPAService {
 
+	private static final String CATEGORY_ALL = "All";
 	private static final String DEFAULT_LANGUAGE_ID = JavaScriptLanguage.ID;
 	
 	private static FormulaService instance = new FormulaService();
@@ -60,11 +61,28 @@ public class FormulaService extends BaseJPAService {
 	}
 
 	public List<CalculationFormula> getFormulae(String category) {
-		return streamableList(getList("select c from CalculationFormula c where c.category = ?1", CalculationFormula.class, category));
+		List<CalculationFormula> formulae = null;
+		if (category == null || category.equalsIgnoreCase(CATEGORY_ALL)) {
+			formulae = streamableList(getList(CalculationFormula.class));
+		} else {
+			formulae = streamableList(getList("select c from CalculationFormula c where c.category = ?1", CalculationFormula.class, category));
+		}
+		formulae.sort((f1, f2) -> (int)(f1.getId() - f2.getId()));
+		return formulae;
 	}
 	
 	public String[] getFormulaNames() {
 		return streamableList(getList("select c.name from CalculationFormula c", String.class)).stream().sorted().toArray(i -> new String[i]);
+	}
+	
+	public String[] getFormulaCategories() {
+		return getFormulaCategories(false);
+	}
+	
+	public String[] getFormulaCategories(boolean includeCategoryAll) {
+		List<String> categories = streamableList(getList("select c.category from CalculationFormula c where c.category is not null", String.class));
+		if (includeCategoryAll) categories.add(CATEGORY_ALL);
+		return categories.stream().sorted().toArray(i -> new String[i]);
 	}
 	
 	public CalculationFormula createFormula() {
@@ -74,7 +92,14 @@ public class FormulaService extends BaseJPAService {
 		formula.setScope(Scope.PerWell.getCode());
 		formula.setLanguage(DEFAULT_LANGUAGE_ID);
 		formula.setAuthor(SecurityService.getInstance().getCurrentUserName());
+		formula.setFormula(generateExampleFormulaBody(formula));
 		return formula;
+	}
+	
+	public String generateExampleFormulaBody(CalculationFormula newFormula) {
+		Language lang = getLanguage(newFormula.getLanguage());
+		if (lang == null) return "";
+		else return lang.generateExampleFormulaBody(newFormula);
 	}
 	
 	public boolean canEditFormula(CalculationFormula formula) {
@@ -115,6 +140,10 @@ public class FormulaService extends BaseJPAService {
 		Scope scope = FormulaUtils.getScope(formula);
 		if (scope == null) throw new CalculationException("Invalid formula scope: " + formula.getScope());
 		if (formula.getFormula() == null || formula.getFormula().trim().isEmpty()) throw new CalculationException("Invalid formula: no formula body");
+	}
+	
+	public Language[] getLanguages() {
+		return languages.values().stream().sorted((l1, l2) -> l1.getLabel().compareTo(l2.getLabel())).toArray(i -> new Language[i]);
 	}
 	
 	public Language getLanguage(String languageId) {

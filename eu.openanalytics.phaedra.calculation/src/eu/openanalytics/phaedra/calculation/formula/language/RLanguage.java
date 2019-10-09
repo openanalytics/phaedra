@@ -22,6 +22,11 @@ public static final String ID = "r";
 	}
 
 	@Override
+	public String generateExampleFormulaBody(CalculationFormula formula) {
+		return "inputValues * 100";
+	}
+	
+	@Override
 	public void validateFormula(CalculationFormula formula) throws CalculationException {
 		super.validateFormula(formula);
 		// Running an r node per well is very bad performance. It may also deadlock on the r session pool.

@@ -18,6 +18,8 @@ public interface Language {
 	
 	public String getLabel();
 	
+	public String generateExampleFormulaBody(CalculationFormula formula);
+	
 	public void validateFormula(CalculationFormula formula) throws CalculationException;
 	
 	public void evaluateFormula(CalculationFormula formula, IValueObject inputValue, IFeature feature, double[] output, Map<String, Object> params) throws CalculationException;

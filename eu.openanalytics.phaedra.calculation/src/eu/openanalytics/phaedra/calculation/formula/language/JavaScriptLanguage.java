@@ -7,6 +7,7 @@ import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.calculation.formula.FormulaUtils;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
+import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -27,6 +28,18 @@ public class JavaScriptLanguage extends BaseLanguage {
 		return "JavaScript";
 	}
 
+	@Override
+	public String generateExampleFormulaBody(CalculationFormula formula) {
+		Scope scope = Scope.get(formula.getScope());
+		switch (scope) {
+		case PerPlate:
+			return "for (var i in inputValues) { outputValues[i] = inputValues[i] * 100 }";
+		case PerWell:
+		default:
+			return "inputValue * 100";
+		}
+	}
+	
 	@Override
 	protected Map<String, Object> buildContext(CalculationFormula formula, IValueObject inputValue, IFeature feature) {
 		Map<String, Object> context = super.buildContext(formula, inputValue, feature);

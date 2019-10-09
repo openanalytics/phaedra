@@ -26,6 +26,11 @@ public static final String ID = "jep";
 	}
 
 	@Override
+	public String generateExampleFormulaBody(CalculationFormula formula) {
+		return "#FeatureX# * 100";
+	}
+	
+	@Override
 	public void validateFormula(CalculationFormula formula) throws CalculationException {
 		super.validateFormula(formula);
 		if (formula.getScope() == Scope.PerPlate.getCode()) throw new CalculationException("JEP cannot evaluate a formula per-plate. Please select per-well instead.");

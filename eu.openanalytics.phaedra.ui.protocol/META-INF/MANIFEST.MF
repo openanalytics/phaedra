@@ -41,6 +41,7 @@ Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.ui.protocol,
  eu.openanalytics.phaedra.ui.protocol.breadcrumb,
  eu.openanalytics.phaedra.ui.protocol.browser,
+ eu.openanalytics.phaedra.ui.protocol.calculation,
  eu.openanalytics.phaedra.ui.protocol.cmd,
  eu.openanalytics.phaedra.ui.protocol.dialog,
  eu.openanalytics.phaedra.ui.protocol.editor,

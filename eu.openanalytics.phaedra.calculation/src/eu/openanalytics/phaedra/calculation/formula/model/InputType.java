@@ -51,4 +51,11 @@ public enum InputType {
 		}
 		return null;
 	}
+	
+	public static InputType getByLabel(String label) {
+		for (InputType t: values()) {
+			if (t.label.equals(label)) return t;
+		}
+		return null;
+	}
 }

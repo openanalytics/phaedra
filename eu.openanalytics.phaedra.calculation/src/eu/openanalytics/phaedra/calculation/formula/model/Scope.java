@@ -34,4 +34,10 @@ public enum Scope {
 		return null;
 	}
 	
+	public static Scope getByLabel(String label) {
+		for (Scope t: values()) {
+			if (t.label.equals(label)) return t;
+		}
+		return null;
+	}
 }

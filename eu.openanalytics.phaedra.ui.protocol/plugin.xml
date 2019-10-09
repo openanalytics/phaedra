@@ -83,6 +83,16 @@
             id="eu.openanalytics.phaedra.ui.protocol.cmd.StartProtocolWizard"
             name="Create New Protocol">
       </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.CreateFormulaHandler"
+            id="eu.openanalytics.phaedra.ui.protocol.calculation.CreateFormulaHandler"
+            name="Create Formula">
+      </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.EditFormulaHandler"
+            id="eu.openanalytics.phaedra.ui.protocol.calculation.EditFormulaHandler"
+            name="Edit Formula">
+      </command>
    </extension>
    <extension
          point="org.eclipse.core.expressions.definitions">
