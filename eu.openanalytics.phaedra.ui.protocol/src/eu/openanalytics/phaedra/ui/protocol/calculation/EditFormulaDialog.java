@@ -30,7 +30,6 @@ import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 
-// Java.type("eu.openanalytics.phaedra.ui.protocol.calculation.CreateFormulaHandler").execute()
 public class EditFormulaDialog extends TitleAreaDatabindingDialog {
 
 	private Text nameTxt;

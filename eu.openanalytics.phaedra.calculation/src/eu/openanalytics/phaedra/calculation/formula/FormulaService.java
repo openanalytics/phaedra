@@ -96,6 +96,23 @@ public class FormulaService extends BaseJPAService {
 		return formula;
 	}
 	
+	public CalculationFormula getWorkingCopy(CalculationFormula formula) {
+		CalculationFormula copy = new CalculationFormula();
+		copy.setId(formula.getId());
+		copyFormula(formula, copy);
+		return copy;
+	}
+	
+	public void copyFormula(CalculationFormula from, CalculationFormula to) {
+		to.setName(from.getName());
+		to.setDescription(from.getDescription());
+		to.setCategory(from.getCategory());
+		to.setFormula(from.getFormula());
+		to.setInputType(from.getInputType());
+		to.setScope(from.getScope());
+		to.setLanguage(from.getLanguage());
+	}
+	
 	public String generateExampleFormulaBody(CalculationFormula newFormula) {
 		Language lang = getLanguage(newFormula.getLanguage());
 		if (lang == null) return "";
@@ -113,14 +130,17 @@ public class FormulaService extends BaseJPAService {
 				String.format("Only the author, %s, can modify the formula %s", formula.getAuthor(), formula.getName()));
 	}
 	
-	public void updateFormula(CalculationFormula formula) {
+	public void updateFormula(CalculationFormula formula, CalculationFormula workingCopy) {
+		if (workingCopy.getId() != formula.getId()) throw new IllegalArgumentException();
 		checkCanEditFormula(formula);
-		validateFormula(formula);
+		validateFormula(workingCopy);
 		
-		CalculationFormula conflict = getFormulaByName(formula.getName());
+		CalculationFormula conflict = getFormulaByName(workingCopy.getName());
 		if (conflict != null && conflict.getId() != formula.getId()) {
-			throw new IllegalArgumentException(String.format("A formula named %s already exists", formula.getName()));
+			throw new IllegalArgumentException(String.format("A formula named %s already exists", workingCopy.getName()));
 		}
+		
+		copyFormula(workingCopy, formula);
 		save(formula);
 	}
 	

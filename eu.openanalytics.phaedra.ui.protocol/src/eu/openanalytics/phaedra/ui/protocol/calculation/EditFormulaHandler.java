@@ -47,17 +47,18 @@ public class EditFormulaHandler extends AbstractHandler {
 	}
 	
 	public static boolean execute(CalculationFormula formula) {
-		EditFormulaDialog dialog = new EditFormulaDialog(Display.getCurrent().getActiveShell(), formula) {
+		CalculationFormula workingCopy = FormulaService.getInstance().getWorkingCopy(formula);
+		EditFormulaDialog dialog = new EditFormulaDialog(Display.getCurrent().getActiveShell(), workingCopy) {
 			@Override
 			protected void okPressed() {
 				try {
-					FormulaService.getInstance().updateFormula(formula);
+					FormulaService.getInstance().updateFormula(formula, workingCopy);
 					super.okPressed();
 				}
 				catch (Exception e) {
 					StatusManager.getManager().handle(new Status(
 							IStatus.ERROR, Activator.PLUGIN_ID,
-							"Failed to save the formula", e),
+							"Failed to save the formula:", e),
 							StatusManager.SHOW | StatusManager.LOG | StatusManager.BLOCK);
 				}
 			}
