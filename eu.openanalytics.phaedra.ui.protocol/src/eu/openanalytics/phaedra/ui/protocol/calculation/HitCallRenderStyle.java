@@ -32,9 +32,13 @@ public enum HitCallRenderStyle {
 		Image img = new Image(null, 15, 15);
 		GC gc = new GC(img);
 		gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_BLACK));
-		PlotShape.valueOf(this.name()).drawShape(gc, 7 ,7, 5);
+		renderImage(gc, 7, 7, 5);
 		gc.dispose();
 		return img;
+	}
+	
+	public void renderImage(GC gc, int x, int y, int size) {
+		PlotShape.valueOf(this.name()).drawShape(gc, x, y, size);
 	}
 	
 	public static HitCallRenderStyle getByCode(int code) {

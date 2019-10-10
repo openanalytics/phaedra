@@ -20,8 +20,8 @@ public class HitValueDAO {
 		String wellIdArg = Arrays.stream(wellIds).mapToObj(l -> String.valueOf(l)).collect(Collectors.joining(","));
 		String sql = "select hit_value"
 				+ " from phaedra.hca_hit_call_value"
-				+ " where fv.feature_id = " + featureId
-				+ " and fv.well_id in (" + wellIdArg + ")"
+				+ " where feature_id = " + featureId
+				+ " and well_id in (" + wellIdArg + ")"
 				+ " order by well_id asc";
 		double[] hitValues = new double[wellIds.length];
 		

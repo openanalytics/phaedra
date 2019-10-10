@@ -3369,6 +3369,13 @@
             id="eu.openanalytics.phaedra.ui.plate.grid.layer.ScriptedChartLayer"
             position="101">
       </gridLayer>
+      <gridLayer
+            class="eu.openanalytics.phaedra.ui.plate.grid.layer.HitCallLayer"
+            gridId="hca.singlewell.grid"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/accept.png"
+            id="eu.openanalytics.phaedra.ui.plate.grid.layer.HitCallLayer"
+            position="10001">
+      </gridLayer>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.base.pref.store.preferenceProvider">
