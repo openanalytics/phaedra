@@ -1581,7 +1581,10 @@ GRANT SELECT ON phaedra.hca_hit_call_value to phaedra_role_read;
 
 create table phaedra.hca_hit_call_ruleset (
 	ruleset_id 			bigint not null,
-	feature_id			bigint not null
+	feature_id			bigint not null,
+	show_in_ui			boolean not null default true,
+	color				integer,
+	style				integer
 );
 
 alter table phaedra.hca_hit_call_ruleset

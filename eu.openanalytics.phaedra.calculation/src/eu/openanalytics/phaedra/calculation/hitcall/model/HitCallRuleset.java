@@ -47,6 +47,15 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	@OrderColumn(name="ruleset_sequence")
 	private List<HitCallRule> rules;
 
+	@Column(name="show_in_ui")
+	private boolean showInUI;
+	
+	@Column(name="color")
+	private int color;
+	
+	@Column(name="style")
+	private int style;
+	
 	public long getId() {
 		return id;
 	}
@@ -64,6 +73,24 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	}
 	public void setRules(List<HitCallRule> rules) {
 		this.rules = rules;
+	}
+	public boolean isShowInUI() {
+		return showInUI;
+	}
+	public void setShowInUI(boolean showInUI) {
+		this.showInUI = showInUI;
+	}
+	public int getColor() {
+		return color;
+	}
+	public void setColor(int color) {
+		this.color = color;
+	}
+	public int getStyle() {
+		return style;
+	}
+	public void setStyle(int style) {
+		this.style = style;
 	}
 	
 	@Override
