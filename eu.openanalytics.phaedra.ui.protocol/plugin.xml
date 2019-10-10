@@ -93,6 +93,11 @@
             id="eu.openanalytics.phaedra.ui.protocol.calculation.EditFormulaHandler"
             name="Edit Formula">
       </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetHandler"
+            id="eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetHandler"
+            name="Edit Hit Calling Ruleset">
+      </command>
    </extension>
    <extension
          point="org.eclipse.core.expressions.definitions">

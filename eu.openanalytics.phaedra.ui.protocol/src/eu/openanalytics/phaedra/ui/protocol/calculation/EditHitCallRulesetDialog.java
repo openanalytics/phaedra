@@ -6,13 +6,10 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 
-// Java.type("eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetDialog").openNew(API.get("HitCallService").getRuleset(3))
-//TODO workingCopy
 public class EditHitCallRulesetDialog extends TitleAreaDialog {
 
 	private HitCallRulesetEditor rulesetEditor;
@@ -24,11 +21,6 @@ public class EditHitCallRulesetDialog extends TitleAreaDialog {
 		this.ruleset = ruleset;
 	}
 
-	public static void openNew(HitCallRuleset ruleset) {
-		EditHitCallRulesetDialog dialog = new EditHitCallRulesetDialog(Display.getDefault().getActiveShell(), ruleset);
-		dialog.open();
-	}
-	
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);

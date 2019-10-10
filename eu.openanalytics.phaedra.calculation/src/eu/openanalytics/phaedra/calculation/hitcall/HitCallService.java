@@ -64,13 +64,43 @@ public class HitCallService extends BaseJPAService {
 	
 	public HitCallRuleset createRuleset(Feature feature) {
 		if (feature == null) throw new IllegalArgumentException("Cannot create ruleset: null feature");
-		if (getRulesetForFeature(feature.getId()) != null) throw new IllegalArgumentException(
-				String.format("Cannot create ruleset: a ruleset already exists for feature %s", feature));
 		HitCallRuleset ruleset = new HitCallRuleset();
 		ruleset.setFeature(feature);
 		ruleset.setRules(new ArrayList<>());
 		checkCanEditRuleset(ruleset);
 		return ruleset;
+	}
+	
+	public HitCallRuleset getWorkingCopy(HitCallRuleset ruleset) {
+		HitCallRuleset workingCopy = createRuleset(ruleset.getFeature());
+		copyRuleset(ruleset, workingCopy);
+		return workingCopy;
+	}
+	
+	public void copyRuleset(HitCallRuleset from, HitCallRuleset to) {
+		to.setShowInUI(from.isShowInUI());
+		to.setColor(from.getColor());
+		to.setStyle(from.getStyle());
+		to.setFeature(from.getFeature());
+		to.setId(from.getId());
+		
+		List<HitCallRule> oldRules = new ArrayList<>(to.getRules());
+		to.getRules().clear();
+		for (HitCallRule newItem: from.getRules()) {
+			HitCallRule itemToReplace = oldRules.stream().filter(i -> i.getId() == newItem.getId()).findAny().orElse(null);
+			if (itemToReplace == null) itemToReplace = new HitCallRule();
+			copyRule(newItem, itemToReplace);
+			to.getRules().add(itemToReplace);
+		}
+	}
+	
+	private void copyRule(HitCallRule from, HitCallRule to) {
+		to.setId(from.getId());
+		to.setName(from.getName());
+		to.setFormula(from.getFormula());
+		to.setSequence(from.getSequence());
+		to.setThreshold(from.getThreshold());
+		to.setRuleset(from.getRuleset());
 	}
 	
 	public boolean canEditRuleset(HitCallRuleset ruleset) {
@@ -83,12 +113,19 @@ public class HitCallService extends BaseJPAService {
 				String.format("No permission to modify the ruleset for feature %s", ruleset.getFeature()));
 	}
 	
-	public void updateRuleset(HitCallRuleset ruleset) {
+	public void updateRuleset(HitCallRuleset ruleset, HitCallRuleset workingCopy) {
+		if (workingCopy.getId() != ruleset.getId()) throw new IllegalArgumentException();
 		checkCanEditRuleset(ruleset);
-		validateRuleset(ruleset);
+		
+		if (ruleset.getId() == 0 && getRulesetForFeature(ruleset.getFeature().getId()) != null) throw new IllegalArgumentException(
+				String.format("Cannot create ruleset: a ruleset already exists for feature %s", ruleset.getFeature()));
+		
+		validateRuleset(workingCopy);
+		
+		copyRuleset(workingCopy, ruleset);
 		for (int i = 0; i < ruleset.getRules().size(); i++) {
 			HitCallRule rule = ruleset.getRules().get(i);
-			rule.setSequence(i+1);
+			rule.setSequence(i);
 		}
 		save(ruleset);
 	}
