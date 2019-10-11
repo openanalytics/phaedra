@@ -36,7 +36,7 @@ public class FeaturesPage extends FormPage {
 		super.createFormContent(managedForm);
 
 		ScrolledForm form = managedForm.getForm();
-		form.setText("Features");
+		form.setText("Well Features");
 		form.setImage(IconManager.getIconImage("tag_blue.png"));
 
 		msgManager = form.getMessageManager();

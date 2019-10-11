@@ -38,7 +38,7 @@ public class SubWellFeaturesPage extends FormPage {
 
 		// form
 		ScrolledForm form = managedForm.getForm();
-		form.setText("Sub-well Features");
+		form.setText("Sub-Well Features");
 		form.setImage(IconManager.getIconImage("tag_red.png"));
 
 		msgManager = form.getMessageManager();

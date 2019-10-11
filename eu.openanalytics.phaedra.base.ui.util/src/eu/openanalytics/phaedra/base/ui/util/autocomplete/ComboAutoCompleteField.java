@@ -79,7 +79,7 @@ public class ComboAutoCompleteField {
 		adapter.setPropagateKeys(true);
 		adapter.setProposalAcceptanceStyle(ContentProposalAdapter.PROPOSAL_REPLACE);
 
-		comboViewer.getCombo().addFocusListener(new FocusAdapter() {
+		comboViewer.getControl().addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
 				Combo combo = (Combo) e.getSource();
@@ -89,7 +89,7 @@ public class ComboAutoCompleteField {
 				}
 			}
 		});
-		comboViewer.getCombo().addKeyListener(new KeyListener() {
+		comboViewer.getControl().addKeyListener(new KeyListener() {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				Combo combo = (Combo) e.getSource();
@@ -103,7 +103,9 @@ public class ComboAutoCompleteField {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				// Store the last known selected index, if any.
-				int selectionIndex = comboViewer.getCombo().getSelectionIndex();
+				int selectionIndex = -1;
+				if (comboViewer.getCombo() != null) selectionIndex = comboViewer.getCombo().getSelectionIndex();
+				if (comboViewer.getCCombo() != null) selectionIndex = comboViewer.getCCombo().getSelectionIndex(); 
 				if (selectionIndex >= 0) {
 					lastSelectedIndex = selectionIndex;
 				}

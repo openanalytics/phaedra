@@ -60,7 +60,7 @@ import eu.openanalytics.phaedra.ui.protocol.dialog.ManageGroupsDialog;
 public class SubWellFeaturesMasterBlock extends MasterDetailsBlock {
 
 	private TableViewer tableViewer;
-	private WritableList inputList;
+	private WritableList<SubWellFeature> inputList;
 	private SubWellFeaturesPage parentPage;
 	private ProtocolClass protocolClass;
 
@@ -68,7 +68,7 @@ public class SubWellFeaturesMasterBlock extends MasterDetailsBlock {
 		List<SubWellFeature> features = protocolClass.getSubWellFeatures();
 		Collections.sort(features, ProtocolUtils.FEATURE_NAME_SORTER);
 
-		this.inputList = new WritableList(features, SubWellFeature.class);
+		this.inputList = new WritableList<>(features, SubWellFeature.class);
 		this.parentPage = page;
 		this.protocolClass = protocolClass;
 	}
@@ -268,71 +268,6 @@ public class SubWellFeaturesMasterBlock extends MasterDetailsBlock {
 				tableViewer.refresh(true);
 			}
 		});
-
-//		ImageHyperlink exampleFileFeatureLink = toolkit.createImageHyperlink(
-//				toolbar, SWT.TRANSPARENT);
-//		exampleFileFeatureLink.addHyperlinkListener(new HyperlinkAdapter() {
-//			public void linkActivated(final HyperlinkEvent e) {
-//				FileDialog fileDialog = new FileDialog(page.getEditor()
-//						.getSite().getShell(), SWT.SINGLE);
-//				String[] extensions = new String[1];
-//				extensions[0] = "*";
-//
-//				fileDialog.setFilterExtensions(extensions);
-//				fileDialog.setText("Select An Example File");
-//				String path = fileDialog.open();
-//
-//				if (path == null) {
-//					return;
-//				}
-//				File file = new File(path);
-//
-//				ProtocolClass pClass = page.getEditor().getProtocolClass();
-//				List<SubWellFeature> knownFeatures = pClass.getSubWellFeatures();
-//				List<SubWellFeature> newFeatures = new ArrayList<SubWellFeature>();
-//				InputStream in = null;
-//				try {
-//					in = new FileInputStream(file);
-//					List<SubWellFeature> features = Lists.newArrayList();//TODO SubWellDefinitionReader.parse(in, pClass);
-//					for (SubWellFeature f : features) {
-//						// Add to list if pClass doesn't contain it already.
-//						boolean exists = false;
-//						for (SubWellFeature known: knownFeatures) {
-//							if (known.getName().equals(f.getName())) {
-//								exists = true;
-//								break;
-//							}
-//						}
-//						if (!exists) {
-//							input.add(f);
-//							newFeatures.add(f);
-//						}
-//					}
-//
-//					viewer.refresh(true);
-//					viewer.setSelection(new StructuredSelection(newFeatures));
-//					if (newFeatures.size() != 0) {
-//						page.markDirty();
-//					}
-//
-//				} catch (Exception ex) {
-//					String message = "Unable to read the selected data file." +
-//							"\nPlease verify that the file has the correct format." +
-//							"\n\nError message: " + ex.getMessage();
-//					MessageDialog.openError(page.getEditor().getSite()
-//							.getShell(), "Parse failed", message);
-//				} finally {
-//					if (in != null) try { in.close(); } catch (IOException e1) {}
-//				}
-//			}
-//		});
-//		exampleFileFeatureLink.setText("Load features from sample file...");
-//		exampleFileFeatureLink
-//				.setImage(IconManager.getIconImage("feature_cell_import.png"));
-//		exampleFileFeatureLink.setEnabled(page.getEditor().isSaveAsAllowed());
-//		GridData gd_example = new GridData();
-//		gd_example.horizontalSpan = 2;
-//		exampleFileFeatureLink.setLayoutData(gd_example);
 	}
 
 	private void createMenu() {

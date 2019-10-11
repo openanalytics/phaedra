@@ -114,7 +114,9 @@ public class HitCallService extends BaseJPAService {
 	}
 	
 	public void updateRuleset(HitCallRuleset ruleset, HitCallRuleset workingCopy) {
-		if (workingCopy.getId() != ruleset.getId()) throw new IllegalArgumentException();
+		if (workingCopy.getId() != ruleset.getId()) throw new IllegalArgumentException("Ruleset's working copy has a different ID");
+		if (ruleset == workingCopy && ruleset.getId() != 0) throw new IllegalArgumentException("Cannot update a ruleset without a working copy");
+		
 		checkCanEditRuleset(ruleset);
 		
 		if (ruleset.getId() == 0 && getRulesetForFeature(ruleset.getFeature().getId()) != null) throw new IllegalArgumentException(
@@ -122,7 +124,7 @@ public class HitCallService extends BaseJPAService {
 		
 		validateRuleset(workingCopy);
 		
-		copyRuleset(workingCopy, ruleset);
+		if (ruleset != workingCopy) copyRuleset(workingCopy, ruleset);
 		for (int i = 0; i < ruleset.getRules().size(); i++) {
 			HitCallRule rule = ruleset.getRules().get(i);
 			rule.setSequence(i);

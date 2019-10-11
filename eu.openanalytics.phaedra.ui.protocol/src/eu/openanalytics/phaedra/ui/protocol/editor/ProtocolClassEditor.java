@@ -1,6 +1,8 @@
 package eu.openanalytics.phaedra.ui.protocol.editor;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
@@ -28,8 +30,11 @@ import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
+import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
+import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ObjectCopyFactory;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.Activator;
 import eu.openanalytics.phaedra.ui.protocol.editor.page.FeaturesPage;
@@ -41,10 +46,11 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 
 	private boolean dirty;
 	private boolean writeAccess;
+	
+	private Map<Feature, HitCallRuleset> hitCallRulesets;
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
-
 		super.init(site, input);
 
 		if (!(input instanceof ProtocolClassEditorInput)) {
@@ -52,19 +58,15 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 		}
 		
 		String name = getProtocolClass().getName();
-		if (name == null) {
-			setPartName("New Protocol Class");
-		} else {
-			setPartName(name);
-		}
+		if (name == null) setPartName("New Protocol Class");
+		else setPartName(name);
 
-		Image image = IconManager.getIconImage("struct.png");
-		setTitleImage(image);
+		setTitleImage(IconManager.getIconImage("struct.png"));
 
-		// Security check
 		writeAccess = ProtocolService.getInstance().canEditProtocolClass(getProtocolClass());
+		hitCallRulesets = new HashMap<>();
 		
-		if (((ProtocolClassEditorInput)input).isNewProtocolClass()) markDirty();
+		if (((ProtocolClassEditorInput) input).isNewProtocolClass()) markDirty();
 	}
 
 	@Override
@@ -120,11 +122,13 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 				// Existing items (imagesettings, features etc) should retain their existing ID.
 				ObjectCopyFactory.copySettings(getProtocolClass(), pc, false);
 
+				
 				final ProtocolClass pcToSave = pc;
 				// Save in the main thread so that after-save events are handled in the UI thread by default.
 				Display.getDefault().syncExec(new Runnable() {
 					@Override
 					public void run() {
+						saveHitCallRulesets();
 						ProtocolService.getInstance().updateProtocolClass(pcToSave);
 					}
 				});
@@ -191,6 +195,33 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 
 	public ProtocolClass getOriginalProtocolClass() {
 		return ((ProtocolClassEditorInput)getEditorInput()).getOriginalProtocolClass();
+	}
+	
+	public HitCallRuleset getHitCallRuleset(Feature feature) {
+		HitCallRuleset ruleset = hitCallRulesets.get(feature);
+		if (ruleset == null) {
+			ruleset = HitCallService.getInstance().getRulesetForFeature(feature.getId());
+			if (ruleset != null) ruleset = HitCallService.getInstance().getWorkingCopy(ruleset);
+		}
+		if (ruleset == null) ruleset = HitCallService.getInstance().createRuleset(feature);
+		hitCallRulesets.put(feature, ruleset);
+		return ruleset;
+	}
+	
+	private void saveHitCallRulesets() {
+		for (HitCallRuleset workingCopy: hitCallRulesets.values()) {
+			boolean isNew = workingCopy.getId() == 0;
+			boolean isEmpty = workingCopy.getRules().isEmpty();
+			
+			if (isNew) {
+				if (isEmpty) continue;
+				else HitCallService.getInstance().updateRuleset(workingCopy, workingCopy);
+			} else {
+				HitCallRuleset original = HitCallService.getInstance().getRuleset(workingCopy.getId());
+				if (isEmpty) HitCallService.getInstance().deleteRuleset(original);
+				else HitCallService.getInstance().updateRuleset(original, workingCopy);
+			}
+		}
 	}
 
 	public Action getSaveAction() {

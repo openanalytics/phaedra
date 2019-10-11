@@ -51,11 +51,11 @@ import eu.openanalytics.phaedra.wellimage.component.ComponentTypeFactory;
 public class ImageSettingsMasterBlock extends MasterDetailsBlock {
 
 	private TableViewer tableViewer;
-	private WritableList inputList;
+	private WritableList<ImageChannel> inputList;
 
 	private ImageSettingsPage parentPage;
 
-	public ImageSettingsMasterBlock(WritableList input, ImageSettingsPage page) {
+	public ImageSettingsMasterBlock(WritableList<ImageChannel> input, ImageSettingsPage page) {
 		this.parentPage = page;
 		this.inputList = input;
 	}

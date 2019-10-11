@@ -83,7 +83,7 @@ public class SubWellFeaturesDetailBlock implements IDetailsPage {
 	private Image symbolImage;
 
 	private TableViewer classificationTableViewer;
-	private WritableList classifications;
+	private WritableList<FeatureClass> classifications;
 
 	public SubWellFeaturesDetailBlock(SubWellFeaturesPage page, SubWellFeaturesMasterBlock master) {
 		this.master = master;
@@ -122,7 +122,7 @@ public class SubWellFeaturesDetailBlock implements IDetailsPage {
 
 		final Section section = toolkit.createSection(parent, Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE);
 		section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		section.setText("General Feature Section");
+		section.setText("General");
 
 		ImageHyperlink generalIcon = toolkit.createImageHyperlink(section, SWT.TRANSPARENT);
 		generalIcon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -219,7 +219,7 @@ public class SubWellFeaturesDetailBlock implements IDetailsPage {
 
 		toolkit.createLabel(compositeGeneral, "This is a:", SWT.NONE);
 
-		checkKeyfeature = toolkit.createButton(compositeGeneral, "Key feature (available in all tables and charts)", SWT.CHECK);
+		checkKeyfeature = toolkit.createButton(compositeGeneral, "Key feature (displayed in all tables and charts)", SWT.CHECK);
 		checkKeyfeature.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 		new Label(compositeGeneral, SWT.NONE);
 
@@ -250,7 +250,7 @@ public class SubWellFeaturesDetailBlock implements IDetailsPage {
 		final Section sctnFeatureClass = toolkit.createSection(parent, Section.TITLE_BAR | Section.EXPANDED | Section.DESCRIPTION | Section.TWISTIE);
 		sctnFeatureClass.setDescription("Define feature classes to perform classification on this feature.");
 		sctnFeatureClass.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		sctnFeatureClass.setText("Classification Section");
+		sctnFeatureClass.setText("Classification");
 
 		ImageHyperlink sectionIcon = toolkit.createImageHyperlink(sctnFeatureClass, SWT.TRANSPARENT);
 		sectionIcon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -350,7 +350,7 @@ public class SubWellFeaturesDetailBlock implements IDetailsPage {
 
 	private void fillClassificationTable() {
 		if (feature.getFeatureClasses() == null) feature.setFeatureClasses(new ArrayList<FeatureClass>());
-		classifications = new WritableList(feature.getFeatureClasses(), FeatureClass.class);
+		classifications = new WritableList<>(feature.getFeatureClasses(), FeatureClass.class);
 		classificationTableViewer.setInput(classifications);
 	}
 

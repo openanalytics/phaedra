@@ -3372,7 +3372,7 @@
       <gridLayer
             class="eu.openanalytics.phaedra.ui.plate.grid.layer.HitCallLayer"
             gridId="hca.singlewell.grid"
-            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/accept.png"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
             id="eu.openanalytics.phaedra.ui.plate.grid.layer.HitCallLayer"
             position="10001">
       </gridLayer>

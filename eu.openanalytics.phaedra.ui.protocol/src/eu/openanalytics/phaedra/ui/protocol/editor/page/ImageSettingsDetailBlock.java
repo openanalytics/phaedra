@@ -187,11 +187,11 @@ public class ImageSettingsDetailBlock implements IDetailsPage {
 
 		toolkit.createLabel(composite, "Visible In:", SWT.NONE);
 
-		checkPlateView = toolkit.createButton(composite, "Small views and thumbnails", SWT.CHECK);
+		checkPlateView = toolkit.createButton(composite, "Small views and thumbnails (low-resolution)", SWT.CHECK);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(false, false).applyTo(checkPlateView);
 		new Label(composite, SWT.NONE);
 
-		checkWellView = toolkit.createButton(composite, "Detailed views", SWT.CHECK);
+		checkWellView = toolkit.createButton(composite, "Detailed views (high-resolution)", SWT.CHECK);
 		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(false, false).applyTo(checkWellView);
 		new Label(composite, SWT.NONE);
 
@@ -470,6 +470,7 @@ public class ImageSettingsDetailBlock implements IDetailsPage {
 		return t;
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected DataBindingContext initDataBindings() {
 		DataBindingContext ctx = new DataBindingContext();
 		FormEditorUtils.bindText(nameTxt, channel, "name", ctx);
@@ -482,8 +483,6 @@ public class ImageSettingsDetailBlock implements IDetailsPage {
 
 		if (channel != null) {
 			ChannelSourceMapper sourceMapper = new ChannelSourceMapper(channel);
-//			FormEditorUtils.bindSelection(typeCmb, sourceMapper, "type", ctx);
-//			FormEditorUtils.bindSelection(bitCmb, sourceMapper, "bitDepth", ctx);
 			ctx.bindValue(WidgetProperties.singleSelectionIndex().observe(typeCmb), PojoProperties.value("type").observe(sourceMapper));
 			ctx.bindValue(WidgetProperties.singleSelectionIndex().observe(bitCmb), PojoProperties.value("bitDepth").observe(sourceMapper));
 		}

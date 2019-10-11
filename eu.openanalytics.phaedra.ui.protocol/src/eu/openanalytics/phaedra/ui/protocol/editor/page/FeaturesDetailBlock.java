@@ -63,6 +63,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
+import eu.openanalytics.phaedra.ui.protocol.calculation.HitCallRulesetEditor;
 import eu.openanalytics.phaedra.ui.protocol.dialog.ManageGroupsDialog;
 import eu.openanalytics.phaedra.ui.protocol.util.ClassificationTableFactory;
 import eu.openanalytics.phaedra.ui.protocol.util.ColorMethodFactory;
@@ -115,6 +116,8 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	private Section sectionCurveSettings;
 	private Composite curveSettingsCmp;
 
+	private HitCallRulesetEditor hitCallRulesetEditor;
+	
 	private Listener dirtyListener = new Listener() {
 		@Override
 		public void handleEvent(Event event) {
@@ -159,7 +162,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 		final Section section = toolkit.createSection(parent, Section.TITLE_BAR | Section.EXPANDED | Section.TWISTIE);
 		section.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-		section.setText("General Feature Section");
+		section.setText("General");
 
 		ImageHyperlink generalIcon = toolkit.createImageHyperlink(section, SWT.TRANSPARENT);
 		generalIcon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -203,14 +206,14 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 		label = toolkit.createLabel(compositeGeneral, "Format:", SWT.NONE);
 
-		comboFormatString = new CCombo(compositeGeneral, SWT.BORDER);
+		comboFormatString = new CCombo(compositeGeneral, SWT.NONE);
 		comboFormatString.setItems(new String[] { ".####", ".00", ".0000" });
 		comboFormatString.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		comboFormatString.setVisibleItemCount(20);
 		toolkit.adapt(comboFormatString, true, true);
 
 		toolkit.createLabel(compositeGeneral, "Group:", SWT.NONE);
-		comboGrouping = new CCombo(compositeGeneral, SWT.BORDER | SWT.READ_ONLY);
+		comboGrouping = new CCombo(compositeGeneral, SWT.READ_ONLY);
 		comboGrouping.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		comboGrouping.setVisibleItemCount(20);
 		toolkit.adapt(comboGrouping, true, true);
@@ -229,16 +232,13 @@ public class FeaturesDetailBlock implements IDetailsPage {
 			}
 		});
 
-		final Composite composite_1 = toolkit.createCompositeSeparator(compositeGeneral);
-		final GridData gd_composite_1 = new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1);
-		gd_composite_1.verticalIndent = 5;
-		gd_composite_1.heightHint = 1;
-		composite_1.setLayoutData(gd_composite_1);
+		Composite lineSep = toolkit.createCompositeSeparator(compositeGeneral);
+		GridDataFactory.fillDefaults().grab(true, false).span(2, 1).hint(SWT.DEFAULT, 1).applyTo(lineSep);
 
 		Label checkboxesLabel = toolkit.createLabel(compositeGeneral, "This is a:", SWT.NONE);
 		checkboxesLabel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
 
-		checkKeyfeature = toolkit.createButton(compositeGeneral, "Key feature (available in all tables and charts)", SWT.CHECK);
+		checkKeyfeature = toolkit.createButton(compositeGeneral, "Key feature (displayed in all tables and charts)", SWT.CHECK);
 		checkKeyfeature.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		new Label(compositeGeneral, SWT.NONE);
@@ -250,7 +250,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		checkAnnotation.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		
 		new Label(compositeGeneral, SWT.NONE);
-		checkExport = toolkit.createButton(compositeGeneral, "Export feature (after approval, will be exported to warehouse)", SWT.CHECK);
+		checkExport = toolkit.createButton(compositeGeneral, "Upload feature (after approval, will be uploaded to LIMS / warehouse)", SWT.CHECK);
 		checkExport.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 
 		/*
@@ -259,9 +259,9 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		 */
 
 		final Section section_1 = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
-		section_1.setDescription("To turn this feature into a Calculated Feature, enter a formula below.");
+		section_1.setDescription("To turn this feature into a Calculated Feature, enter a formula below:");
 		section_1.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		section_1.setText("Calculation Section");
+		section_1.setText("Calculation");
 
 		ImageHyperlink formulaIcon = toolkit.createImageHyperlink(section_1, SWT.TRANSPARENT);
 		formulaIcon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -276,7 +276,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		toolkit.paintBordersFor(formulaIcon);
 
 		final Composite compositeFormula = toolkit.createComposite(section_1, SWT.NONE);
-		compositeFormula.setLayout(new GridLayout(3,false));
+		compositeFormula.setLayout(new GridLayout(2, false));
 		toolkit.paintBordersFor(compositeFormula);
 		section_1.setClient(compositeFormula);
 
@@ -284,13 +284,10 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		GridDataFactory.fillDefaults().hint(70, SWT.DEFAULT).align(SWT.BEGINNING, SWT.BEGINNING).applyTo(formulaLabel);
 
 		textCalcFormula = toolkit.createText(compositeFormula, null, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		final GridData gd_text = new GridData(SWT.FILL, SWT.CENTER, true, false);
-		gd_text.heightHint = 60;
-		textCalcFormula.setLayoutData(gd_text);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).hint(SWT.DEFAULT, 60).applyTo(textCalcFormula);
 
-		final Button editBtn = new Button(compositeFormula, SWT.PUSH);
-		final GridData gd_edit = new GridData(SWT.FILL, SWT.TOP, false, false);
-		editBtn.setLayoutData(gd_edit);
+		new Label(compositeFormula, SWT.NONE);
+		Button editBtn = new Button(compositeFormula, SWT.PUSH);
 		editBtn.setText("Edit expression...");
 		editBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -302,22 +299,21 @@ public class FeaturesDetailBlock implements IDetailsPage {
 				master.refreshViewer();
 			}
 		});
-
+		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(editBtn);
+		
 		toolkit.createLabel(compositeFormula, "Language:", SWT.NONE);
 
 		String[] languageNames = Arrays.stream(CalculationLanguage.getLanguages()).map(l -> l.getLabel()).toArray(i -> new String[i]);
-		comboFormulaLanguage = new CCombo(compositeFormula, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
+		comboFormulaLanguage = new CCombo(compositeFormula, SWT.READ_ONLY);
 		comboFormulaLanguage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		comboFormulaLanguage.setItems(languageNames);
-		new Label(compositeFormula, SWT.NONE);
 
 		toolkit.createLabel(compositeFormula, "Calculation:", SWT.NONE);
 
 		String[] triggerNames = Arrays.stream(CalculationTrigger.values()).map(t -> t.getLabel()).toArray(i -> new String[i]);
-		comboFormulaTrigger = new CCombo(compositeFormula, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
+		comboFormulaTrigger = new CCombo(compositeFormula, SWT.READ_ONLY);
 		comboFormulaTrigger.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		comboFormulaTrigger.setItems(triggerNames);
-		new Label(compositeFormula, SWT.NONE);
 
 		Label sequenceLabel = toolkit.createLabel(compositeFormula, "Sequence:", SWT.NONE);
 		sequenceLabel.setLayoutData(new GridData(110, SWT.DEFAULT));
@@ -336,9 +332,9 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 		final Section normalizationSection = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
 		normalizationSection.setDescription("To normalize this feature, choose a normalization method and the control types for normalization."
-				+ "\nIf control types are not set, the protocol class defaults will be used.");
+				+ "\n(If control types are not specified, the protocol class defaults will be used.)");
 		normalizationSection.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		normalizationSection.setText("Normalization Section");
+		normalizationSection.setText("Normalization");
 
 		ImageHyperlink icon = toolkit.createImageHyperlink(normalizationSection, SWT.TRANSPARENT);
 		icon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -365,7 +361,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		});
 		predefinedNormBtn.setLayoutData(new GridData(140, SWT.DEFAULT));
 
-		comboNormalization = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY);
+		comboNormalization = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		comboNormalization.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 3, 1));
 		comboNormalization.setItems(NormalizationService.getInstance().getNormalizations());
 		comboNormalization.setVisibleItemCount(20);
@@ -384,16 +380,19 @@ public class FeaturesDetailBlock implements IDetailsPage {
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "Low Control Type:", SWT.NONE);
-		comboLowType = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY);
+		comboLowType = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		comboLowType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		toolkit.adapt(comboLowType, true, false);
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "High Control Type:", SWT.NONE);
-		comboHighType = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY);
+		comboHighType = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		comboHighType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		toolkit.adapt(comboHighType, true, false);
 
+		lineSep = toolkit.createCompositeSeparator(normalizationCmp);
+		GridDataFactory.fillDefaults().grab(true, false).span(4, 1).hint(SWT.DEFAULT, 1).applyTo(lineSep);
+		
 		customNormBtn = toolkit.createButton(normalizationCmp, "Custom method:", SWT.RADIO);
 		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(customNormBtn);
 		customNormBtn.addSelectionListener(new SelectionAdapter() {
@@ -404,9 +403,10 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		});
 
 		customNormTxt = toolkit.createText(normalizationCmp, "", SWT.WRAP | SWT.MULTI | SWT.V_SCROLL);
-		GridDataFactory.fillDefaults().hint(SWT.DEFAULT, 60).grab(true,true).span(2, 1).applyTo(customNormTxt);
+		GridDataFactory.fillDefaults().hint(SWT.DEFAULT, 60).grab(true,true).span(3, 1).applyTo(customNormTxt);
 
-		editNormScriptBtn = toolkit.createButton(normalizationCmp, "Edit...", SWT.PUSH);
+		new Label(normalizationCmp, SWT.NONE);
+		editNormScriptBtn = toolkit.createButton(normalizationCmp, "Edit expression...", SWT.PUSH);
 		editNormScriptBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -416,17 +416,17 @@ public class FeaturesDetailBlock implements IDetailsPage {
 				if (newFormula != null) customNormTxt.setText(newFormula);
 			}
 		});
-		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(editNormScriptBtn);
+		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).span(3, 1).applyTo(editNormScriptBtn);
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "Language:", SWT.NONE);
-		customNormLanguage = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
+		customNormLanguage = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		customNormLanguage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		customNormLanguage.setItems(languageNames);
 
 		new Label(normalizationCmp, SWT.NONE);
 		label = toolkit.createLabel(normalizationCmp, "Scope:", SWT.NONE);
-		normScopeCmb = new CCombo(normalizationCmp, SWT.BORDER | SWT.READ_ONLY | SWT.FILL);
+		normScopeCmb = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		normScopeCmb.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 
 		/*
@@ -437,7 +437,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		final Section sectionClassification = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
 		sectionClassification.setDescription("Define feature classes to perform classification on this feature.");
 		sectionClassification.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		sectionClassification.setText("Classification Section");
+		sectionClassification.setText("Classification");
 
 		ImageHyperlink sectionIcon = toolkit.createImageHyperlink(sectionClassification, SWT.TRANSPARENT);
 		sectionIcon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -505,7 +505,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		final Section sectionColorMethod = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
 		sectionColorMethod.setDescription("The color method is used in plate heatmaps and other visual components.");
 		sectionColorMethod.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
-		sectionColorMethod.setText("Color Method Section");
+		sectionColorMethod.setText("Color Method");
 
 		ImageHyperlink calibrationIcon = toolkit.createImageHyperlink(sectionColorMethod, SWT.TRANSPARENT);
 		calibrationIcon.addHyperlinkListener(new HyperlinkAdapter() {
@@ -571,13 +571,8 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		sectionCurveSettings = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
 		sectionCurveSettings.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		sectionCurveSettings.setDescription("Set the properties below to perform curve fitting on this feature.");
-		sectionCurveSettings.setText("Curve Section");
+		sectionCurveSettings.setText("Dose-Response Curve Fitting");
 
-//		ExpandableComposite ec = toolkit.createExpandableComposite(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
-//		ec.setText("sdasdasd");
-//		toolkit.adapt(ec);
-//		GridDataFactory.fillDefaults().grab(true,true).applyTo(ec);
-		
 		ImageHyperlink curveIcon = toolkit.createImageHyperlink(sectionCurveSettings, SWT.TRANSPARENT);
 		curveIcon.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
@@ -597,8 +592,40 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		sectionCurveSettings.setClient(compositeCurve);
 
 		curveSettingsCmp = new Composite(compositeCurve, SWT.NONE);
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(curveSettingsCmp);
+		GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 300).applyTo(curveSettingsCmp);
 		GridLayoutFactory.fillDefaults().applyTo(curveSettingsCmp);
+		
+		/*
+		 * Section: Hit Calling
+		 * ********************
+		 */
+
+		final Section hitCallSection = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
+		hitCallSection.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		hitCallSection.setText("Hit Calling");
+		hitCallSection.setDescription("To perform hit calling on this feature, add at least one rule to the table below:");
+		
+		icon = toolkit.createImageHyperlink(hitCallSection, SWT.TRANSPARENT);
+		icon.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e) {
+				hitCallSection.setExpanded(true);
+			}
+		});
+		icon.setImage(IconManager.getIconImage("arrow_in.png"));
+		hitCallSection.setTextClient(icon);
+
+		Composite hitCallCmp = toolkit.createComposite(hitCallSection, SWT.NONE);
+		GridLayoutFactory.fillDefaults().numColumns(4).margins(5,5).spacing(5, 5).applyTo(hitCallCmp);
+		hitCallSection.setClient(hitCallCmp);
+		toolkit.paintBordersFor(hitCallCmp);
+
+		hitCallRulesetEditor = new HitCallRulesetEditor(hitCallCmp, SWT.NONE, dirtyListener);
+		GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 350).applyTo(hitCallRulesetEditor);
+		
+		/*
+		 * Dirty Listeners
+		 */
 		
 		textName.addKeyListener(dirtyKeyListener);
 		textAlias.addKeyListener(dirtyKeyListener);
@@ -681,6 +708,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		fillGroupingCombo();
 		fillClassificationTable();
 		fillCurveComposite();
+		fillHitCallSection();
 		setActiveColorMethod();
 		
 		boolean isCustomNorm = NormalizationService.NORMALIZATION_CUSTOM.equals(feature.getNormalization());
@@ -752,6 +780,10 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		Composite cmp = CurveUIFactory.createFields(curveSettingsCmp, feature, null, m_bindingContext, dirtyListener);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(cmp);
 		cmp.requestLayout();
+	}
+	
+	private void fillHitCallSection() {
+		hitCallRulesetEditor.setInput(parentPage.getEditor().getHitCallRuleset(feature));
 	}
 	
 	private void fillWellTypeCombos() {

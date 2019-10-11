@@ -19,6 +19,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -26,6 +27,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
@@ -47,9 +49,14 @@ public class HitCallRulesetEditor extends Composite {
 	private WritableList<HitCallRule> ruleList;
 	
 	public HitCallRulesetEditor(Composite parent, int style) {
+		this(parent, style, null);
+	}
+	
+	public HitCallRulesetEditor(Composite parent, int style, Listener listener) {
 		super(parent, style);
 		GridLayoutFactory.fillDefaults().applyTo(this);
-		
+		final Listener dirtyListener = (listener == null) ? e -> {} : listener;
+
 		Group group = new Group(this, SWT.SHADOW_ETCHED_IN);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(group);
 		GridLayoutFactory.fillDefaults().margins(5, 5).numColumns(2).applyTo(group);
@@ -79,6 +86,7 @@ public class HitCallRulesetEditor extends Composite {
 			if (ruleset == null || ruleList == null) return;
 			HitCallService.getInstance().createRule(ruleset);
 			rulesTableViewer.refresh();
+			dirtyListener.handleEvent(null);
 		});
 		
 		lbl = new Label(btnComposite, SWT.NONE);
@@ -91,6 +99,7 @@ public class HitCallRulesetEditor extends Composite {
 			HitCallRule rule = SelectionUtils.getFirstObject(rulesTableViewer.getSelection(), HitCallRule.class);
 			ruleList.remove(rule);
 			rulesTableViewer.refresh();
+			dirtyListener.handleEvent(null);
 		});
 		
 		group = new Group(this, SWT.SHADOW_ETCHED_IN);
@@ -103,6 +112,7 @@ public class HitCallRulesetEditor extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (ruleset != null) ruleset.setShowInUI(showInUIBtn.getSelection());
+				dirtyListener.handleEvent(null);
 			}
 		});
 		GridDataFactory.fillDefaults().grab(true, false).span(2, 1).applyTo(showInUIBtn);
@@ -116,6 +126,7 @@ public class HitCallRulesetEditor extends Composite {
 				if (ruleset != null && event.getProperty().equals(ColorSelector.PROP_COLORCHANGE)) {
 					ruleset.setColor(ColorUtils.rgbToHex(colorSelector.getColorValue()));
 				}
+				dirtyListener.handleEvent(null);
 			}
 		});
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(colorSelector.getButton());
@@ -126,6 +137,7 @@ public class HitCallRulesetEditor extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (ruleset != null) ruleset.setStyle(styleCombo.getSelectionIndex());
+				dirtyListener.handleEvent(null);
 			}
 		});
 		for (HitCallRenderStyle s: HitCallRenderStyle.values()) {
@@ -138,12 +150,19 @@ public class HitCallRulesetEditor extends Composite {
 	
 	public void setInput(HitCallRuleset ruleset) {
 		this.ruleset = ruleset;
-		this.ruleList = new WritableList<>(ruleset.getRules(), HitCallRule.class);
-		
-		rulesTableViewer.setInput(ruleList);
-		showInUIBtn.setSelection(ruleset.isShowInUI());
-		colorSelector.setColorValue(ColorUtils.hexToRgb(ruleset.getColor()));
-		styleCombo.select(ruleset.getStyle());
+		if (ruleset == null) {
+			this.ruleList = null;
+			rulesTableViewer.setInput(new WritableList<>());
+			showInUIBtn.setSelection(false);
+			colorSelector.setColorValue(new RGB(0,0,0));
+			styleCombo.select(0);
+		} else {
+			this.ruleList = new WritableList<>(ruleset.getRules(), HitCallRule.class);
+			rulesTableViewer.setInput(ruleList);
+			showInUIBtn.setSelection(ruleset.isShowInUI());
+			colorSelector.setColorValue(ColorUtils.hexToRgb(ruleset.getColor()));
+			styleCombo.select(ruleset.getStyle());
+		}
 	}
 
 	private void configureColumns() {

@@ -16,7 +16,6 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.KeyAdapter;
@@ -26,7 +25,6 @@ import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -57,7 +55,6 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.editor.ProtocolClassEditor;
-import eu.openanalytics.phaedra.ui.protocol.editor.page.security.EditorsContentProvider;
 import eu.openanalytics.phaedra.ui.protocol.util.MultiploMethodToStringConverter;
 import eu.openanalytics.phaedra.ui.protocol.util.StringToMultiploMethodConverter;
 
@@ -85,7 +82,6 @@ public class ProtocolClassPage extends FormPage {
 	
 	private ProtocolClass protocolClass;
 
-	private TreeViewer permissionsTreeViewer;
 	private IMessageManager msgManager;
 
 	private ProtocolClassEditor pceditor;
@@ -104,6 +100,7 @@ public class ProtocolClassPage extends FormPage {
 	private KeyAdapter dirtyKeyListener = new KeyAdapter() {
 		@Override
 		public void keyPressed(final KeyEvent e) {
+			if (e.keyCode == SWT.CONTROL) return;
 			markDirty();
 		}
 	};
@@ -111,40 +108,31 @@ public class ProtocolClassPage extends FormPage {
 	@Override
 	protected void createFormContent(IManagedForm managedForm) {
 		FormToolkit toolkit = managedForm.getToolkit();
+		
 		ScrolledForm form = managedForm.getForm();
-
-		String suffix = "";
-		if (!getEditor().isSaveAsAllowed()) suffix += " (Locked)";
-
-		form.setText("Protocol Class: " + protocolClass.getName() + suffix);
+		form.setText("Protocol Class: " + protocolClass.getName() + (getEditor().isSaveAsAllowed() ? "" : " (Locked)"));
 		form.setImage(IconManager.getIconImage("struct.png"));
 
-		Composite body = form.getBody();
-		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(body);
-		toolkit.paintBordersFor(body);
+		Composite formBody = form.getBody();
+		GridLayoutFactory.fillDefaults().numColumns(2).margins(5, 5).applyTo(formBody);
+		toolkit.paintBordersFor(formBody);
 
 		toolkit.decorateFormHeading(managedForm.getForm().getForm());
 		msgManager = getManagedForm().getMessageManager();
 		msgManager.setDecorationPosition(SWT.TOP);
 
-		Section section = toolkit.createSection(body, Section.TITLE_BAR | Section.DESCRIPTION);
-		section.setDescription("This section contains the general settings of the protocol class.");
-		section.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
+		Section section = toolkit.createSection(formBody, Section.TITLE_BAR | Section.DESCRIPTION);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).span(2, 1).applyTo(section);
 		section.setText("General");
 
 		Composite compositeBase = toolkit.createComposite(section, SWT.NONE);
-		GridLayout gridLayout = new GridLayout();
-		gridLayout.marginBottom = 20;
-		gridLayout.horizontalSpacing = 10;
-		gridLayout.numColumns = 2;
-		compositeBase.setLayout(gridLayout);
+		compositeBase.setEnabled(getEditor().isSaveAsAllowed());
+		GridLayoutFactory.fillDefaults().margins(5, 5).numColumns(2).applyTo(compositeBase);
 		section.setClient(compositeBase);
 		toolkit.paintBordersFor(compositeBase);
 
-		compositeBase.setEnabled(getEditor().isSaveAsAllowed());
-
 		Label label = toolkit.createLabel(compositeBase, "Name:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
+		label.setLayoutData(new GridData(150, SWT.DEFAULT));
 
 		textName = toolkit.createText(compositeBase, null, SWT.NONE);
 		textName.addKeyListener(dirtyKeyListener);
@@ -158,7 +146,6 @@ public class ProtocolClassPage extends FormPage {
 		});
 
 		label = toolkit.createLabel(compositeBase, "Id:", SWT.NONE);
-		label.setLayoutData(new GridData(110, SWT.DEFAULT));
 
 		labelId = toolkit.createLabel(compositeBase, null, SWT.NONE);
 		final GridData gd_labelId = new GridData(SWT.FILL, SWT.CENTER, true, false);
@@ -178,18 +165,17 @@ public class ProtocolClassPage extends FormPage {
 
 		toolkit.createLabel(compositeBase, "Lock Status:", SWT.NONE);
 
-		checkIsEditable = toolkit.createButton(compositeBase, "Editable" + " (team members with the manager role can edit this protocol class)", SWT.CHECK);
-		checkIsEditable.addSelectionListener(new SelectionAdapter() {
+		checkIsInDevelopment = toolkit.createButton(compositeBase, "In Development (all team members can edit this protocol class)", SWT.CHECK);
+		checkIsInDevelopment.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				markDirty();
 			}
 		});
-
-		toolkit.createLabel(compositeBase, "Development Status:", SWT.NONE);
-
-		checkIsInDevelopment = toolkit.createButton(compositeBase, "In Development (team members without the manager role " + "can also edit this protocol class)", SWT.CHECK);
-		checkIsInDevelopment.addSelectionListener(new SelectionAdapter() {
+		
+		toolkit.createLabel(compositeBase, "", SWT.NONE);
+		checkIsEditable = toolkit.createButton(compositeBase, "Editable (team members with the manager role can edit this protocol class)", SWT.CHECK);
+		checkIsEditable.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				markDirty();
@@ -206,11 +192,14 @@ public class ProtocolClassPage extends FormPage {
 		GridLayoutFactory.fillDefaults().numColumns(2).margins(1, 1).applyTo(subcomp);
 		toolkit.paintBordersFor(subcomp);
 
-		defaultFeatureCmbViewer = new ComboViewer(subcomp, SWT.BORDER);
+		CCombo defaultFeatureCmb = new CCombo(subcomp, SWT.READ_ONLY);
+		toolkit.adapt(defaultFeatureCmb, true, true);
+		
+		defaultFeatureCmbViewer = new ComboViewer(defaultFeatureCmb);
 		defaultFeatureCmbViewer.setContentProvider(new ArrayContentProvider());
 		defaultFeatureCmbViewer.setLabelProvider(new LabelProvider());
 		defaultFeatureCmbViewer.addSelectionChangedListener(e -> {
-			String name = defaultFeatureCmbViewer.getCombo().getText();
+			String name = defaultFeatureCmbViewer.getCCombo().getText();
 			if (name == null || name.isEmpty()) return;
 			Feature defaultFeature = ProtocolUtils.getFeatures(protocolClass).stream()
 					.filter(f -> f.getDisplayName().equals(name))
@@ -220,7 +209,7 @@ public class ProtocolClassPage extends FormPage {
 			markDirty();
 		});
 		defaultFeatureAutoComplete = new ComboAutoCompleteField(defaultFeatureCmbViewer, new String[0]);
-		GridDataFactory.fillDefaults().hint(280, SWT.DEFAULT).applyTo(defaultFeatureCmbViewer.getControl());
+		GridDataFactory.fillDefaults().hint(300, SWT.DEFAULT).applyTo(defaultFeatureCmbViewer.getControl());
 		fillComboDefaultFeature();
 
 		Hyperlink refreshFeaturesLnk = toolkit.createHyperlink(subcomp, "Refresh", SWT.NONE);
@@ -231,7 +220,7 @@ public class ProtocolClassPage extends FormPage {
 			}
 		});
 
-		toolkit.createLabel(compositeBase, "Default Link Source:", SWT.NONE);
+		toolkit.createLabel(compositeBase, "Default Plate Link Source:", SWT.NONE);
 
 		comboDefaultLinkSource = new CCombo(compositeBase, SWT.READ_ONLY);
 		comboDefaultLinkSource.addSelectionListener(new SelectionAdapter() {
@@ -268,38 +257,6 @@ public class ProtocolClassPage extends FormPage {
 			}
 		});
 		
-		new Label(compositeBase, SWT.NONE);
-		new Label(compositeBase, SWT.NONE);
-
-		toolkit.createLabel(compositeBase, "Low Control Type:", SWT.NONE);
-
-		comboLowerBound = new CCombo(compositeBase, SWT.READ_ONLY);
-		final GridData gd_comboLowerBound = new GridData(150, SWT.DEFAULT);
-		comboLowerBound.setLayoutData(gd_comboLowerBound);
-		comboLowerBound.setVisibleItemCount(20);
-		comboLowerBound.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				markDirty();
-			}
-		});
-
-		toolkit.createLabel(compositeBase, "High Control Type:", SWT.NONE);
-
-		comboHigherBound = new CCombo(compositeBase, SWT.READ_ONLY);
-		final GridData gd_comboHigerBound = new GridData(150, SWT.DEFAULT);
-		comboHigherBound.setLayoutData(gd_comboHigerBound);
-		comboHigherBound.setVisibleItemCount(20);
-		toolkit.adapt(comboHigherBound, true, true);
-		comboHigherBound.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				markDirty();
-			}
-		});
-
-		fillComboHigherAndLowerBounds();
-
 		new Label(compositeBase, SWT.NONE); new Label(compositeBase, SWT.NONE);
 		{	toolkit.createLabel(compositeBase, "Default Multiplo Method:", SWT.NONE);
 			
@@ -309,7 +266,7 @@ public class ProtocolClassPage extends FormPage {
 			toolkit.paintBordersFor(line);
 			
 			CCombo combo = new CCombo(line, SWT.READ_ONLY);
-			combo.setLayoutData(new GridData(150, SWT.DEFAULT));
+			combo.setLayoutData(new GridData(300, SWT.DEFAULT));
 			toolkit.adapt(combo, true, true);
 			ComboViewer viewer = new ComboViewer(combo);
 			viewer.setContentProvider(new ArrayContentProvider());
@@ -330,30 +287,42 @@ public class ProtocolClassPage extends FormPage {
 			PlatformUI.getWorkbench().getHelpSystem().setHelp(defaultMultiploMethodViewer.getControl(), "eu.openanalytics.phaedra.ui.help.viewProtocolClassSettings_MultiploMethod");
 			PlatformUI.getWorkbench().getHelpSystem().setHelp(defaultMultiploParameterControl, "eu.openanalytics.phaedra.ui.help.viewProtocolClassSettings_MultiploMethod");
 		}
+		
+		new Label(compositeBase, SWT.NONE);
+		new Label(compositeBase, SWT.NONE);
 
-		final Section sectionTeamsAndUsers = toolkit.createSection(body, Section.TITLE_BAR | Section.DESCRIPTION | Section.EXPANDED | Section.TWISTIE);
-		sectionTeamsAndUsers.setDescription("The following users can EDIT this protocol class:");
-		final GridData gd_sectionTeamsAndUsers = new GridData(SWT.FILL, SWT.FILL, true, true);
-		sectionTeamsAndUsers.setLayoutData(gd_sectionTeamsAndUsers);
-		sectionTeamsAndUsers.setText("Protocol Class Permissions");
+		toolkit.createLabel(compositeBase, "Default Low Control Type:", SWT.NONE);
 
-		final Composite compositeGroups = toolkit.createComposite(sectionTeamsAndUsers, SWT.NONE);
-		compositeGroups.setLayout(new GridLayout());
-		toolkit.paintBordersFor(compositeGroups);
-		sectionTeamsAndUsers.setClient(compositeGroups);
+		comboLowerBound = new CCombo(compositeBase, SWT.READ_ONLY);
+		final GridData gd_comboLowerBound = new GridData(300, SWT.DEFAULT);
+		comboLowerBound.setLayoutData(gd_comboLowerBound);
+		comboLowerBound.setVisibleItemCount(20);
+		comboLowerBound.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				markDirty();
+			}
+		});
 
-		permissionsTreeViewer = new TreeViewer(compositeGroups, SWT.NONE);
-		permissionsTreeViewer.getTree().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		toolkit.createLabel(compositeBase, "Default High Control Type:", SWT.NONE);
 
-		permissionsTreeViewer.setContentProvider(new EditorsContentProvider());
-		permissionsTreeViewer.setLabelProvider(new LabelProvider());
-		permissionsTreeViewer.setInput(protocolClass);
-		permissionsTreeViewer.expandToLevel(2);
+		comboHigherBound = new CCombo(compositeBase, SWT.READ_ONLY);
+		final GridData gd_comboHigerBound = new GridData(300, SWT.DEFAULT);
+		comboHigherBound.setLayoutData(gd_comboHigerBound);
+		comboHigherBound.setVisibleItemCount(20);
+		toolkit.adapt(comboHigherBound, true, true);
+		comboHigherBound.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				markDirty();
+			}
+		});
+
+		fillComboHigherAndLowerBounds();
 
 		managedForm.getForm().getToolBarManager().add(getEditor().getSaveAction());
 		managedForm.getForm().getToolBarManager().update(true);
 
-		new Label(body, SWT.NONE);
 		initDataBindings();
 	}
 
@@ -419,6 +388,7 @@ public class ProtocolClassPage extends FormPage {
 		comboHigherBound.setItems(welltypes);
 	}
 
+	@SuppressWarnings("unchecked")
 	protected DataBindingContext initDataBindings() {
 		DataBindingContext dbc = new DataBindingContext();
 		
