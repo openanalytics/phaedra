@@ -1,6 +1,8 @@
 package eu.openanalytics.phaedra.ui.plate.grid.layer;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.swt.graphics.GC;
@@ -13,7 +15,6 @@ import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.calculation.outlier.OutlierDetectionService;
-import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -22,12 +23,14 @@ import eu.openanalytics.phaedra.ui.plate.grid.PlatesLayer;
 import eu.openanalytics.phaedra.ui.protocol.calculation.RulesetRenderStyle;
 import eu.openanalytics.phaedra.ui.protocol.provider.IFeatureProvider;
 
+/**
+ * Displays an outlier symbol on each well that matches the outlier ruleset of at least 1 feature.
+ */
 public class OutlierDetectionLayer extends PlatesLayer {
 
 	private Plate plate;
 	private ProtocolClass currentPClass;
-	private List<FormulaRuleset> currentRulesets;
-	private List<Well> currentOutliers;
+	private Map<Well, FormulaRuleset> currentOutliers;
 	
 	@Override
 	public String getName() {
@@ -38,7 +41,7 @@ public class OutlierDetectionLayer extends PlatesLayer {
 	protected void doInitialize() {
 		if (hasPlates()) plate = getPlate();
 		currentPClass = null;
-		currentRulesets = null;
+		currentOutliers = null;
 		currentOutliers = null;
 		update(null, null);
 	}
@@ -56,18 +59,20 @@ public class OutlierDetectionLayer extends PlatesLayer {
 		ProtocolClass pClass = provider.getCurrentProtocolClass();
 		if (!pClass.equals(currentPClass)) {
 			currentPClass = pClass;
-			currentRulesets = FormulaService.getInstance()
+			currentOutliers = new HashMap<>();
+			List<FormulaRuleset> rulesets = FormulaService.getInstance()
 					.getRulesetsForProtocolClass(pClass.getId(), RulesetType.OutlierDetection.getCode())
 					.values().stream().collect(Collectors.toList());
-			currentOutliers = PlateService.streamableList(plate.getWells()).stream()
-				.filter(w -> {
-					int wellNr = PlateUtils.getWellNr(w);
-					for (FormulaRuleset rs: currentRulesets) {
-						boolean[] outliers = OutlierDetectionService.getInstance().getOutliers(w.getPlate(), rs.getFeature());
-						if (outliers[wellNr - 1]) return true;
-					}
-					return false;
-				}).collect(Collectors.toList());
+			
+			for (FormulaRuleset rs: rulesets) {
+				if (!rs.isShowInUI()) continue;
+				boolean[] outliers = OutlierDetectionService.getInstance().getOutliers(plate, rs.getFeature());
+				for (Well well: plate.getWells()) {
+					if (currentOutliers.containsKey(well)) continue;
+					int wellNr = PlateUtils.getWellNr(well);
+					if (outliers[wellNr - 1]) currentOutliers.put(well, rs);
+				}
+			}
 		}
 	}
 	
@@ -79,8 +84,8 @@ public class OutlierDetectionLayer extends PlatesLayer {
 			if (currentOutliers == null || currentOutliers.isEmpty()) return;
 			
 			Well well = (Well) cell.getData();
-			if (well.getStatus() >= 0 && currentOutliers.contains(well)) {
-				FormulaRuleset ruleset = currentRulesets.get(0);
+			FormulaRuleset ruleset = currentOutliers.get(well);
+			if (well.getStatus() >= 0 && ruleset != null) {
 				RulesetRenderStyle style = RulesetRenderStyle.getByCode(ruleset.getStyle());
 				gc.setForeground(ColorCache.get(ruleset.getColor()));
 				gc.setLineWidth(2);

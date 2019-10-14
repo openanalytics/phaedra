@@ -199,9 +199,9 @@
              name="Run Hit Calling">
        </command>
        <command
-             defaultHandler="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
-             id="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
-             name="Reject Detected Outliers">
+             defaultHandler="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
+             id="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
+             name="Outlier Detection">
        </command>
    </extension>
    <extension
@@ -638,7 +638,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
                style="push">
             <visibleWhen
@@ -851,7 +851,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
                style="push">
             <visibleWhen
@@ -981,7 +981,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
                style="push">
             <visibleWhen
@@ -1146,7 +1146,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
                style="push">
             <visibleWhen
@@ -1271,7 +1271,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RejectDetectedOutliersHandler"
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
                style="push">
             <visibleWhen

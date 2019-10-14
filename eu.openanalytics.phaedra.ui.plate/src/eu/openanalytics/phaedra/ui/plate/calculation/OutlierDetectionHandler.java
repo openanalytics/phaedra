@@ -6,10 +6,14 @@ import java.util.stream.Collectors;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.statushandlers.StatusManager;
 
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
@@ -23,10 +27,11 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
+import eu.openanalytics.phaedra.ui.protocol.Activator;
 import eu.openanalytics.phaedra.validation.ValidationJobHelper;
 import eu.openanalytics.phaedra.validation.ValidationService.Action;
 
-public class RejectDetectedOutliersHandler extends AbstractHandler {
+public class OutlierDetectionHandler extends AbstractHandler {
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -39,15 +44,15 @@ public class RejectDetectedOutliersHandler extends AbstractHandler {
 		return null;
 	}
 	
-	public static void execute(List<Plate> plates) {
-		if (plates == null || plates.isEmpty()) return;
+	public static boolean execute(List<Plate> plates) {
+		if (plates == null || plates.isEmpty()) return false;
 		
 		ProtocolClass pClass = ProtocolUtils.getProtocolClass(plates.get(0));
 		List<FormulaRuleset> rulesets = FormulaService.getInstance()
 				.getRulesetsForProtocolClass(pClass.getId(), RulesetType.OutlierDetection.getCode())
 				.values().stream().collect(Collectors.toList());
 		
-		List<Well> wells = plates.stream()
+		List<Well> outlierWells = plates.stream()
 				.flatMap(p -> PlateService.streamableList(p.getWells()).stream())
 				.filter(w -> {
 					int wellNr = PlateUtils.getWellNr(w);
@@ -57,12 +62,25 @@ public class RejectDetectedOutliersHandler extends AbstractHandler {
 					}
 					return false;
 				}).collect(Collectors.toList());
-		if (wells.isEmpty()) return;
+		if (outlierWells.isEmpty()) return false;
 		
-		String remark = "Rejected by outlier detection rules";
-		String message = String.format("Are you sure you want to auto-reject %d wells  with the reason '%s'?", wells.size(), remark);
-		boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reject Detected Outliers", message);
-		if (confirmed) ValidationJobHelper.doInJob(Action.REJECT_OUTLIER_WELL, remark, wells);
+		OutlierDetectionDialog dialog = new OutlierDetectionDialog(Display.getCurrent().getActiveShell(), plates, outlierWells) {
+			@Override
+			protected void okPressed() {
+				try {
+					String remark = "Rejected by outlier detection rules";
+					String message = String.format("Are you sure you want to auto-reject %d wells  with the reason '%s'?", outlierWells.size(), remark);
+					boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reject Detected Outliers", message);
+					if (confirmed) ValidationJobHelper.doInJob(Action.REJECT_OUTLIER_WELL, remark, outlierWells);
+					
+					super.okPressed();
+				}
+				catch (Exception e) {
+					StatusManager.getManager().handle(new Status(IStatus.ERROR, Activator.PLUGIN_ID, "Failed to perform outlier detection", e),
+							StatusManager.SHOW | StatusManager.LOG | StatusManager.BLOCK);
+				}
+			}
+		};
+		return (dialog.open() == Dialog.OK);
 	}
-
 }
