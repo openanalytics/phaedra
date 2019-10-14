@@ -73,12 +73,12 @@ table.mltable tr.rowgroup-first th, table.mltable tr.rowgroup-first td {border-t
 <tr><td colspan="2"><img src="../../Images/formulas/PctInhNegMeanNormalizer.svg" alt="normalized = 100 - (x - Mean(X_LC)/Mean(X_HC) - Mean(X_LC)) · 100"/></td></tr>
 <tr class="rowgroup-first"><th>PIN[Neg Median]</th><td>Negative percent inhibition based on median of controls</td></tr>
 <tr><td colspan="2"><img src="../../Images/formulas/PctInhNegMedianNormalizer.svg" alt="normalized = 100 - (x - Median(X_LC)/Median(X_HC) - Median(X_LC)) · 100"/></td></tr>
-<tr class="rowgroup-first"><th>ZScore[S]</th><td>Z-score based on samples</td></tr>
-<tr><td colspan="2"><img src="../../Images/formulas/ZScoreSamplesNormalizer.svg" alt="normalized = (x - Mean(X_S)/SD(X_S))"/></td></tr>
+<tr class="rowgroup-first"><th>ZScore[S/L]</th><td>Z-score based on samples and low controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/ZScoreSamplesNormalizer.svg" alt="normalized = (x - Mean(X_S+LC)/SD(X_S+LC))"/></td></tr>
 <tr class="rowgroup-first"><th>ZScore[L]</th><td>Z-score based on low/negative controls</td></tr>
 <tr><td colspan="2"><img src="../../Images/formulas/ZScoreLowNormalizer.svg" alt="normalized = (x - Mean(X_LC)/SD(X_LC))"/></td></tr>
-<tr class="rowgroup-first"><th>ZScoreRob[S]</th><td>Robust Z-score based on samples</td></tr>
-<tr><td colspan="2"><img src="../../Images/formulas/ZScoreRobSamplesNormalizer.svg" alt="normalized = (x - Median(X_S)/1.4826 · MAD(X_S))"/></td></tr>
+<tr class="rowgroup-first"><th>ZScoreRob[S/L]</th><td>Robust Z-score based on samples and low controls</td></tr>
+<tr><td colspan="2"><img src="../../Images/formulas/ZScoreRobSamplesNormalizer.svg" alt="normalized = (x - Median(X_S+LC)/1.4826 · MAD(X_S+LC))"/></td></tr>
 <tr class="rowgroup-first"><th>ZScoreRob[L]</th><td>Robust Z-score based on low/negative controls</td></tr>
 <tr><td colspan="2"><img src="../../Images/formulas/ZScoreRobLowNormalizer.svg" alt="normalized = (x - Median(X_LC)/1.4826 · MAD(X_LC))"/></td></tr>
 </table>

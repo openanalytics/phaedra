@@ -44,6 +44,7 @@ public class FormulaUtils {
 			s = s.replace("SD", "\\stat{SD}");
 			s = s.replace("MAD", "\\stat{MAD}");
 			s = s.replace("(X_S)", "_{\\welltype{S}}");
+			s = s.replace("(X_S+LC)", "_{\\welltype{S \\cup LC}}");
 			s = s.replace("(X_HC)", "_{\\welltype{HC}}");
 			s = s.replace("(X_LC)", "_{\\welltype{LC}}");
 			s = s.replace("·", "\\cdot");
@@ -113,11 +114,11 @@ public class FormulaUtils {
 					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
 			
 			new Formula(new ZScoreSamplesNormalizer(),
-					frac("X_VALUE - Mean(X_S)",     "SD(X_S)") ), 
+					frac("X_VALUE - Mean(X_S+LC)",  "SD(X_S+LC)") ), 
 			new Formula(new ZScoreLowNormalizer(),
 					frac("X_VALUE - Mean(X_LC)",    "SD(X_LC)") ),
 			new Formula(new ZScoreRobSamplesNormalizer(),
-					frac("X_VALUE - Median(X_S)",   "1.4826 · MAD(X_S)") ),
+					frac("X_VALUE - Median(X_S+LC)", "1.4826 · MAD(X_S+LC)") ),
 			new Formula(new ZScoreRobLowNormalizer(),
 					frac("X_VALUE - Median(X_LC)",  "1.4826 · MAD(X_LC)") )
 			
