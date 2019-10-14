@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.ui.protocol.calculation;
 
 import org.eclipse.core.databinding.observable.list.WritableList;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.ColorSelector;
@@ -18,7 +19,6 @@ import org.eclipse.nebula.widgets.tablecombo.TableCombo;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -70,7 +70,7 @@ public class HitCallRulesetEditor extends Composite {
 		rulesTableViewer.getTable().setHeaderVisible(true);
 		rulesTableViewer.setContentProvider(new ArrayContentProvider());
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(rulesTableViewer.getControl());
-		configureColumns();
+		configureColumns(dirtyListener);
 		
 		new Label(group, SWT.NONE);
 		Composite btnComposite = new Composite(group, SWT.NONE);
@@ -165,7 +165,7 @@ public class HitCallRulesetEditor extends Composite {
 		}
 	}
 
-	private void configureColumns() {
+	private void configureColumns(Listener dirtyListener) {
 		TableViewerColumn tvc = new TableViewerColumn(rulesTableViewer, SWT.NONE);
 		tvc.getColumn().setText("Name");
 		tvc.getColumn().setWidth(200);
@@ -174,7 +174,7 @@ public class HitCallRulesetEditor extends Composite {
 				return ((HitCallRule) element).getName();
 			}
 		});
-		tvc.setEditingSupport(new NameEditingSupport(rulesTableViewer, null));
+		tvc.setEditingSupport(new NameEditingSupport(rulesTableViewer, dirtyListener));
 		
 		tvc = new TableViewerColumn(rulesTableViewer, SWT.NONE);
 		tvc.getColumn().setText("Formula");
@@ -186,7 +186,7 @@ public class HitCallRulesetEditor extends Composite {
 				return formula.getName();
 			}
 		});
-		tvc.setEditingSupport(new FormulaEditingSupport(rulesTableViewer, null));
+		tvc.setEditingSupport(new FormulaEditingSupport(rulesTableViewer, dirtyListener));
 		
 		tvc = new TableViewerColumn(rulesTableViewer, SWT.NONE);
 		tvc.getColumn().setText("Threshold");
@@ -196,15 +196,15 @@ public class HitCallRulesetEditor extends Composite {
 				return String.valueOf(((HitCallRule) element).getThreshold());
 			}
 		});
-		tvc.setEditingSupport(new ThresholdEditingSupport(rulesTableViewer, null));
+		tvc.setEditingSupport(new ThresholdEditingSupport(rulesTableViewer, dirtyListener));
 	}
 	
 	private static abstract class BaseEditingSupport extends EditingSupport {
 
 		private final TableViewer viewer;
-		private final SelectionListener dirtyListener;
+		private final Listener dirtyListener;
 
-		public BaseEditingSupport(TableViewer viewer, SelectionListener dirtyListener) {
+		public BaseEditingSupport(TableViewer viewer, Listener dirtyListener) {
 			super(viewer);
 			this.viewer = viewer;
 			this.dirtyListener = dirtyListener;
@@ -217,14 +217,14 @@ public class HitCallRulesetEditor extends Composite {
 
 		@Override
 		protected void setValue(Object element, Object value) {
-			if (dirtyListener != null) dirtyListener.widgetSelected(null);
+			if (dirtyListener != null) dirtyListener.handleEvent(null);
 			viewer.update(element, null);
 		}
 	}
 	
 	private static class NameEditingSupport extends BaseEditingSupport {
 
-		public NameEditingSupport(TableViewer viewer, SelectionListener dirtyListener) {
+		public NameEditingSupport(TableViewer viewer, Listener dirtyListener) {
 			super(viewer, dirtyListener);
 		}
 
@@ -247,7 +247,7 @@ public class HitCallRulesetEditor extends Composite {
 	
 	private static class FormulaEditingSupport extends BaseEditingSupport {
 
-		public FormulaEditingSupport(TableViewer viewer, SelectionListener dirtyListener) {
+		public FormulaEditingSupport(TableViewer viewer, Listener dirtyListener) {
 			super(viewer, dirtyListener);
 		}
 
@@ -277,14 +277,14 @@ public class HitCallRulesetEditor extends Composite {
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
 			SelectFormulaDialog dialog = new SelectFormulaDialog(Display.getDefault().getActiveShell());
-			dialog.open();
-			return dialog.getSelectedFormula();
+			if (dialog.open() == Dialog.OK) return dialog.getSelectedFormula();
+			return null;
 		}
 	}
 	
 	private static class ThresholdEditingSupport extends BaseEditingSupport {
 
-		public ThresholdEditingSupport(TableViewer viewer, SelectionListener dirtyListener) {
+		public ThresholdEditingSupport(TableViewer viewer, Listener dirtyListener) {
 			super(viewer, dirtyListener);
 		}
 

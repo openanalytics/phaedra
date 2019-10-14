@@ -98,6 +98,11 @@
             id="eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetHandler"
             name="Edit Hit Calling Ruleset">
       </command>
+      <command
+            defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.DeleteFormulaHandler"
+            id="eu.openanalytics.phaedra.ui.protocol.calculation.DeleteFormulaHandler"
+            name="Delete Formula">
+      </command>
    </extension>
    <extension
          point="org.eclipse.core.expressions.definitions">

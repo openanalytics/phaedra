@@ -23,6 +23,7 @@ import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
+import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
@@ -146,7 +147,12 @@ public class FormulaService extends BaseJPAService {
 	
 	public void deleteFormula(CalculationFormula formula) {
 		checkCanEditFormula(formula);
-		delete(formula);
+		int count = getList("select r from HitCallRule r where r.formula.id = ?1", HitCallRule.class, formula.getId()).size();
+		if (count == 0) {
+			delete(formula);
+		} else {
+			throw new IllegalArgumentException(String.format("Cannot delete formula '%s': there are %d Hit Calling rules depending on it", formula.getName(), count));
+		}
 	}
 
 	public void validateFormula(CalculationFormula formula) throws CalculationException {

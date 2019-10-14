@@ -63,7 +63,7 @@ public class HitValueDAO {
 			if (existingValueCount > 0) {
 				try (Statement stmt = conn.createStatement()) {
 					stmt.execute(sqlDelete);
-				}	
+				}
 			}
 			try (PreparedStatement ps = conn.prepareStatement(sqlInsert)) {
 				for (int i = 0; i < hitValues.length; i++) {
@@ -72,7 +72,9 @@ public class HitValueDAO {
 					ps.setDouble(3, hitValues[i]);
 					ps.addBatch();
 				}
+				ps.executeBatch();
 			}
+			conn.commit();
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
