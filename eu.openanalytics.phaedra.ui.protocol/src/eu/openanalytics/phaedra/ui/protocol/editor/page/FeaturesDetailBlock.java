@@ -344,8 +344,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 				outlierDetectionSection.setExpanded(true);
 			}
 		});
-		//TODO
-		icon.setImage(IconManager.getIconImage("arrow_in.png"));
+		icon.setImage(IconManager.getIconImage("outlier_detection.png"));
 		outlierDetectionSection.setTextClient(icon);
 
 		Composite outlierDetectionCmp = toolkit.createComposite(outlierDetectionSection, SWT.NONE);

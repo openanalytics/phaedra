@@ -64,7 +64,7 @@ public class HitCallLayer extends PlatesLayer {
 			int wellNr = PlateUtils.getWellNr(well);
 			
 			boolean[] hits = HitCallService.getInstance().getHitValues(plate, currentFeature);
-			if (hits == null || hits.length <= wellNr) return;
+			if (hits == null || hits.length < (wellNr - 1)) return;
 			
 			if (hits[wellNr - 1]) {
 				RulesetRenderStyle style = RulesetRenderStyle.getByCode(currentRuleset.getStyle());
