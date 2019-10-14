@@ -9,7 +9,7 @@ import eu.openanalytics.phaedra.base.ui.util.misc.ColorCache;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
-import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
+import eu.openanalytics.phaedra.calculation.outlier.OutlierDetectionService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -18,7 +18,7 @@ import eu.openanalytics.phaedra.ui.plate.grid.PlatesLayer;
 import eu.openanalytics.phaedra.ui.protocol.calculation.RulesetRenderStyle;
 import eu.openanalytics.phaedra.ui.protocol.provider.IFeatureProvider;
 
-public class HitCallLayer extends PlatesLayer {
+public class OutlierDetectionLayer extends PlatesLayer {
 
 	private Plate plate;
 	private Feature currentFeature;
@@ -26,7 +26,7 @@ public class HitCallLayer extends PlatesLayer {
 	
 	@Override
 	public String getName() {
-		return "Hit Calling";
+		return "Outlier Detection";
 	}
 	
 	@Override
@@ -38,7 +38,7 @@ public class HitCallLayer extends PlatesLayer {
 	
 	@Override
 	public IGridCellRenderer createRenderer() {
-		return new HitCallRenderer();
+		return new OutlierDetectionRenderer();
 	}
 	
 	@Override
@@ -49,11 +49,11 @@ public class HitCallLayer extends PlatesLayer {
 		Feature feature = provider.getCurrentFeature();
 		if (!feature.equals(currentFeature)) {
 			currentFeature = feature;
-			currentRuleset = FormulaService.getInstance().getRulesetForFeature(currentFeature.getId(), RulesetType.HitCalling.getCode());
+			currentRuleset = FormulaService.getInstance().getRulesetForFeature(currentFeature.getId(), RulesetType.OutlierDetection.getCode());
 		}
 	}
 	
-	private class HitCallRenderer extends BaseGridCellRenderer {
+	private class OutlierDetectionRenderer extends BaseGridCellRenderer {
 		
 		@Override
 		public void render(GridCell cell, GC gc, int x, int y, int w, int h) {
@@ -63,10 +63,10 @@ public class HitCallLayer extends PlatesLayer {
 			Well well = (Well) cell.getData();
 			int wellNr = PlateUtils.getWellNr(well);
 			
-			boolean[] hits = HitCallService.getInstance().getHitValues(plate, currentFeature);
-			if (hits == null || hits.length <= wellNr) return;
+			boolean[] outliers = OutlierDetectionService.getInstance().getOutliers(plate, currentFeature);
+			if (outliers == null || outliers.length <= wellNr) return;
 			
-			if (hits[wellNr - 1]) {
+			if (outliers[wellNr - 1]) {
 				RulesetRenderStyle style = RulesetRenderStyle.getByCode(currentRuleset.getStyle());
 				gc.setForeground(ColorCache.get(currentRuleset.getColor()));
 				gc.setLineWidth(2);

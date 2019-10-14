@@ -1549,36 +1549,6 @@ grant select on phaedra.hca_calculation_formula to phaedra_role_read;
 
 -- ---------------------------------------------------------------------------
 
-CREATE TABLE phaedra.hca_hit_call_value (
-	well_id 			bigint not null,
-	feature_id 			bigint not null,
-	hit_value 			double precision
-);
-
-ALTER TABLE phaedra.hca_hit_call_value
-	ADD CONSTRAINT hca_hit_call_value_pk
-	PRIMARY KEY (well_id, feature_id);
-
-ALTER TABLE phaedra.hca_hit_call_value
-	ADD CONSTRAINT hca_hit_call_value_fk_w
-	FOREIGN KEY (well_id)
-	REFERENCES phaedra.hca_plate_well (well_id)
-	ON DELETE CASCADE;
-
-ALTER TABLE phaedra.hca_hit_call_value
-	ADD CONSTRAINT hca_hit_call_value_fk_f
-	FOREIGN KEY (feature_id)
-	REFERENCES phaedra.hca_feature (feature_id)
-	ON DELETE CASCADE;
-
-CREATE INDEX hca_hit_call_value_ix1
-	ON phaedra.hca_hit_call_value(feature_id);
-	
-GRANT INSERT, UPDATE, DELETE ON phaedra.hca_hit_call_value to phaedra_role_crud;
-GRANT SELECT ON phaedra.hca_hit_call_value to phaedra_role_read;
-
--- ---------------------------------------------------------------------------
-
 create table phaedra.hca_formula_ruleset (
 	ruleset_id 			bigint not null,
 	feature_id			bigint not null,
@@ -1642,3 +1612,63 @@ create sequence phaedra.hca_formula_rule_s
 	
 grant insert, update, delete on phaedra.hca_formula_rule to phaedra_role_crud;
 grant select on phaedra.hca_formula_rule to phaedra_role_read;
+
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_hit_call_value (
+	well_id 			bigint not null,
+	feature_id 			bigint not null,
+	hit_value 			double precision
+);
+
+ALTER TABLE phaedra.hca_hit_call_value
+	ADD CONSTRAINT hca_hit_call_value_pk
+	PRIMARY KEY (well_id, feature_id);
+
+ALTER TABLE phaedra.hca_hit_call_value
+	ADD CONSTRAINT hca_hit_call_value_fk_w
+	FOREIGN KEY (well_id)
+	REFERENCES phaedra.hca_plate_well (well_id)
+	ON DELETE CASCADE;
+
+ALTER TABLE phaedra.hca_hit_call_value
+	ADD CONSTRAINT hca_hit_call_value_fk_f
+	FOREIGN KEY (feature_id)
+	REFERENCES phaedra.hca_feature (feature_id)
+	ON DELETE CASCADE;
+
+CREATE INDEX hca_hit_call_value_ix1
+	ON phaedra.hca_hit_call_value(feature_id);
+	
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_hit_call_value to phaedra_role_crud;
+GRANT SELECT ON phaedra.hca_hit_call_value to phaedra_role_read;
+
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_outlier_detection_value (
+	well_id 			bigint not null,
+	feature_id 			bigint not null,
+	outlier_value		double precision
+);
+
+ALTER TABLE phaedra.hca_outlier_detection_value
+	ADD CONSTRAINT hca_outlier_detection_value_pk
+	PRIMARY KEY (well_id, feature_id);
+
+ALTER TABLE phaedra.hca_outlier_detection_value
+	ADD CONSTRAINT hca_outlier_detection_value_fk_w
+	FOREIGN KEY (well_id)
+	REFERENCES phaedra.hca_plate_well (well_id)
+	ON DELETE CASCADE;
+
+ALTER TABLE phaedra.hca_outlier_detection_value
+	ADD CONSTRAINT hca_outlier_detection_value_fk_f
+	FOREIGN KEY (feature_id)
+	REFERENCES phaedra.hca_feature (feature_id)
+	ON DELETE CASCADE;
+
+CREATE INDEX hca_outlier_detection_value_ix1
+	ON phaedra.hca_outlier_detection_value(feature_id);
+	
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_outlier_detection_value to phaedra_role_crud;
+GRANT SELECT ON phaedra.hca_outlier_detection_value to phaedra_role_read;

@@ -35,6 +35,7 @@ import eu.openanalytics.phaedra.calculation.jep.JEPCalculation;
 import eu.openanalytics.phaedra.calculation.jep.JEPFormulaDialog;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationException;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
+import eu.openanalytics.phaedra.calculation.outlier.OutlierDetectionService;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -179,7 +180,8 @@ public class CalculationService {
 			Collections.sort(features, ProtocolUtils.FEATURE_CALC_SEQUENCE);
 
 			long protocolClassId = ProtocolUtils.getProtocolClass(plate).getId();
-			Map<Long, FormulaRuleset> rulesets = FormulaService.getInstance().getRulesetsForProtocolClass(protocolClassId, RulesetType.HitCalling.getCode());
+			Map<Long, FormulaRuleset> outlierDetectionRulesets = FormulaService.getInstance().getRulesetsForProtocolClass(protocolClassId, RulesetType.OutlierDetection.getCode());
+			Map<Long, FormulaRuleset> hitCallRulesets = FormulaService.getInstance().getRulesetsForProtocolClass(protocolClassId, RulesetType.HitCalling.getCode());
 			
 			for (Feature f: features) {
 				if (!f.isNumeric()) continue;
@@ -189,6 +191,10 @@ public class CalculationService {
 					getAccessor(plate).forceFeatureCalculation(f);
 				}
 
+				// Perform outlier detection, if the feature has any outlier detection rules attached to it.
+				FormulaRuleset outlierDetectionRuleset = outlierDetectionRulesets.get(f.getId());
+				if (outlierDetectionRuleset != null) OutlierDetectionService.getInstance().runOutlierDetection(outlierDetectionRuleset, plate);
+				
 				String norm = f.getNormalization();
 				if (norm != null && !norm.equals(NormalizationService.NORMALIZATION_NONE)) {
 					// Apply normalization and save the new values.
@@ -212,7 +218,7 @@ public class CalculationService {
 				}
 				
 				// Perform hit calling, if the feature has any hit calling rules attached to it.
-				FormulaRuleset hitCallRuleset = rulesets.get(f.getId());
+				FormulaRuleset hitCallRuleset = hitCallRulesets.get(f.getId());
 				if (hitCallRuleset != null) HitCallService.getInstance().runHitCalling(hitCallRuleset, plate);
 			}
 

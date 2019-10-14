@@ -48,6 +48,7 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 	private boolean dirty;
 	private boolean writeAccess;
 	
+	private Map<Feature, FormulaRuleset> outlierDetectionRulesets;
 	private Map<Feature, FormulaRuleset> hitCallRulesets;
 
 	@Override
@@ -65,6 +66,7 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 		setTitleImage(IconManager.getIconImage("struct.png"));
 
 		writeAccess = ProtocolService.getInstance().canEditProtocolClass(getProtocolClass());
+		outlierDetectionRulesets = new HashMap<>();
 		hitCallRulesets = new HashMap<>();
 		
 		if (((ProtocolClassEditorInput) input).isNewProtocolClass()) markDirty();
@@ -129,7 +131,8 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 				Display.getDefault().syncExec(new Runnable() {
 					@Override
 					public void run() {
-						saveHitCallRulesets();
+						saveRulesets(outlierDetectionRulesets);
+						saveRulesets(hitCallRulesets);
 						ProtocolService.getInstance().updateProtocolClass(pcToSave);
 					}
 				});
@@ -198,19 +201,20 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 		return ((ProtocolClassEditorInput)getEditorInput()).getOriginalProtocolClass();
 	}
 	
-	public FormulaRuleset getHitCallRuleset(Feature feature) {
-		FormulaRuleset ruleset = hitCallRulesets.get(feature);
+	public FormulaRuleset getRuleset(Feature feature, RulesetType type) {
+		Map<Feature, FormulaRuleset> cacheMap = (type == RulesetType.HitCalling) ? hitCallRulesets : outlierDetectionRulesets;
+		FormulaRuleset ruleset = cacheMap.get(feature);
 		if (ruleset == null) {
-			ruleset = FormulaService.getInstance().getRulesetForFeature(feature.getId(), RulesetType.HitCalling.getCode());
+			ruleset = FormulaService.getInstance().getRulesetForFeature(feature.getId(), type.getCode());
 			if (ruleset != null) ruleset = FormulaService.getInstance().getWorkingCopy(ruleset);
 		}
-		if (ruleset == null) ruleset = FormulaService.getInstance().createRuleset(feature, RulesetType.HitCalling.getCode());
-		hitCallRulesets.put(feature, ruleset);
+		if (ruleset == null) ruleset = FormulaService.getInstance().createRuleset(feature, type.getCode());
+		cacheMap.put(feature, ruleset);
 		return ruleset;
 	}
 	
-	private void saveHitCallRulesets() {
-		for (FormulaRuleset workingCopy: hitCallRulesets.values()) {
+	private void saveRulesets(Map<Feature, FormulaRuleset> rulesetMap) {
+		for (FormulaRuleset workingCopy: rulesetMap.values()) {
 			boolean isNew = workingCopy.getId() == 0;
 			boolean isEmpty = workingCopy.getRules().isEmpty();
 			

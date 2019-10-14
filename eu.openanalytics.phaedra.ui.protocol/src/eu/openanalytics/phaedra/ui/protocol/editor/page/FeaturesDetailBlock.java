@@ -53,6 +53,7 @@ import eu.openanalytics.phaedra.base.ui.util.misc.FormulaDisplay;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
+import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.calculation.norm.INormalizer;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService.NormalizationScope;
@@ -116,6 +117,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	private Section sectionCurveSettings;
 	private Composite curveSettingsCmp;
 
+	private RulesetEditor outlierDetectionRulesetEditor;
 	private RulesetEditor hitCallRulesetEditor;
 	
 	private Listener dirtyListener = new Listener() {
@@ -326,6 +328,35 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		spinnerSeq.setPageIncrement(100);
 
 		/*
+		 * Section: Outlier Detection
+		 * **************************
+		 */
+
+		final Section outlierDetectionSection = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
+		outlierDetectionSection.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		outlierDetectionSection.setText("Outlier Detection");
+		outlierDetectionSection.setDescription("To perform outlier detection on this feature, add at least one rule to the table below:");
+		
+		ImageHyperlink icon = toolkit.createImageHyperlink(outlierDetectionSection, SWT.TRANSPARENT);
+		icon.addHyperlinkListener(new HyperlinkAdapter() {
+			@Override
+			public void linkActivated(HyperlinkEvent e) {
+				outlierDetectionSection.setExpanded(true);
+			}
+		});
+		//TODO
+		icon.setImage(IconManager.getIconImage("arrow_in.png"));
+		outlierDetectionSection.setTextClient(icon);
+
+		Composite outlierDetectionCmp = toolkit.createComposite(outlierDetectionSection, SWT.NONE);
+		GridLayoutFactory.fillDefaults().numColumns(4).margins(5,5).spacing(5, 5).applyTo(outlierDetectionCmp);
+		outlierDetectionSection.setClient(outlierDetectionCmp);
+		toolkit.paintBordersFor(outlierDetectionCmp);
+
+		outlierDetectionRulesetEditor = new RulesetEditor(outlierDetectionCmp, SWT.NONE, dirtyListener);
+		GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 350).applyTo(outlierDetectionRulesetEditor);
+		
+		/*
 		 * Section: Normalization
 		 * **********************
 		 */
@@ -336,7 +367,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		normalizationSection.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		normalizationSection.setText("Normalization");
 
-		ImageHyperlink icon = toolkit.createImageHyperlink(normalizationSection, SWT.TRANSPARENT);
+		icon = toolkit.createImageHyperlink(normalizationSection, SWT.TRANSPARENT);
 		icon.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e) {
@@ -708,6 +739,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		fillGroupingCombo();
 		fillClassificationTable();
 		fillCurveComposite();
+		fillOutlierDetectionSection();
 		fillHitCallSection();
 		setActiveColorMethod();
 		
@@ -782,8 +814,12 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		cmp.requestLayout();
 	}
 	
+	private void fillOutlierDetectionSection() {
+		outlierDetectionRulesetEditor.setInput(parentPage.getEditor().getRuleset(feature, RulesetType.OutlierDetection));
+	}
+	
 	private void fillHitCallSection() {
-		hitCallRulesetEditor.setInput(parentPage.getEditor().getHitCallRuleset(feature));
+		hitCallRulesetEditor.setInput(parentPage.getEditor().getRuleset(feature, RulesetType.HitCalling));
 	}
 	
 	private void fillWellTypeCombos() {

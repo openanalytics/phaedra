@@ -6,6 +6,7 @@ import java.util.Map;
 import eu.openanalytics.phaedra.base.scripting.api.IScriptAPIProvider;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
+import eu.openanalytics.phaedra.calculation.outlier.OutlierDetectionService;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.validation.ValidationService;
 
@@ -19,6 +20,7 @@ public class ScriptAPI implements IScriptAPIProvider {
 		utils.put("StatService", StatService.getInstance());
 		utils.put("FormulaService", FormulaService.getInstance());
 		utils.put("HitCallService", HitCallService.getInstance());
+		utils.put("OutlierDetectionService", OutlierDetectionService.getInstance());
 		return utils;
 	}
 

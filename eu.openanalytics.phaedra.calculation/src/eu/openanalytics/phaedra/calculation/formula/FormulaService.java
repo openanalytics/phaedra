@@ -241,7 +241,7 @@ public class FormulaService extends BaseJPAService {
 		if (feature == null) throw new IllegalArgumentException("Cannot create ruleset: null feature");
 		FormulaRuleset ruleset = new FormulaRuleset();
 		ruleset.setFeature(feature);
-		ruleset.setType(RulesetType.HitCalling.getCode());
+		ruleset.setType(rulesetType);
 		ruleset.setRules(new ArrayList<>());
 		checkCanEditRuleset(ruleset);
 		return ruleset;

@@ -3,13 +3,9 @@ package eu.openanalytics.phaedra.calculation.hitcall;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-
 import eu.openanalytics.phaedra.base.cache.CacheKey;
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
-import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.calculation.CalculationException;
@@ -22,7 +18,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
-public class HitCallService extends BaseJPAService {
+public class HitCallService {
 
 	private static HitCallService instance = new HitCallService();
 
@@ -35,18 +31,12 @@ public class HitCallService extends BaseJPAService {
 		hitValueDAO = new HitValueDAO();
 	}
 
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-	
 	public static HitCallService getInstance() {
 		return instance;
 	}
 	
-	
 	// Note: only CalculationService#calculate should be allowed to call this method
-	public double[] runHitCalling(FormulaRuleset ruleset, Plate plate) throws CalculationException {
+	public void runHitCalling(FormulaRuleset ruleset, Plate plate) throws CalculationException {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CALCULATE, plate);
 		
 		if (ruleset == null || ruleset.getRules() == null || ruleset.getRules().isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
@@ -83,23 +73,21 @@ public class HitCallService extends BaseJPAService {
 			}
 		}
 		
-		long[] wellIds = streamableList(plate.getWells()).stream().mapToLong(w -> w.getId()).toArray();
+		long[] wellIds = FormulaService.streamableList(plate.getWells()).stream().mapToLong(w -> w.getId()).toArray();
 		hitValueDAO.saveHitValues(wellIds, feature.getId(), hitValues);
-		hitValueCache.put(key, hitValues);
-		
-		return hitValues;
+		hitValueCache.put(key, toBoolean(hitValues));
 	}
 
-	public double[] getHitValues(Plate plate, Feature feature) {
+	public boolean[] getHitValues(Plate plate, Feature feature) {
 		CacheKey key = createCacheKey(plate, feature);
-		if (hitValueCache.contains(key)) return (double[]) hitValueCache.get(key);
+		if (hitValueCache.contains(key)) return (boolean[]) hitValueCache.get(key);
 		
-		double[] hitValues = null;
+		boolean[] hitValues = null;
 		synchronized (plate) {
-			if (hitValueCache.contains(key)) return (double[]) hitValueCache.get(key);
-			long[] wellIds = streamableList(plate.getWells()).stream().mapToLong(w -> w.getId()).toArray();
-			hitValues = hitValueDAO.getHitValues(wellIds, feature.getId());
-			hitValues = sortValues(hitValues, plate);
+			if (hitValueCache.contains(key)) return (boolean[]) hitValueCache.get(key);
+			long[] wellIds = FormulaService.streamableList(plate.getWells()).stream().mapToLong(w -> w.getId()).toArray();
+			double[] v = sortValues(hitValueDAO.getHitValues(wellIds, feature.getId()), plate);
+			hitValues = toBoolean(v);
 			hitValueCache.put(key, hitValues);
 		}
 		
@@ -111,9 +99,17 @@ public class HitCallService extends BaseJPAService {
 		hitValueCache.remove(createCacheKey(plate, feature), true);
 	}
 	
+	private boolean[] toBoolean(double[] hitValues) {
+		boolean[] booleanValues = new boolean[hitValues.length];
+		for (int i = 0; i < booleanValues.length; i++) {
+			booleanValues[i] = !Double.isNaN(hitValues[i]) && hitValues[i] > 0.0d;
+		}
+		return booleanValues;
+	}
+	
 	private double[] sortValues(double[] hitValues, Plate plate) {
 		// hitValues are sorted by wellId. Return an array sorted by wellNr instead.
-		Well[] wells = streamableList(plate.getWells()).stream().sorted((w1, w2) -> (int)(w1.getId() - w2.getId())).toArray(i -> new Well[i]);
+		Well[] wells = FormulaService.streamableList(plate.getWells()).stream().sorted((w1, w2) -> (int)(w1.getId() - w2.getId())).toArray(i -> new Well[i]);
 		double[] sortedValues = new double[hitValues.length];
 		for (int i = 0; i < sortedValues.length; i++) {
 			int wellNr = PlateUtils.getWellNr(wells[i]);

@@ -3,11 +3,13 @@ package eu.openanalytics.phaedra.base.ui.util.autocomplete;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
 import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Control;
 
 /**
  * ComboAutoCompleteField is a class which attempts to auto-complete a user's
@@ -104,8 +106,9 @@ public class ComboAutoCompleteField {
 			public void keyPressed(KeyEvent e) {
 				// Store the last known selected index, if any.
 				int selectionIndex = -1;
-				if (comboViewer.getCombo() != null) selectionIndex = comboViewer.getCombo().getSelectionIndex();
-				if (comboViewer.getCCombo() != null) selectionIndex = comboViewer.getCCombo().getSelectionIndex(); 
+				Control control = comboViewer.getControl();
+				if (control instanceof Combo) selectionIndex = comboViewer.getCombo().getSelectionIndex();
+				if (control instanceof CCombo) selectionIndex = comboViewer.getCCombo().getSelectionIndex(); 
 				if (selectionIndex >= 0) {
 					lastSelectedIndex = selectionIndex;
 				}

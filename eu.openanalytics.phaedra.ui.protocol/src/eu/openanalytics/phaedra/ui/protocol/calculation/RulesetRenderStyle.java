@@ -10,8 +10,18 @@ public enum RulesetRenderStyle {
 
 	CheckMark(0),
 	Star(1),
-	Diamond(2);
-
+	Diamond(2),
+	Ellipse(3),
+	Rectangle(4),
+	TriangleUp(5),
+	TriangleRight(6),
+	TriangleLeft(7),
+	TriangleDown(8),
+	Cross(9),
+	DiagonalCross(10),
+	ProhibitorySign(11),
+	QuestionMark(12);
+		
 	private int code;
 	private Image image;
 	
