@@ -19,6 +19,7 @@ import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchActionConstants;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.gridviewer.advanced.AdvancedGridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.advanced.ModifyableGridContentProvider;
 import eu.openanalytics.phaedra.base.ui.gridviewer.layer.GridLayerSupport;
@@ -39,6 +40,8 @@ import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 
 public class WellGridView extends DecoratedView {
 
+	private DataFormatSupport dataFormatSupport;
+	
 	private AdvancedGridViewer gridViewer;
 	private GridLayerSupport gridLayerSupport;
 
@@ -50,13 +53,15 @@ public class WellGridView extends DecoratedView {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
+		
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().applyTo(container);
 
 		gridViewer = new AdvancedGridViewer(container, 0, 0);
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(gridViewer.getControl());
 
-		gridLayerSupport = new GridLayerSupport("hca.singlewell.grid|hca.well.grid", gridViewer);
+		gridLayerSupport = new GridLayerSupport("hca.singlewell.grid|hca.well.grid", gridViewer, dataFormatSupport);
 		gridLayerSupport.setAttribute("featureProvider", ProtocolUIService.getInstance());
 		gridLayerSupport.setAttribute(GridLayerSupport.IS_HIDDEN, getViewSite().getActionBars().getServiceLocator() == null);
 
@@ -122,9 +127,19 @@ public class WellGridView extends DecoratedView {
 	public void setFocus() {
 		gridViewer.getControl().setFocus();
 	}
+	
+	private void reloadData() {
+		final List<Well> input;
+		if (this.gridViewer == null || this.gridViewer.getControl().isDisposed()
+				|| (input = this.currentWells) == null) {
+			return;
+		}
+		this.gridLayerSupport.setInput(input);
+	}
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		getSite().getPage().removeSelectionListener(highlightListener);
 		ProtocolUIService.getInstance().removeUIEventListener(uiEventListener);

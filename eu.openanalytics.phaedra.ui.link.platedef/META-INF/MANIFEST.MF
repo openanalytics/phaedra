@@ -7,6 +7,7 @@ Bundle-Activator: eu.openanalytics.phaedra.ui.link.platedef.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.7",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
  eu.openanalytics.phaedra.calculation;bundle-version="1.0.0",

@@ -3,7 +3,6 @@ package eu.openanalytics.phaedra.model.curve.util;
 import eu.openanalytics.phaedra.base.scripting.jep.parse.BaseScanner;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
-import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -47,13 +46,18 @@ public class JEPCurvePropertyScanner extends BaseScanner<Well> {
 		Value prop = CurveParameter.find(curve.getOutputParameters(), propName);
 		if (prop == null) return Double.NaN;
 
-		Object value = null;
-		if (prop.definition.type == ParameterType.Binary) {
-			value = CurveParameter.getBinaryValue(prop);
-		} else if (prop.definition.type.isNumeric()) {
+		Object value;
+		switch (prop.definition.getDataDescription().getDataType()) {
+		case Integer:
+		case Real:
 			value = prop.numericValue;
-		} else {
+			break;
+		case ByteArray:
+			value = CurveParameter.getBinaryValue(prop);
+			break;
+		default:
 			value = prop.stringValue;
+			break;
 		}
 
 		if (value == null) value = Double.NaN;

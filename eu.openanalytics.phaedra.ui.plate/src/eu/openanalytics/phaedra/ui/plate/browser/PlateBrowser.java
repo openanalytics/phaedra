@@ -38,6 +38,7 @@ import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
 import com.google.common.collect.Lists;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -81,7 +82,10 @@ import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 public class PlateBrowser extends DecoratedEditor {
 
 	public static final String PLATEGRID_SETTINGS = "SETTINGS_PLATEGRID";
-
+	
+	
+	private DataFormatSupport dataFormatSupport;
+	
 	private BreadcrumbViewer breadcrumb;
 	private CTabFolder tabFolder;
 
@@ -124,7 +128,8 @@ public class PlateBrowser extends DecoratedEditor {
 
 	@Override
 	public void createPartControl(Composite parent) {
-
+		this.dataFormatSupport = new DataFormatSupport(this::reloadHeadmaps);
+		
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
@@ -195,7 +200,7 @@ public class PlateBrowser extends DecoratedEditor {
 			viewer.getGrid().addListener(SWT.MouseDoubleClick, e -> openWellBrowser(new StructuredSelection(plate)));
 
 			if (i == 0) {
-				gridLayerSupport = new MultiGridLayerSupport("hca.singlewell.grid|hca.well.grid", viewer);
+				gridLayerSupport = new MultiGridLayerSupport("hca.singlewell.grid|hca.well.grid", viewer, dataFormatSupport);
 				gridLayerSupport.setAttribute("featureProvider", ProtocolUIService.getInstance());
 				gridLayerSupport.setAttribute(GridLayerSupport.IS_HIDDEN, getEditorSite().getActionBars().getServiceLocator() == null);
 				viewer.setLabelProvider(gridLayerSupport.createLabelProvider());
@@ -261,13 +266,17 @@ public class PlateBrowser extends DecoratedEditor {
 	public void setFocus() {
 		tableViewer.getTable().setFocus();
 	}
-
+	
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		if (plateGrid != null) plateGrid.dispose();
 		if (gridLayerSupport != null) gridLayerSupport.dispose();
 		if (loadDataJob != null) loadDataJob.cancel();
-		ModelEventService.getInstance().removeEventListener(eventListener);
+		if (eventListener != null) {
+			ModelEventService.getInstance().removeEventListener(eventListener);
+			eventListener = null;
+		}
 		ProtocolUIService.getInstance().removeUIEventListener(featureSelectionListener);
 		featureHeatmapsTabComposite.dispose();
 		super.dispose();
@@ -398,7 +407,7 @@ public class PlateBrowser extends DecoratedEditor {
 	private void openWellBrowser(ISelection selection) {
 		Object item = ((StructuredSelection)selection).getFirstElement();
 		if (item instanceof Plate) {
-			IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+			IHandlerService handlerService = getSite().getService(IHandlerService.class);
 			try {
 				handlerService.executeCommand(BrowseWells.class.getName(), null);
 			} catch (Exception e) {
@@ -541,4 +550,21 @@ public class PlateBrowser extends DecoratedEditor {
 			return Status.OK_STATUS;
 		}
 	}
+	
+	private void reloadHeadmaps() {
+		if (this.plateGrid == null || this.plateGrid.isDisposed()
+				|| this.plates == null) {
+			return;
+		}
+		for (int plateIndex = 0; plateIndex < this.plates.size(); plateIndex++) {
+			GridViewer viewer = plateGrid.getGridViewer(plateIndex);
+			if (viewer != null) {
+				Object input = viewer.getInput();
+				if (input != null) {
+					gridLayerSupport.setInput(input, viewer);
+				}
+			}
+		}
+	}
+	
 }

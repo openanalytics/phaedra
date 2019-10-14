@@ -55,7 +55,9 @@ public class SubWellDensity2DLayer extends SubWellChartLayer {
 		List<String> selFeatures = new ArrayList<>();
 		selFeatures.add(getFeatures().get(cell.getColumn()).getDisplayName());
 		selFeatures.add(getFeatures().get(cell.getRow()).getDisplayName());
-		return new SubWellDensity2DRenderTask(getEntities(), selFeatures, getFillOption(), w, h, cell.getRow(), cell.getColumn());
+		return new SubWellDensity2DRenderTask(getEntities(), selFeatures, getFillOption(),
+				getDataFormatter(),
+				w, h, cell.getRow(), cell.getColumn() );
 	}
 
 	@Override

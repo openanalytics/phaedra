@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.plate.table;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.nebula.widgets.nattable.NatTable;
@@ -22,6 +25,7 @@ import org.eclipse.nebula.widgets.nattable.sort.SortConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.graphics.Point;
 
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.columnChooser.IColumnMatcher;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.AsyncColumnAccessor;
@@ -70,7 +74,10 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 		, DESCRIPTION, COMPOUND, CONCENTRATION };
 	private static final String[] COLUMNS_TOOLTIPS = new String[] { IMAGE, PLATE, WELL_NR, ROW, "Column", WELL_TYPE, "Well Validation Status"
 		, DESCRIPTION, COMPOUND, CONCENTRATION };
-
+	
+	
+	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
+	
 	private List<Well> currentWells;
 	private List<Feature> features;
 	private ImageAsyncColumnAccessor imageAccessor;
@@ -89,12 +96,14 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 	private boolean isAsync;
 	/** Contains the Features that already have been fully loaded when in sync. */
 	private Set<Feature> featuresSyncLoaded;
-
-	public WellDataCalculator() {
-		this(false);
+	
+	
+	public WellDataCalculator(Supplier<? extends DataUnitConfig> dataUnitSupport) {
+		this(false, dataUnitSupport);
 	}
 
-	public WellDataCalculator(boolean isMultiPlate) {
+	public WellDataCalculator(boolean isMultiPlate, Supplier<? extends DataUnitConfig> dataUnitSupport) {
+		this.dataUnitSupplier = dataUnitSupport; 
 		this.scale = 1f/32;
 		this.features = new ArrayList<>();
 		this.currentWells = new ArrayList<>();
@@ -210,7 +219,7 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 				Compound c = well.getCompound();
 				return c != null ? c.getType() + " " + c.getNumber() : "";
 			case CONCENTRATION:
-				return well.getCompoundConcentration();
+				return dataUnitSupplier.get().getConcentrationUnit().convert(well.getCompoundConcentration(), Molar);
 			case PLATE:
 				return well.getPlate().getBarcode();
 			default:

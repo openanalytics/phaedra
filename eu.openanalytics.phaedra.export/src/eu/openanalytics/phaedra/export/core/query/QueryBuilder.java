@@ -1,9 +1,12 @@
 package eu.openanalytics.phaedra.export.core.query;
 
+import static eu.openanalytics.phaedra.export.core.query.Query.checkColumnLabel;
+
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
@@ -14,10 +17,9 @@ import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.export.core.util.SQLUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
-import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
-import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
@@ -25,14 +27,16 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 public class QueryBuilder {
 
 	public Query createWellsQuery(ExportSettings settings) {
+		Query query = new Query();
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("SELECT");
 		sb.append(" P.EXPERIMENT_ID, E.EXPERIMENT_NAME, P.PLATE_ID, P.BARCODE, P.SEQUENCE_IN_RUN, P.PLATE_INFO, P.VALIDATE_STATUS, P.APPROVE_STATUS,");
 		sb.append(" " + JDBCUtils.selectConcat("P.DESCRIPTION", "W.DESCRIPTION", ' ') + " REMARKS, W.WELL_ID, W.ROW_NR, W.COL_NR, W.WELLTYPE_CODE,");
-		if (settings.compoundNameSplit) sb.append(" PC.COMPOUND_TY, PC.COMPOUND_NR,");
+		if (settings.getCompoundNameSplit()) sb.append(" PC.COMPOUND_TY, PC.COMPOUND_NR,");
 		else sb.append(" PC.COMPOUND_TY || PC.COMPOUND_NR COMP_NAME,");
 		sb.append(" W.CONCENTRATION, W.IS_VALID");
+		query.setColumnDataType("CONCENTRATION", WellProperty.Concentration.getDataDescription());
 		if (settings.includes.contains(ExportSettings.Includes.Saltform)) sb.append(", PC.SALTFORM");
 
 		sb.append(" FROM");
@@ -58,12 +62,12 @@ public class QueryBuilder {
 		expIds = expIds.substring(0,expIds.lastIndexOf(','));
 		sql = sql.replace("${experimentIds}", expIds);
 
-		Query query = new Query();
 		query.setSql(sql);
 		return query;
 	}
 
 	public Query createFeatureQuery(Feature feature, ExportSettings settings) {
+		Query query = new Query();
 		StringBuilder sb = new StringBuilder();
 		sb.append("SELECT");
 
@@ -89,15 +93,22 @@ public class QueryBuilder {
 				List<Definition> outputParamDefs = (settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) ?
 						model.getOutputParameters(fitSettings) : model.getOutputKeyParameters();
 				for (Definition def: outputParamDefs) {
-					if (def.type == ParameterType.Binary) continue;
-					
-					String basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
-							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
-					String baseCensoredPropertyQuery ="(SELECT CP.STRING_VALUE"
-							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName} Censor')"
-							+ " || (SELECT " + JDBCUtils.getFormatNumberSQL("CP.NUMERIC_VALUE", 3)
-							+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
-					appendIfIncludes(inc, settings, sb, (CurveParameter.isCensored(def) ? baseCensoredPropertyQuery : basePropertyQuery), def.name, def.name);
+					final String basePropertyQuery;
+					switch (def.getDataDescription().getDataType()) {
+					case Real:
+						basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
+								+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
+						break;
+					case String:
+						basePropertyQuery = " (SELECT CP.STRING_VALUE"
+								+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
+						break;
+					default:
+						continue;
+					}
+					final String label = checkColumnLabel(def.getName());
+					query.setColumnDataType(label, def.getDataDescription());
+					append(sb, basePropertyQuery, def.getName(), label);
 				}
 			}
 		}
@@ -129,18 +140,21 @@ public class QueryBuilder {
 				.map((experiment) -> Long.toString(experiment.getId()))
 				.collect(Collectors.joining(",")));
 
-		Query query = new Query();
 		query.setSql(sql);
 		return query;
 	}
 
 	private void appendIfIncludes(ExportSettings.Includes inc, ExportSettings settings, StringBuilder sb, String baseString, String propName, String colAlias) {
 		if (settings.includes.contains(inc)) {
-			String string = baseString;
-			if (propName != null) string = string.replace("${propertyName}", propName);
-			if (colAlias != null) string = string.replace("${columnAlias}", colAlias.replace(" ", "_"));
-			sb.append(string);
+			append(sb, baseString, propName, (colAlias != null) ? checkColumnLabel(colAlias) : null);
 		}
+	}
+	
+	private void append(StringBuilder sb, String baseString, String propName, String columnLabel) {
+		String s = baseString;
+		if (propName != null) s = s.replace("${propertyName}", propName);
+		if (columnLabel != null) s = s.replace("${columnAlias}", columnLabel);
+		sb.append(s);
 	}
 	
 	public Query createPlatesQuery(ExportPlateTableSettings settings) {

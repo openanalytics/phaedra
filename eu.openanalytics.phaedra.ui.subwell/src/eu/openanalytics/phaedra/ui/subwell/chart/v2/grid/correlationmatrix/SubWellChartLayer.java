@@ -50,8 +50,8 @@ public abstract class SubWellChartLayer extends FeatureWellLayer {
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void doInitialize() {
-		protocolId = ((Protocol) getEntities().get(0).getAdapter(Protocol.class)).getId();
-		dataProvider = new SubWellDataProvider();
+		protocolId = getEntities().get(0).getAdapter(Protocol.class).getId();
+		dataProvider = new SubWellDataProvider(getLayerSupport().getDataFormatSupport());
 		dataProvider.initialize();
 		dataProvider.loadData(getEntities(), getDimensionCount());
 
@@ -184,7 +184,7 @@ public abstract class SubWellChartLayer extends FeatureWellLayer {
 		} catch (ClassNotFoundException | IOException e) {
 			// Do nothing. Leave config in its current state (default).
 		}
-		protocolId = ((Protocol) getEntities().get(0).getAdapter(Protocol.class)).getId();
+		protocolId = getEntities().get(0).getAdapter(Protocol.class).getId();
 		GridState.saveValue(protocolId, getId(), PROPERTY_CONFIG, this.config);
 	}
 

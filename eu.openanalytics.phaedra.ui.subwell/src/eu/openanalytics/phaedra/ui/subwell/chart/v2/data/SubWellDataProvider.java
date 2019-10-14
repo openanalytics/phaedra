@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -18,6 +19,8 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.density.Density2DChart;
@@ -54,13 +57,22 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 	private static final String MAX = "max";
 	private static final String MIN = "min";
 	private static final String USE_PLATE_LIMITS = "USE_PLATE_LIMITS";
-
+	
+	
+	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
+	
 	private List<SubWellFeature> subWellFeatures;
 
 	private Map<String, List<String>> stringPropertyValues;
 
 	private boolean usePlateLimits;
-
+	private List<WellProperty> wellProperties;
+	
+	
+	public SubWellDataProvider(final Supplier<? extends DataUnitConfig> dataUnitSupplier) {
+		this.dataUnitSupplier = dataUnitSupplier;
+	}
+	
 	@Override
 	public void initialize() {
 		super.initialize();
@@ -92,7 +104,7 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 		List<SubWellFeature> newFeatures = PlateUtils.getSubWellFeatures(wells.get(0));
 		newFeatures = newFeatures.stream().filter(f -> f.isNumeric()).collect(Collectors.toCollection(ArrayList::new));
 		Collections.sort(newFeatures, ProtocolUtils.FEATURE_NAME_SORTER);
-		WellProperty[] wellProperties = WellProperty.values();
+		List<WellProperty> wellProperties = Arrays.asList(WellProperty.values());
 
 		int rowCount = 0;
 		Map<Well, float[][]> newData = new HashMap<>();
@@ -103,13 +115,14 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 		// Column y+1: Unit Weight
 
 		for (Well well : wells) {
-			float[][] data = new float[newFeatures.size() + wellProperties.length + 1][];
+			float[][] data = new float[newFeatures.size() + wellProperties.size() + 1][];
 
 			newData.put(well, data);
 			newDataSizes.put(well, 0);
 		}
 
-		subWellFeatures = newFeatures;
+		this.subWellFeatures = newFeatures;
+		this.wellProperties = wellProperties;
 		stringPropertyValues = new HashMap<>();
 		setCurrentData(newData);
 		setDataSizes(newDataSizes);
@@ -165,23 +178,30 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 					if (getFilters() != null) performFiltering();
 				}
 			}
-		} else if (col - subWellFeatures.size() < WellProperty.values().length) {
+			return values;
+		} else if (col - this.subWellFeatures.size() < this.wellProperties.size()) {
 			// It's a Well property. Retrieve Well properties.
-			WellProperty prop = WellProperty.values()[col - subWellFeatures.size()];
-			if (prop.isNumeric()) {
-				Arrays.fill(values, (float) prop.getValue(well));
-			} else {
+			WellProperty prop = this.wellProperties.get(col - this.subWellFeatures.size());
+			DataDescription dataDescription = prop.getDataDescription();
+			final DataUnitConfig dataUnitConfig = this.dataUnitSupplier.get();
+			switch (dataDescription.getDataType()) {
+			case Integer:
+			case Real:
+				Arrays.fill(values, (float)prop.getRealValue(well, dataUnitConfig));
+				return values;
+			default:
 				// Convert the String values to a sequence number.
 				String value = prop.getStringValue(well);
 				stringPropertyValues.putIfAbsent(prop.getLabel(), new ArrayList<>());
 				List<String> uniqueValues = stringPropertyValues.get(prop.getLabel());
 				CollectionUtils.addUnique(uniqueValues, value);
 				Arrays.fill(values, uniqueValues.indexOf(value));
+				return values;
 			}
 		} else {
 			Arrays.fill(values, 1.0f);
+			return values;
 		}
-		return values;
 	}
 
 	@Override
@@ -403,8 +423,9 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 			if (feature == null) {
 				WellProperty prop = WellProperty.getByName(featureName);
 				if (prop != null && prop.isNumeric()) {
+					final DataUnitConfig dataUnitConfig = this.dataUnitSupplier.get();
 					for (Well well : plate.getWells()) {
-						float value = (float) prop.getValue(well);
+						float value = (float)prop.getRealValue(well, dataUnitConfig);
 						bounds[0] = Math.min(bounds[0], value);
 						bounds[1] = Math.max(bounds[1], value);
 					}

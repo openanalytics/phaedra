@@ -108,7 +108,7 @@ public abstract class AbstractSubWellChartLayer extends PlatesLayer {
 
 		// Get the chart dimension count.
 		int dimensionCount = getDimensionCount();
-		dataProvider = new SubWellDataProvider();
+		dataProvider = new SubWellDataProvider(getLayerSupport().getDataFormatSupport());
 		dataProvider.initialize();
 		dataProvider.loadData(wells, dimensionCount, monitor);
 
@@ -231,7 +231,9 @@ public abstract class AbstractSubWellChartLayer extends PlatesLayer {
 	}
 
 	public SubWellChartRenderTask createRenderTask(GridCell cell, int w, int h) {
-		return new SubWellChartRenderTask((Well) cell.getData(), w, h, cell.getRow(), cell.getColumn());
+		return new SubWellChartRenderTask((Well) cell.getData(),
+				getDataFormatter(),
+				w, h, cell.getRow(), cell.getColumn() );
 	}
 
 	public List<LayerSettings<Well, Well>> getLayerSettings() {

@@ -1,6 +1,6 @@
 package eu.openanalytics.phaedra.base.ui.search;
 
-import java.util.Set;
+import java.util.Collection;
 
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.swt.widgets.Composite;
@@ -31,7 +31,7 @@ public interface IQueryValuePanelFactory extends IExecutableExtension {
 	 * A set of filters for which this component factory is applicable. 
 	 * @return
 	 */
-	public Set<QueryFilter> getFilters();
+	public Collection<QueryFilter> getFilters();
 	
 	/**
 	 * Returns <code>true</code> if the current value is reusable for this factory.

@@ -39,6 +39,9 @@ import chemaxon.formats.MolFormatException;
 import chemaxon.formats.MolImporter;
 import chemaxon.marvin.util.DispOptConstants;
 import chemaxon.struc.Molecule;
+import eu.openanalytics.phaedra.base.datatype.description.CensoredValueDescription;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.FunctionDisplayConverter;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.RichColumnAccessor;
@@ -60,10 +63,8 @@ import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
-import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
-import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
 import eu.openanalytics.phaedra.model.curve.util.CurveComparators;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.compound.CompoundInfoService;
@@ -109,6 +110,8 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 	private static final String CURVE_WIDTH = "curveWidth";
 
 	private CompoundGridInput gridInput;
+	
+	private final DataFormatSupport dataFormatSupport;
 
 	private ColumnSpec[] columnSpecs;
 	private GridColumnGroup[] columnGroups;
@@ -118,31 +121,31 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 
 	private DataPreLoader preLoader;
 	private Map<Compound, ImageData> smilesImages;
-
-	private ConcentrationFormat concFormat;
-
+	
 	private int baseColumnCount;
 	private int structureColumnIndex;
 	
-	public CompoundContentProvider(CompoundGridInput gridInput) {
+	public CompoundContentProvider(CompoundGridInput gridInput, DataFormatSupport dataFormatSupport) {
 		this.gridInput = gridInput;
 
-		this.concFormat = ConcentrationFormat.LogMolar;
+		this.dataFormatSupport = dataFormatSupport;
+		this.dataFormatSupport.addListener(this::updateLabels);
+		
 		this.smilesImages = new HashMap<>();
 
 		List<ColumnSpec> columnSpecList = new ArrayList<>();
-		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, null, c -> c.getPlate().getExperiment().getName()));
-		columnSpecList.add(new ColumnSpec("Plate(s)", null, 85, null, null, CompoundContentProvider::getBarcodes));
-		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, null, c -> c.getPlate().getValidationStatus(),
+		columnSpecList.add(new ColumnSpec("Experiment", null, 110, null, c -> c.getPlate().getExperiment().getName()));
+		columnSpecList.add(new ColumnSpec("Plate(s)", null, 85, null, CompoundContentProvider::getBarcodes));
+		columnSpecList.add(new ColumnSpec("PV", "Plate Validation Status", 35, null, c -> c.getPlate().getValidationStatus(),
 				c -> PlateValidationStatus.getByCode(c.getPlate().getValidationStatus()).toString(), false));
-		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, null, c -> c.getValidationStatus(),
+		columnSpecList.add(new ColumnSpec("CV", "Compound Validation Status", 35, null, c -> c.getValidationStatus(),
 				c -> CompoundValidationStatus.getByCode(c.getValidationStatus()).toString(), false));
-		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, null, c -> c.getType()));
-		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, null, c -> c.getNumber()));
-		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, null, c -> c.getSaltform()));
-		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, null, c -> c.getGrouping()));
-		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, null, CompoundContentProvider::getSampleCount));
-		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, null, c -> {
+		columnSpecList.add(new ColumnSpec("Comp.Type", null, 65, null, c -> c.getType()));
+		columnSpecList.add(new ColumnSpec("Comp.Nr", null, 60, null, c -> c.getNumber()));
+		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, c -> c.getSaltform()));
+		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, c -> c.getGrouping()));
+		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, CompoundContentProvider::getSampleCount));
+		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, c -> {
 			if (smilesImages.containsKey(c)) return smilesImages.get(c);
 			ImageData img = makeSmilesImage(c);
 			smilesImages.put(c, img);
@@ -160,21 +163,21 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 			
 			List<Definition> params = model.getOutputKeyParameters();
 			for (Definition param: params) {
-				columnSpecList.add(new ColumnSpec(param.name, param.description, 60, feature, param, c -> {
+				columnSpecList.add(new ColumnSpec(param, 60, feature, c -> {
 					Curve curve = getCurve(c, feature);
 					if (curve == null) return null;
 					Value value = CurveParameter.find(curve.getOutputParameters(), param.name);
-					return CurveParameter.renderValue(value, curve, concFormat);
+					return CurveParameter.renderValue(value, curve, this.dataFormatSupport.get());
 				}));
 			}
-			columnSpecList.add(new ColumnSpec("Curve", null, 100, feature, null, c -> {
+			columnSpecList.add(new ColumnSpec("Curve", null, 100, feature, c -> {
 				Curve curve = getCurve(c, feature);
 				if (curve == null) return null;
 				return CurveFitService.getInstance().getCurveImage(curve.getId(), imageX, imageY);
 			}));
 			
 			//TODO eMax is an OSB-specific parameter.
-			columnSpecList.add(new ColumnSpec("eMax Image", null, 100, feature, null, c -> getEMaxImage(feature, c), null, true));
+			columnSpecList.add(new ColumnSpec("eMax Image", null, 100, feature, c -> getEMaxImage(feature, c), null, true));
 			
 			int indexStart = columnSpecList.size() - (params.size() + 2);
 			columnGroupList.add(new GridColumnGroup(feature.getDisplayName(), IntStream.range(indexStart, columnSpecList.size()).toArray()));
@@ -182,6 +185,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		
 		columnSpecs = columnSpecList.toArray(new ColumnSpec[columnSpecList.size()]);
 		columnGroups = columnGroupList.toArray(new GridColumnGroup[columnGroupList.size()]);
+		updateLabels();
 	}
 
 	public void preLoad(NatTable table) {
@@ -191,19 +195,19 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		preLoader.schedule();
 	}
 
-	public void setConcFormat(ConcentrationFormat concFormat) {
-		this.concFormat = concFormat;
+	private void updateLabels() {
+		if (columnSpecs == null) {
+			return;
+		}
+		DataFormatter dataFormatter = this.dataFormatSupport.get();
 		for (int i = 0; i < columnSpecs.length; i++) {
 			Definition def = columnSpecs[i].paramDefinition;
-			if (def != null && def.type == ParameterType.Concentration) {
-				columnSpecs[i].name = concFormat.decorateName(columnSpecs[i].name);
+			if (def != null) {
+				columnSpecs[i].label = def.getDataDescription().convertNameTo(columnSpecs[i].name, dataFormatter);
 			}
 		}
 	}
-
-	public ConcentrationFormat getConcFormat() {
-		return concFormat;
-	}
+	
 
 	public void setImageSize(int x, int y) {
 		imageX = x;
@@ -251,13 +255,13 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 
 	@Override
 	public String getColumnProperty(int columnIndex) {
-		return columnSpecs[columnIndex].name;
+		return columnSpecs[columnIndex].label;
 	}
 
 	@Override
 	public int getColumnIndex(String propertyName) {
 		for (int i = 0; i < columnSpecs.length; i++) {
-			if (columnSpecs[i].name.equals(propertyName)) return i;
+			if (columnSpecs[i].name.equals(propertyName) || columnSpecs[i].label.equals(propertyName)) return i;
 		}
 		return -1;
 	}
@@ -301,7 +305,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 					Comparator<String> comp = null;
 					Definition def = columnSpecs[i].paramDefinition;
 					if (def != null && def.type.isNumeric()) {
-						if (CurveParameter.isCensored(def)) comp = CurveComparators.CENSOR_COMPARATOR;
+						if (def.getDataDescription() instanceof CensoredValueDescription) comp = CurveComparators.CENSOR_COMPARATOR;
 						else if (def.type.isNumeric()) comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
 					}
 					
@@ -375,20 +379,11 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 	}
 
 	public void saveSettings(Properties properties) {
-		properties.addProperty("ACTIVE_STRATEGY", concFormat);
 		properties.addProperty(CURVE_WIDTH, getImageWidth());
 		properties.addProperty(CURVE_HEIGHT, getImageHeight());
 	}
 
 	public void loadSettings(Properties properties) {
-		Object o = properties.getProperty("ACTIVE_STRATEGY");
-		// Support older Saved Views.
-		if (o instanceof Boolean) {
-			if ((boolean) o) setConcFormat(ConcentrationFormat.Molar);
-			else setConcFormat(ConcentrationFormat.LogMolar);
-		} else if (o instanceof ConcentrationFormat) {
-			setConcFormat((ConcentrationFormat) o);
-		}
 		int curveWidth = properties.getProperty(CURVE_WIDTH, getImageWidth());
 		int curveHeight = properties.getProperty(CURVE_HEIGHT, getImageHeight());
 		setImageSize(curveWidth, curveHeight);
@@ -514,6 +509,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 
 	private static class ColumnSpec {
 		public String name;
+		/** decorated name */ private String label;
 		public String tooltip;
 		public int width;
 		public Feature feature;
@@ -522,21 +518,35 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		public Function<CompoundWithGrouping, String> tooltipRenderer;
 		public boolean defaultHidden;
 		
-		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition, Function<CompoundWithGrouping, Object> valueRenderer) {
-			this(name, tooltip, width, feature, paramDefinition, valueRenderer, null, false);
+		public ColumnSpec(String name, String tooltip, int width, Feature feature, Function<CompoundWithGrouping, Object> valueRenderer) {
+			this(name, tooltip, width, feature, valueRenderer, null, false);
 		}
 		
-		public ColumnSpec(String name, String tooltip, int width, Feature feature, Definition paramDefinition,
+		public ColumnSpec(String name, String tooltip, int width, Feature feature,
 				Function<CompoundWithGrouping, Object> valueRenderer, Function<CompoundWithGrouping, String> tooltipRenderer, boolean defaultHidden) {
 			super();
 			this.name = name;
+			this.label = name;
 			this.tooltip = tooltip;
 			this.width = width;
 			this.feature = feature;
-			this.paramDefinition = paramDefinition;
+			this.paramDefinition = null;
 			this.valueRenderer = valueRenderer;
 			this.tooltipRenderer = tooltipRenderer;
 			this.defaultHidden = defaultHidden;
 		}
+		
+		public ColumnSpec(Definition paramDefinition, int width, Feature feature, Function<CompoundWithGrouping, Object> valueRenderer) {
+			this.name = paramDefinition.name;
+			this.label = name;
+			this.tooltip = paramDefinition.description;
+			this.width = width;
+			this.feature = feature;
+			this.paramDefinition = paramDefinition;
+			this.valueRenderer = valueRenderer;
+			this.tooltipRenderer = null;
+			this.defaultHidden = false;
+		}
+		
 	}
 }

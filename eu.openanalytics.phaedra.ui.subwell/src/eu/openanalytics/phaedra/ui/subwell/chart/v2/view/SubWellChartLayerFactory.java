@@ -1,7 +1,10 @@
 package eu.openanalytics.phaedra.ui.subwell.chart.v2.view;
 
-import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractLegend;
+import java.util.function.Supplier;
+
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractChart.ChartName;
+import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractLegend;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.ChartLayerFactory;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -9,8 +12,18 @@ import eu.openanalytics.phaedra.ui.plate.chart.v2.view.ClassificationScatter2DLe
 import eu.openanalytics.phaedra.ui.plate.chart.v2.view.ClassificationScatter3DLegend;
 import eu.openanalytics.phaedra.ui.subwell.chart.v2.data.SubWellDataProvider;
 
-public class SubWellChartLayerFactory extends ChartLayerFactory<Well, Well> {
 
+public class SubWellChartLayerFactory extends ChartLayerFactory<Well, Well> {
+	
+	
+	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
+	
+	
+	public SubWellChartLayerFactory(final Supplier<? extends DataUnitConfig> dataUnitSupplier) {
+		this.dataUnitSupplier = dataUnitSupplier;
+	}
+	
+	
 	@Override
 	public AbstractLegend<Well, Well> getLegend(ChartName name) {
 		switch (name) {
@@ -25,7 +38,7 @@ public class SubWellChartLayerFactory extends ChartLayerFactory<Well, Well> {
 
 	@Override
 	public IDataProvider<Well, Well> getDataProvider() {
-		return new SubWellDataProvider();
+		return new SubWellDataProvider(this.dataUnitSupplier);
 	}
-
+	
 }

@@ -52,7 +52,7 @@ public class GridToTemplate {
 				int[] pos = { r, c };
 				String value = gridValueGetter.apply(pos);
 				if (value == null) continue;
-				modified = modified | tab.applyValue(well, gridValueGetter.apply(pos));
+				modified = modified | tab.applyValue(well, value);
 			}
 		}
 		return modified;

@@ -1,23 +1,34 @@
 package eu.openanalytics.phaedra.model.curve.util;
 
+import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 
+
+/**
+ * @deprecated use {@link eu.openanalytics.phaedra.base.datatype.format.ConcentrationFormat}
+ */
+@Deprecated
 public enum ConcentrationFormat {
 
-	Molar("M"),
-	MicroMolar("µM"),
-	LogMolar("-log(M)");
+	Molar(ConcentrationUnit.Molar),
+	MicroMolar(ConcentrationUnit.MicroMolar),
+	LogMolar(ConcentrationUnit.LogMolar);
 
-	private String label;
+	private ConcentrationUnit unit;
 
 	private final static int DEFAULT_DECIMALS = 3;
 
-	private ConcentrationFormat(String label) {
-		this.label = label;
+	private ConcentrationFormat(ConcentrationUnit unit) {
+		this.unit = unit;
 	}
-
+	
+	
+	public ConcentrationUnit getUnit() {
+		return unit;
+	}
+	
 	public String getLabel() {
-		return label;
+		return unit.getAbbr();
 	}
 
 	/**

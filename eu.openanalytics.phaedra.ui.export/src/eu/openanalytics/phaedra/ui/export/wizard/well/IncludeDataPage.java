@@ -16,11 +16,17 @@ import eu.openanalytics.phaedra.export.core.ExportSettings.Includes;
 import eu.openanalytics.phaedra.ui.export.wizard.AbstractFileSelectionPage;
 
 public class IncludeDataPage extends AbstractFileSelectionPage {
-
+	
+	
+	private static final String CENSORED_DATA_SPLIT_KEY = "format.CensoredData.split";
+	
+	
 	private final ExportSettings settings;
 	
 	private Button compoundJoinedChk;
 	private Button compoundSplitChk;
+	private Button censoredJoinedChk;
+	private Button censoredSplitChk;
 	
 	public IncludeDataPage(ExportSettings settings, int stepNum, int stepTotal) {
 		super("Data to Include", settings, "Welldata");
@@ -42,16 +48,8 @@ public class IncludeDataPage extends AbstractFileSelectionPage {
 		Label label = new Label(container, SWT.SEPARATOR | SWT.SHADOW_OUT | SWT.HORIZONTAL);
 		GridDataFactory.fillDefaults().applyTo(label);
 		
-		label = new Label(container, SWT.NONE);
-		label.setText("Compound numbers:");
-		
-		compoundJoinedChk = new Button(container, SWT.RADIO);
-		compoundJoinedChk.setText("In one column ('TypeNumber')");
-		GridDataFactory.fillDefaults().applyTo(compoundJoinedChk);
-		
-		compoundSplitChk = new Button(container, SWT.RADIO);
-		compoundSplitChk.setText("In two columns ('Type' 'Number')");
-		GridDataFactory.fillDefaults().applyTo(compoundSplitChk);
+		Composite tableConfig = createFormatConfig(container);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(tableConfig);
 		
 		Composite fileSelection = createFileSelection(container);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(fileSelection);
@@ -59,12 +57,52 @@ public class IncludeDataPage extends AbstractFileSelectionPage {
 		setPageComplete(false);
 		loadDialogSettings();
 	}
+	
+	private Composite createFormatConfig(final Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(composite);
+		
+		{	Label label = new Label(composite, SWT.NONE);
+			label.setText("Compound numbers:");
+			GridDataFactory.fillDefaults().applyTo(label);
+			
+			Composite radioGroup = new Composite(composite, SWT.NONE);
+			GridLayoutFactory.fillDefaults().applyTo(radioGroup);
+			GridDataFactory.fillDefaults().applyTo(radioGroup);
+			
+			compoundJoinedChk = new Button(radioGroup, SWT.RADIO);
+			compoundJoinedChk.setText("In one column ('TypeNumber')");
+			GridDataFactory.fillDefaults().applyTo(compoundJoinedChk);
+			
+			compoundSplitChk = new Button(radioGroup, SWT.RADIO);
+			compoundSplitChk.setText("In two columns ('Type' 'Number')");
+			GridDataFactory.fillDefaults().applyTo(compoundSplitChk);
+		}
+		{	Label label = new Label(composite, SWT.NONE);
+			label.setText("Censored data:");
+			GridDataFactory.fillDefaults().applyTo(label);
+			
+			Composite radioGroup = new Composite(composite, SWT.NONE);
+			GridLayoutFactory.fillDefaults().applyTo(radioGroup);
+			GridDataFactory.fillDefaults().applyTo(radioGroup);
+			
+			censoredJoinedChk = new Button(radioGroup, SWT.RADIO);
+			censoredJoinedChk.setText("In one column ('>1.5e-3')");
+			GridDataFactory.fillDefaults().applyTo(censoredJoinedChk);
+			
+			censoredSplitChk = new Button(radioGroup, SWT.RADIO);
+			censoredSplitChk.setText("In two columns ('>' 1.5e-3)");
+			GridDataFactory.fillDefaults().applyTo(censoredSplitChk);
+		}
+		return composite;
+	}
 
 	@Override
 	public void collectSettings() {
 		super.collectSettings();
 		
-		settings.compoundNameSplit = compoundSplitChk.getSelection();
+		settings.setCompoundNameSplit(compoundSplitChk.getSelection());
+		settings.setCensoredValueSplit(censoredSplitChk.getSelection());
 	}
 
 	@Override
@@ -74,6 +112,13 @@ public class IncludeDataPage extends AbstractFileSelectionPage {
 		compoundJoinedChk.setSelection(dialogSettings.getBoolean("compoundJoinedChk"));
 		compoundSplitChk.setSelection(dialogSettings.getBoolean("compoundSplitChk"));
 		if (!compoundJoinedChk.getSelection() && !compoundSplitChk.getSelection()) compoundJoinedChk.setSelection(true);
+		
+		if (dialogSettings.get(CENSORED_DATA_SPLIT_KEY) != null && dialogSettings.getBoolean(CENSORED_DATA_SPLIT_KEY)) {
+			censoredSplitChk.setSelection(true);
+		}
+		else {
+			censoredJoinedChk.setSelection(true);
+		}
 		
 		for (Includes inc: Includes.values()) {
 			String key = "include" + inc.name();
@@ -91,6 +136,8 @@ public class IncludeDataPage extends AbstractFileSelectionPage {
 		
 		dialogSettings.put("compoundJoinedChk", !settings.compoundNameSplit);
 		dialogSettings.put("compoundSplitChk", settings.compoundNameSplit);
+		
+		dialogSettings.put(CENSORED_DATA_SPLIT_KEY, settings.getCensoredValueSplit());
 		
 		for (Includes inc: Includes.values()) {
 			String key = "include" + inc.name();

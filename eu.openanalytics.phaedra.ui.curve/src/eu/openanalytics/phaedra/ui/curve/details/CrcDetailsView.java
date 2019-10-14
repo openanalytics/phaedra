@@ -45,6 +45,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -82,7 +83,10 @@ import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 
 
 public class CrcDetailsView extends DecoratedView {
-
+	
+	
+	private DataFormatSupport dataFormatSupport;
+	
 	private BreadcrumbViewer breadcrumb;
 	private SplitComposite splitComp;
 	private MultiSelectChart chartComposite;
@@ -117,6 +121,8 @@ public class CrcDetailsView extends DecoratedView {
 	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataFormatSupport = new DataFormatSupport(this::update);
+		
 		GridLayoutFactory.fillDefaults().numColumns(1).spacing(0, 0).applyTo(parent);
 
 		breadcrumb = BreadcrumbFactory.createBreadcrumb(parent);
@@ -163,7 +169,7 @@ public class CrcDetailsView extends DecoratedView {
 		infoTable = new RichTableViewer(splitComp, SWT.BORDER);
 		infoTable.applyColumnConfig(createTableColumns());
 		infoTable.setContentProvider(new ArrayContentProvider());
-		infoTable.setInput(CurveTextProvider.getColumns(null));
+		infoTable.setInput(CurveTextProvider.getColumns(null, this.dataFormatSupport.get()));
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(infoTable.getTable());
 		
 		tooltip = new DefaultToolTip(infoTable.getControl(), SWT.NONE, true);
@@ -268,6 +274,7 @@ public class CrcDetailsView extends DecoratedView {
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		super.dispose();
 		if (selectionListener != null) getSite().getPage().removeSelectionListener(selectionListener);
 		if (curveFitListener != null) ModelEventService.getInstance().removeEventListener(curveFitListener);
@@ -314,7 +321,8 @@ public class CrcDetailsView extends DecoratedView {
 	private void update() {
 		// SplitComposite uses visibility to hide components. Prevent setInput() from resetting visibility.
 		infoTable.setInput(CurveTextProvider.getColumns(currentCurve,
-				Prefs.toNameList(Activator.getDefault().getPreferenceStore().getString(Prefs.CRC_TABLE_FAVORITES_NAMES)) ));
+				Prefs.toNameList(Activator.getDefault().getPreferenceStore().getString(Prefs.CRC_TABLE_FAVORITES_NAMES)),
+				this.dataFormatSupport.get() ));
 		infoTable.getTable().setVisible(splitComp.isVisible(2));
 
 		// Refresh the chart.

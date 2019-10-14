@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
-import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.export.core.ExportException;
 import eu.openanalytics.phaedra.export.core.query.Query;
 import eu.openanalytics.phaedra.export.core.query.QueryExecutor;
@@ -56,7 +55,7 @@ public class SQLUtils {
 		}
 		
 		List<String> values = new ArrayList<String>();
-		int colIndex = CollectionUtils.find(result.getColumnNames(), columnName);
+		int colIndex = result.getColumnIndex(columnName);
 		
 		for (int i=0; i<result.getRowCount(); i++) {
 			String value = result.getValueString(i, colIndex);
@@ -83,7 +82,7 @@ public class SQLUtils {
 		
 		int[] indices = new int[columnNames.length];
 		for (int i=0; i<indices.length; i++) {
-			indices[i] = CollectionUtils.find(result.getColumnNames(), columnNames[i]);
+			indices[i] = result.getColumnIndex(columnNames[i]);
 		}
 		
 		for (int c=0; c<columnNames.length; c++) {

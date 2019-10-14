@@ -1,15 +1,27 @@
 package eu.openanalytics.phaedra.ui.plate.chart.v2.view;
 
-import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractLegend;
+import java.util.function.Supplier;
+
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractChart.ChartName;
-import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
+import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractLegend;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.ChartLayerFactory;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.ui.plate.chart.v2.data.WellDataProvider;
 
-public class WellChartLayerFactory extends ChartLayerFactory<Plate, Well> {
 
+public class WellChartLayerFactory extends ChartLayerFactory<Plate, Well> {
+	
+	
+	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
+	
+	
+	public WellChartLayerFactory(Supplier<? extends DataUnitConfig> dataUnitSupplier) {
+		this.dataUnitSupplier = dataUnitSupplier;
+	}
+	
+	
 	@Override
 	public AbstractLegend<Plate, Well> getLegend(ChartName name) {
 		switch (name) {
@@ -23,8 +35,8 @@ public class WellChartLayerFactory extends ChartLayerFactory<Plate, Well> {
 	}
 
 	@Override
-	public IDataProvider<Plate, Well> getDataProvider() {
-		return new WellDataProvider();
+	public WellDataProvider getDataProvider() {
+		return new WellDataProvider(this.dataUnitSupplier);
 	}
-
+	
 }

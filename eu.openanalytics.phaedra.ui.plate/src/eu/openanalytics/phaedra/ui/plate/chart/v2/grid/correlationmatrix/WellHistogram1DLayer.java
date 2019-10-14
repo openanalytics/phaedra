@@ -25,7 +25,9 @@ public class WellHistogram1DLayer extends WellChartLayer {
 	public WellChartRenderTask createRenderTask(GridCell cell, int w, int h) {
 		List<String> selFeatures = new ArrayList<>();
 		selFeatures.add(getFeatures().get(cell.getColumn()).getDisplayName());
-		return new WellHistogram1DRenderTask(getEntities(), selFeatures, getFillOption(), w, h, cell.getRow(), cell.getColumn());
+		return new WellHistogram1DRenderTask(getEntities(), selFeatures, getFillOption(),
+				getDataFormatter(),
+				w, h, cell.getRow(), cell.getColumn() );
 	}
 
 	@Override

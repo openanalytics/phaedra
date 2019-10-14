@@ -10,6 +10,8 @@ import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchPart;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -28,7 +30,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.plate.table.WellTableColumns;
 
 public class WellClassificationSupport extends BaseClassificationSupport<Well> {
-
+	
 	private List<Well> currentWells;
 
 	public WellClassificationSupport() {
@@ -155,6 +157,7 @@ public class WellClassificationSupport extends BaseClassificationSupport<Well> {
 
 	@Override
 	protected ColumnConfiguration[] createItemTableColumns() {
-		return WellTableColumns.configureColumns(false);
+		final DataFormatter dataFormatter = DataTypePrefs.getDefaultDataFormatter();
+		return WellTableColumns.configureColumns(false, () -> dataFormatter);
 	}
 }

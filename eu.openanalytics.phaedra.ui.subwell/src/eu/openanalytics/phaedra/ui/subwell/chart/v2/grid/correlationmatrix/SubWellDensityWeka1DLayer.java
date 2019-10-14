@@ -24,7 +24,9 @@ public class SubWellDensityWeka1DLayer extends SubWellScatter2DLayer {
 	public SubWellDensityWeka1DRenderTask createRenderTask(GridCell cell, int w, int h) {
 		List<String> selFeatures = new ArrayList<>();
 		selFeatures.add(getFeatures().get(cell.getColumn()).getDisplayName());
-		return new SubWellDensityWeka1DRenderTask(getEntities(), selFeatures, getFillOption(), w, h, cell.getRow(), cell.getColumn());
+		return new SubWellDensityWeka1DRenderTask(getEntities(), selFeatures, getFillOption(),
+				getDataFormatter(),
+				w, h, cell.getRow(), cell.getColumn() );
 	}
 
 	@Override

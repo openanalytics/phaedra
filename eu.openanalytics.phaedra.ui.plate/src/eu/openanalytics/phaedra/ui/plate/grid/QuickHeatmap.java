@@ -18,6 +18,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -44,7 +45,10 @@ import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
 import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 
 public class QuickHeatmap extends DecoratedView {
-
+	
+	
+	private DataFormatSupport dataFormatSupport;
+	
 	private BreadcrumbViewer breadcrumb;
 	private GridViewer gridViewer;
 	private GridLayerSupport gridLayerSupport;
@@ -55,9 +59,11 @@ public class QuickHeatmap extends DecoratedView {
 	private IUIEventListener uiEventListener;
 	private IModelEventListener modelEventListener;
 	
+	
 	@Override
 	public void createPartControl(Composite parent) {
-
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
+		
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().applyTo(container);
 
@@ -67,7 +73,7 @@ public class QuickHeatmap extends DecoratedView {
 		gridViewer = new GridViewer(container);
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(gridViewer.getControl());
 
-		gridLayerSupport = new GridLayerSupport("hca.singlewell.grid|hca.well.grid", gridViewer);
+		gridLayerSupport = new GridLayerSupport("hca.singlewell.grid|hca.well.grid", gridViewer, dataFormatSupport);
 		gridLayerSupport.setAttribute("featureProvider", ProtocolUIService.getInstance());
 		gridLayerSupport.setAttribute(GridLayerSupport.IS_HIDDEN, getViewSite().getActionBars().getServiceLocator() == null);
 
@@ -123,7 +129,7 @@ public class QuickHeatmap extends DecoratedView {
 			
 			if (event.type == ModelEventType.Calculated) {
 				if (event.source instanceof Plate) {
-					if (currentPlate.equals((Plate)event.source)) {
+					if (currentPlate.equals(event.source)) {
 						Display.getDefault().asyncExec(() -> gridViewer.setInput(gridViewer.getInput()));
 					}
 				}
@@ -168,9 +174,19 @@ public class QuickHeatmap extends DecoratedView {
 	public void setFocus() {
 		gridViewer.getControl().setFocus();
 	}
+	
+	private void reloadData() {
+		final Plate input;
+		if (this.gridViewer == null || this.gridViewer.getControl().isDisposed()
+				|| (input = this.currentPlate) == null) {
+			return;
+		}
+		this.gridLayerSupport.setInput(input);
+	}
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		ProtocolUIService.getInstance().removeUIEventListener(uiEventListener);
 		ModelEventService.getInstance().removeEventListener(modelEventListener);

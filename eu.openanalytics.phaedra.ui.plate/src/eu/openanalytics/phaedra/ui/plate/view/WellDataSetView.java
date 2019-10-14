@@ -38,6 +38,7 @@ import org.eclipse.ui.IWorkbenchPart;
 
 import ca.odell.glazedlists.EventList;
 import ca.odell.glazedlists.GlazedLists;
+import eu.openanalytics.phaedra.base.datatype.util.DataUnitSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -75,7 +76,10 @@ import eu.openanalytics.phaedra.ui.wellimage.util.ImageControlPanel.ImageControl
 import eu.openanalytics.phaedra.ui.wellimage.util.ImageSettingsDialog;
 
 public class WellDataSetView extends DecoratedView {
-
+	
+	
+	private DataUnitSupport dataUnitSupport;
+	
 	private Composite container;
 	private NatTable table;
 	private FullFeaturedColumnHeaderLayerStack<Well> columnHeaderLayer;
@@ -97,14 +101,17 @@ public class WellDataSetView extends DecoratedView {
 	private Point tableImgSize;
 	private Job imageColumnSizeUpdateJob;
 	private Job highlightJob;
-
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataUnitSupport = new DataUnitSupport(this::reloadData);
+		
 		container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().margins(2, 2).applyTo(container);
 
 		this.tableImgSize = new Point(20, 20);
-		this.columnAccessor = new WellDataCalculator(true);
+		this.columnAccessor = new WellDataCalculator(true, this.dataUnitSupport);
 		this.eventList = GlazedLists.eventListOf();
 
 		createTable();
@@ -125,6 +132,7 @@ public class WellDataSetView extends DecoratedView {
 
 	@Override
 	public void dispose() {
+		if (this.dataUnitSupport != null) this.dataUnitSupport.dispose();
 		if (highlightJob != null) highlightJob.cancel();
 		imageColumnSizeUpdateJob.cancel();
 		eventList.dispose();
@@ -323,7 +331,7 @@ public class WellDataSetView extends DecoratedView {
 			if (eventList == null || eventList.isEmpty()) return;
 			if (event.type == EventType.FeatureSelectionChanged || event.type == EventType.NormalizationSelectionChanged) {
 				ProtocolClass pClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
-				ProtocolClass thisPClass = (ProtocolClass)(eventList.get(0)).getPlate().getAdapter(ProtocolClass.class);
+				ProtocolClass thisPClass = (eventList.get(0)).getPlate().getAdapter(ProtocolClass.class);
 				if (thisPClass.equals(pClass)) {
 					Display.getDefault().asyncExec(() -> table.refresh());
 				}
@@ -331,7 +339,7 @@ public class WellDataSetView extends DecoratedView {
 				Display.getDefault().asyncExec(() -> table.refresh());
 			} else if (event.type == EventType.ImageSettingsChanged) {
 				columnAccessor.clearCache();
-				table.doCommand(new VisualRefreshCommand());
+				reloadData();
 			}
 		};
 
@@ -362,6 +370,13 @@ public class WellDataSetView extends DecoratedView {
 		getSite().getPage().addSelectionListener(selectionListener);
 		getSite().getPage().addSelectionListener(highlightListener);
 		getSite().getPage().addSelectionListener(classificationSupport);
+	}
+	
+	private void reloadData() {
+		if (table == null || table.isDisposed()) {
+			return;
+		}
+		table.doCommand(new VisualRefreshCommand());
 	}
 
 	private void createJobs() {
@@ -418,7 +433,7 @@ public class WellDataSetView extends DecoratedView {
 
 	private Protocol getProtocol() {
 		if (columnAccessor.getCurrentWells() == null) return null;
-		return columnAccessor.getCurrentWells().stream().findAny().map(w -> (Protocol) w.getAdapter(Protocol.class)).orElse(null);
+		return columnAccessor.getCurrentWells().stream().findAny().map(w -> w.getAdapter(Protocol.class)).orElse(null);
 	}
 	
 	private Properties getProperties() {

@@ -8,6 +8,7 @@ Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.databinding,
  org.eclipse.ui,
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.7",
  eu.openanalytics.phaedra.model.curve;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",

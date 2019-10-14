@@ -667,4 +667,13 @@
             class="eu.openanalytics.phaedra.ui.protocol.util.UIAnnotationCreator">
       </annotationCreator>
    </extension>
+   
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            id="eu.openanalytics.phaedra.ui.datatype.PreferencePage"
+            name="Unit / Formatting"
+            class="eu.openanalytics.phaedra.internal.ui.datatype.UnitPreferencePage">
+      </page>
+   </extension>
 </plugin>

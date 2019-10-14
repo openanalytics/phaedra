@@ -2,9 +2,9 @@ package eu.openanalytics.phaedra.export.core.writer;
 
 import eu.openanalytics.phaedra.export.core.writer.convert.DefaultValueConverter;
 import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
-import eu.openanalytics.phaedra.export.core.writer.format.CSVWriter;
-import eu.openanalytics.phaedra.export.core.writer.format.StreamingXLSXWriter;
-import eu.openanalytics.phaedra.export.core.writer.format.TXTWriter;
+import eu.openanalytics.phaedra.export.core.writer.format.QueryCSVWriter;
+import eu.openanalytics.phaedra.export.core.writer.format.QueryXLSXWriter;
+import eu.openanalytics.phaedra.export.core.writer.format.QueryTXTWriter;
 
 public class WriterFactory {
 
@@ -40,13 +40,13 @@ public class WriterFactory {
 		
 		switch (fileType) {
 		case XLSX_FILE_TYPE:
-			writer = new StreamingXLSXWriter();
+			writer = new QueryXLSXWriter();
 			break;
 		case CSV_FILE_TYPE:
-			writer = new CSVWriter();
+			writer = new QueryCSVWriter();
 			break;
 		case TXT_FILE_TYPE:
-			writer = new TXTWriter();
+			writer = new QueryTXTWriter();
 			break;
 		default:
 			return null;

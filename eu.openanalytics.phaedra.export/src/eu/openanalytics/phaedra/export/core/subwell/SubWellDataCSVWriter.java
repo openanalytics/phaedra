@@ -1,14 +1,14 @@
 package eu.openanalytics.phaedra.export.core.subwell;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -18,30 +18,37 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
 import au.com.bytecode.opencsv.CSVWriter;
-import eu.openanalytics.phaedra.model.plate.PlateService;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
+import eu.openanalytics.phaedra.export.core.writer.format.AbstractCSVWriter;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
-import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
 
-public class SubWellDataCSVWriter implements IExportWriter {
 
-	private static SubWellDataCSVWriter instance;
-
+public class SubWellDataCSVWriter extends AbstractCSVWriter implements IExportWriter {
+	
+	
 	private Map<Integer, String[]> rowMap;
-
-	private SubWellDataCSVWriter() {
-		// Do nothing.
+	
+	
+	private DataFormatter dataFormatter;
+	
+	
+	public SubWellDataCSVWriter() {
 	}
-
-	public static SubWellDataCSVWriter getInstance() {
-		if (instance == null) instance = new SubWellDataCSVWriter();
-		return instance;
+	
+	
+	@Override
+	public void initialize(final IExportExperimentsSettings settings, final DataFormatter dataFormatter) {
+		super.initialize(settings);
+		
+		this.dataFormatter = dataFormatter;
 	}
-
+	
+	@Override
 	public void write(final List<Well> wells, final ExportSettings settings) {
-
 		Job job = new Job("Export Subwell Data") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
@@ -129,14 +136,9 @@ public class SubWellDataCSVWriter implements IExportWriter {
 				monitor.worked(1);
 			}
 			
-			String destPath = eu.openanalytics.phaedra.export.core.writer.format.CSVWriter.getDestinationPath(settings.getFileLocation(), "Info");
-			try (CSVWriter infoWriter = new CSVWriter(new FileWriter(destPath), ',')) {
-				List<Experiment> experiments = PlateService.streamableList(wells).stream()
-						.map(w -> w.getPlate().getExperiment())
-						.distinct()
-						.collect(Collectors.toList());
-				Date timestamp = new Date();
-				eu.openanalytics.phaedra.export.core.writer.format.CSVWriter.writeExportInfo(experiments, timestamp, infoWriter);
+			try (CSVWriter infoWriter = new CSVWriter(
+					new FileWriter(getDestinationPath(settings.getFileLocation(), "Info")), ',')) {
+				writeExportInfo(infoWriter);
 			}
 			
 		} catch (IOException e) {
@@ -161,7 +163,8 @@ public class SubWellDataCSVWriter implements IExportWriter {
 			row[2] = PlateUtils.getWellCoordinate(w);
 			row[3] = index + "";
 			row[4] = w.getCompound() != null ? w.getCompound().getNumber() : w.getWellType();
-			row[5] = w.getCompoundConcentration() + "";
+			row[5] = Double.toString(this.dataFormatter.getConcentrationUnit()
+					.convert(w.getCompoundConcentration(), Molar) );
 			rowMap.put(rowIndex, row);
 			return row;
 		}

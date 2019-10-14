@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.model.curve.osb;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.LogMolar;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,6 +24,14 @@ import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.statet.rj.services.FunctionCall;
 import org.eclipse.statet.rj.services.util.Graphic;
 
+import eu.openanalytics.phaedra.base.datatype.description.ByteArrayDescription;
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedCensorDescription;
+import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedCensoredValueDescription;
+import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedValueDescription;
+import eu.openanalytics.phaedra.base.datatype.special.RealValueConcentrationLogPNamedDescription;
 import eu.openanalytics.phaedra.base.r.rservi.CairoPdfGraphic;
 import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;
@@ -33,7 +43,6 @@ import eu.openanalytics.phaedra.model.curve.CurveFitInput;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
-import eu.openanalytics.phaedra.model.curve.CurveParameter.ParameterType;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
@@ -44,41 +53,41 @@ public class OSBFitModel extends AbstractCurveFitModel {
 	
 	
 	private static final Definition[] IN_PARAMS = {
-		new Definition("Method", null, false, ParameterType.String, null, new CurveParameter.ParameterValueList("OLS", "LIN", "CENS")),
-		new Definition("Type", null, false, ParameterType.String, null, new CurveParameter.ParameterValueList("A", "D")),
-		new Definition("Lower bound"),
-		new Definition("Upper bound"),
-		new Definition("Custom pICx", "Specify comma separated percent x of additional pICx measures.",
-				false, ParameterType.String, null, new PICxRestriction())
+		new Definition(new StringValueDescription("Method"), null, false, null, new CurveParameter.ParameterValueList("OLS", "LIN", "CENS")),
+		new Definition(new StringValueDescription("Type"), null, false, null, new CurveParameter.ParameterValueList("A", "D")),
+		new Definition(new RealValueDescription("Lower bound")),
+		new Definition(new RealValueDescription("Upper bound")),
+		new Definition(new StringValueDescription("Custom ICx/pICx"), "Specify comma separated percent x of additional ICx/pICx measures.",
+				false, null, new PICxRestriction())
 	};
 	
 	private static final Definition[] OUT_PARAMS = {
-		new Definition("pIC50", null, true, ParameterType.Concentration, new CurveParameter.CensoredValueRenderer("pIC50 Censor"), null),
-		new Definition("pIC50 Censor", null, false, ParameterType.String, null, new CurveParameter.ParameterValueList("<", ">", "~")),
-		new Definition("pIC50 StdErr"),
-		new Definition("pIC50 LB"),
-		new Definition("pIC50 LB StdErr"),
-		new Definition("pIC50 UB"),
-		new Definition("pIC50 UB StdErr"),
-		new Definition("pIC50 LCL"),
-		new Definition("pIC50 UCL"),
-		new Definition("pIC20", null, false, ParameterType.Concentration, null, null),
-		new Definition("pIC80", null, false, ParameterType.Concentration, null, null),
-		new Definition("eMin", null, false, ParameterType.Numeric, null, null),
-		new Definition("eMin Conc", null, false, ParameterType.Concentration, null, null),
-		new Definition("eMean", null, false, ParameterType.Numeric, null, null),
-		new Definition("eMax", null, true, ParameterType.Numeric, null, null),
-		new Definition("eMax Conc", null, true, ParameterType.Concentration, null, null),
-		new Definition("Hill", null, true, ParameterType.Numeric, null, null),
-		new Definition("Hill StdErr"),
-		new Definition("Method Fallback", null, false, ParameterType.String, null, null),
-		new Definition("r2", null, true, ParameterType.Numeric, null, null),
-		new Definition("AIC"),
-		new Definition("BIC"),
-		new Definition("DFE"),
-		new Definition("SE"),
-		new Definition("Confidence Band", null, false, ParameterType.Binary, null, null),
-		new Definition("Weights", null, false, ParameterType.Binary, null, null)
+		new Definition(new ConcentrationLogPNamedCensoredValueDescription("pIC50", LogMolar, "pIC50 Censor"), null, true, new CurveParameter.CensoredValueRenderer("pIC50 Censor"), null),
+		new Definition(new ConcentrationLogPNamedCensorDescription("pIC50 Censor", LogMolar), null, false, null, new CurveParameter.ParameterValueList("<", ">", "~")),
+		new Definition(new RealValueDescription("pIC50 StdErr")),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 LB", LogMolar)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 LB StdErr", LogMolar)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 UB", LogMolar)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 UB StdErr", LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC50 LCL", LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC50 UCL", LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC20", LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC80", LogMolar)),
+		new Definition(new RealValueDescription("eMin")),
+		new Definition(new ConcentrationValueDescription("eMin Conc", LogMolar)),
+		new Definition(new RealValueDescription("eMean")),
+		new Definition(new RealValueDescription("eMax"), null, true, null, null),
+		new Definition(new ConcentrationValueDescription("eMax Conc", LogMolar), null, true, null, null),
+		new Definition(new RealValueDescription("Hill"), null, true, null, null),
+		new Definition(new RealValueDescription("Hill StdErr")),
+		new Definition(new StringValueDescription("Method Fallback")),
+		new Definition(new RealValueDescription("r2"), null, true, null, null),
+		new Definition(new RealValueDescription("AIC")),
+		new Definition(new RealValueDescription("BIC")),
+		new Definition(new RealValueDescription("DFE")),
+		new Definition(new RealValueDescription("SE")),
+		new Definition(new ByteArrayDescription("Confidence Band")),
+		new Definition(new ByteArrayDescription("Weights"))
 	};
 	private static final List<Definition> OUT_PARAMS_LIST = Arrays.asList(OUT_PARAMS);
 	private static final List<Definition> OUT_KEY_PARAMS_LIST = Arrays.asList(OUT_PARAMS_LIST.stream().filter((def) -> def.key).toArray(Definition[]::new));
@@ -127,7 +136,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 					System.arraycopy(OUT_PARAMS, 0, params, 0, insert);
 					int i = insert;
 					for (Integer percent : percents) {
-						params[i++] = new Definition("pIC" + percent, null, false, ParameterType.Concentration, null, null);
+						params[i++] = new Definition(new ConcentrationLogPNamedValueDescription("pIC" + percent, LogMolar));
 					}
 					insert += 2;
 					System.arraycopy(OUT_PARAMS, insert, params, i, OUT_PARAMS.length - insert);
@@ -395,7 +404,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		@Override
 		public IStatus validate(Object value) {
 			if (parseICxParam((String)value) == null) {
-				return ValidationStatus.error("Enter comma separated integer percent values for Custom pICx.");
+				return ValidationStatus.error("Enter comma separated integer percent values for Custom ICx.");
 			}
 			return ValidationStatus.ok();
 		}

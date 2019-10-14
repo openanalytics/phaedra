@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.plate.search;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.ui.PlatformUI;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.FunctionDisplayConverter;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.IRichColumnAccessor;
@@ -52,6 +55,7 @@ public class WellQueryEditorSupport extends AbstractQueryEditorSupport {
 	@Override
 	public void customize(NatTable table) {
 		table.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseDoubleClick(MouseEvent e) {
 				ISelection sel = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getSelectionService().getSelection();
 				Well well = SelectionUtils.getFirstObject(sel, Well.class);
@@ -93,7 +97,8 @@ public class WellQueryEditorSupport extends AbstractQueryEditorSupport {
 				if (c0 == null) return null;
 				return c0.getType() + " " + c0.getNumber();
 			case 11:
-				return rowObject.getCompoundConcentration();
+				return DataTypePrefs.getDefaultConcentrationUnit().convert(
+						rowObject.getCompoundConcentration(), Molar );
 			case 12:
 				Compound c1 = rowObject.getCompound();
 				if (c1 == null) return null;

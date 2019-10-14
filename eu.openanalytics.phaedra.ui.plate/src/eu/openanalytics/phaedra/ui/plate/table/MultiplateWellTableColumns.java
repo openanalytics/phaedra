@@ -3,14 +3,15 @@ package eu.openanalytics.phaedra.ui.plate.table;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
@@ -21,6 +22,7 @@ import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
@@ -31,8 +33,8 @@ import eu.openanalytics.phaedra.ui.protocol.util.ColorMethodFactory;
 
 public class MultiplateWellTableColumns {
 
-	public static ColumnConfiguration[] configureColumns(final PlateDataAccessor dataAccessor, TableViewer tableViewer) {
-		
+	public static ColumnConfiguration[] configureColumns(final PlateDataAccessor dataAccessor, TableViewer tableViewer,
+			final Supplier<DataFormatter> dataFormatSupplier) {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
@@ -78,14 +80,9 @@ public class MultiplateWellTableColumns {
 		configs.add(config);
 		
 		config = ColumnConfigFactory.create("Concentration", "getCompoundConcentration", ColumnDataType.Numeric, 90);
-		config.setLabelProvider(new RichLabelProvider(config) {
-			@Override
-			public void update(ViewerCell cell) {
-				Well well = (Well)cell.getElement();
-				double conc = well.getCompoundConcentration();
-				cell.setText(String.valueOf(conc));
-			}
-		});
+		WellPropertyLabelProvider concLabelProvider = new WellPropertyLabelProvider(config,
+				WellProperty.Concentration, dataFormatSupplier);
+		config.setLabelProvider(concLabelProvider);
 		configs.add(config);
 		
 		/* Feature columns*/

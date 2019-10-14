@@ -2,21 +2,21 @@ package eu.openanalytics.phaedra.ui.curve.prefs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.core.databinding.observable.list.WritableList;
 import org.eclipse.jface.databinding.viewers.ObservableListContentProvider;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
@@ -35,6 +35,9 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ListSelectionDialog;
 
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataDescriptionUtils;
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
@@ -48,9 +51,25 @@ import eu.openanalytics.phaedra.ui.curve.details.CrcDetailsView;
 public class PropertyPreferencePage extends org.eclipse.jface.preference.PreferencePage implements IWorkbenchPreferencePage {
 	
 	
-	private List<String> availableProperties;
+	private class PropertyLabelProvider extends ColumnLabelProvider {
+		
+		@Override
+		public String getText(final Object element) {
+			final String name = (String)element;
+			final DataDescription dataDescription = availableProperties.get(name);
+			return (dataDescription != null) ? dataDescription.convertNameTo(name, dataFormatSupport.get()) : name;
+		}
+		
+	}
 	
-	private WritableList<String> topProperties;
+	
+	private final DataFormatSupport dataFormatSupport;
+	
+	private final HashMap<String, DataDescription> availableProperties;
+	private final List<DataDescription> availableDefaultProperties;
+	private final List<DataDescription> availableModelProperties;
+	
+	private final WritableList<String> topProperties;
 	
 	private TableViewer propertyTableViewer;
 	private Button addButton;
@@ -60,37 +79,53 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 	
 	
 	public PropertyPreferencePage() {
-		topProperties = new WritableList<String>();
+		this.dataFormatSupport = new DataFormatSupport(this::refreshTable);
 		
-		availableProperties = loadAvailableProperties();
+		this.topProperties = new WritableList<>();
+		
+		this.availableProperties = new HashMap<>();
+		this.availableDefaultProperties = new ArrayList<>();
+		this.availableModelProperties = new ArrayList<>();
+		loadAvailableProperties();
 	}
 	
 	@Override
 	public void init(IWorkbench workbench) {
 	}
 	
-	private List<String> loadAvailableProperties() {
-		List<String> availableProperties = new ArrayList<>();
-		for (CurveTextField column : CurveTextProvider.getColumns(null)) {
-			availableProperties.add(column.getLabel());
+	@Override
+	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
+		super.dispose();
+	}
+	
+	
+	private void loadAvailableProperties() {
+		for (CurveTextField column : CurveTextProvider.getColumns(null, this.dataFormatSupport.get())) {
+			final DataDescription dataDescription = column.getDataDescription();
+			this.availableDefaultProperties.add(dataDescription);
+			this.availableProperties.put(dataDescription.getName(), dataDescription);
 		}
-		Set<String> unique = new HashSet<String>();
 		for (String modelId : CurveFitService.getInstance().getFitModels()) {
 			for (CurveParameter.Definition def : CurveFitService.getInstance().getModel(modelId).getOutputParameters(null)) {
-				unique.add(def.name);
+				final DataDescription dataDescription = def.getDataDescription();
+				if (!this.availableProperties.containsKey(dataDescription.getName())) {
+					this.availableProperties.put(dataDescription.getName(), dataDescription);
+					this.availableModelProperties.add(dataDescription);
+				}
 			}
 		}
 		IWorkbenchPart part = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActivePart();
 		Curve curve = (part instanceof CrcDetailsView) ? ((CrcDetailsView) part).getCurve() : null;
 		if (curve != null) {
 			for (Value value : curve.getOutputParameters()) {
-				unique.add(value.definition.name);
+				final DataDescription dataDescription = value.definition.getDataDescription();
+				if (!this.availableProperties.containsKey(dataDescription.getName())) {
+					this.availableProperties.put(dataDescription.getName(), dataDescription);
+					this.availableModelProperties.add(dataDescription);
+				}
 			}
 		}
-		ArrayList<String> sorted = new ArrayList<>(unique);
-		sorted.sort(null);
-		availableProperties.addAll(sorted);
-		return availableProperties;
 	}
 	
 	@Override
@@ -103,6 +138,7 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 	protected Control createContents(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		composite.setLayout(new GridLayout());
+		GridLayoutFactory.fillDefaults().applyTo(composite);
 		
 		Composite propertiesComposite = createPropertyTable(composite);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(propertiesComposite);
@@ -126,16 +162,18 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 		label.setText("Add, remove and arrange favored properties shown at the top of the table:");
 		GridDataFactory.fillDefaults().span(2, 1).applyTo(label);
 		
-		TableViewer viewer = new TableViewer(composite, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.V_SCROLL);
+		Composite tableComposite = new Composite(composite, SWT.NONE);
+		TableColumnLayout columnLayout = new TableColumnLayout();
+		TableViewer viewer = new TableViewer(tableComposite, SWT.BORDER | SWT.MULTI | SWT.FULL_SELECTION | SWT.V_SCROLL);
 		viewer.setContentProvider(new ObservableListContentProvider());
-		viewer.setLabelProvider(new LabelProvider());
 		TableViewerColumn column = new TableViewerColumn(viewer, SWT.LEFT);
-		column.setLabelProvider(new ColumnLabelProvider());
-		column.getColumn().setWidth(convertWidthInCharsToPixels(40));
+		column.setLabelProvider(new PropertyLabelProvider());
+		columnLayout.setColumnData(column.getColumn(), new ColumnWeightData(100));
+		
 		viewer.setInput(this.topProperties);
+		tableComposite.setLayout(columnLayout);
 		GridDataFactory.fillDefaults().grab(true, true)
-				.hint(column.getColumn().getWidth() + 16, convertHeightInCharsToPixels(10))
-				.applyTo(viewer.getControl());
+				.applyTo(tableComposite);
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
@@ -171,9 +209,20 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 	}
 	
 	private void addProperty() {
-		List<String> properties = new ArrayList<>(availableProperties);
-		properties.removeAll(topProperties);
-		ListSelectionDialog input = new ListSelectionDialog(getShell(), properties, new ArrayContentProvider(), new LabelProvider(), null);
+		List<String> names = new ArrayList<>(this.availableDefaultProperties.size() + this.availableModelProperties.size());
+		for (final DataDescription dataDescription : this.availableDefaultProperties) {
+			if (!this.topProperties.contains(dataDescription.getName())) {
+				names.add(dataDescription.getName());
+			}
+		}
+		this.availableModelProperties.sort(DataDescriptionUtils.getNameComparator(this.dataFormatSupport.get()));
+		for (final DataDescription dataDescription : this.availableModelProperties) {
+			if (!this.topProperties.contains(dataDescription.getName())) {
+				names.add(dataDescription.getName());
+			}
+		}
+		
+		ListSelectionDialog input = new ListSelectionDialog(getShell(), names, new ArrayContentProvider(), new PropertyLabelProvider(), null);
 		input.setTitle("Add Property");
 		input.setMessage("Select the properties to add:");
 		List<String> result;
@@ -185,16 +234,16 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 	}
 	
 	private void removeProperty() {
-		List<String> keys = ((IStructuredSelection)propertyTableViewer.getSelection()).toList();
-		if (!keys.isEmpty()) {
-			topProperties.removeAll(keys);
+		List<String> names = ((IStructuredSelection)propertyTableViewer.getSelection()).toList();
+		if (!names.isEmpty()) {
+			topProperties.removeAll(names);
 			updatePropertyButtons();
 		}
 	}
 	
 	private void movePropertyUp() {
-		String key = (String) ((IStructuredSelection)propertyTableViewer.getSelection()).getFirstElement();
-		int idx = topProperties.indexOf(key);
+		String name = (String) ((IStructuredSelection)propertyTableViewer.getSelection()).getFirstElement();
+		int idx = topProperties.indexOf(name);
 		if (idx - 1 >= 0) {
 			topProperties.move(idx, idx - 1);
 			updatePropertyButtons();
@@ -202,19 +251,26 @@ public class PropertyPreferencePage extends org.eclipse.jface.preference.Prefere
 	}
 	
 	private void movePropertyDown() {
-		String key = (String) ((IStructuredSelection)propertyTableViewer.getSelection()).getFirstElement();
-		int idx = topProperties.indexOf(key);
+		String name = (String) ((IStructuredSelection)propertyTableViewer.getSelection()).getFirstElement();
+		int idx = topProperties.indexOf(name);
 		if (idx >= 0 && idx + 1 < topProperties.size()) {
 			topProperties.move(idx, idx + 1);
 			updatePropertyButtons();
 		}
 	}
 	
+	private void refreshTable() {
+		if (this.propertyTableViewer == null || this.propertyTableViewer.getControl().isDisposed()) {
+			return;
+		}
+		this.propertyTableViewer.refresh();
+	}
+	
 	private void updatePropertyButtons() {
 		IStructuredSelection selection = (IStructuredSelection)propertyTableViewer.getSelection();
-		String key = (String)selection.getFirstElement();
-		int idx = (selection.size() == 1) ? topProperties.indexOf(key) : -1;
-		removeButton.setEnabled(key != null);
+		String name = (String)selection.getFirstElement();
+		int idx = (selection.size() == 1) ? topProperties.indexOf(name) : -1;
+		removeButton.setEnabled(name != null);
 		upButton.setEnabled(idx - 1 >= 0);
 		downButton.setEnabled(idx >= 0 && idx + 1 < topProperties.size());
 	}

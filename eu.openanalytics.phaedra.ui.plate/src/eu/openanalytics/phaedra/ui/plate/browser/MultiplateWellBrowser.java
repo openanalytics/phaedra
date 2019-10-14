@@ -29,6 +29,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -46,6 +47,8 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.ui.plate.table.MultiplateWellTableColumns;
 
 public class MultiplateWellBrowser extends EditorPart {
+
+	private DataFormatSupport dataFormatSupport;
 
 	private CTabFolder tabFolder;
 	private CTabItem tableTab;
@@ -70,7 +73,8 @@ public class MultiplateWellBrowser extends EditorPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
-
+		this.dataFormatSupport = new DataFormatSupport(this::refresh);
+		
 		List<Plate> plates = getPlates();
 
 		wellAccessor = new MultiplateWellAccessor(plates);
@@ -140,6 +144,7 @@ public class MultiplateWellBrowser extends EditorPart {
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		ModelEventService.getInstance().removeEventListener(modelEventListener);
 		super.dispose();
@@ -163,6 +168,13 @@ public class MultiplateWellBrowser extends EditorPart {
 	@Override
 	public void doSaveAs() {
 		// Do nothing.
+	}
+	
+	private void refresh() {
+		if (this.tableViewer == null || this.tableViewer.getControl().isDisposed()) {
+			return;
+		}
+		this.tableViewer.refresh();
 	}
 
 	private Runnable refreshUICallback = () -> tableViewer.setInput(wellAccessor.getWells());
@@ -215,7 +227,7 @@ public class MultiplateWellBrowser extends EditorPart {
 
 				Display.getDefault().syncExec(() -> {
 					if (!tableViewer.getTable().isDisposed()) {
-						tableViewer.applyColumnConfig(MultiplateWellTableColumns.configureColumns(dataAccessors.get(0), tableViewer));
+						tableViewer.applyColumnConfig(MultiplateWellTableColumns.configureColumns(dataAccessors.get(0), tableViewer, dataFormatSupport));
 						tableViewer.setInput(wellAccessor.getWells());
 					}
 				});

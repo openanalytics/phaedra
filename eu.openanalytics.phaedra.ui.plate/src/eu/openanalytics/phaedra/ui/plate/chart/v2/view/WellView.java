@@ -173,7 +173,17 @@ public abstract class WellView extends JEPView<Plate, Well> {
 			}
 		};
 	}
-
+	
+	
+	@Override
+	protected void reloadData() {
+		final List<Well> input;
+		if ((input = this.currentWells) == null || input.isEmpty()) {
+			return;
+		}
+		getItemSelectionChangedObservable().valueChanged(input);
+	}
+	
 	@Override
 	public BaseLegendView<Plate, Well> createLegendView(Composite composite, List<AbstractChartLayer<Plate, Well>> layers) {
 		ClassificationLegendView<Plate, Well> legend = new ClassificationLegendView<Plate, Well>(composite, layers, groupingStrategies);
@@ -184,7 +194,7 @@ public abstract class WellView extends JEPView<Plate, Well> {
 	@Override
 	public ChartLayerFactory<Plate, Well> getChartLayerFactory(){
 		if (chartLayerFactory == null) {
-			chartLayerFactory = new WellChartLayerFactory();
+			chartLayerFactory = new WellChartLayerFactory(getDataUnitSupport());
 		}
 		return chartLayerFactory;
 	}
@@ -229,11 +239,8 @@ public abstract class WellView extends JEPView<Plate, Well> {
 				}
 				defaultNormalizationButton.setImage(IconManager.getIconImage(
 						useDefaultNormalization ? "raw_normalized_n.png" : "raw_normalized_r.png"));
-
-				if (currentWells != null) {
-					// Trigger new Plate load so that feature values will be loaded with normalized values
-					getItemSelectionChangedObservable().valueChanged(currentWells);
-				}
+				
+				reloadData();
 			}
 		});
 	}

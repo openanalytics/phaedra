@@ -3617,6 +3617,18 @@
             id="eu.openanalytics.phaedra.ui.plate.search.PlateValidationStatusQueryValuePanelFactory">
       </queryValuePanelFactory>
       <queryValuePanelFactory
+            id="eu.openanalytics.phaedra.ui.plate.search.WellConcentrationValueQueryValuePanelFactory"
+            class="eu.openanalytics.phaedra.ui.plate.search.WellConcentrationValueQueryValuePanelFactory">
+      </queryValuePanelFactory>
+      <queryValuePanelFactory
+            id="eu.openanalytics.phaedra.ui.plate.search.WellConcentrationRangeQueryValuePanelFactory"
+            class="eu.openanalytics.phaedra.ui.plate.search.WellConcentrationRangeQueryValuePanelFactory">
+      </queryValuePanelFactory>
+      <queryValuePanelFactory
+            id="eu.openanalytics.phaedra.ui.plate.search.WellConcentrationValuesQueryValuePanelFactory"
+            class="eu.openanalytics.phaedra.ui.plate.search.WellConcentrationValuesQueryValuePanelFactory">
+      </queryValuePanelFactory>
+      <queryValuePanelFactory
             class="eu.openanalytics.phaedra.ui.plate.search.WellStatusQueryValuePanelFactory"
             id="eu.openanalytics.phaedra.ui.plate.search.WellStatusQueryValuePanelFactory">
       </queryValuePanelFactory>

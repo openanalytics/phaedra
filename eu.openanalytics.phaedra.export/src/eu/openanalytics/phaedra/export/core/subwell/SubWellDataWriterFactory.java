@@ -2,8 +2,16 @@ package eu.openanalytics.phaedra.export.core.subwell;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
+import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
+import eu.openanalytics.phaedra.export.core.BaseExportExperimentsSettings;
+import eu.openanalytics.phaedra.export.core.ExportInfo;
+import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 
 public class SubWellDataWriterFactory {
@@ -36,14 +44,26 @@ public class SubWellDataWriterFactory {
 		}
 
 		if (!filteredWells.isEmpty()) {
+			DataFormatter dataFormatter = DataTypePrefs.getDefaultDataFormatter();
+			
 			// Depending on the filetype, an Excel file or CSV will be created.
+			IExportWriter writer;
 			if (settings.getFileLocation().toLowerCase().endsWith("csv")) {
-				SubWellDataCSVWriter.getInstance().write(filteredWells, settings);
+				writer = new SubWellDataCSVWriter();
 			} else if (settings.getFileLocation().toLowerCase().endsWith("h5")) {
-				SubWellDataH5Writer.getInstance().write(filteredWells, settings);
+				writer = new SubWellDataH5Writer();
 			} else {
-				SubWellDataXLSXWriter.getInstance().write(filteredWells, settings);
+				writer = new SubWellDataXLSXWriter();
 			}
+			
+			List<Experiment> experiments = PlateService.streamableList(wells).stream()
+					.map(well -> well.getPlate().getExperiment())
+					.distinct()
+					.collect(Collectors.toList());
+			writer.initialize(new BaseExportExperimentsSettings(experiments), dataFormatter);
+			writer.addExportInfo(new ExportInfo(new StringValueDescription("Unit of Concentration"), dataFormatter.getConcentrationUnit().getAbbr()));
+			
+			writer.write(filteredWells, settings);
 		}
 	}
 

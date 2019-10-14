@@ -21,6 +21,7 @@ import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.provider.AbstractGridLabelProvider;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.GridCell;
@@ -41,12 +42,19 @@ public class GridLayerSupport {
 	private GridViewer viewer;
 	private List<IGridLayer> layers;
 	private DelegatingCellRenderer layeredRenderer;
+	
+	private final DataFormatSupport dataFormatSupport;
+	
 	private Map<String, Object> attributesMap;
-
-	public GridLayerSupport(String id, GridViewer viewer) {
+	
+	
+	public GridLayerSupport(String id, GridViewer viewer, DataFormatSupport dataFormatSupport) {
 		this.id = id;
 		this.viewer = viewer;
 		this.layers = new ArrayList<IGridLayer>();
+		
+		this.dataFormatSupport = dataFormatSupport;
+		
 		this.attributesMap = new HashMap<>();
 		this.layeredRenderer = new DelegatingCellRenderer();
 		
@@ -141,6 +149,12 @@ public class GridLayerSupport {
 	public Object getAttribute(String name) {
 		return attributesMap.get(name);
 	}
+	
+	
+	public DataFormatSupport getDataFormatSupport() {
+		return dataFormatSupport;
+	}
+	
 	
 	public void dispose() {
 		for (IGridLayer layer: layers) {

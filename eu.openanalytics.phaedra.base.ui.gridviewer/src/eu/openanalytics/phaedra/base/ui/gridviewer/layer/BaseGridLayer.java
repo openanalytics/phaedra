@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.ui.gridviewer.layer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Shell;
 
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.GridCell;
 
 /**
@@ -146,4 +147,9 @@ public abstract class BaseGridLayer implements IGridLayer {
 	/* package */ void setLayerSupport(GridLayerSupport layerSupport) {
 		this.layerSupport = layerSupport;
 	}
+	
+	protected DataFormatter getDataFormatter() {
+		return getLayerSupport().getDataFormatSupport().get();
+	}
+	
 }

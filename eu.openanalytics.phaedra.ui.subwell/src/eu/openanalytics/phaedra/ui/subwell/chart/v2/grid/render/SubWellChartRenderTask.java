@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.ui.subwell.chart.v2.grid.render;
 
 import java.util.Map;
 
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.ChartLayerFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
@@ -10,11 +11,17 @@ import eu.openanalytics.phaedra.ui.subwell.chart.v2.data.SubWellDataProvider;
 import eu.openanalytics.phaedra.ui.subwell.chart.v2.view.SubWellChartLayerFactory;
 
 public class SubWellChartRenderTask extends AbstractChartRenderTask<Well, Well> {
-
+	
+	
+	private final DataUnitConfig dataUnitConfig;
+	
 	private Map<String, double[][]> plateBoundsMap;
 
-	public SubWellChartRenderTask(Well well, int w, int h, int row, int col) {
+	public SubWellChartRenderTask(Well well,
+			DataUnitConfig dataUnitConfig,
+			int w, int h, int row, int col) {
 		super(w, h, row, col);
+		this.dataUnitConfig = dataUnitConfig;
 		selection.add(well);
 	}
 
@@ -38,7 +45,7 @@ public class SubWellChartRenderTask extends AbstractChartRenderTask<Well, Well> 
 
 	@Override
 	public ChartLayerFactory<Well, Well> getChartLayerFactory() {
-		return new SubWellChartLayerFactory();
+		return new SubWellChartLayerFactory(() -> this.dataUnitConfig);
 	}
 
 	public void setPlateBoundsMap(Map<String, double[][]> plateBoundsMap) {

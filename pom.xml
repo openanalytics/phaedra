@@ -43,6 +43,7 @@
 		<module>eu.openanalytics.phaedra.base.bootstrap</module>
 		<module>eu.openanalytics.phaedra.base.cache</module>
 		<module>eu.openanalytics.phaedra.base.console</module>
+		<module>eu.openanalytics.phaedra.base.datatype</module>
 		<module>eu.openanalytics.phaedra.base.db</module>
 		<module>eu.openanalytics.phaedra.base.email</module>
 		<module>eu.openanalytics.phaedra.base.environment</module>

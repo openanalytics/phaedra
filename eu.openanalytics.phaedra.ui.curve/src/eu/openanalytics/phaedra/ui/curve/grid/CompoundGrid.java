@@ -18,14 +18,13 @@ import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 
 import ca.odell.glazedlists.matchers.Matcher;
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableBuilder;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.layer.FullFeaturedColumnHeaderLayerStack;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionProvider;
-import eu.openanalytics.phaedra.base.ui.util.toolitem.DropdownToolItemFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
-import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
 import eu.openanalytics.phaedra.ui.curve.CompoundWithGrouping;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundContentProvider;
 import eu.openanalytics.phaedra.ui.curve.grid.provider.CompoundGridInput;
@@ -36,6 +35,8 @@ public class CompoundGrid extends Composite {
 
 	private static final String[] compoundListCurveSizes = new String[] { "100 x 100", "150 x 150", "200 x 200", "250 x 250", "300 x 300" };
 
+	private DataFormatSupport dataFormatSupport;
+	
 	private NatTable table;
 	private FullFeaturedColumnHeaderLayerStack<CompoundWithGrouping> columnHeaderLayer;
 	private NatTableSelectionProvider<CompoundWithGrouping> selectionProvider;
@@ -50,11 +51,13 @@ public class CompoundGrid extends Composite {
 
 	public CompoundGrid(Composite parent, CompoundGridInput gridInput, MenuManager menuMgr) {
 		super(parent, SWT.NONE);
-
+		
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
+		
 		GridLayoutFactory.fillDefaults().margins(0, 0).applyTo(this);
 
-		columnAccessor = new CompoundContentProvider(gridInput);
-
+		columnAccessor = new CompoundContentProvider(gridInput, this.dataFormatSupport);
+		
 		NatTableBuilder<CompoundWithGrouping> builder = new NatTableBuilder<>(columnAccessor, gridInput.getGridCompounds());
 		table = builder
 				.resizeColumns(columnAccessor.getColumnWidths())
@@ -96,8 +99,15 @@ public class CompoundGrid extends Composite {
 		return table;
 	}
 
+	private void reloadData() {
+		if (table == null || table.isDisposed()) return;
+		
+		table.doCommand(new VisualRefreshCommand());
+	}
+
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		table.dispose();
 		super.dispose();
 	}
@@ -197,23 +207,6 @@ public class CompoundGrid extends Composite {
 			if (curveSize.equals(currentCurveSize)) {
 				item.select(i, true);
 			}
-		}
-
-		ToolItem formatDropdown = DropdownToolItemFactory.createDropdown(toolbar);
-		formatDropdown.setImage(IconManager.getIconImage("logM.png"));
-		formatDropdown.setToolTipText("Concentration format");
-
-		ConcentrationFormat[] formats = ConcentrationFormat.values();
-		for (ConcentrationFormat format: formats) {
-			MenuItem menuItem = DropdownToolItemFactory.createChild(formatDropdown, format.toString() + ": " + format.getLabel(), SWT.RADIO);
-			menuItem.setData(format);
-			menuItem.addListener(SWT.Selection, e -> {
-				MenuItem selItem = (MenuItem)e.widget;
-				if (!selItem.getSelection()) return;
-				columnAccessor.setConcFormat((ConcentrationFormat)selItem.getData());
-				table.doCommand(new VisualRefreshCommand());
-			});
-			menuItem.setSelection(format == columnAccessor.getConcFormat());
 		}
 
 		new ToolItem(toolbar, SWT.SEPARATOR);

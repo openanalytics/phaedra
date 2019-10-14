@@ -37,6 +37,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.layer.GridLayerSupport;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
@@ -63,7 +64,10 @@ public abstract class BaseCorrelationMatrix<FEATURE extends IFeature> extends De
 	private static final String ACCEPTED = "Accepted";
 	private static final String REJECTED = "Rejected";
 	private static final String[] SORT_ORDER = { "[ASC]", "[DESC]" };
-
+	
+	
+	private DataFormatSupport dataFormatSupport;
+	
 	private GridViewer gridViewer;
 	private GridLayerSupport layerSupport;
 
@@ -85,9 +89,11 @@ public abstract class BaseCorrelationMatrix<FEATURE extends IFeature> extends De
 		this.gridId = gridId;
 		this.featureClass = featureClass;
 	}
-
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
 		this.features = new ArrayList<>();
 		this.wellTypeFilter = getAllWellTypes();
 		this.wellStatusFilter = getAllWellStatus();
@@ -95,7 +101,7 @@ public abstract class BaseCorrelationMatrix<FEATURE extends IFeature> extends De
 		gridViewer = new GridViewer(parent);
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(gridViewer.getControl());
 
-		layerSupport = new GridLayerSupport(gridId, gridViewer);
+		layerSupport = new GridLayerSupport(gridId, gridViewer, dataFormatSupport);
 		layerSupport.setAttribute("featureProvider", ProtocolUIService.getInstance());
 		layerSupport.setAttribute(GridLayerSupport.IS_HIDDEN, getViewSite().getActionBars().getServiceLocator() == null);
 
@@ -164,6 +170,7 @@ public abstract class BaseCorrelationMatrix<FEATURE extends IFeature> extends De
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		super.dispose();
 	}
@@ -269,6 +276,13 @@ public abstract class BaseCorrelationMatrix<FEATURE extends IFeature> extends De
 		});
 		BaseFeatureInput<FEATURE> input = createBaseFeatureInput(features, wells, sortType, sortOrder);
 		layerSupport.setInput(input);
+	}
+	
+	private void reloadData() {
+		if (this.gridViewer == null || this.gridViewer.getControl().isDisposed()) {
+			return;
+		}
+		this.layerSupport.setInput(this.gridViewer.getInput());
 	}
 
 	private void toggleDragSupport(boolean enabled) {

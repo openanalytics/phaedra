@@ -56,7 +56,9 @@ public class WellDensity2DLayer extends WellChartLayer {
 		List<String> selFeatures = new ArrayList<>();
 		selFeatures.add(getFeatures().get(cell.getColumn()).getDisplayName());
 		selFeatures.add(getFeatures().get(cell.getRow()).getDisplayName());
-		return new WellDensity2DRenderTask(getEntities(), selFeatures, getFillOption(), w, h, cell.getRow(), cell.getColumn());
+		return new WellDensity2DRenderTask(getEntities(), selFeatures, getFillOption(),
+				getDataFormatter(),
+				w, h, cell.getRow(), cell.getColumn() );
 	}
 
 	@Override

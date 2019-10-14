@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.link.platedef.template.tab;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -16,22 +18,52 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
+import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationValueConverter;
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.IGridCellRenderer;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
-import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.link.platedef.template.PlateTemplate;
 import eu.openanalytics.phaedra.link.platedef.template.WellTemplate;
 
 public class ConcentrationTab extends BaseTemplateTab {
-
+	
+	
+	private final DataFormatSupport dataFormatSupport;
+	private DataFormatter uiFormatter;
+	private ConcentrationValueConverter uiToModelConverter;
+	
+	private Label informationControl;
 	private Text wellConcentrationText;
+	
+	
+	public ConcentrationTab(final DataFormatSupport dataFormatSupport) {
+		this.dataFormatSupport = dataFormatSupport;
+		this.dataFormatSupport.addListener(this::updateFormatting);
+		updateFormatting();
+	}
+	
 	
 	@Override
 	public String getName() {
 		return "Concentration";
 	}
-
+	
+	
+	private class ConcentrationCellRenderer extends BaseTemplateCellRenderer {
+		
+		@Override
+		protected String[] doGetLabels(WellTemplate well) {
+			String s = well.getConcentration();
+			if (s != null) {
+				final double value = Double.parseDouble(s);
+				s = uiFormatter.getConcentrationFormat().format(value, Molar);
+			}
+			return new String[] { s };
+		}
+	}
+	
 	@Override
 	public IGridCellRenderer createCellRenderer() {
 		return new ConcentrationCellRenderer();
@@ -39,20 +71,35 @@ public class ConcentrationTab extends BaseTemplateTab {
 
 	@Override
 	public String getValue(WellTemplate well) {
-		return well.getConcentration() == null ? "" : well.getConcentration();
+		String s = well.getConcentration();
+		if (s != null) {
+			double value = Double.parseDouble(s);
+			return this.uiFormatter.getConcentrationEditFormat().format(value, Molar);
+		}
+		return "";
 	}
 	
 	@Override
-	public boolean applyValue(WellTemplate well, String value) {
-		if (NumberUtils.isNumeric(value)) {
-			well.setConcentration(value);
+	public boolean applyValue(WellTemplate well, String input) {
+		if (input.isEmpty()) {
+			well.setConcentration(null);
+			return true;
+		}
+		if (NumberUtils.isNumeric(input)) {
+			Double value = Double.valueOf(input);
+			if (this.uiToModelConverter != null) {
+				value = (Double)this.uiToModelConverter.convert(value);
+			}
+			well.setConcentration(value.toString());
 			return true;
 		}
 		return false;
 	}
 	
+	
 	@Override
-	public void createEditingFields(Composite parent, PlateTemplate template, Supplier<List<WellTemplate>> selectionSupplier, Runnable templateRefresher) {
+	public void createEditingFields(Composite parent, PlateTemplate template, Supplier<List<WellTemplate>> selectionSupplier,
+			Runnable templateRefresher) {
 		Composite comp = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().numColumns(5).applyTo(comp);
 		
@@ -74,7 +121,11 @@ public class ConcentrationTab extends BaseTemplateTab {
 				String conc = wellConcentrationText.getText();
 				if (!NumberUtils.isDouble(conc)) {
 					MessageDialog.openError(Display.getCurrent().getActiveShell(), "Invalid concentration",
-							"Invalid concentration: " + conc + "\nPlease specify the concentration in mol/L, for example: 1.5e-8");
+							String.format("Invalid concentration value: %1$s" + conc + "\n\n"
+									+ "Please specify the concentration in %2$s, for example: %3$s.",
+									conc,
+									uiFormatter.getConcentrationUnit().getLabel(true),
+									uiFormatter.getConcentrationFormat().format(1e-6, Molar) ));
 					return;
 				}
 				for (WellTemplate well: currentSelection) applyValue(well, conc);
@@ -85,23 +136,34 @@ public class ConcentrationTab extends BaseTemplateTab {
 
 		new Label(comp, SWT.NONE).setImage(IconManager.getIconImage("information.png"));
 
-		lbl = new Label(comp, SWT.NONE);
-		lbl.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
-		lbl.setText("In mol/L, for example: 1e-8");		
+		this.informationControl = new Label(comp, SWT.NONE);
+		this.informationControl.setForeground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
+		
+		updateFormatting();
 	}
 	
 	@Override
 	public void selectionChanged(List<WellTemplate> newSelection) {
 		WellTemplate sample = newSelection.get(0);
-		String conc = newSelection.stream().allMatch(w -> Objects.equals(sample.getConcentration(), w.getConcentration()))
-				? StringUtils.nonNull(sample.getConcentration()) : "";
+		String conc = (newSelection.stream().allMatch(w -> Objects.equals(sample.getConcentration(), w.getConcentration()))) ?
+				getValue(sample) : "";
 		wellConcentrationText.setText(conc);
 	}
 	
-	public static class ConcentrationCellRenderer extends BaseTemplateCellRenderer {
-		@Override
-		protected String[] doGetLabels(WellTemplate well) {
-			return new String[] { well.getConcentration() };
+	private void updateFormatting() {
+		this.uiFormatter = this.dataFormatSupport.get();
+		
+		this.uiToModelConverter = (this.uiFormatter.getConcentrationUnit() != Molar) ?
+				new ConcentrationValueConverter(this.uiFormatter.getConcentrationUnit(), Molar) :
+				null;
+		
+		if (this.wellConcentrationText == null || this.wellConcentrationText.isDisposed()) {
+			return;
 		}
+		
+		this.informationControl.setText(String.format("In %1$s, for example: %2$s.",
+				this.uiFormatter.getConcentrationUnit().getLabel(true),
+				this.uiFormatter.getConcentrationFormat().format(1e-6, Molar) ));
 	}
+	
 }

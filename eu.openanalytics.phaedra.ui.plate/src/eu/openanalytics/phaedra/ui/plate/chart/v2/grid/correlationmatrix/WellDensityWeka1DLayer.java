@@ -25,7 +25,9 @@ public class WellDensityWeka1DLayer extends WellScatter2DLayer {
 	public WellDensityWeka1DRenderTask createRenderTask(GridCell cell, int w, int h) {
 		List<String> selFeatures = new ArrayList<>();
 		selFeatures.add(getFeatures().get(cell.getColumn()).getDisplayName());
-		return new WellDensityWeka1DRenderTask(getEntities(), selFeatures, getFillOption(), w, h, cell.getRow(), cell.getColumn());
+		return new WellDensityWeka1DRenderTask(getEntities(), selFeatures, getFillOption(),
+				getDataFormatter(),
+				w, h, cell.getRow(), cell.getColumn() );
 	}
 
 	@Override

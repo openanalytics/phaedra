@@ -9,6 +9,7 @@ import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 
 /**
@@ -34,13 +35,13 @@ public class MultiGridLayerSupport extends GridLayerSupport {
 
 	private List<GridLayerSupport> delegateLayerSupports;
 
-	public MultiGridLayerSupport(String id, GridViewer viewer) {
-		super(id, viewer);
+	public MultiGridLayerSupport(String id, GridViewer viewer, DataFormatSupport dataFormatSupport) {
+		super(id, viewer, dataFormatSupport);
 		delegateLayerSupports = new ArrayList<>();
 	}
 
 	public void linkViewer(GridViewer viewer) {
-		GridLayerSupport support = new GridLayerSupport(getId(), viewer);
+		GridLayerSupport support = new GridLayerSupport(getId(), viewer, getDataFormatSupport());
 		support.setAttribute("featureProvider", getAttribute("featureProvider"));
 		support.setAttribute(IS_HIDDEN, getAttribute(IS_HIDDEN));
 		viewer.setLabelProvider(support.createLabelProvider());
@@ -76,6 +77,7 @@ public class MultiGridLayerSupport extends GridLayerSupport {
 		return false;
 	}
 
+	@Override
 	public void contributeContextMenu(IMenuManager manager) {
 
 		// Add a dropdown for selecting active layers.

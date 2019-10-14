@@ -50,6 +50,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.EditorPart;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.provider.AbstractGridContentProvider;
@@ -83,6 +84,8 @@ public class PlateTemplateEditor extends EditorPart {
 	private ProtocolClass protocolClass;
 	private boolean isNewTemplate;
 	
+	private DataFormatSupport dataFormatSupport;
+	
 	private List<WellTemplate> currentSelection;
 	private boolean dirty = false;
 
@@ -108,9 +111,17 @@ public class PlateTemplateEditor extends EditorPart {
 		setInput(input);
 		setPartName(input.getName());
 	}
-
+	
+	@Override
+	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
+		super.dispose();
+	}
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
 
 		plateTemplate = ((PlateTemplateEditorInput)getEditorInput()).getPlateTemplate();
 		isNewTemplate = ((PlateTemplateEditorInput)getEditorInput()).isNewTemplate();
@@ -254,7 +265,7 @@ public class PlateTemplateEditor extends EditorPart {
 				new OverviewTab(),
 				new WellTypeTab(),
 				new CompoundTab(),
-				new ConcentrationTab(),
+				new ConcentrationTab(this.dataFormatSupport),
 				new AnnotationTab()
 		};
 		
@@ -540,6 +551,17 @@ public class PlateTemplateEditor extends EditorPart {
 
 	private void resetHeatmap() {
 		for (int i = 0; i < gridViewers.length; i++) gridViewers[i].setInput("root");
+	}
+	
+	private void reloadData() {
+		if (this.tabFolder == null || this.tabFolder.isDisposed()
+				|| this.currentSelection == null) {
+			return;
+		}
+		for (int i = 0; i < tabs.length; i++) {
+			tabs[i].selectionChanged(this.currentSelection); // edit field
+		}
+		resetHeatmap();
 	}
 
 	private void refreshTemplateBrowser() {

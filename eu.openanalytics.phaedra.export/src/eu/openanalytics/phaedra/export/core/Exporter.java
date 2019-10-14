@@ -5,6 +5,9 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
+import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.export.core.ExportSettings.Includes;
 import eu.openanalytics.phaedra.export.core.query.Query;
 import eu.openanalytics.phaedra.export.core.query.QueryBuilder;
@@ -21,7 +24,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
  * It must remain independent of any UI component, to allow non-interactive
  * exports (e.g. batch-triggered or headless).
  */
-public class Exporter {
+public class /*WellData*/Exporter {
 
 	/**
 	 * Executes the export.
@@ -47,11 +50,18 @@ public class Exporter {
 			writer.initialize(settings);
 			monitor.worked(1);
 			
+			DataFormatter dataFormatter = DataTypePrefs.getDefaultDataFormatter();
+			writer.addExportInfo(new ExportInfo(new StringValueDescription("Unit of Concentration"), dataFormatter.getConcentrationUnit().getAbbr()));
+			
 			// First, perform the base query (columns that are independent of feature).
 			monitor.subTask("Querying wells");
 			QueryBuilder queryBuilder = new QueryBuilder();
+			QueryExecutor queryExecutor = new QueryExecutor();
+			queryExecutor.setDataUnitConfig(dataFormatter);
+			queryExecutor.setCensoredDataCombine(!settings.getCensoredValueSplit());
+			
 			Query query = queryBuilder.createWellsQuery(settings);
-			QueryResult result = new QueryExecutor().execute(query);
+			QueryResult result = queryExecutor.execute(query);
 			writer.writeBaseData(result);
 			int expectedRowcount = result.getRowCount();
 			monitor.worked(5);
@@ -65,7 +75,7 @@ public class Exporter {
 				// Collect the data
 				monitor.subTask("Exporting data for " + feature.getDisplayName());
 				query = queryBuilder.createFeatureQuery(feature, settings);
-				result = new QueryExecutor().execute(query, true);
+				result = queryExecutor.execute(query, true);
 				result.setFeature(feature);
 				monitor.worked(1);
 				

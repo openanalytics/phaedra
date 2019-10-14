@@ -47,6 +47,7 @@ public class ExportSettings implements IExportExperimentsSettings, IFilterPlates
 	public String fileType;
 	
 	public boolean compoundNameSplit;
+	private boolean censoredValueSplit;
 	
 	public List<Experiment> experiments;
 	public List<Feature> features = new ArrayList<>();
@@ -212,6 +213,23 @@ public class ExportSettings implements IExportExperimentsSettings, IFilterPlates
 	
 	public List<Includes> getIncludes() {
 		return includes;
+	}
+	
+	
+	public boolean getCompoundNameSplit() {
+		return compoundNameSplit;
+	}
+	
+	public void setCompoundNameSplit(boolean enabled) {
+		this.compoundNameSplit = enabled;
+	}
+	
+	public boolean getCensoredValueSplit() {
+		return censoredValueSplit;
+	}
+	
+	public void setCensoredValueSplit(boolean enabled) {
+		this.censoredValueSplit = enabled;
 	}
 	
 }

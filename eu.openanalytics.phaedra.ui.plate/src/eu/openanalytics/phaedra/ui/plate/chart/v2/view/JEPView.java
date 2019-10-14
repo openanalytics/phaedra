@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.ToolBar;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataUnitSupport;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractChart.ChartName;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.BaseDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.AbstractChartLayer;
@@ -26,7 +28,9 @@ import eu.openanalytics.phaedra.ui.plate.chart.v2.data.JEPAwareDataProvider;
 import eu.openanalytics.phaedra.ui.plate.classification.BaseClassificationSupport;
 
 public abstract class JEPView<ENTITY, ITEM> extends CompositeChartLegendView<ENTITY, ITEM> {
-
+	
+	private DataUnitSupport dataUnitSupport;
+	
 	private BaseClassificationSupport<?> classificationSupport;
 
 	protected abstract BaseClassificationSupport<?> createClassificationSupport();
@@ -37,7 +41,21 @@ public abstract class JEPView<ENTITY, ITEM> extends CompositeChartLegendView<ENT
 		Consumer<Properties> propertyLoader = properties -> setProperties(properties);
 		addDecorator(new SettingsDecorator(protocolSupplier, propertySaver, propertyLoader));
 	}
-
+	
+	
+	@Override
+	public void createPartControl(Composite parent) {
+		this.dataUnitSupport = new DataUnitSupport(this::reloadData);
+		
+		super.createPartControl(parent);
+	}
+	
+	protected DataUnitSupport getDataUnitSupport() {
+		return this.dataUnitSupport;
+	}
+	
+	protected abstract void reloadData();
+	
 	@Override
 	protected void addSpecificToolbarButtons(ToolBar parent) {
 		super.addSpecificToolbarButtons(parent);
@@ -52,6 +70,7 @@ public abstract class JEPView<ENTITY, ITEM> extends CompositeChartLegendView<ENT
 
 	@Override
 	public void dispose() {
+		if (dataUnitSupport != null) dataUnitSupport.dispose();
 		if (classificationSupport != null) {
 			getSite().getPage().removeSelectionListener(classificationSupport);
 		}

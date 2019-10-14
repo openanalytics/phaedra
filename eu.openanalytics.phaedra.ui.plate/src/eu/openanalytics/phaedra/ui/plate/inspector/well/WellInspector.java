@@ -33,6 +33,8 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -75,7 +77,10 @@ import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
 
 public class WellInspector extends DecoratedView {
-
+	
+	
+	private DataFormatSupport dataFormatSupport;
+	
 	private BreadcrumbViewer breadcrumb;
 
 	private FormToolkit formToolkit;
@@ -92,6 +97,8 @@ public class WellInspector extends DecoratedView {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataFormatSupport = new DataFormatSupport(this::loadWell);
+		
 		formToolkit = FormEditorUtils.createToolkit();
 		
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(parent);
@@ -234,13 +241,17 @@ public class WellInspector extends DecoratedView {
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		ModelEventService.getInstance().removeEventListener(modelEventListener);
 		super.dispose();
 	}
 
 	private void loadWell() {
-		if (treeViewer.getControl().isDisposed()) return;
+		if (treeViewer == null || treeViewer.getControl().isDisposed()
+				|| currentWell == null) {
+			return;
+		}
 
 		breadcrumb.setInput(currentWell);
 		breadcrumb.getControl().getParent().layout();
@@ -263,7 +274,8 @@ public class WellInspector extends DecoratedView {
 		} else {
 			compoundTxt.setText(c.toString());
 		}
-		concTxt.setText(WellProperty.Concentration.getStringValue(currentWell));
+		concTxt.setText(this.dataFormatSupport.get().getConcentrationEditFormat().format(
+				WellProperty.Concentration.getValue(currentWell), ConcentrationUnit.Molar));
 
 		descriptionTxt.setText(currentWell.getDescription() == null ? "" : currentWell.getDescription());
 

@@ -12,8 +12,12 @@ import org.eclipse.core.databinding.validation.IValidator;
 import org.eclipse.core.databinding.validation.ValidationStatus;
 import org.eclipse.core.runtime.IStatus;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationDataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.ContentType;
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
-import eu.openanalytics.phaedra.model.curve.util.ConcentrationFormat;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -22,27 +26,40 @@ public class CurveParameter {
 
 	public static class Definition {
 		
+		private final DataDescription dataDescription;
 		public String name;
 		public String description;
 		public boolean key;
 		public ParameterType type;
-		public IParameterValueRenderer valueRenderer;
+		private final IParameterValueRenderer valueRenderer;
 		/** Supported: ParameterValueList, org.eclipse.core.databinding.validation.IValidator<String>, org.eclipse.core.databinding.conversion.IConverter<String, String> */
 		public Object valueRestriction;
 		
-		public Definition(String name) {
-			this(name, null, false, ParameterType.Numeric, null, null);
-		}
-		
-		public Definition(String name, String description, boolean key, ParameterType type, IParameterValueRenderer valueRenderer, Object valueRestriction) {
-			this.name = name;
+		public Definition(final DataDescription dataDescription, String description, boolean key,
+				IParameterValueRenderer valueRenderer, Object valueRestriction) {
+			this.dataDescription = dataDescription;
+			this.name = dataDescription.getName();
 			this.description = description;
 			this.key = key;
-			this.type = type;
+			this.type = ParameterType.get(dataDescription);
 			this.valueRenderer = valueRenderer;
 			this.valueRestriction = valueRestriction;
 		}
-
+		
+		public Definition(final DataDescription dataDescription) {
+			this(dataDescription, null, false, null, null);
+		}
+		
+		
+		public final DataDescription getDataDescription() {
+			return this.dataDescription;
+		}
+		
+		public final String getName() {
+			return this.name;
+		}
+		
+		
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -133,11 +150,27 @@ public class CurveParameter {
 		}
 	}
 	
+	/** deprecated use {@link DataDescription} instead */
 	public enum ParameterType {
 		String,
 		Numeric,
 		Concentration,
 		Binary;
+		
+		public static ParameterType get(DataDescription dataDescription) {
+			switch (dataDescription.getDataType()) {
+			case Integer:
+			case Real:
+				if (dataDescription.getContentType() == ContentType.Concentration) {
+					return Concentration;
+				}
+				return Numeric;
+			case ByteArray:
+				return Binary;
+			default:
+				return String;
+			}
+		}
 		
 		public boolean isNumeric() {
 			return (this == Numeric || this == Concentration);
@@ -147,18 +180,28 @@ public class CurveParameter {
 	/*-- Value Renderer --*/
 	
 	public static interface IParameterValueRenderer {
-		public String render(Value value, Curve curve, ConcentrationFormat format);
+		public String render(Value value, Curve curve, DataFormatter format);
 	}
 
 	public static class BaseValueRenderer implements IParameterValueRenderer {
 		@Override
-		public String render(Value value, Curve curve, ConcentrationFormat format) {
-			if (value.definition.type == ParameterType.Concentration) {
-				if (format == null) format = ConcentrationFormat.LogMolar;
-				return ConcentrationFormat.format(ConcentrationFormat.LogMolar, format, getCensor(curve), value.numericValue);
-			} else if (value.definition.type.isNumeric()) {
-				return Formatters.getInstance().format(value.numericValue, "#.##");
-			} else {
+		public String render(Value value, Curve curve, DataFormatter formatter) {
+			DataDescription dataDescription = value.definition.getDataDescription();
+			switch (dataDescription.getDataType()) {
+			case Integer:
+				return formatter.format((long)value.numericValue, dataDescription);
+			case Real:
+				if (dataDescription.getContentType() == ContentType.Concentration) {
+					if (formatter == null) formatter = DataTypePrefs.getDefaultDataFormatter();
+					return formatter.getConcentrationFormat().format(getCensor(curve), value.numericValue,
+							((ConcentrationDataDescription)dataDescription).getConcentrationUnit() );
+				}
+				return Formatters.getInstance().format(
+						(double)dataDescription.convertDataTo(value.numericValue, formatter),
+						"#.##" );
+			case String:
+				return formatter.format(value.stringValue, dataDescription);
+			default:
 				return value.stringValue;
 			}
 		}
@@ -237,10 +280,6 @@ public class CurveParameter {
 		return (idx >= 0) ? defs.get(idx) : null;
 	}
 	
-	public static boolean isCensored(Definition def) {
-		return def.valueRenderer instanceof CensoredValueRenderer;
-	}
-	
 	public static Value createValue(Feature feature, Definition definition) {
 		String strValue = feature.getCurveSettings().get(definition.name);
 		return createValue(strValue, definition);
@@ -299,7 +338,7 @@ public class CurveParameter {
 		return Arrays.stream(values).filter(v -> v.definition.name.equals(name)).findAny().orElse(null);
 	}
 	
-	public static String renderValue(Value value, Curve curve, ConcentrationFormat format) {
+	public static String renderValue(Value value, Curve curve, DataFormatter format) {
 		IParameterValueRenderer renderer = value.definition.valueRenderer;
 		if (renderer == null) renderer = DEFAULT_RENDERER;
 		return renderer.render(value, curve, format);

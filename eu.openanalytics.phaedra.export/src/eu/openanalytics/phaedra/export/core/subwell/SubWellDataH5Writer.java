@@ -1,10 +1,13 @@
 package eu.openanalytics.phaedra.export.core.subwell;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
+
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -14,24 +17,38 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.export.Activator;
+import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
+import eu.openanalytics.phaedra.export.core.writer.format.AbstractExportWriter;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
 
-public class SubWellDataH5Writer implements IExportWriter {
 
-	private static SubWellDataH5Writer instance = new SubWellDataH5Writer();
-
-	private HashMap<Integer, Object[]> rowMap;
-
-	public static SubWellDataH5Writer getInstance() {
-		return instance;
+public class SubWellDataH5Writer extends AbstractExportWriter implements IExportWriter {
+	
+	
+	private Map<Integer, Object[]> rowMap;
+	
+	private DataFormatter dataFormatter;
+	
+	
+	public SubWellDataH5Writer() {
 	}
-
+	
+	
+	@Override
+	public void initialize(final IExportExperimentsSettings settings, final DataFormatter dataFormatter) {
+		super.initialize(settings);
+		
+		this.dataFormatter = dataFormatter;
+	}
+	
+	@Override
 	public void write(final List<Well> wells, final ExportSettings settings) {
 		Job job = new Job("Export Subwell Data") {
 			@Override
@@ -169,7 +186,8 @@ public class SubWellDataH5Writer implements IExportWriter {
 			row[1] = w.getId();
 			row[2] = PlateUtils.getWellCoordinate(w);
 			row[3] = w.getCompound() != null ? w.getCompound().getNumber() : w.getWellType();
-			row[4] = w.getCompoundConcentration();
+			row[4] = this.dataFormatter.getConcentrationUnit()
+					.convert(w.getCompoundConcentration(), Molar);
 			rowMap.put(rowIndex, row);
 			return row;
 		}

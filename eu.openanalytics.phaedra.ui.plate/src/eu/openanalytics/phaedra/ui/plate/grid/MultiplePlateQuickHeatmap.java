@@ -17,6 +17,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewerUtils;
 import eu.openanalytics.phaedra.base.ui.gridviewer.layer.GridLayerSupport;
@@ -47,7 +48,10 @@ import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
 public class MultiplePlateQuickHeatmap extends DecoratedView {
 
 	public static final String STAT = "STAT";
-
+	
+	
+	private DataFormatSupport dataFormatSupport;
+	
 	private GridViewer gridViewer;
 	private GridLayerSupport gridLayerSupport;
 	private ToolItem statDropdown;
@@ -56,14 +60,17 @@ public class MultiplePlateQuickHeatmap extends DecoratedView {
 
 	private ISelectionListener selectionListener;
 	private IUIEventListener featureSelectionListener;
-
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
+		
 		gridViewer = new GridViewer(parent);
 		gridViewer.getGrid().setSelectionEnabled(false);
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(gridViewer.getControl());
 
-		gridLayerSupport = new GridLayerSupport("hca.multiplewell.grid|hca.well.grid", gridViewer);
+		gridLayerSupport = new GridLayerSupport("hca.multiplewell.grid|hca.well.grid", gridViewer, dataFormatSupport);
 		gridLayerSupport.setAttribute("featureProvider", ProtocolUIService.getInstance());
 		gridLayerSupport.setAttribute(GridLayerSupport.IS_HIDDEN, getViewSite().getActionBars().getServiceLocator() == null);
 
@@ -90,11 +97,11 @@ public class MultiplePlateQuickHeatmap extends DecoratedView {
 		featureSelectionListener = (event) -> {
 			if (currentPlates == null || currentPlates.isEmpty()) return;
 			ProtocolClass pClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
-			ProtocolClass thisPClass = (ProtocolClass) currentPlates.get(0).getAdapter(ProtocolClass.class);
+			ProtocolClass thisPClass = currentPlates.get(0).getAdapter(ProtocolClass.class);
 			if (thisPClass.equals(pClass)) {
 				if (event.type == EventType.FeatureSelectionChanged
 						|| event.type == EventType.NormalizationSelectionChanged) {
-					gridLayerSupport.setInput(currentPlates);
+					reloadData();
 				} else if (event.type == EventType.ColorMethodChanged) {
 					gridViewer.setInput(gridViewer.getInput());
 				}
@@ -131,9 +138,19 @@ public class MultiplePlateQuickHeatmap extends DecoratedView {
 	public void setFocus() {
 		gridViewer.getControl().setFocus();
 	}
+	
+	private void reloadData() {
+		final List<Plate> input;
+		if (this.gridViewer == null || this.gridViewer.getControl().isDisposed()
+				|| (input = this.currentPlates) == null) {
+			return;
+		}
+		this.gridLayerSupport.setInput(input);
+	}
 
 	@Override
 	public void dispose() {
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		gridLayerSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		ProtocolUIService.getInstance().removeUIEventListener(featureSelectionListener);

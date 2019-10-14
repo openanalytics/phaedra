@@ -1,39 +1,59 @@
 package eu.openanalytics.phaedra.model.plate.util;
 
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.EntityIdDescription;
+import eu.openanalytics.phaedra.base.datatype.description.IntegerValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.model.plate.vo.Experiment;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 
 
 public enum WellProperty {
-
-	Number("Well Number", true),
-	Position("Well Position", false),
-	Row("Well Row", true),
-	Column("Well Column", true),
-	Type("Well Type", false),
-	Compound("Compound", false),
-	Concentration("Concentration", true),
-	LogConcentration("Log Concentration", true),
-	PlateSequence("Plate Sequence", true),
-	PlateId("Plate ID", true),
-	ExperimentId("Experiment ID", true)
-	;
-
-	private String label;
-	private boolean numeric;
-
-	private WellProperty(String label, boolean numeric) {
-		this.label = label;
-		this.numeric = numeric;
+	
+	Number(new IntegerValueDescription("Well Number")),
+	Position(new StringValueDescription("Well Position")),
+	Row(new IntegerValueDescription("Well Row")),
+	Column(new IntegerValueDescription("Well Column")),
+	Type(new StringValueDescription("Well Type")),
+	Compound(new StringValueDescription("Compound")),
+	Concentration(new ConcentrationValueDescription("Concentration", Molar)),
+	LogConcentration(new RealValueDescription("Log Concentration")),
+	PlateSequence(new IntegerValueDescription("Plate Sequence")),
+	PlateId(new EntityIdDescription("Plate ID", Plate.class)),
+	ExperimentId(new EntityIdDescription("Experiment ID", Experiment.class));
+	
+	
+	private final String label;
+	
+	private final DataDescription dataDescription;
+	private final boolean numeric;
+	
+	
+	private WellProperty(final DataDescription dataDescription) {
+		this.label = dataDescription.getName();
+		this.dataDescription = dataDescription;
+		this.numeric = (dataDescription.getDataType() == DataType.Integer || dataDescription.getDataType() == DataType.Real);
 	}
 
 	public String getLabel() {
 		return label;
 	}
-
+	
+	public DataDescription getDataDescription() {
+		return dataDescription;
+	}
+	
 	public boolean isNumeric() {
 		return numeric;
 	}
@@ -67,7 +87,60 @@ public enum WellProperty {
 			return numeric ? "" + getValue(well) : "";
 		}
 	}
-
+	
+	public double getRealValue(final Well well, final DataUnitConfig units) {
+		switch (this) {
+		case Number:
+			return PlateUtils.getWellNr(well);
+		case Row:
+			return well.getRow();
+		case Column:
+			return well.getColumn();
+		case Concentration:
+			return units.getConcentrationUnit().convert(well.getCompoundConcentration(), Molar);
+		case LogConcentration:
+			return well.getCompoundConcentration() == 0.0 ? Double.NaN : Math.log10(well.getCompoundConcentration());
+		case PlateSequence:
+			return well.getPlate().getSequence();
+		case PlateId:
+			return well.getPlate().getId();
+		case ExperimentId:
+			return well.getPlate().getExperiment().getId();
+		default:
+			return 0.0;
+		}
+	}
+	
+	public Object getTypedValue(final Well well) {
+		switch (this) {
+		case Number:
+			return Integer.valueOf(PlateUtils.getWellNr(well));
+		case Row:
+			return Integer.valueOf(well.getRow());
+		case Column:
+			return Integer.valueOf(well.getColumn());
+		case Position:
+			return PlateUtils.getWellCoordinate(well);
+		case Type:
+			return well.getWellType();
+		case Compound:
+			return (well.getCompound() == null) ? well.getWellType() : well.getCompound().toString();
+		case Concentration:
+			return well.getCompoundConcentration();
+		case LogConcentration:
+			return getValue(well);
+		case PlateSequence:
+			return Integer.valueOf(well.getPlate().getSequence());
+		case PlateId:
+			return Long.valueOf(well.getPlate().getId());
+		case ExperimentId:
+			return Long.valueOf(well.getPlate().getExperiment().getId());
+		default:
+			return null;
+		}
+	}
+	
+	
 	public static WellProperty getByName(String name) {
 		for (WellProperty prop: values()) {
 			if (prop.getLabel().equals(name)) return prop;

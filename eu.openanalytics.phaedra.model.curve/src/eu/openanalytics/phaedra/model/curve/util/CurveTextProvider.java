@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
@@ -16,24 +19,26 @@ import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
 
 public class CurveTextProvider {
 
-	private static final CurveTextField[] BASE_COLUMNS = {
+	private static final List<CurveTextField> BASE_COLUMNS = Arrays.asList(
 			new CurveTextField("Id", c -> String.valueOf(c.getId())),
 			new CurveTextField("Model Id", c -> c.getModelId()),
 			new CurveTextField("Fit Date", c -> String.valueOf(c.getFitDate())),
 			new CurveTextField("Fit Version", c -> c.getFitVersion()),
-			new CurveTextField("Fit Error", c -> String.valueOf(c.getErrorCode()))
-	};
+			new CurveTextField("Fit Error", c -> String.valueOf(c.getErrorCode())) );
 	
-	public static CurveTextField[] getColumns(Curve curve) {
+
+	public static List<CurveTextField> getColumns(Curve curve, DataFormatter dataFormatter) {
 		// First, the base properties
 		List<CurveTextField> allFields = new ArrayList<>();
-		Arrays.stream(BASE_COLUMNS).forEach(c -> allFields.add(c));
+		allFields.addAll(BASE_COLUMNS);
 		
 		// Then, the curve fit properties
-		Value[] values = curve == null ? new Value[0] : curve.getOutputParameters();
-		Arrays.stream(values).forEach(v -> {
-			allFields.add(new CurveTextField(v.definition.name, c -> CurveParameter.renderValue(v, curve, null)));
-		});
+		Value[] curveValues = curve == null ? new Value[0] : curve.getOutputParameters();
+		for (Value value : curveValues) {
+			allFields.add(new CurveTextField(value.definition.getDataDescription(),
+					value.definition.getDataDescription().convertNameTo(value.definition.name, dataFormatter),
+					c -> CurveParameter.renderValue(value, curve, dataFormatter) ));
+		}
 		
 		// Last, the custom compound properties
 		if (curve != null && !curve.getCompounds().isEmpty()) {
@@ -46,41 +51,49 @@ public class CurveTextProvider {
 			}
 		}
 		
-		return allFields.toArray(new CurveTextField[allFields.size()]);
+		return allFields;
 	}
 	
-	public static List<CurveTextField> getColumns(Curve curve, List<String> favorites) {
-		CurveTextField[] columns = getColumns(curve);
+	public static List<CurveTextField> getColumns(Curve curve, List<String> favorites, DataFormatter dataFormatter) {
+		List<CurveTextField> columns = getColumns(curve, dataFormatter);
 		
-		List<CurveTextField> unordered = new ArrayList<>();
-		for (int i = 0; i < columns.length; i++) {
-			unordered.add(columns[i]);
-		}
-		if (favorites.isEmpty()) return unordered;
+		if (favorites.isEmpty()) return columns;
 		
-		List<CurveTextField> ordered = new ArrayList<>(unordered.size());
+		List<CurveTextField> ordered = new ArrayList<>(columns.size());
 		for (String name : favorites) {
-			for (Iterator<CurveTextField> iter = unordered.iterator(); iter.hasNext();) {
+			for (Iterator<CurveTextField> iter = columns.iterator(); iter.hasNext();) {
 				CurveTextField field = iter.next();
-				if (field.getLabel().equals(name)) {
+				if (field.getDataDescription().getName().equals(name)) {
 					ordered.add(field);
 					iter.remove();
 					break;
 				}
 			}
 		}
-		ordered.addAll(unordered);
+		ordered.addAll(columns);
 		return ordered;
 	}
 	
 	
 	public static class CurveTextField {
+		
+		private final DataDescription dataDescription;
 		private String label;
 		private Function<Curve, String> valueRenderer;
 		
-		public CurveTextField(String label, Function<Curve, String> valueRenderer) {
+		public CurveTextField(DataDescription dataDescription, String label, Function<Curve, String> valueRenderer) {
+			this.dataDescription = dataDescription;
 			this.label = label;
 			this.valueRenderer = valueRenderer;
+		}
+		
+		public CurveTextField(String label, Function<Curve, String> valueRenderer) {
+			this(new StringValueDescription(label), label, valueRenderer);
+		}
+		
+		
+		public DataDescription getDataDescription() {
+			return this.dataDescription;
 		}
 		
 		public String getLabel() {

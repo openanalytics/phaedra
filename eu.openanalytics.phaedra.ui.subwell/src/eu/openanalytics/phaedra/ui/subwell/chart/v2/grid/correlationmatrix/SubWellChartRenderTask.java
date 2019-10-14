@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.ui.subwell.chart.v2.grid.correlationmatrix;
 
 import java.util.List;
 
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.EntityRenderTask;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractChart;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
@@ -14,13 +15,17 @@ public abstract class SubWellChartRenderTask extends EntityRenderTask<Well, Well
 	private List<String> features;
 
 	private String fillOption;
-
-	public SubWellChartRenderTask(List<Well> wells, List<String> features, String fillOption
-			, int w, int h, int row, int col) {
+	private final DataUnitConfig dataUnitConfig;
+	
+	
+	public SubWellChartRenderTask(List<Well> wells, List<String> features, String fillOption,
+			DataUnitConfig dataUnitConfig,
+			int w, int h, int row, int col) {
 		super(w, h, row, col);
 		this.selection.addAll(wells);
 		this.features = features;
 		this.fillOption = fillOption;
+		this.dataUnitConfig = dataUnitConfig;
 	}
 
 	@Override
@@ -50,7 +55,7 @@ public abstract class SubWellChartRenderTask extends EntityRenderTask<Well, Well
 
 	@Override
 	public IDataProvider<Well, Well> getChartDataProvider() {
-		return new SubWellDataProvider();
+		return new SubWellDataProvider(() -> this.dataUnitConfig);
 	}
-
+	
 }

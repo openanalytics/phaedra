@@ -46,6 +46,7 @@ import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
 import ca.odell.glazedlists.EventList;
 import ca.odell.glazedlists.GlazedLists;
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -90,6 +91,8 @@ import eu.openanalytics.phaedra.ui.wellimage.util.ImageSettingsDialog;
 
 public class WellBrowser extends EditorPart {
 
+	private DataFormatSupport dataFormatSupport;
+	
 	private CTabFolder tabFolder;
 	private CTabItem gridTab;
 	private CTabItem tableTab;
@@ -145,7 +148,8 @@ public class WellBrowser extends EditorPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
-
+		this.dataFormatSupport = new DataFormatSupport(this::reloadData);
+		
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
@@ -181,7 +185,7 @@ public class WellBrowser extends EditorPart {
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(gridViewer.getControl());
 
 		gridViewer.setContentProvider(new PlateContentProvider());
-		gridLayerSupport = new GridLayerSupport("hca.singlewell.grid|hca.well.grid", gridViewer);
+		gridLayerSupport = new GridLayerSupport("hca.singlewell.grid|hca.well.grid", gridViewer, dataFormatSupport);
 		gridLayerSupport.setAttribute("featureProvider", ProtocolUIService.getInstance());
 		gridLayerSupport.setAttribute(GridLayerSupport.IS_HIDDEN, getEditorSite().getActionBars().getServiceLocator() == null);
 		gridViewer.setLabelProvider(gridLayerSupport.createLabelProvider());
@@ -257,14 +261,13 @@ public class WellBrowser extends EditorPart {
 		uiEventListener = event -> {
 			if (event.type == EventType.FeatureSelectionChanged || event.type == EventType.NormalizationSelectionChanged) {
 				ProtocolClass pClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
-				ProtocolClass thisPClass = (ProtocolClass)(getPlate().getAdapter(ProtocolClass.class));
+				ProtocolClass thisPClass = getPlate().getAdapter(ProtocolClass.class);
 				if (thisPClass.equals(pClass)) {
 					gridViewer.setInput(gridViewer.getInput());
 				}
 			} else if (event.type == EventType.ColorMethodChanged) {
 				columnAccessor.resetPainters();
-				table.doCommand(new VisualRefreshCommand());
-				gridViewer.setInput(gridViewer.getInput());
+				reloadData();
 			} else if (event.type == EventType.ImageSettingsChanged) {
 				columnAccessor.clearCache();
 				if (tabFolder.getSelection() == tableTab) table.doCommand(new VisualRefreshCommand());
@@ -321,9 +324,26 @@ public class WellBrowser extends EditorPart {
 	public void setFocus() {
 		gridViewer.getControl().setFocus();
 	}
+	
+	private void reloadData(boolean grid, boolean table) {
+		if (this.gridViewer == null || this.gridViewer.getControl().isDisposed()) {
+			return;
+		}
+		if (grid) {
+			this.gridLayerSupport.setInput(this.gridViewer.getInput());
+		}
+		if (table) {
+			this.table.doCommand(new VisualRefreshCommand());
+		}
+	}
+	
+	private void reloadData() {
+		reloadData(true, true);
+	}
 
 	@Override
 	public void dispose() {
+		if (dataFormatSupport != null) dataFormatSupport.dispose();
 		gridLayerSupport.dispose();
 		if (columnAccessor != null) columnAccessor.dispose();
 		eventList.dispose();
@@ -392,7 +412,7 @@ public class WellBrowser extends EditorPart {
 			}
 		}
 
-		columnAccessor = new WellDataCalculator();
+		columnAccessor = new WellDataCalculator(this.dataFormatSupport);
 		columnAccessor.setFeatures(ProtocolService.getInstance().getMembers(ProtocolUIService.getInstance().getCurrentFeatureGroup()));
 		columnAccessor.setCurrentWells(wellAccessor.getWells());
 

@@ -10,6 +10,7 @@ import java.util.List;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
+import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.export.core.query.Query;
 import eu.openanalytics.phaedra.export.core.query.QueryBuilder;
@@ -59,8 +60,9 @@ public class PlateTableExporter {
 			// First, perform the base query (columns that are independent of feature).
 			monitor.subTask("Querying plates");
 			QueryBuilder queryBuilder = new QueryBuilder();
+			QueryExecutor queryExecutor = new QueryExecutor();
 			Query query = queryBuilder.createPlatesQuery(settings);
-			QueryResult baseResult = new QueryExecutor().execute(query);
+			QueryResult baseResult = queryExecutor.execute(query);
 			writer.writeBaseData(baseResult);
 			
 			m.worked(5);
@@ -98,19 +100,17 @@ public class PlateTableExporter {
 		m.setWorkRemaining(rowCount);
 		
 		{	// Header
-			featureStats.setColumnCount(colCount);
-			int col = 0;
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "Z-Prime");
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "S/N");
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "S/B");
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Z-Prime"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/N"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/B"));
 				}
 				if (includeFeatureControlStats) {
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "LC Mean");
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "LC %CV");
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "HC Mean");
-					featureStats.setColumn(col++, QueryResult.DOUBLE_VALUE, feature.getName() + " " + "HC %CV");
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC Mean"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC %CV"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC Mean"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC %CV"));
 				}
 			}
 		}
@@ -142,6 +142,7 @@ public class PlateTableExporter {
 			featureStats.addRow(rowValues);
 			m.worked(1);
 		}
+		featureStats.finish();
 		writer.writeFeature(featureStats);
 	}
 	

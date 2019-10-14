@@ -8,12 +8,18 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
+import eu.openanalytics.phaedra.base.datatype.description.ContentType;
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
+import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.density.Density2DChart;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.DataProviderSettings;
 import eu.openanalytics.phaedra.base.ui.charting.v2.filter.IFilter;
@@ -39,17 +45,27 @@ public class WellDataProvider extends JEPAwareDataProvider<Plate, Well> {
 
 	private static final String USE_DEFAULT_NORM = "USE_DEFAULT_NORM";
 
+	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
+	
 	private List<Feature> wellFeatures;
+	private List<WellProperty> wellProperties;
 
 	private Map<String, List<String>> stringPropertyValues;
 	private Map<Plate, List<Well>> wellsByPlate;
 
 	private boolean useDefaultNormalization;
-
+	
+	
+	public WellDataProvider(final Supplier<? extends DataUnitConfig> dataUnitSupplier) {
+		this.dataUnitSupplier = dataUnitSupplier;
+	}
+	
+	
 	@Override
 	public void initialize() {
 		super.initialize();
-		wellFeatures = new ArrayList<Feature>();
+		wellFeatures = new ArrayList<>();
+		wellProperties = Collections.emptyList();
 		stringPropertyValues = new HashMap<>();
 		wellsByPlate = new HashMap<>();
 	}
@@ -78,7 +94,7 @@ public class WellDataProvider extends JEPAwareDataProvider<Plate, Well> {
 		List<Feature> newFeatures = PlateUtils.getFeatures(wells.get(0));
 		newFeatures = newFeatures.stream().filter(f -> f.isNumeric()).collect(Collectors.toCollection(ArrayList::new));
 		Collections.sort(newFeatures, ProtocolUtils.FEATURE_NAME_SORTER);
-		WellProperty[] wellProperties = WellProperty.values();
+		List<WellProperty> wellProperties = Arrays.asList(WellProperty.values());
 
 		// Sort the incoming selection.
 		Collections.sort(wells, PlateUtils.WELL_EXP_NAME_PLATE_BARCODE_WELL_NR_SORTER);
@@ -100,13 +116,14 @@ public class WellDataProvider extends JEPAwareDataProvider<Plate, Well> {
 			List<Well> wellsFromPlate = newWellsByPlate.get(plate);
 
 			int dataSize = wellsFromPlate.size();
-			float[][] data = new float[newFeatures.size() + wellProperties.length + 1][];
+			float[][] data = new float[newFeatures.size() + wellProperties.size() + 1][];
 
 			newData.put(plate, data);
 			newDataSizes.put(plate, dataSize);
 		}
 
-		wellFeatures = newFeatures;
+		this.wellFeatures = newFeatures;
+		this.wellProperties = wellProperties;
 		stringPropertyValues = new HashMap<>();
 		wellsByPlate = newWellsByPlate;
 		setCurrentData(newData);
@@ -139,35 +156,54 @@ public class WellDataProvider extends JEPAwareDataProvider<Plate, Well> {
 				if (monitor.isCanceled()) return null;
 				values[wellNr++] = (float) accessor.getNumericValue(w, f, isUseDefaultNormalization() ? f.getNormalization() : null);
 			}
-		} else if (col - wellFeatures.size() < WellProperty.values().length) {
+			return values;
+		} else if (col - this.wellFeatures.size() < this.wellProperties.size()) {
 			// It's a Well property. Retrieve Well properties.
-			WellProperty prop = WellProperty.values()[col - wellFeatures.size()];
-			if (prop.isNumeric()) {
-				for (Well w : wells) values[wellNr++] = (float) prop.getValue(w);
-			} else {
-				for (Well w : wells) {
+			WellProperty prop = this.wellProperties.get(col - wellFeatures.size());
+			DataDescription dataDescription = prop.getDataDescription();
+			final DataUnitConfig dataUnitConfig = this.dataUnitSupplier.get();
+			switch (dataDescription.getDataType()) {
+			case Integer:
+			case Real:
+				for (Well well : wells) values[wellNr++] = (float)prop.getRealValue(well, dataUnitConfig);
+				return values;
+			default:
+				for (Well well : wells) {
 					// Convert the String values to a sequence number.
-					String value = prop.getStringValue(w);
+					String value = prop.getStringValue(well);
 					stringPropertyValues.putIfAbsent(prop.getLabel(), new ArrayList<>());
 					List<String> uniqueValues = stringPropertyValues.get(prop.getLabel());
 					CollectionUtils.addUnique(uniqueValues, value);
 					values[wellNr++] = uniqueValues.indexOf(value);
 				}
+				return values;
 			}
 		} else {
 			Arrays.fill(values, 1.0f);
+			return values;
 		}
-		return values;
 	}
 
 	@Override
 	public String[] getAxisLabels() {
 		String[] labels = super.getAxisLabels();
-		if (isUseDefaultNormalization()) {
-			for (int i = 0; i < labels.length; i++) {
-				int index = getFeatureIndex(labels[i]);
-				if (index >= 0 && index < wellFeatures.size()) {
-					labels[i] += " [" + wellFeatures.get(index).getNormalization() + "]";
+		for (int i = 0; i < labels.length; i++) {
+			int index = getFeatureIndex(labels[i]);
+			if (index >= 0) {
+				if (index < wellFeatures.size()) {
+					if (isUseDefaultNormalization()) {
+						labels[i] += " [" + wellFeatures.get(index).getNormalization() + "]";
+					}
+					continue;
+				}
+				else if (index - this.wellFeatures.size() < this.wellProperties.size()) {
+					WellProperty prop = this.wellProperties.get(index - this.wellFeatures.size());
+					DataDescription dataDescription = prop.getDataDescription();
+					if (dataDescription.getDataType() == DataType.Real
+							&& dataDescription.getContentType() == ContentType.Concentration) {
+						ConcentrationUnit outputUnit = this.dataUnitSupplier.get().getConcentrationUnit();
+						labels[i] += " [" + outputUnit.getAbbr() + "]";
+					}
 				}
 			}
 		}

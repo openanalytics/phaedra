@@ -52,7 +52,7 @@ public abstract class WellChartLayer extends FeaturePlateLayer {
 	@Override
 	protected void doInitialize() {
 		protocolId = getEntities().get(0).getPlate().getExperiment().getProtocol().getId();
-		dataProvider = new WellDataProvider();
+		dataProvider = new WellDataProvider(getLayerSupport().getDataFormatSupport());
 		dataProvider.initialize();
 		dataProvider.loadData(getEntities(), getDimensionCount());
 
@@ -181,7 +181,7 @@ public abstract class WellChartLayer extends FeaturePlateLayer {
 		} catch (ClassNotFoundException | IOException e) {
 			// Do nothing. Leave config in its current state (default).
 		}
-		protocolId = ((Protocol) getEntities().get(0).getAdapter(Protocol.class)).getId();
+		protocolId = getEntities().get(0).getAdapter(Protocol.class).getId();
 		GridState.saveValue(protocolId, getId(), PROPERTY_CONFIG, this.config);
 	}
 

@@ -157,6 +157,15 @@ public abstract class SubWellView extends JEPView<Well, Well> {
 	}
 
 	@Override
+	protected void reloadData() {
+		final List<Well> input;
+		if ((input = this.currentWells) == null || input.isEmpty()) {
+			return;
+		}
+		getItemSelectionChangedObservable().valueChanged(input);
+	}
+
+	@Override
 	public BaseLegendView<Well, Well> createLegendView(Composite composite, List<AbstractChartLayer<Well, Well>> layers) {
 		ClassificationLegendView<Well, Well> legend = new ClassificationLegendView<Well, Well>(composite, layers, groupingStrategies);
 		getItemSelectionChangedObservable().addObserver(legend.getItemSelectionChangedObservable());
@@ -166,7 +175,7 @@ public abstract class SubWellView extends JEPView<Well, Well> {
 	@Override
 	public ChartLayerFactory<Well, Well> getChartLayerFactory() {
 		if (chartLayerFactory == null) {
-			chartLayerFactory = new SubWellChartLayerFactory();
+			chartLayerFactory = new SubWellChartLayerFactory(getDataUnitSupport());
 		}
 		return chartLayerFactory;
 	}
