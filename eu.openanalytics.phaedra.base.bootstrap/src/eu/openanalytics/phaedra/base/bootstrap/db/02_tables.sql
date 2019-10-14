@@ -1579,36 +1579,37 @@ GRANT SELECT ON phaedra.hca_hit_call_value to phaedra_role_read;
 
 -- ---------------------------------------------------------------------------
 
-create table phaedra.hca_hit_call_ruleset (
+create table phaedra.hca_formula_ruleset (
 	ruleset_id 			bigint not null,
 	feature_id			bigint not null,
+	type				integer not null,
 	show_in_ui			boolean not null default true,
 	color				integer,
 	style				integer
 );
 
-alter table phaedra.hca_hit_call_ruleset
-	add constraint hca_hit_call_ruleset_pk
+alter table phaedra.hca_formula_ruleset
+	add constraint hca_formula_ruleset_pk
 	primary key ( ruleset_id );
 
-alter table phaedra.hca_hit_call_ruleset
-	add constraint hca_hit_call_ruleset_fk_feature
+alter table phaedra.hca_formula_ruleset
+	add constraint hca_formula_ruleset_fk_feature
 	foreign key (feature_id)
 	references phaedra.hca_feature(feature_id)
 	on delete cascade;
 	
-create sequence phaedra.hca_hit_call_ruleset_s
+create sequence phaedra.hca_formula_ruleset_s
 	increment by 1
 	start with 1
 	maxvalue 9223372036854775807
 	no cycle;
 	
-grant insert, update, delete on phaedra.hca_hit_call_ruleset to phaedra_role_crud;
-grant select on phaedra.hca_hit_call_ruleset to phaedra_role_read;
+grant insert, update, delete on phaedra.hca_formula_ruleset to phaedra_role_crud;
+grant select on phaedra.hca_formula_ruleset to phaedra_role_read;
 
 -- ---------------------------------------------------------------------------
 
-create table phaedra.hca_hit_call_rule (
+create table phaedra.hca_formula_rule (
 	rule_id 			bigint not null,
 	rule_name			text not null,
 	formula_id			bigint not null,
@@ -1617,27 +1618,27 @@ create table phaedra.hca_hit_call_rule (
 	threshold 			double precision
 );
 
-alter table phaedra.hca_hit_call_rule
-	add constraint hca_hit_call_rule_pk
+alter table phaedra.hca_formula_rule
+	add constraint hca_formula_rule_pk
 	primary key ( rule_id );
 
-alter table phaedra.hca_hit_call_rule
-	add constraint hca_hit_call_rule_fk_formula
+alter table phaedra.hca_formula_rule
+	add constraint hca_formula_rule_fk_formula
 	foreign key (formula_id)
 	references phaedra.hca_calculation_formula(formula_id)
 	on delete cascade;
 	
-alter table phaedra.hca_hit_call_rule
-	add constraint hca_hit_call_rule_fk_ruleset
+alter table phaedra.hca_formula_rule
+	add constraint hca_formula_rule_fk_ruleset
 	foreign key (ruleset_id)
-	references phaedra.hca_hit_call_ruleset(ruleset_id)
+	references phaedra.hca_formula_ruleset(ruleset_id)
 	on delete cascade;
 	
-create sequence phaedra.hca_hit_call_rule_s
+create sequence phaedra.hca_formula_rule_s
 	increment by 1
 	start with 1
 	maxvalue 9223372036854775807
 	no cycle;
 	
-grant insert, update, delete on phaedra.hca_hit_call_rule to phaedra_role_crud;
-grant select on phaedra.hca_hit_call_rule to phaedra_role_read;
+grant insert, update, delete on phaedra.hca_formula_rule to phaedra_role_crud;
+grant select on phaedra.hca_formula_rule to phaedra_role_read;

@@ -15,9 +15,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRule;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
@@ -25,7 +26,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 public class RunHitCallingDialog extends TitleAreaDialog {
 
 	private List<Plate> plates;
-	private Map<HitCallRule, Double> customThresholds;
+	private Map<FormulaRule, Double> customThresholds;
 	
 	public RunHitCallingDialog(Shell parentShell, List<Plate> plates) {
 		super(parentShell);
@@ -52,13 +53,14 @@ public class RunHitCallingDialog extends TitleAreaDialog {
 		GridLayoutFactory.fillDefaults().margins(5,5).numColumns(2).applyTo(main);
 		
 		ProtocolClass pClass = ProtocolUtils.getProtocolClass(plates.get(0));
-		HitCallRuleset[] rulesets = HitCallService.getInstance().getRulesetsForProtocolClass(pClass.getId()).values().stream()
+		FormulaRuleset[] rulesets = FormulaService.getInstance().getRulesetsForProtocolClass(pClass.getId(), RulesetType.HitCalling.getCode())
+				.values().stream()
 				.sorted((r1, r2) -> r1.getFeature().getName().compareTo(r2.getFeature().getName()))
-				.toArray(i -> new HitCallRuleset[i]);
+				.toArray(i -> new FormulaRuleset[i]);
 		
 		List<Text> texts = new ArrayList<>();
-		for (HitCallRuleset rs: rulesets) {
-			for (HitCallRule r: rs.getRules()) {
+		for (FormulaRuleset rs: rulesets) {
+			for (FormulaRule r: rs.getRules()) {
 				customThresholds.put(r, r.getThreshold());
 				
 				new Label(main, SWT.NONE).setText(String.format("%s, %s:", rs.getFeature().getName(), r.getName()));
@@ -77,11 +79,11 @@ public class RunHitCallingDialog extends TitleAreaDialog {
 		return main;
 	}
 	
-	public Map<HitCallRule, Double> getCustomThresholds() {
+	public Map<FormulaRule, Double> getCustomThresholds() {
 		return customThresholds;
 	}
 	
-	private void updateCustomThreshold(HitCallRule rule, String text) {
+	private void updateCustomThreshold(FormulaRule rule, String text) {
 		try {
 			Double customTh = Double.valueOf(text);
 			customThresholds.put(rule, customTh);

@@ -8,15 +8,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 
-public class EditHitCallRulesetDialog extends TitleAreaDialog {
+public class EditRulesetDialog extends TitleAreaDialog {
 
-	private HitCallRulesetEditor rulesetEditor;
+	private RulesetEditor rulesetEditor;
 	
-	private HitCallRuleset ruleset;
+	private FormulaRuleset ruleset;
 	
-	public EditHitCallRulesetDialog(Shell parentShell, HitCallRuleset ruleset) {
+	public EditRulesetDialog(Shell parentShell, FormulaRuleset ruleset) {
 		super(parentShell);
 		this.ruleset = ruleset;
 	}
@@ -24,7 +24,7 @@ public class EditHitCallRulesetDialog extends TitleAreaDialog {
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		newShell.setText("Edit Hit Calling Ruleset");
+		newShell.setText("Edit Formula Ruleset");
 		newShell.setSize(600, 500);
 	}
 	
@@ -39,12 +39,12 @@ public class EditHitCallRulesetDialog extends TitleAreaDialog {
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(main);
 		GridLayoutFactory.fillDefaults().margins(5,5).numColumns(1).applyTo(main);
 		
-		rulesetEditor = new HitCallRulesetEditor(main, SWT.NONE);
+		rulesetEditor = new RulesetEditor(main, SWT.NONE);
 		rulesetEditor.setInput(ruleset);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(rulesetEditor);
 		
-		setTitle("Edit Hit Calling Ruleset");
-		setMessage("Adjust the rules and properties of the hit calling ruleset below.");
+		setTitle("Edit Formula Ruleset");
+		setMessage("Adjust the rules and properties of the formula ruleset below.");
 		
 		return main;
 	}

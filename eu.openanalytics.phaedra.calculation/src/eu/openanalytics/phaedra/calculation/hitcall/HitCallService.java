@@ -1,9 +1,6 @@
 package eu.openanalytics.phaedra.calculation.hitcall;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -13,18 +10,16 @@ import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
-import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRule;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
-import eu.openanalytics.phaedra.model.protocol.ProtocolService;
-import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class HitCallService extends BaseJPAService {
@@ -49,136 +44,26 @@ public class HitCallService extends BaseJPAService {
 		return instance;
 	}
 	
-	public HitCallRuleset getRuleset(long rulesetId) {
-		return getEntity(HitCallRuleset.class, rulesetId);
-	}
 	
-	public HitCallRuleset getRulesetForFeature(long featureId) {
-		return getEntity("select rs from HitCallRuleset rs where rs.feature.id = ?1", HitCallRuleset.class, featureId);
-	}
-	
-	public Map<Long, HitCallRuleset> getRulesetsForProtocolClass(long protocolClassId) {
-		Map<Long, HitCallRuleset> rulesetsPerFeature = new HashMap<>();
-		List<HitCallRuleset> rulesets = streamableList(getList("select rs from HitCallRuleset rs where rs.feature.protocolClass.id = ?1", HitCallRuleset.class, protocolClassId));
-		for (HitCallRuleset rs: rulesets) rulesetsPerFeature.put(rs.getFeature().getId(), rs);
-		return rulesetsPerFeature;
-	}
-	
-	public HitCallRuleset createRuleset(Feature feature) {
-		if (feature == null) throw new IllegalArgumentException("Cannot create ruleset: null feature");
-		HitCallRuleset ruleset = new HitCallRuleset();
-		ruleset.setFeature(feature);
-		ruleset.setRules(new ArrayList<>());
-		checkCanEditRuleset(ruleset);
-		return ruleset;
-	}
-	
-	public HitCallRuleset getWorkingCopy(HitCallRuleset ruleset) {
-		HitCallRuleset workingCopy = createRuleset(ruleset.getFeature());
-		copyRuleset(ruleset, workingCopy);
-		return workingCopy;
-	}
-	
-	public void copyRuleset(HitCallRuleset from, HitCallRuleset to) {
-		to.setShowInUI(from.isShowInUI());
-		to.setColor(from.getColor());
-		to.setStyle(from.getStyle());
-		to.setFeature(from.getFeature());
-		to.setId(from.getId());
-		
-		List<HitCallRule> oldRules = new ArrayList<>(to.getRules());
-		to.getRules().clear();
-		for (HitCallRule newItem: from.getRules()) {
-			HitCallRule itemToReplace = oldRules.stream().filter(i -> i.getId() == newItem.getId()).findAny().orElse(null);
-			if (itemToReplace == null) itemToReplace = new HitCallRule();
-			copyRule(newItem, itemToReplace);
-			to.getRules().add(itemToReplace);
-		}
-	}
-	
-	private void copyRule(HitCallRule from, HitCallRule to) {
-		to.setId(from.getId());
-		to.setName(from.getName());
-		to.setFormula(from.getFormula());
-		to.setSequence(from.getSequence());
-		to.setThreshold(from.getThreshold());
-		to.setRuleset(from.getRuleset());
-	}
-	
-	public boolean canEditRuleset(HitCallRuleset ruleset) {
-		if (ruleset.getFeature() == null) return false;
-		return ProtocolService.getInstance().canEditProtocolClass(ruleset.getFeature().getProtocolClass());
-	}
-	
-	public void checkCanEditRuleset(HitCallRuleset ruleset) {
-		if (!canEditRuleset(ruleset)) throw new PermissionDeniedException(
-				String.format("No permission to modify the ruleset for feature %s", ruleset.getFeature()));
-	}
-	
-	public void updateRuleset(HitCallRuleset ruleset, HitCallRuleset workingCopy) {
-		if (workingCopy.getId() != ruleset.getId()) throw new IllegalArgumentException("Ruleset's working copy has a different ID");
-		if (ruleset == workingCopy && ruleset.getId() != 0) throw new IllegalArgumentException("Cannot update a ruleset without a working copy");
-		
-		checkCanEditRuleset(ruleset);
-		
-		if (ruleset.getId() == 0 && getRulesetForFeature(ruleset.getFeature().getId()) != null) throw new IllegalArgumentException(
-				String.format("Cannot create ruleset: a ruleset already exists for feature %s", ruleset.getFeature()));
-		
-		validateRuleset(workingCopy);
-		
-		if (ruleset != workingCopy) copyRuleset(workingCopy, ruleset);
-		for (int i = 0; i < ruleset.getRules().size(); i++) {
-			HitCallRule rule = ruleset.getRules().get(i);
-			rule.setSequence(i);
-		}
-		save(ruleset);
-	}
-	
-	public void deleteRuleset(HitCallRuleset ruleset) {
-		checkCanEditRuleset(ruleset);
-		delete(ruleset);
-	}
-	
-	public HitCallRule createRule(HitCallRuleset ruleset) {
-		checkCanEditRuleset(ruleset);
-		HitCallRule rule = new HitCallRule();
-		rule.setRuleset(ruleset);
-		rule.setName("New rule");
-		rule.setSequence(ruleset.getRules().size() + 1);
-		ruleset.getRules().add(rule);
-		return rule;
-	}
-	
-	public void validateRuleset(HitCallRuleset ruleset) throws CalculationException {
-		if (ruleset == null) throw new CalculationException("Invalid ruleset: null");
-		if (ruleset.getFeature() == null) throw new CalculationException("Invalid ruleset: no feature specified");
-		for (HitCallRule rule: ruleset.getRules()) validateRule(rule);
-	}
-	
-	public void validateRule(HitCallRule rule) throws CalculationException {
-		if (rule == null) throw new CalculationException("Invalid rule: null");
-		if (rule.getName() == null || rule.getName().trim().isEmpty()) throw new CalculationException("Invalid rule: empty name");
-		if (rule.getFormula() == null) throw new CalculationException("Invalid rule: no formula");
-	}
-	
-	//TODO Only CalculationService#calculate should be allowed to call this method
-	public double[] runHitCalling(HitCallRuleset ruleset, Plate plate) throws CalculationException {
+	// Note: only CalculationService#calculate should be allowed to call this method
+	public double[] runHitCalling(FormulaRuleset ruleset, Plate plate) throws CalculationException {
 		SecurityService.getInstance().checkWithException(Permissions.PLATE_CALCULATE, plate);
 		
 		if (ruleset == null || ruleset.getRules() == null || ruleset.getRules().isEmpty()) throw new CalculationException("Cannot perform hit calling: no rules provided");
+		if (ruleset.getType() != RulesetType.HitCalling.getCode()) throw new CalculationException("Cannot perform hit calling: provided ruleset is not of type " + RulesetType.HitCalling.getLabel());
 		if (plate == null) throw new CalculationException("Cannot perform hit calling: no plate provided");
-		validateRuleset(ruleset);
+		FormulaService.getInstance().validateRuleset(ruleset);
 		
 		Feature feature = ruleset.getFeature();
 		clearCache(plate, feature);
 		CacheKey key = createCacheKey(plate, feature);
 		double[] hitValues = null;
 		
-		for (HitCallRule rule: ruleset.getRules()) {
+		for (FormulaRule rule: ruleset.getRules()) {
 			if (rule.getFormula() == null) throw new CalculationException(String.format("Cannot perform hit calling: rule %s has no formula", rule.getName()));
 			
 			Map<String, Object> params = new HashMap<>();
-			double threshold = getCustomThreshold(plate, rule);
+			double threshold = FormulaService.getInstance().getCustomRuleThreshold(plate, rule);
 			if (Double.isNaN(threshold)) threshold = rule.getThreshold();
 			params.put("threshold", threshold);
 			
@@ -205,27 +90,6 @@ public class HitCallService extends BaseJPAService {
 		return hitValues;
 	}
 
-	public double getCustomThreshold(Plate plate, HitCallRule rule) {
-		String propKey = "hc-th-rule#" + rule.getId();
-		float customThreshold = ObjectPropertyService.getInstance().getNumericValue(Plate.class.getName(), plate.getId(), propKey);
-		return customThreshold;
-	}
-	
-	public void saveCustomThresholds(List<Plate> plates, HitCallRule rule, double threshold) {
-		for (Plate plate: plates) SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
-		
-		long[] plateIds = plates.stream().mapToLong(p -> p.getId()).toArray();
-		String propKey = "hc-th-rule#" + rule.getId();
-		
-		if (rule.getThreshold() == threshold) {
-			ObjectPropertyService.getInstance().deleteValues(Plate.class.getName(), plateIds, propKey);
-		} else {
-			float[] thresholds = new float[plates.size()];
-			Arrays.fill(thresholds, (float) threshold);
-			ObjectPropertyService.getInstance().setValues(Plate.class.getName(), plateIds, propKey, thresholds);
-		}
-	}
-	
 	public double[] getHitValues(Plate plate, Feature feature) {
 		CacheKey key = createCacheKey(plate, feature);
 		if (hitValueCache.contains(key)) return (double[]) hitValueCache.get(key);

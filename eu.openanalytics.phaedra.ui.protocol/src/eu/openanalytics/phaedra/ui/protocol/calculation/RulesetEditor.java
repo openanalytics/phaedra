@@ -33,26 +33,26 @@ import org.eclipse.swt.widgets.TableItem;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
-import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRule;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 
-public class HitCallRulesetEditor extends Composite {
+public class RulesetEditor extends Composite {
 
 	private TableViewer rulesTableViewer;
 	private Button showInUIBtn;
 	private ColorSelector colorSelector;
 	private TableCombo styleCombo;
 	
-	private HitCallRuleset ruleset;
-	private WritableList<HitCallRule> ruleList;
+	private FormulaRuleset ruleset;
+	private WritableList<FormulaRule> ruleList;
 	
-	public HitCallRulesetEditor(Composite parent, int style) {
+	public RulesetEditor(Composite parent, int style) {
 		this(parent, style, null);
 	}
 	
-	public HitCallRulesetEditor(Composite parent, int style, Listener listener) {
+	public RulesetEditor(Composite parent, int style, Listener listener) {
 		super(parent, style);
 		GridLayoutFactory.fillDefaults().applyTo(this);
 		final Listener dirtyListener = (listener == null) ? e -> {} : listener;
@@ -84,7 +84,7 @@ public class HitCallRulesetEditor extends Composite {
 		link.setText("<a>Add rule</a>");
 		link.addListener(SWT.Selection, e -> {
 			if (ruleset == null || ruleList == null) return;
-			HitCallService.getInstance().createRule(ruleset);
+			FormulaService.getInstance().createRule(ruleset);
 			rulesTableViewer.refresh();
 			dirtyListener.handleEvent(null);
 		});
@@ -96,7 +96,7 @@ public class HitCallRulesetEditor extends Composite {
 		link.setText("<a>Remove rule</a>");
 		link.addListener(SWT.Selection, e -> {
 			if (ruleset == null || ruleList == null) return;
-			HitCallRule rule = SelectionUtils.getFirstObject(rulesTableViewer.getSelection(), HitCallRule.class);
+			FormulaRule rule = SelectionUtils.getFirstObject(rulesTableViewer.getSelection(), FormulaRule.class);
 			ruleList.remove(rule);
 			rulesTableViewer.refresh();
 			dirtyListener.handleEvent(null);
@@ -140,7 +140,7 @@ public class HitCallRulesetEditor extends Composite {
 				dirtyListener.handleEvent(null);
 			}
 		});
-		for (HitCallRenderStyle s: HitCallRenderStyle.values()) {
+		for (RulesetRenderStyle s: RulesetRenderStyle.values()) {
 			TableItem item = new TableItem(styleCombo.getTable(), SWT.NONE);
 			item.setText(s.name());
 			item.setImage(s.getImage());
@@ -148,7 +148,7 @@ public class HitCallRulesetEditor extends Composite {
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(styleCombo);
 	}
 	
-	public void setInput(HitCallRuleset ruleset) {
+	public void setInput(FormulaRuleset ruleset) {
 		this.ruleset = ruleset;
 		if (ruleset == null) {
 			this.ruleList = null;
@@ -157,7 +157,7 @@ public class HitCallRulesetEditor extends Composite {
 			colorSelector.setColorValue(new RGB(0,0,0));
 			styleCombo.select(0);
 		} else {
-			this.ruleList = new WritableList<>(ruleset.getRules(), HitCallRule.class);
+			this.ruleList = new WritableList<>(ruleset.getRules(), FormulaRule.class);
 			rulesTableViewer.setInput(ruleList);
 			showInUIBtn.setSelection(ruleset.isShowInUI());
 			colorSelector.setColorValue(ColorUtils.hexToRgb(ruleset.getColor()));
@@ -171,7 +171,7 @@ public class HitCallRulesetEditor extends Composite {
 		tvc.getColumn().setWidth(200);
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				return ((HitCallRule) element).getName();
+				return ((FormulaRule) element).getName();
 			}
 		});
 		tvc.setEditingSupport(new NameEditingSupport(rulesTableViewer, dirtyListener));
@@ -181,7 +181,7 @@ public class HitCallRulesetEditor extends Composite {
 		tvc.getColumn().setWidth(200);
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				CalculationFormula formula = ((HitCallRule) element).getFormula();
+				CalculationFormula formula = ((FormulaRule) element).getFormula();
 				if (formula == null) return "";
 				return formula.getName();
 			}
@@ -193,7 +193,7 @@ public class HitCallRulesetEditor extends Composite {
 		tvc.getColumn().setWidth(75);
 		tvc.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				return String.valueOf(((HitCallRule) element).getThreshold());
+				return String.valueOf(((FormulaRule) element).getThreshold());
 			}
 		});
 		tvc.setEditingSupport(new ThresholdEditingSupport(rulesTableViewer, dirtyListener));
@@ -235,12 +235,12 @@ public class HitCallRulesetEditor extends Composite {
 
 		@Override
 		protected Object getValue(Object element) {
-			return ((HitCallRule) element).getName();
+			return ((FormulaRule) element).getName();
 		}
 
 		@Override
 		protected void setValue(Object element, Object value) {
-			((HitCallRule) element).setName(String.valueOf(value));
+			((FormulaRule) element).setName(String.valueOf(value));
 			super.setValue(element, value);
 		}
 	}
@@ -258,12 +258,12 @@ public class HitCallRulesetEditor extends Composite {
 
 		@Override
 		protected Object getValue(Object element) {
-			return ((HitCallRule) element).getFormula();
+			return ((FormulaRule) element).getFormula();
 		}
 
 		@Override
 		protected void setValue(Object element, Object value) {
-			((HitCallRule) element).setFormula((CalculationFormula) value);
+			((FormulaRule) element).setFormula((CalculationFormula) value);
 			super.setValue(element, value);
 		}
 	}
@@ -295,14 +295,14 @@ public class HitCallRulesetEditor extends Composite {
 
 		@Override
 		protected Object getValue(Object element) {
-			return String.valueOf(((HitCallRule) element).getThreshold());
+			return String.valueOf(((FormulaRule) element).getThreshold());
 		}
 
 		@Override
 		protected void setValue(Object element, Object value) {
 			try {
 				double threshold = Double.parseDouble(String.valueOf(value));
-				((HitCallRule) element).setThreshold(threshold);
+				((FormulaRule) element).setThreshold(threshold);
 				super.setValue(element, value);
 			} catch (NumberFormatException e) {}
 		}

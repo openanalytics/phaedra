@@ -14,16 +14,16 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.statushandlers.StatusManager;
 
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 import eu.openanalytics.phaedra.ui.protocol.Activator;
 
-public class EditHitCallRulesetHandler extends AbstractHandler {
+public class EditRulesetHandler extends AbstractHandler {
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		ISelection selection = HandlerUtil.getCurrentSelection(event);
-		HitCallRuleset ruleset = SelectionUtils.getSingleObject(selection, HitCallRuleset.class, true);
+		FormulaRuleset ruleset = SelectionUtils.getSingleObject(selection, FormulaRuleset.class, true);
 		if (ruleset != null) execute(ruleset);
 		return null;
 	}
@@ -33,7 +33,7 @@ public class EditHitCallRulesetHandler extends AbstractHandler {
 		if (evaluationContext instanceof IEvaluationContext) {
 			Object selection = ((IEvaluationContext) evaluationContext).getVariable(ISources.ACTIVE_CURRENT_SELECTION_NAME);
 			if (selection instanceof ISelection) {
-				HitCallRuleset ruleset = SelectionUtils.getSingleObject((ISelection) selection, HitCallRuleset.class, true);
+				FormulaRuleset ruleset = SelectionUtils.getSingleObject((ISelection) selection, FormulaRuleset.class, true);
 				setBaseEnabled(validateSelection(ruleset));
 				return;
 			}
@@ -41,18 +41,18 @@ public class EditHitCallRulesetHandler extends AbstractHandler {
 		setBaseEnabled(false);
 	}
 	
-	private boolean validateSelection(HitCallRuleset ruleset) {
+	private boolean validateSelection(FormulaRuleset ruleset) {
 		if (ruleset == null) return false;
-		return HitCallService.getInstance().canEditRuleset(ruleset);
+		return FormulaService.getInstance().canEditRuleset(ruleset);
 	}
 	
-	public static boolean execute(HitCallRuleset ruleset) {
-		HitCallRuleset workingCopy = HitCallService.getInstance().getWorkingCopy(ruleset);
-		EditHitCallRulesetDialog dialog = new EditHitCallRulesetDialog(Display.getCurrent().getActiveShell(), workingCopy) {
+	public static boolean execute(FormulaRuleset ruleset) {
+		FormulaRuleset workingCopy = FormulaService.getInstance().getWorkingCopy(ruleset);
+		EditRulesetDialog dialog = new EditRulesetDialog(Display.getCurrent().getActiveShell(), workingCopy) {
 			@Override
 			protected void okPressed() {
 				try {
-					HitCallService.getInstance().updateRuleset(ruleset, workingCopy);
+					FormulaService.getInstance().updateRuleset(ruleset, workingCopy);
 					super.okPressed();
 				}
 				catch (Exception e) {

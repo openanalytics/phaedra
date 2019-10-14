@@ -63,7 +63,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
-import eu.openanalytics.phaedra.ui.protocol.calculation.HitCallRulesetEditor;
+import eu.openanalytics.phaedra.ui.protocol.calculation.RulesetEditor;
 import eu.openanalytics.phaedra.ui.protocol.dialog.ManageGroupsDialog;
 import eu.openanalytics.phaedra.ui.protocol.util.ClassificationTableFactory;
 import eu.openanalytics.phaedra.ui.protocol.util.ColorMethodFactory;
@@ -116,7 +116,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	private Section sectionCurveSettings;
 	private Composite curveSettingsCmp;
 
-	private HitCallRulesetEditor hitCallRulesetEditor;
+	private RulesetEditor hitCallRulesetEditor;
 	
 	private Listener dirtyListener = new Listener() {
 		@Override
@@ -620,7 +620,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		hitCallSection.setClient(hitCallCmp);
 		toolkit.paintBordersFor(hitCallCmp);
 
-		hitCallRulesetEditor = new HitCallRulesetEditor(hitCallCmp, SWT.NONE, dirtyListener);
+		hitCallRulesetEditor = new RulesetEditor(hitCallCmp, SWT.NONE, dirtyListener);
 		GridDataFactory.fillDefaults().grab(true, true).hint(SWT.DEFAULT, 350).applyTo(hitCallRulesetEditor);
 		
 		/*

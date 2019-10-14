@@ -13,6 +13,7 @@ import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.PermissionDeniedException;
 import eu.openanalytics.phaedra.base.security.SecurityService;
+import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
@@ -20,11 +21,15 @@ import eu.openanalytics.phaedra.calculation.formula.language.JEPLanguage;
 import eu.openanalytics.phaedra.calculation.formula.language.JavaScriptLanguage;
 import eu.openanalytics.phaedra.calculation.formula.language.RLanguage;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRule;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
+import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
+import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class FormulaService extends BaseJPAService {
@@ -147,11 +152,11 @@ public class FormulaService extends BaseJPAService {
 	
 	public void deleteFormula(CalculationFormula formula) {
 		checkCanEditFormula(formula);
-		int count = getList("select r from HitCallRule r where r.formula.id = ?1", HitCallRule.class, formula.getId()).size();
+		int count = getList("select r from FormulaRule r where r.formula.id = ?1", FormulaRule.class, formula.getId()).size();
 		if (count == 0) {
 			delete(formula);
 		} else {
-			throw new IllegalArgumentException(String.format("Cannot delete formula '%s': there are %d Hit Calling rules depending on it", formula.getName(), count));
+			throw new IllegalArgumentException(String.format("Cannot delete formula '%s': there are %d formula rules depending on it", formula.getName(), count));
 		}
 	}
 
@@ -209,5 +214,148 @@ public class FormulaService extends BaseJPAService {
 		EclipseLog.debug(String.format("Formula %s evaluated on %s, feature %s in %d ms", formula.getName(), plate, feature, duration), CalculationService.class);
 		
 		return output;
+	}
+	
+	/*
+	 * Formula Rulesets
+	 * ****************
+	 */
+	
+	public FormulaRuleset getRuleset(long rulesetId) {
+		return getEntity(FormulaRuleset.class, rulesetId);
+	}
+	
+	public FormulaRuleset getRulesetForFeature(long featureId, int type) {
+		return getEntity("select rs from FormulaRuleset rs where rs.feature.id = ?1 and rs.type = ?2", FormulaRuleset.class, featureId, type);
+	}
+	
+	public Map<Long, FormulaRuleset> getRulesetsForProtocolClass(long protocolClassId, int type) {
+		Map<Long, FormulaRuleset> rulesetsPerFeature = new HashMap<>();
+		List<FormulaRuleset> rulesets = streamableList(getList("select rs from FormulaRuleset rs"
+				+ " where rs.feature.protocolClass.id = ?1 and rs.type = ?2", FormulaRuleset.class, protocolClassId, type));
+		for (FormulaRuleset rs: rulesets) rulesetsPerFeature.put(rs.getFeature().getId(), rs);
+		return rulesetsPerFeature;
+	}
+	
+	public FormulaRuleset createRuleset(Feature feature, int rulesetType) {
+		if (feature == null) throw new IllegalArgumentException("Cannot create ruleset: null feature");
+		FormulaRuleset ruleset = new FormulaRuleset();
+		ruleset.setFeature(feature);
+		ruleset.setType(RulesetType.HitCalling.getCode());
+		ruleset.setRules(new ArrayList<>());
+		checkCanEditRuleset(ruleset);
+		return ruleset;
+	}
+	
+	public FormulaRuleset getWorkingCopy(FormulaRuleset ruleset) {
+		FormulaRuleset workingCopy = createRuleset(ruleset.getFeature(), ruleset.getType());
+		copyRuleset(ruleset, workingCopy);
+		return workingCopy;
+	}
+	
+	public void copyRuleset(FormulaRuleset from, FormulaRuleset to) {
+		to.setType(from.getType());
+		to.setShowInUI(from.isShowInUI());
+		to.setColor(from.getColor());
+		to.setStyle(from.getStyle());
+		to.setFeature(from.getFeature());
+		to.setId(from.getId());
+		
+		List<FormulaRule> oldRules = new ArrayList<>(to.getRules());
+		to.getRules().clear();
+		for (FormulaRule newItem: from.getRules()) {
+			FormulaRule itemToReplace = oldRules.stream().filter(i -> i.getId() == newItem.getId()).findAny().orElse(null);
+			if (itemToReplace == null) itemToReplace = new FormulaRule();
+			copyRule(newItem, itemToReplace);
+			to.getRules().add(itemToReplace);
+		}
+	}
+	
+	private void copyRule(FormulaRule from, FormulaRule to) {
+		to.setId(from.getId());
+		to.setName(from.getName());
+		to.setFormula(from.getFormula());
+		to.setSequence(from.getSequence());
+		to.setThreshold(from.getThreshold());
+		to.setRuleset(from.getRuleset());
+	}
+	
+	public boolean canEditRuleset(FormulaRuleset ruleset) {
+		if (ruleset.getFeature() == null) return false;
+		return ProtocolService.getInstance().canEditProtocolClass(ruleset.getFeature().getProtocolClass());
+	}
+	
+	public void checkCanEditRuleset(FormulaRuleset ruleset) {
+		if (!canEditRuleset(ruleset)) throw new PermissionDeniedException(
+				String.format("No permission to modify the ruleset for feature %s", ruleset.getFeature()));
+	}
+	
+	public void updateRuleset(FormulaRuleset ruleset, FormulaRuleset workingCopy) {
+		if (workingCopy.getId() != ruleset.getId()) throw new IllegalArgumentException("Ruleset's working copy has a different ID");
+		if (ruleset == workingCopy && ruleset.getId() != 0) throw new IllegalArgumentException("Cannot update a ruleset without a working copy");
+		
+		checkCanEditRuleset(ruleset);
+		
+		if (ruleset.getId() == 0 && getRulesetForFeature(ruleset.getFeature().getId(), ruleset.getType()) != null) {
+			throw new IllegalArgumentException(String.format("Cannot create ruleset: a ruleset already exists"
+					+ " for feature %s and type %s", ruleset.getFeature(), RulesetType.get(ruleset.getType()).getLabel()));
+		}
+		
+		validateRuleset(workingCopy);
+		
+		if (ruleset != workingCopy) copyRuleset(workingCopy, ruleset);
+		for (int i = 0; i < ruleset.getRules().size(); i++) {
+			FormulaRule rule = ruleset.getRules().get(i);
+			rule.setSequence(i);
+		}
+		save(ruleset);
+	}
+	
+	public void deleteRuleset(FormulaRuleset ruleset) {
+		checkCanEditRuleset(ruleset);
+		delete(ruleset);
+	}
+	
+	public FormulaRule createRule(FormulaRuleset ruleset) {
+		checkCanEditRuleset(ruleset);
+		FormulaRule rule = new FormulaRule();
+		rule.setRuleset(ruleset);
+		rule.setName("New rule");
+		rule.setSequence(ruleset.getRules().size() + 1);
+		ruleset.getRules().add(rule);
+		return rule;
+	}
+	
+	public void validateRuleset(FormulaRuleset ruleset) throws CalculationException {
+		if (ruleset == null) throw new CalculationException("Invalid ruleset: null");
+		if (ruleset.getFeature() == null) throw new CalculationException("Invalid ruleset: no feature specified");
+		for (FormulaRule rule: ruleset.getRules()) validateRule(rule);
+	}
+	
+	public void validateRule(FormulaRule rule) throws CalculationException {
+		if (rule == null) throw new CalculationException("Invalid rule: null");
+		if (rule.getName() == null || rule.getName().trim().isEmpty()) throw new CalculationException("Invalid rule: empty name");
+		if (rule.getFormula() == null) throw new CalculationException("Invalid rule: no formula");
+	}
+	
+	public double getCustomRuleThreshold(Plate plate, FormulaRule rule) {
+		String propKey = "formula-th-rule#" + rule.getId();
+		float customThreshold = ObjectPropertyService.getInstance().getNumericValue(Plate.class.getName(), plate.getId(), propKey);
+		return customThreshold;
+	}
+	
+	public void saveCustomRuleThresholds(List<Plate> plates, FormulaRule rule, double threshold) {
+		for (Plate plate: plates) SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
+		
+		long[] plateIds = plates.stream().mapToLong(p -> p.getId()).toArray();
+		String propKey = "formula-th-rule#" + rule.getId();
+		
+		if (rule.getThreshold() == threshold) {
+			ObjectPropertyService.getInstance().deleteValues(Plate.class.getName(), plateIds, propKey);
+		} else {
+			float[] thresholds = new float[plates.size()];
+			Arrays.fill(thresholds, (float) threshold);
+			ObjectPropertyService.getInstance().setValues(Plate.class.getName(), plateIds, propKey, thresholds);
+		}
 	}
 }

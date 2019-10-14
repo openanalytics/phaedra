@@ -235,14 +235,11 @@
          <entityClass
                class="eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula">
          </entityClass>
-      </persistenceModel>
-      <persistenceModel
-            name="HitCalling">
          <entityClass
-               class="eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule">
+               class="eu.openanalytics.phaedra.calculation.formula.model.FormulaRule">
          </entityClass>
          <entityClass
-               class="eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset">
+               class="eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset">
          </entityClass>
       </persistenceModel>
    </extension>

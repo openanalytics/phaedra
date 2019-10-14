@@ -1,4 +1,4 @@
-package eu.openanalytics.phaedra.calculation.hitcall.model;
+package eu.openanalytics.phaedra.calculation.formula.model;
 
 import java.util.List;
 
@@ -27,13 +27,13 @@ import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 @Entity
-@Table(name="hca_hit_call_ruleset", schema="phaedra")
-@SequenceGenerator(name="hca_hit_call_ruleset_s", sequenceName="hca_hit_call_ruleset_s", schema="phaedra", allocationSize=1)
-public class HitCallRuleset implements IValueObject, IOwnedObject {
+@Table(name="hca_formula_ruleset", schema="phaedra")
+@SequenceGenerator(name="hca_formula_ruleset_s", sequenceName="hca_formula_ruleset_s", schema="phaedra", allocationSize=1)
+public class FormulaRuleset implements IValueObject, IOwnedObject {
 
 	@Id
 	@Column(name="ruleset_id")
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator="hca_hit_call_ruleset_s")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator="hca_formula_ruleset_s")
 	private long id;
 	
 	@JoinFetch(JoinFetchType.INNER)
@@ -45,8 +45,11 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="ruleset", fetch=FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
 	@OrderColumn(name="ruleset_sequence")
-	private List<HitCallRule> rules;
+	private List<FormulaRule> rules;
 
+	@Column(name="type")
+	private int type;
+	
 	@Column(name="show_in_ui")
 	private boolean showInUI;
 	
@@ -68,11 +71,17 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 	public void setFeature(Feature feature) {
 		this.feature = feature;
 	}
-	public List<HitCallRule> getRules() {
+	public List<FormulaRule> getRules() {
 		return rules;
 	}
-	public void setRules(List<HitCallRule> rules) {
+	public void setRules(List<FormulaRule> rules) {
 		this.rules = rules;
+	}
+	public int getType() {
+		return type;
+	}
+	public void setType(int type) {
+		this.type = type;
 	}
 	public boolean isShowInUI() {
 		return showInUI;
@@ -121,7 +130,7 @@ public class HitCallRuleset implements IValueObject, IOwnedObject {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		HitCallRuleset other = (HitCallRuleset) obj;
+		FormulaRuleset other = (FormulaRuleset) obj;
 		if (id != other.id)
 			return false;
 		return true;

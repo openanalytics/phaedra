@@ -94,9 +94,9 @@
             name="Edit Formula">
       </command>
       <command
-            defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetHandler"
-            id="eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetHandler"
-            name="Edit Hit Calling Ruleset">
+            defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.EditRulesetHandler"
+            id="eu.openanalytics.phaedra.ui.protocol.calculation.EditRulesetHandler"
+            name="Edit Ruleset">
       </command>
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.protocol.calculation.DeleteFormulaHandler"

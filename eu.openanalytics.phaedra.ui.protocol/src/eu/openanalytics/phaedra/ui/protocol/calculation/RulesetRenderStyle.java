@@ -6,7 +6,7 @@ import org.eclipse.swt.graphics.Image;
 
 import eu.openanalytics.phaedra.base.ui.util.misc.PlotShape;
 
-public enum HitCallRenderStyle {
+public enum RulesetRenderStyle {
 
 	CheckMark(0),
 	Star(1),
@@ -15,7 +15,7 @@ public enum HitCallRenderStyle {
 	private int code;
 	private Image image;
 	
-	private HitCallRenderStyle(int code) {
+	private RulesetRenderStyle(int code) {
 		this.code = code;
 	}
 	
@@ -41,8 +41,8 @@ public enum HitCallRenderStyle {
 		PlotShape.valueOf(this.name()).drawShape(gc, x, y, size);
 	}
 	
-	public static HitCallRenderStyle getByCode(int code) {
-		for (HitCallRenderStyle style: values()) {
+	public static RulesetRenderStyle getByCode(int code) {
+		for (RulesetRenderStyle style: values()) {
 			if (style.code == code) return style;
 		}
 		return null;

@@ -30,8 +30,9 @@ import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
-import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ObjectCopyFactory;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -47,7 +48,7 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 	private boolean dirty;
 	private boolean writeAccess;
 	
-	private Map<Feature, HitCallRuleset> hitCallRulesets;
+	private Map<Feature, FormulaRuleset> hitCallRulesets;
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
@@ -197,29 +198,29 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 		return ((ProtocolClassEditorInput)getEditorInput()).getOriginalProtocolClass();
 	}
 	
-	public HitCallRuleset getHitCallRuleset(Feature feature) {
-		HitCallRuleset ruleset = hitCallRulesets.get(feature);
+	public FormulaRuleset getHitCallRuleset(Feature feature) {
+		FormulaRuleset ruleset = hitCallRulesets.get(feature);
 		if (ruleset == null) {
-			ruleset = HitCallService.getInstance().getRulesetForFeature(feature.getId());
-			if (ruleset != null) ruleset = HitCallService.getInstance().getWorkingCopy(ruleset);
+			ruleset = FormulaService.getInstance().getRulesetForFeature(feature.getId(), RulesetType.HitCalling.getCode());
+			if (ruleset != null) ruleset = FormulaService.getInstance().getWorkingCopy(ruleset);
 		}
-		if (ruleset == null) ruleset = HitCallService.getInstance().createRuleset(feature);
+		if (ruleset == null) ruleset = FormulaService.getInstance().createRuleset(feature, RulesetType.HitCalling.getCode());
 		hitCallRulesets.put(feature, ruleset);
 		return ruleset;
 	}
 	
 	private void saveHitCallRulesets() {
-		for (HitCallRuleset workingCopy: hitCallRulesets.values()) {
+		for (FormulaRuleset workingCopy: hitCallRulesets.values()) {
 			boolean isNew = workingCopy.getId() == 0;
 			boolean isEmpty = workingCopy.getRules().isEmpty();
 			
 			if (isNew) {
 				if (isEmpty) continue;
-				else HitCallService.getInstance().updateRuleset(workingCopy, workingCopy);
+				else FormulaService.getInstance().updateRuleset(workingCopy, workingCopy);
 			} else {
-				HitCallRuleset original = HitCallService.getInstance().getRuleset(workingCopy.getId());
-				if (isEmpty) HitCallService.getInstance().deleteRuleset(original);
-				else HitCallService.getInstance().updateRuleset(original, workingCopy);
+				FormulaRuleset original = FormulaService.getInstance().getRuleset(workingCopy.getId());
+				if (isEmpty) FormulaService.getInstance().deleteRuleset(original);
+				else FormulaService.getInstance().updateRuleset(original, workingCopy);
 			}
 		}
 	}

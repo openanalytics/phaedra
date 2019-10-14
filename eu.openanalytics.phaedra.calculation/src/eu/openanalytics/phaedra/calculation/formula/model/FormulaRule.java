@@ -1,4 +1,4 @@
-package eu.openanalytics.phaedra.calculation.hitcall.model;
+package eu.openanalytics.phaedra.calculation.formula.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,16 +16,15 @@ import org.eclipse.persistence.annotations.BatchFetchType;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
-import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 
 @Entity
-@Table(name="hca_hit_call_rule", schema="phaedra")
-@SequenceGenerator(name="hca_hit_call_rule_s", sequenceName="hca_hit_call_rule_s", schema="phaedra", allocationSize=1)
-public class HitCallRule implements IValueObject, IOwnedObject {
+@Table(name="hca_formula_rule", schema="phaedra")
+@SequenceGenerator(name="hca_formula_rule_s", sequenceName="hca_formula_rule_s", schema="phaedra", allocationSize=1)
+public class FormulaRule implements IValueObject, IOwnedObject {
 
 	@Id
 	@Column(name="rule_id")
-	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator="hca_hit_call_rule_s")
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator="hca_formula_rule_s")
 	private long id;
 	
 	@Column(name="rule_name")
@@ -44,7 +43,7 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name="ruleset_id")
-	private HitCallRuleset ruleset;
+	private FormulaRuleset ruleset;
 	
 	public long getId() {
 		return id;
@@ -76,10 +75,10 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 	public void setThreshold(double threshold) {
 		this.threshold = threshold;
 	}
-	public HitCallRuleset getRuleset() {
+	public FormulaRuleset getRuleset() {
 		return ruleset;
 	}
-	public void setRuleset(HitCallRuleset ruleset) {
+	public void setRuleset(FormulaRuleset ruleset) {
 		this.ruleset = ruleset;
 	}
 	
@@ -109,7 +108,7 @@ public class HitCallRule implements IValueObject, IOwnedObject {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		HitCallRule other = (HitCallRule) obj;
+		FormulaRule other = (FormulaRule) obj;
 		if (id != other.id)
 			return false;
 		return true;

@@ -21,8 +21,8 @@ import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationMode;
-import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRule;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRule;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -48,8 +48,8 @@ public class RunHitCallingHandler extends AbstractHandler {
 			@Override
 			protected void okPressed() {
 				try {
-					for (Entry<HitCallRule, Double> entry: getCustomThresholds().entrySet()) {
-						HitCallService.getInstance().saveCustomThresholds(plates, entry.getKey(), entry.getValue());
+					for (Entry<FormulaRule, Double> entry: getCustomThresholds().entrySet()) {
+						FormulaService.getInstance().saveCustomRuleThresholds(plates, entry.getKey(), entry.getValue());
 					}
 					triggerRecalcJob(plates);
 					super.okPressed();

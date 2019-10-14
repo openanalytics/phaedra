@@ -6,21 +6,23 @@ import eu.openanalytics.phaedra.base.ui.gridviewer.widget.GridCell;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.BaseGridCellRenderer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.IGridCellRenderer;
 import eu.openanalytics.phaedra.base.ui.util.misc.ColorCache;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
+import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
-import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.plate.grid.PlatesLayer;
-import eu.openanalytics.phaedra.ui.protocol.calculation.HitCallRenderStyle;
+import eu.openanalytics.phaedra.ui.protocol.calculation.RulesetRenderStyle;
 import eu.openanalytics.phaedra.ui.protocol.provider.IFeatureProvider;
 
 public class HitCallLayer extends PlatesLayer {
 
 	private Plate plate;
 	private Feature currentFeature;
-	private HitCallRuleset currentRuleset;
+	private FormulaRuleset currentRuleset;
 	
 	@Override
 	public String getName() {
@@ -47,7 +49,7 @@ public class HitCallLayer extends PlatesLayer {
 		Feature feature = provider.getCurrentFeature();
 		if (!feature.equals(currentFeature)) {
 			currentFeature = feature;
-			currentRuleset = HitCallService.getInstance().getRulesetForFeature(currentFeature.getId());
+			currentRuleset = FormulaService.getInstance().getRulesetForFeature(currentFeature.getId(), RulesetType.HitCalling.getCode());
 		}
 	}
 	
@@ -66,7 +68,7 @@ public class HitCallLayer extends PlatesLayer {
 			
 			double hitValue = hits[wellNr - 1];
 			if (!Double.isNaN(hitValue) && hitValue > 0) {
-				HitCallRenderStyle style = HitCallRenderStyle.getByCode(currentRuleset.getStyle());
+				RulesetRenderStyle style = RulesetRenderStyle.getByCode(currentRuleset.getStyle());
 				gc.setForeground(ColorCache.get(currentRuleset.getColor()));
 				gc.setLineWidth(2);
 				style.renderImage(gc, x+(w/2), y+(h/2), w/4);
