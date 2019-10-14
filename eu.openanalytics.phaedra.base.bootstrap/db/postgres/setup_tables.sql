@@ -1700,3 +1700,159 @@ alter table phaedra.hca_object_property
 
 grant insert, update, delete on phaedra.hca_object_property to :accountNameWrite;
 grant select on phaedra.hca_object_property to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_calculation_formula (
+	formula_id 			bigint not null,
+	formula_name		text not null,
+	description			text,
+	category			text,
+	author				text,
+	formula				text,
+	language			text,
+	scope				integer,
+	input_type			integer
+);
+
+alter table phaedra.hca_calculation_formula
+	add constraint hca_calculation_formula_pk
+	primary key ( formula_id );
+
+create sequence phaedra.hca_calculation_formula_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+	
+grant insert, update, delete on phaedra.hca_calculation_formula to :accountNameWrite;
+grant select, usage on phaedra.hca_calculation_formula_s to :accountNameWrite;
+grant select on phaedra.hca_calculation_formula to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_formula_ruleset (
+	ruleset_id 			bigint not null,
+	feature_id			bigint not null,
+	type				integer not null,
+	show_in_ui			boolean not null default true,
+	color				integer,
+	style				integer
+);
+
+alter table phaedra.hca_formula_ruleset
+	add constraint hca_formula_ruleset_pk
+	primary key ( ruleset_id );
+
+alter table phaedra.hca_formula_ruleset
+	add constraint hca_formula_ruleset_fk_feature
+	foreign key (feature_id)
+	references phaedra.hca_feature(feature_id)
+	on delete cascade;
+	
+create sequence phaedra.hca_formula_ruleset_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+	
+grant insert, update, delete on phaedra.hca_formula_ruleset to :accountNameWrite;
+grant select, usage on phaedra.hca_formula_ruleset_s to :accountNameWrite;
+grant select on phaedra.hca_formula_ruleset to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+create table phaedra.hca_formula_rule (
+	rule_id 			bigint not null,
+	rule_name			text not null,
+	formula_id			bigint not null,
+	ruleset_id			bigint not null,
+	ruleset_sequence	integer not null,
+	threshold 			double precision
+);
+
+alter table phaedra.hca_formula_rule
+	add constraint hca_formula_rule_pk
+	primary key ( rule_id );
+
+alter table phaedra.hca_formula_rule
+	add constraint hca_formula_rule_fk_formula
+	foreign key (formula_id)
+	references phaedra.hca_calculation_formula(formula_id)
+	on delete cascade;
+	
+alter table phaedra.hca_formula_rule
+	add constraint hca_formula_rule_fk_ruleset
+	foreign key (ruleset_id)
+	references phaedra.hca_formula_ruleset(ruleset_id)
+	on delete cascade;
+	
+create sequence phaedra.hca_formula_rule_s
+	increment by 1
+	start with 1
+	maxvalue 9223372036854775807
+	no cycle;
+	
+grant insert, update, delete on phaedra.hca_formula_rule to :accountNameWrite;
+grant select, usage on phaedra.hca_formula_rule_s to :accountNameWrite;
+grant select on phaedra.hca_formula_rule to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_hit_call_value (
+	well_id 			bigint not null,
+	feature_id 			bigint not null,
+	hit_value 			double precision
+);
+
+ALTER TABLE phaedra.hca_hit_call_value
+	ADD CONSTRAINT hca_hit_call_value_pk
+	PRIMARY KEY (well_id, feature_id);
+
+ALTER TABLE phaedra.hca_hit_call_value
+	ADD CONSTRAINT hca_hit_call_value_fk_w
+	FOREIGN KEY (well_id)
+	REFERENCES phaedra.hca_plate_well (well_id)
+	ON DELETE CASCADE;
+
+ALTER TABLE phaedra.hca_hit_call_value
+	ADD CONSTRAINT hca_hit_call_value_fk_f
+	FOREIGN KEY (feature_id)
+	REFERENCES phaedra.hca_feature (feature_id)
+	ON DELETE CASCADE;
+
+CREATE INDEX hca_hit_call_value_ix1
+	ON phaedra.hca_hit_call_value(feature_id);
+	
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_hit_call_value to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_hit_call_value to :accountNameRead;
+
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE phaedra.hca_outlier_detection_value (
+	well_id 			bigint not null,
+	feature_id 			bigint not null,
+	outlier_value		double precision
+);
+
+ALTER TABLE phaedra.hca_outlier_detection_value
+	ADD CONSTRAINT hca_outlier_detection_value_pk
+	PRIMARY KEY (well_id, feature_id);
+
+ALTER TABLE phaedra.hca_outlier_detection_value
+	ADD CONSTRAINT hca_outlier_detection_value_fk_w
+	FOREIGN KEY (well_id)
+	REFERENCES phaedra.hca_plate_well (well_id)
+	ON DELETE CASCADE;
+
+ALTER TABLE phaedra.hca_outlier_detection_value
+	ADD CONSTRAINT hca_outlier_detection_value_fk_f
+	FOREIGN KEY (feature_id)
+	REFERENCES phaedra.hca_feature (feature_id)
+	ON DELETE CASCADE;
+
+CREATE INDEX hca_outlier_detection_value_ix1
+	ON phaedra.hca_outlier_detection_value(feature_id);
+	
+GRANT INSERT, UPDATE, DELETE ON phaedra.hca_outlier_detection_value to :accountNameWrite;
+GRANT SELECT ON phaedra.hca_outlier_detection_value to :accountNameRead;
