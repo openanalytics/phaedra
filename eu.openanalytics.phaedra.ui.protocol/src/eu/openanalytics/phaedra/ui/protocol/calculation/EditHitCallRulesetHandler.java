@@ -18,7 +18,6 @@ import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
 import eu.openanalytics.phaedra.calculation.hitcall.model.HitCallRuleset;
 import eu.openanalytics.phaedra.ui.protocol.Activator;
 
-// Java.type("eu.openanalytics.phaedra.ui.protocol.calculation.EditHitCallRulesetHandler").execute(API.get("HitCallService").getRuleset(3))
 public class EditHitCallRulesetHandler extends AbstractHandler {
 	
 	@Override

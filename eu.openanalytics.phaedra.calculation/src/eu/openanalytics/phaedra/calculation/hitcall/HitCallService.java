@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.calculation.hitcall;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
+import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class HitCallService extends BaseJPAService {
@@ -176,7 +178,9 @@ public class HitCallService extends BaseJPAService {
 			if (rule.getFormula() == null) throw new CalculationException(String.format("Cannot perform hit calling: rule %s has no formula", rule.getName()));
 			
 			Map<String, Object> params = new HashMap<>();
-			params.put("threshold", rule.getThreshold());
+			double threshold = getCustomThreshold(plate, rule);
+			if (Double.isNaN(threshold)) threshold = rule.getThreshold();
+			params.put("threshold", threshold);
 			
 			double[] ruleHitValues = FormulaService.getInstance().evaluateFormula(plate, feature, rule.getFormula(), params);
 			
@@ -201,6 +205,27 @@ public class HitCallService extends BaseJPAService {
 		return hitValues;
 	}
 
+	public double getCustomThreshold(Plate plate, HitCallRule rule) {
+		String propKey = "hc-th-rule#" + rule.getId();
+		float customThreshold = ObjectPropertyService.getInstance().getNumericValue(Plate.class.getName(), plate.getId(), propKey);
+		return customThreshold;
+	}
+	
+	public void saveCustomThresholds(List<Plate> plates, HitCallRule rule, double threshold) {
+		for (Plate plate: plates) SecurityService.getInstance().checkWithException(Permissions.PLATE_EDIT, plate);
+		
+		long[] plateIds = plates.stream().mapToLong(p -> p.getId()).toArray();
+		String propKey = "hc-th-rule#" + rule.getId();
+		
+		if (rule.getThreshold() == threshold) {
+			ObjectPropertyService.getInstance().deleteValues(Plate.class.getName(), plateIds, propKey);
+		} else {
+			float[] thresholds = new float[plates.size()];
+			Arrays.fill(thresholds, (float) threshold);
+			ObjectPropertyService.getInstance().setValues(Plate.class.getName(), plateIds, propKey, thresholds);
+		}
+	}
+	
 	public double[] getHitValues(Plate plate, Feature feature) {
 		CacheKey key = createCacheKey(plate, feature);
 		if (hitValueCache.contains(key)) return (double[]) hitValueCache.get(key);
@@ -224,7 +249,7 @@ public class HitCallService extends BaseJPAService {
 	
 	private double[] sortValues(double[] hitValues, Plate plate) {
 		// hitValues are sorted by wellId. Return an array sorted by wellNr instead.
-		Well[] wells = streamableList(plate.getWells()).stream().sorted((w1, w2) -> (int)(w2.getId() - w1.getId())).toArray(i -> new Well[i]);
+		Well[] wells = streamableList(plate.getWells()).stream().sorted((w1, w2) -> (int)(w1.getId() - w2.getId())).toArray(i -> new Well[i]);
 		double[] sortedValues = new double[hitValues.length];
 		for (int i = 0; i < sortedValues.length; i++) {
 			int wellNr = PlateUtils.getWellNr(wells[i]);

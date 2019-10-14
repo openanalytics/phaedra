@@ -193,6 +193,11 @@
              id="eu.openanalytics.phaedra.ui.plate.cmd.RunScript"
              name="Run Script">
        </command>
+       <command
+             defaultHandler="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+             id="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+             name="Run Hit Calling">
+       </command>
    </extension>
    <extension
          point="org.eclipse.ui.menus">
@@ -627,6 +632,17 @@
                </reference>
             </visibleWhen>
          </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="activeSelection.Experiment">
+               </reference>
+            </visibleWhen>
+         </command>
          <separator
                name="eu.openanalytics.phaedra.ui.plate.separator2"
                visible="true">
@@ -818,6 +834,17 @@
                </reference>
             </visibleWhen>
          </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="activeSelection.Plate">
+               </reference>
+            </visibleWhen>
+         </command>
          <separator
                name="eu.openanalytics.phaedra.ui.plate.separator7"
                visible="true">
@@ -918,6 +945,17 @@
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.RecalculatePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate.png"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="activeSelection.Well">
+               </reference>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
                style="push">
             <visibleWhen
                   checkEnabled="false">
@@ -1069,6 +1107,17 @@
                </reference>
             </visibleWhen>
          </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="activeSelection.Plate">
+               </reference>
+            </visibleWhen>
+         </command>
          <separator
                name="eu.openanalytics.phaedra.ui.plate.separator7"
                visible="true">
@@ -1164,6 +1213,17 @@
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.RecalculatePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate.png"
+               style="push">
+            <visibleWhen
+                  checkEnabled="false">
+               <reference
+                     definitionId="activeSelection.Well">
+               </reference>
+            </visibleWhen>
+         </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
+               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
                style="push">
             <visibleWhen
                   checkEnabled="false">
