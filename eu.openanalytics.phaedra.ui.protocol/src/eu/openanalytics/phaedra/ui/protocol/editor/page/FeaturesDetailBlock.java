@@ -53,6 +53,8 @@ import eu.openanalytics.phaedra.base.ui.util.misc.FormulaDisplay;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
+import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.calculation.norm.INormalizer;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
@@ -65,6 +67,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.calculation.RulesetEditor;
+import eu.openanalytics.phaedra.ui.protocol.calculation.SelectFormulaDialog;
 import eu.openanalytics.phaedra.ui.protocol.dialog.ManageGroupsDialog;
 import eu.openanalytics.phaedra.ui.protocol.util.ClassificationTableFactory;
 import eu.openanalytics.phaedra.ui.protocol.util.ColorMethodFactory;
@@ -92,7 +95,12 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	private Button checkAnnotation;
 	private Button checkExport;
 
-	private Text textCalcFormula;
+	private Button predefinedCalcBtn;
+	private Text calcFormulaNameTxt;
+	private Button selectCalcFormulaBtn;
+	private Button customCalcBtn;
+	private Text calcFormulaTxt;
+	private Button editCalcFormulaBtn;
 	private CCombo comboFormulaLanguage;
 	private CCombo comboFormulaTrigger;
 	private Spinner spinnerSeq;
@@ -261,7 +269,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		 */
 
 		final Section section_1 = toolkit.createSection(parent, Section.TITLE_BAR | Section.DESCRIPTION | Section.TWISTIE);
-		section_1.setDescription("To turn this feature into a Calculated Feature, enter a formula below:");
+		section_1.setDescription("To turn this feature into a Calculated Feature, select or enter a formula below:");
 		section_1.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		section_1.setText("Calculation");
 
@@ -282,51 +290,93 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		toolkit.paintBordersFor(compositeFormula);
 		section_1.setClient(compositeFormula);
 
-		Label formulaLabel = toolkit.createLabel(compositeFormula, "Formula:", SWT.NONE);
-		GridDataFactory.fillDefaults().hint(70, SWT.DEFAULT).align(SWT.BEGINNING, SWT.BEGINNING).applyTo(formulaLabel);
+		predefinedCalcBtn = toolkit.createButton(compositeFormula, "Predefined formula:", SWT.RADIO);
+		predefinedCalcBtn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				toggleCalculationButtons(!predefinedCalcBtn.getSelection());
+			}
+		});
+		
+		calcFormulaNameTxt = toolkit.createText(compositeFormula, null);
+		calcFormulaNameTxt.setEditable(false);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(calcFormulaNameTxt);
+		
+		new Label(compositeFormula, SWT.NONE);
+		selectCalcFormulaBtn = toolkit.createButton(compositeFormula, "Select formula...", SWT.PUSH);
+		selectCalcFormulaBtn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				CalculationFormula formula = SelectFormulaDialog.openNew();
+				if (formula != null) {
+					toggleCalculationButtons(false);
+					calcFormulaNameTxt.setText(formula.getName());
+					feature.setCalculationFormulaId(formula.getId());
+					dirtyListener.handleEvent(null);
+					master.refreshViewer();
+				}
+			}
+		});
+		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).hint(100, SWT.DEFAULT).applyTo(selectCalcFormulaBtn);
 
-		textCalcFormula = toolkit.createText(compositeFormula, null, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).hint(SWT.DEFAULT, 60).applyTo(textCalcFormula);
+		customCalcBtn = toolkit.createButton(compositeFormula, "Custom formula:", SWT.RADIO);
+		customCalcBtn.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				toggleCalculationButtons(customCalcBtn.getSelection());
+			}
+		});
+		customCalcBtn.setLayoutData(new GridData(140, SWT.DEFAULT));
+		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(customCalcBtn);
+		
+		calcFormulaTxt = toolkit.createText(compositeFormula, null, SWT.WRAP | SWT.V_SCROLL | SWT.MULTI);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).hint(SWT.DEFAULT, 60).applyTo(calcFormulaTxt);
 
 		new Label(compositeFormula, SWT.NONE);
-		Button editBtn = new Button(compositeFormula, SWT.PUSH);
-		editBtn.setText("Edit expression...");
-		editBtn.addSelectionListener(new SelectionAdapter() {
+		editCalcFormulaBtn = new Button(compositeFormula, SWT.PUSH);
+		editCalcFormulaBtn.setText("Edit formula...");
+		editCalcFormulaBtn.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				CalculationLanguage lang = CalculationLanguage.getLanguages()[comboFormulaLanguage.getSelectionIndex()];
 				Shell shell = Display.getDefault().getActiveShell();
-				String newFormula = lang.openEditor(shell, textCalcFormula.getText(), feature.getProtocolClass());
-				if (newFormula != null) textCalcFormula.setText(newFormula);
+				String newFormula = lang.openEditor(shell, calcFormulaTxt.getText(), feature.getProtocolClass());
+				if (newFormula != null) calcFormulaTxt.setText(newFormula);
 				master.refreshViewer();
 			}
 		});
-		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).applyTo(editBtn);
+		GridDataFactory.fillDefaults().align(SWT.BEGINNING, SWT.BEGINNING).hint(100, SWT.DEFAULT).applyTo(editCalcFormulaBtn);
 		
-		toolkit.createLabel(compositeFormula, "Language:", SWT.NONE);
-
+		new Label(compositeFormula, SWT.NONE);
+		Composite comp = toolkit.createComposite(compositeFormula, SWT.NONE);
+		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(comp);
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(comp);
+		
+		toolkit.createLabel(comp, "Language:", SWT.NONE);
 		String[] languageNames = Arrays.stream(CalculationLanguage.getLanguages()).map(l -> l.getLabel()).toArray(i -> new String[i]);
-		comboFormulaLanguage = new CCombo(compositeFormula, SWT.READ_ONLY);
-		comboFormulaLanguage.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
+		comboFormulaLanguage = new CCombo(comp, SWT.READ_ONLY | SWT.BORDER);
 		comboFormulaLanguage.setItems(languageNames);
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(comboFormulaLanguage);
 
+		lineSep = toolkit.createCompositeSeparator(compositeFormula);
+		GridDataFactory.fillDefaults().grab(true, false).span(2, 1).hint(SWT.DEFAULT, 1).applyTo(lineSep);
+		
 		toolkit.createLabel(compositeFormula, "Calculation:", SWT.NONE);
-
 		String[] triggerNames = Arrays.stream(CalculationTrigger.values()).map(t -> t.getLabel()).toArray(i -> new String[i]);
 		comboFormulaTrigger = new CCombo(compositeFormula, SWT.READ_ONLY);
-		comboFormulaTrigger.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		comboFormulaTrigger.setItems(triggerNames);
-
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(comboFormulaTrigger);
+		
 		Label sequenceLabel = toolkit.createLabel(compositeFormula, "Sequence:", SWT.NONE);
 		sequenceLabel.setLayoutData(new GridData(110, SWT.DEFAULT));
 
 		spinnerSeq = new Spinner(compositeFormula, SWT.BORDER | SWT.FILL);
-		spinnerSeq.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
 		spinnerSeq.setMinimum(0);
 		spinnerSeq.setMaximum(Integer.MAX_VALUE);
 		spinnerSeq.setIncrement(1);
 		spinnerSeq.setPageIncrement(100);
-
+		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).applyTo(spinnerSeq);
+		
 		/*
 		 * Section: Outlier Detection
 		 * **************************
@@ -667,7 +717,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		checkNumeric.addSelectionListener(dirtySelectionListener);
 		checkClassificationRestricted.addSelectionListener(dirtySelectionListener);
 		
-		textCalcFormula.addKeyListener(dirtyKeyListener);
+		calcFormulaTxt.addKeyListener(dirtyKeyListener);
 		comboFormulaLanguage.addSelectionListener(dirtySelectionListener);
 		comboFormulaTrigger.addSelectionListener(dirtySelectionListener);
 		spinnerSeq.addSelectionListener(dirtySelectionListener);
@@ -741,6 +791,10 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		fillOutlierDetectionSection();
 		fillHitCallSection();
 		setActiveColorMethod();
+		
+		boolean isCustomCalc = feature.getCalculationFormulaId() <= 0;
+		toggleCalculationButtons(isCustomCalc);
+		updateFormulaName();
 		
 		boolean isCustomNorm = NormalizationService.NORMALIZATION_CUSTOM.equals(feature.getNormalization());
 		toggleNormalizationButtons(isCustomNorm);
@@ -836,6 +890,31 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		comboHighType.setItems(welltypes);
 	}
 
+	private void toggleCalculationButtons(boolean isCustomFormula) {
+		predefinedCalcBtn.setSelection(!isCustomFormula);
+		calcFormulaNameTxt.setEnabled(!isCustomFormula);
+		selectCalcFormulaBtn.setEnabled(!isCustomFormula);
+		
+		customCalcBtn.setSelection(isCustomFormula);
+		calcFormulaTxt.setEnabled(isCustomFormula);
+		editCalcFormulaBtn.setEnabled(isCustomFormula);
+		comboFormulaLanguage.setEnabled(isCustomFormula);
+		
+		if (isCustomFormula && feature.getCalculationFormulaId() > 0) {
+			feature.setCalculationFormulaId(0);
+			dirtyListener.handleEvent(null);
+			updateFormulaName();
+		}
+	}
+	
+	private void updateFormulaName() {
+		CalculationFormula formula = null;
+		if (feature != null && feature.getCalculationFormulaId() > 0) formula = FormulaService.getInstance().getFormula(feature.getCalculationFormulaId());
+		if (formula == null) calcFormulaNameTxt.setText("");
+		else calcFormulaNameTxt.setText(formula.getName());
+		master.refreshViewer();
+	}
+	
 	private void fillNormalizationScopeCombo() {
 		NormalizationScope[] scopes = NormalizationScope.values();
 		String[] scopeNames = new String[scopes.length];
@@ -885,7 +964,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		FormEditorUtils.bindText(textDescription, feature, "description", ctx);
 		FormEditorUtils.bindSelection(comboFormatString, feature, "formatString", ctx);
 
-		FormEditorUtils.bindText(textCalcFormula, feature, "calculationFormula", ctx);
+		FormEditorUtils.bindText(calcFormulaTxt, feature, "calculationFormula", ctx);
 		FormEditorUtils.bindSelection(spinnerSeq, feature, "calculationSequence", ctx);
 
 		FormEditorUtils.bindSelection(comboNormalization, feature, "normalization", ctx);

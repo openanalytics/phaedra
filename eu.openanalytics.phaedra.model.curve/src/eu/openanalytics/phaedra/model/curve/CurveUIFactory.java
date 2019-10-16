@@ -164,7 +164,6 @@ public class CurveUIFactory {
 							GridDataFactory.fillDefaults().grab(true, false).applyTo(cmb);
 							cmb.setItems(allowedValues);
 							
-							if (dirtyListener != null) cmb.addModifyListener(event -> dirtyListener.handleEvent(null));
 							if (bindingCtx != null) {
 								UpdateValueStrategy targetToModel = new UpdateValueStrategy();
 								if (param.valueRestriction instanceof IValidator) {
@@ -181,13 +180,13 @@ public class CurveUIFactory {
 								cmb.select(cmb.indexOf(CurveParameter.getValueAsString(value)));
 								cmb.addModifyListener(event -> CurveParameter.setValueFromString(value, cmb.getText()));
 							}
+							if (dirtyListener != null) cmb.addModifyListener(event -> dirtyListener.handleEvent(null));
 							cmb.requestLayout();
 						}
 						else { // text field
 							Text txt = new Text(additionParamCmp, SWT.BORDER);
 							GridDataFactory.fillDefaults().grab(true, false).applyTo(txt);
 							
-							if (dirtyListener != null) txt.addModifyListener(event -> dirtyListener.handleEvent(null));
 							if (bindingCtx != null) {
 								UpdateValueStrategy targetToModel = new UpdateValueStrategy();
 								if (param.valueRestriction instanceof IValidator) {
@@ -211,6 +210,7 @@ public class CurveUIFactory {
 								if (s != null) txt.setText(s);
 								txt.addModifyListener(event -> CurveParameter.setValueFromString(value, txt.getText()));
 							}
+							if (dirtyListener != null) txt.addModifyListener(event -> dirtyListener.handleEvent(null));
 							txt.requestLayout();
 						}
 					}

@@ -108,6 +108,7 @@ public class ObjectCopyFactory {
 	public static void copySettings(Feature from, Feature to, boolean copyIds) {
 		if (copyIds) to.setId(from.getId());
 		to.setCalculationFormula(from.getCalculationFormula());
+		to.setCalculationFormulaId(from.getCalculationFormulaId());
 		to.setCalculationLanguage(from.getCalculationLanguage());
 		to.setCalculationTrigger(from.getCalculationTrigger());
 		to.setCalculationSequence(from.getCalculationSequence());

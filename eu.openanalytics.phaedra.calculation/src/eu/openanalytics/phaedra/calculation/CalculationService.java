@@ -27,6 +27,7 @@ import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
+import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.FormulaRuleset;
 import eu.openanalytics.phaedra.calculation.formula.model.RulesetType;
 import eu.openanalytics.phaedra.calculation.hitcall.HitCallService;
@@ -286,15 +287,22 @@ public class CalculationService {
 		return MultiploMethod.get(exp) != MultiploMethod.None;
 	}
 	
+	// Note: should only be called from PlateDataAccessor so values can be cached.
 	/* package */ List<FeatureValue> runCalculatedFeature(Feature f, Plate p) {
-		// Note: should only be called from PlateDataAccessor so values can be cached.
 
 		if (f == null || !f.isCalculated()) {
 			throw new CalculationException("Feature " + f + " is not a calculated feature");
 		}
 
-		String formula = f.getCalculationFormula();
-		if (formula == null) {
+		CalculationFormula formula = null;
+		long formulaId = f.getCalculationFormulaId();
+		if (formulaId > 0) {
+			formula = FormulaService.getInstance().getFormula(formulaId);
+			FormulaService.getInstance().validateFormula(formula);
+		}
+		String customFormula = f.getCalculationFormula();
+		
+		if (formula == null && customFormula == null) {
 			throw new CalculationException("Cannot calculate: feature " + f + " has no formula");
 		}
 
@@ -304,35 +312,49 @@ public class CalculationService {
 			return results;
 		}
 
-		// Prevents JPA lazy & concurrency issues.
-		List<Well> wells = new ArrayList<Well>(p.getWells());
-		wells.stream().forEach(well -> well.getAdapter(ProtocolClass.class));
-		PlateDataAccessor accessor = getAccessor(p);
-		CalculationLanguage lang = CalculationLanguage.get(f.getCalculationLanguage());
-
-		wells.parallelStream().forEach(well -> {
-			Double numericResult = null;
-			try {
-				String result = lang.eval(formula, accessor, well, f);
-				numericResult = Double.parseDouble(result);
-			} catch (ScriptException | CalculationException | NumberFormatException e) {
-				numericResult = Double.NaN;
+		double[] calcValues = null;
+		
+		if (formula != null) {
+			calcValues = FormulaService.getInstance().evaluateFormula(p, f, formula);
+			for (int i = 0; i < calcValues.length; i++) {
+				FeatureValue calculatedValue = new FeatureValue();
+				calculatedValue.setFeature(f);
+				calculatedValue.setWell(PlateUtils.getWell(p, i + 1));
+				calculatedValue.setRawNumericValue(calcValues[i]);
+				results.add(calculatedValue);
 			}
+		} else if (customFormula != null) {
+			// Prevents JPA lazy & concurrency issues.
+			List<Well> wells = new ArrayList<Well>(p.getWells());
+			wells.stream().forEach(well -> well.getAdapter(ProtocolClass.class));
+			PlateDataAccessor accessor = getAccessor(p);
+			CalculationLanguage lang = CalculationLanguage.get(f.getCalculationLanguage());
 
-			FeatureValue calculatedValue = new FeatureValue();
-			calculatedValue.setFeature(f);
-			calculatedValue.setWell(well);
-			calculatedValue.setRawNumericValue(numericResult);
-			results.add(calculatedValue);
-		});
+			wells.parallelStream().forEach(well -> {
+				Double numericResult = null;
+				try {
+					String result = lang.eval(customFormula, accessor, well, f);
+					numericResult = Double.parseDouble(result);
+				} catch (ScriptException | CalculationException | NumberFormatException e) {
+					numericResult = Double.NaN;
+				}
 
-		double[] calcValues = new double[results.size()];
-		for (FeatureValue r: results) {
-			calcValues[PlateUtils.getWellNr(r.getWell())-1] = r.getRawNumericValue();
+				FeatureValue calculatedValue = new FeatureValue();
+				calculatedValue.setFeature(f);
+				calculatedValue.setWell(well);
+				calculatedValue.setRawNumericValue(numericResult);
+				results.add(calculatedValue);
+			});
+			
+			calcValues = new double[results.size()];
+			for (FeatureValue r: results) {
+				calcValues[PlateUtils.getWellNr(r.getWell())-1] = r.getRawNumericValue();
+			}
 		}
+
 		// Save the newly calculated values to the database.
 		PlateService.getInstance().updateWellDataRaw(p, f, calcValues);
-
+		
 		return results;
 	}
 

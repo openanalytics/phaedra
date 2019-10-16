@@ -86,7 +86,7 @@ public class FormulaService extends BaseJPAService {
 	}
 	
 	public String[] getFormulaCategories(boolean includeCategoryAll) {
-		List<String> categories = streamableList(getList("select c.category from CalculationFormula c where c.category is not null", String.class));
+		List<String> categories = streamableList(getList("select distinct c.category from CalculationFormula c where c.category is not null", String.class));
 		if (includeCategoryAll) categories.add(CATEGORY_ALL);
 		return categories.stream().sorted().toArray(i -> new String[i]);
 	}

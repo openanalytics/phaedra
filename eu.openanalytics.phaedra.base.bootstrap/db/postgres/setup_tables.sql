@@ -433,7 +433,6 @@ CREATE TABLE phaedra.hca_feature (
 	is_uploaded 			boolean default false,
 	is_annotation 			boolean default false,
 	is_classification_restricted boolean default false,
-	calc_formula			varchar(2000),
 	curve_normalization		varchar(25) default 'NONE',
 	normalization_language	varchar(30),
 	normalization_formula	varchar(2000),
@@ -442,7 +441,9 @@ CREATE TABLE phaedra.hca_feature (
 	format_string			varchar(25),
 	low_welltype			varchar(10),
 	high_welltype			varchar(10),
+	calc_formula			varchar(2000),
 	calc_language			varchar(30),
+	calc_formula_id			bigint,
 	calc_trigger			varchar(30),
 	calc_sequence			integer
 )

@@ -77,6 +77,8 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 
 	@Column(name="calc_formula")
 	private String calculationFormula;
+	@Column(name="calc_formula_id")
+	private long calculationFormulaId;
 	@Column(name="calc_language")
 	private String calculationLanguage;
 	@Column(name="calc_trigger")
@@ -157,7 +159,7 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 	}
 
 	public boolean isCalculated() {
-		return calculationFormula != null && !calculationFormula.isEmpty();
+		return calculationFormulaId > 0 || (calculationFormula != null && !calculationFormula.isEmpty());
 	}
 
 	public String getCalculationFormula() {
@@ -168,6 +170,14 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 		this.calculationFormula = calculationFormula;
 	}
 
+	public long getCalculationFormulaId() {
+		return calculationFormulaId;
+	}
+	
+	public void setCalculationFormulaId(long calculationFormulaId) {
+		this.calculationFormulaId = calculationFormulaId;
+	}
+	
 	public String getCalculationLanguage() {
 		return calculationLanguage;
 	}
