@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.r.rservi;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -47,6 +48,8 @@ public class RUtils {
 			return makeNumericRVector(copy);
 		} else if (value instanceof int[]) {
 			return makeIntegerRVector((int[]) value);
+		} else if (value instanceof long[]) {
+			return makeNumericRVector(Arrays.stream((long[]) value).mapToDouble(l -> l).toArray());
 		} else if (value instanceof Object[]) {
 			Object[] v = (Object[]) value;
 			RObject[] rV = new RObject[v.length];

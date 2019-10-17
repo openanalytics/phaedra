@@ -2,8 +2,10 @@ package eu.openanalytics.phaedra.calculation.formula.language;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
+import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.formula.FormulaUtils;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
@@ -12,6 +14,8 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 
 public class JavaScriptLanguage extends BaseLanguage {
@@ -44,6 +48,15 @@ public class JavaScriptLanguage extends BaseLanguage {
 	protected Map<String, Object> buildContext(CalculationFormula formula, IValueObject inputValue, IFeature feature) {
 		Map<String, Object> context = super.buildContext(formula, inputValue, feature);
 		context.put("feature", feature);
+		
+		context.put("getValue", new BiFunction<Well, String, Double>() {
+			@Override
+			public Double apply(Well w, String featureName) {
+				Feature f = ProtocolUtils.getFeatureByName(featureName, ProtocolUtils.getProtocolClass(w));
+				if (f == null) return Double.NaN;
+				return CalculationService.getInstance().getAccessor(w.getPlate()).getNumericValue(w, f, null);
+			}
+		});
 		
 		InputType type = FormulaUtils.getInputType(formula);
 		if (inputValue instanceof Well) {
