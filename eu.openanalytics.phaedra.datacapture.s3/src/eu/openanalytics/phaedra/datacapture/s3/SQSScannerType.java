@@ -1,12 +1,17 @@
 package eu.openanalytics.phaedra.datacapture.s3;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -16,6 +21,8 @@ import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import eu.openanalytics.phaedra.base.environment.IEnvironment;
 import eu.openanalytics.phaedra.base.environment.Screening;
@@ -35,7 +42,8 @@ import eu.openanalytics.phaedra.datacapture.scanner.model.ScanJob;
 
 public class SQSScannerType extends BaseScannerType {
 
-	private static final Pattern s3PathPattern = Pattern.compile("s3:\\/\\/([^\\/]+)\\/(.*)");
+	private static final Pattern S3_URL_PATTERN = Pattern.compile("s3:\\/\\/([^\\/]+)\\/(.*)");
+	private static final Gson GSON = new GsonBuilder().create();
 	
 	@Override
 	public void run(ScanJob scanJob, IProgressMonitor monitor) throws ScanException {
@@ -44,7 +52,7 @@ public class SQSScannerType extends BaseScannerType {
 		monitor.subTask("Reading config");
 		ScannerConfig cfg = null;
 		try {
-			cfg = parse(scanJob.getConfig());
+			cfg = parseConfig(scanJob.getConfig());
 		} catch (IOException e) {
 			throw new ScanException("Failed to parse scan job configuration", e);
 		}
@@ -78,27 +86,25 @@ public class SQSScannerType extends BaseScannerType {
 		monitor.done();
 	}
 	
-	private boolean canProcess(Message msg, ScannerConfig cfg) {
-		//TODO Perform additional checks on the message contents
-		return s3PathPattern.matcher(msg.getBody()).matches();
+ 	private boolean canProcess(Message msg, ScannerConfig cfg) {
+ 		MessageBody body = parseMessage(msg);
+ 		return (body != null && body.url != null);
 	}
 	
 	private void submitTask(Message msg, ScannerConfig cfg) throws ScanException {
-		//TODO Allow s3 path to be specified in attributes or structured body
-		String sourcePath = msg.getBody();
-		Matcher match = s3PathPattern.matcher(sourcePath);
+		MessageBody body = parseMessage(msg);
+		
+		Matcher match = S3_URL_PATTERN.matcher(body.url);
 		String s3Bucket = null;
 		String s3Path = null;
 		if (match.matches()) {
 			s3Bucket = match.group(1);
 			s3Path = match.group(2);
 		} else {
-			throw new ScanException("Invalid message body: " + sourcePath);
+			throw new ScanException("Invalid S3 URL: " + body.url);
 		}
 		
-		DataCaptureTask task = DataCaptureService.getInstance().createTask(sourcePath, cfg.protocolId);
-		if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
-		
+		DataCaptureTask task = createTask(body, cfg);
 		try {
 			ModuleConfig modCfg = new ModuleConfig();
 			modCfg.setType("ScriptedModule");
@@ -124,8 +130,47 @@ public class SQSScannerType extends BaseScannerType {
 			throw new ScanException("Failed to prepare datacapture task", e);
 		}
 	}
+	
+	private MessageBody parseMessage(Message msg) {
+		MessageBody body = null;
+		
+		Matcher m = S3_URL_PATTERN.matcher(msg.getBody());
+		if (m.matches()) {
+			body = new MessageBody();
+			body.url = msg.getBody();
+		} else {
+			try {
+				body = GSON.fromJson(msg.getBody(), MessageBody.class);
+			} catch (Exception e) {
+				// The body is not valid JSON. Null will be returned.
+			}
+		}
+		
+		return body;
+	}
+	
+	private DataCaptureTask createTask(MessageBody msg, ScannerConfig cfg) throws ScanException {
+		long protocolId = msg.protocolId;
+		if (protocolId == 0) protocolId = cfg.protocolId;
+		if (protocolId == 0) {
+			for (Entry<String, Long> entry: cfg.keyMappings.entrySet()) {
+				if (Pattern.matches(entry.getKey(), msg.url)) {
+					protocolId = entry.getValue();
+					break;
+				}
+			}
+		}
+		
+		if (protocolId == 0) throw new ScanException("Cannot create datacapture task: no target protocol specified");
+		DataCaptureTask task = DataCaptureService.getInstance().createTask(msg.url, cfg.protocolId);
+		
+		if (msg.captureConfig != null) task.setConfigId(msg.captureConfig);
+		else if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
+		
+		return task;
+	}
 
-	private ScannerConfig parse(String config) throws IOException {
+	private ScannerConfig parseConfig(String config) throws IOException {
 		ScannerConfig cfg = new ScannerConfig();
 		Document doc = XmlUtils.parse(config);
 		cfg.queue = getConfigValue(doc, "/config/queue", null);
@@ -134,13 +179,28 @@ public class SQSScannerType extends BaseScannerType {
 		cfg.createMissingSubWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingSubWellFeatures", "false"));
 		cfg.captureConfig = getConfigValue(doc, "/config/captureConfig", null);
 		cfg.protocolId = Long.valueOf(getConfigValue(doc, "/config/protocolId", "0"));
-		cfg.s3KeyPattern = getConfigValue(doc, "/config/s3KeyPattern", null);
 		cfg.downloadScriptId = getConfigValue(doc, "/config/downloadScriptId", "download.s3.files");
+		cfg.s3KeyPattern = getConfigValue(doc, "/config/s3KeyPattern", null);
+		
+		NodeList mappingTags = XmlUtils.findTags("/config/mappings/mapping", doc);
+		for (int i=0; i < mappingTags.getLength(); i++) {
+			Element mappingTag = (Element) mappingTags.item(i);
+			String pattern = XmlUtils.getNodeByName(mappingTag, "pattern").getNodeValue();
+			Long protocolId = Long.valueOf(XmlUtils.getNodeByName(mappingTag, "protocol").getNodeValue());
+			cfg.keyMappings.put(pattern, protocolId);
+		}
+		
 		return cfg;
 	}
 	
 	private String getConfigValue(Document doc, String xpath, String defaultValue) {
 		return Optional.ofNullable(XmlUtils.findString(xpath, doc)).filter(s -> (s != null && !s.isEmpty())).orElse(defaultValue);
+	}
+	
+	private static class MessageBody {
+		public String url;
+		public String captureConfig;
+		public long protocolId;
 	}
 	
 	private static class ScannerConfig {
@@ -150,9 +210,12 @@ public class SQSScannerType extends BaseScannerType {
 		public boolean createMissingWellFeatures;
 		public boolean createMissingSubWellFeatures;
 		
+		public String downloadScriptId;
+		public String s3KeyPattern;
+
 		public String captureConfig;
 		public long protocolId;
-		public String s3KeyPattern;
-		public String downloadScriptId;
+		
+		public Map<String, Long> keyMappings = new HashMap<>();
 	}
 }

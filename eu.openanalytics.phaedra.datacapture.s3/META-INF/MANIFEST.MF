@@ -7,6 +7,7 @@ Bundle-Activator: eu.openanalytics.phaedra.datacapture.s3.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
  com.amazon.aws;bundle-version="1.11.107",
+ com.google.gson;bundle-version="2.2.3",
  eu.openanalytics.phaedra.datacapture,
  eu.openanalytics.phaedra.datacapture.scanner,
  eu.openanalytics.phaedra.base.util,
