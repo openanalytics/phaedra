@@ -17,6 +17,7 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 
 public abstract class BaseLanguage implements Language {
@@ -45,11 +46,15 @@ public abstract class BaseLanguage implements Language {
 		InputType type = FormulaUtils.getInputType(formula);
 		context.put("featureId", feature.getId());
 		
+		// Note: when used as a feature calc formula, raw values may not exist and trying to fetch them (using type.getInputValue())
+		// would trigger an endless loop.
+		boolean isFeatureCalcFormula = (feature instanceof Feature && ((Feature) feature).getCalculationFormulaId() == formula.getId());
+				
 		if (inputValue instanceof Well) {
 			Well well = (Well) inputValue;
 			context.put("plateId", well.getPlate().getId());
 			context.put("wellId", well.getId());
-			context.put("inputValue", type.getInputValue(well, feature));
+			context.put("inputValue", isFeatureCalcFormula ? Double.NaN : type.getInputValue(well, feature));
 		} else if (inputValue instanceof Plate) {
 			Plate plate = (Plate) inputValue;
 			context.put("plateId", plate.getId());
@@ -58,7 +63,7 @@ public abstract class BaseLanguage implements Language {
 					.sorted(PlateUtils.WELL_NR_SORTER)
 					.toArray(i -> new Well[i]);
 			long[] wellIds = Arrays.stream(wells).mapToLong(w -> w.getId()).toArray();
-			double[] inputValues = Arrays.stream(wells).mapToDouble(w -> type.getInputValue(w, feature)).toArray();
+			double[] inputValues = Arrays.stream(wells).mapToDouble(w -> isFeatureCalcFormula ? Double.NaN : type.getInputValue(w, feature)).toArray();
 			context.put("wellIds", wellIds);
 			context.put("inputValues", inputValues);
 		} else {
