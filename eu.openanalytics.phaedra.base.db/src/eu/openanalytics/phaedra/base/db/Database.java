@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.db;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -16,6 +17,7 @@ import eu.openanalytics.phaedra.base.db.jpa.LockingEntityManager;
 import eu.openanalytics.phaedra.base.db.jpa.PersistenceXMLClassLoader;
 import eu.openanalytics.phaedra.base.db.pool.ConnectionPoolManager;
 import eu.openanalytics.phaedra.base.db.prefs.Prefs;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
 /**
  * This class is the entry point for database connectivity.
@@ -26,6 +28,9 @@ public class Database {
 	private ConnectionPoolManager connectionPoolManager;
 	private EntityManagerFactory entityManagerFactory;
 	private EntityManager entityManager;
+	
+	private long entityManagerLastClear;
+	private long entityManagerClearInterval;
 	
 	public Database(DatabaseConfig cfg) {
 		JDBCUtils.checkDbType(cfg.get(DatabaseConfig.URL));
@@ -39,6 +44,9 @@ public class Database {
 		
 		entityManagerFactory = new PersistenceProvider().createEntityManagerFactory(PersistenceXMLClassLoader.MODEL_NAME, createJPAProperties(cfg));
 		entityManager = new LockingEntityManager(entityManagerFactory.createEntityManager());
+
+		entityManagerLastClear = System.currentTimeMillis();
+		entityManagerClearInterval = Long.parseLong(getProp(cfg, DatabaseConfig.JPA_CACHE_L1_CLEAR_INTERVAL, "-1"));
 		
 		PatchedEclipselinkService.getInstance().setEntityManagerLock(((LockingEntityManager)entityManager).getLock());
 	}
@@ -48,6 +56,21 @@ public class Database {
 	}
 	
 	public EntityManager getEntityManager() {
+		long now = System.currentTimeMillis();
+		// Careful! Do not use in client mode! A clear() call will detach ALL managed objects.
+		// When used in headless mode, make sure to lock the EntityManager to avoid clearing the cache while objects are in use.
+		if (entityManagerClearInterval > 0 && now - entityManagerLastClear > entityManagerClearInterval) {
+			Lock emLock = ((LockingEntityManager) entityManager).getLock();
+			if (emLock.tryLock()) {
+				try {
+					EclipseLog.debug("Clearing EntityManager L1 cache...", Database.class);
+					entityManager.clear();
+					entityManagerLastClear = now;
+				} finally {
+					emLock.unlock();
+				}
+			}
+		}
 		return entityManager;
 	}
 
@@ -76,10 +99,9 @@ public class Database {
 		properties.put(PersistenceUnitProperties.SESSION_CUSTOMIZER, JPASessionCustomizer.class.getName());
 		properties.put(JPASessionCustomizer.PROP_CONNECTION_POOL, connectionPoolManager);
 		
-		String logLevel = cfg.get(DatabaseConfig.JPA_LOG_LEVEL);
-		if (logLevel == null || logLevel.isEmpty()) logLevel = "severe";
-		
-		properties.put(PersistenceUnitProperties.LOGGING_LEVEL, logLevel);
+		properties.put(PersistenceUnitProperties.CACHE_SHARED_DEFAULT, getProp(cfg, DatabaseConfig.JPA_CACHE_L2_ENABLED, "true"));
+
+		properties.put(PersistenceUnitProperties.LOGGING_LEVEL, getProp(cfg, DatabaseConfig.JPA_LOG_LEVEL, "severe"));
 		properties.put(PersistenceUnitProperties.LOGGING_TIMESTAMP, "false");
 		properties.put(PersistenceUnitProperties.LOGGING_SESSION, "false");
 		properties.put(PersistenceUnitProperties.LOGGING_THREAD, "false");
@@ -87,5 +109,11 @@ public class Database {
 		JDBCUtils.customizeJPASettings(properties);
 		
 		return properties;
+	}
+	
+	private String getProp(DatabaseConfig cfg, String name, String defaultValue) {
+		String value = cfg.get(name);
+		if (value == null || value.trim().isEmpty()) value = defaultValue;
+		return value;
 	}
 }
