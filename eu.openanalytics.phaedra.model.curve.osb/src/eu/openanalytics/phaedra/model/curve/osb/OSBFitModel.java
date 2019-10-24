@@ -75,7 +75,6 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		new Definition(new ConcentrationLogPNamedValueDescription("pIC80", LogMolar)),
 		new Definition(new RealValueDescription("eMin")),
 		new Definition(new ConcentrationValueDescription("eMin Conc", LogMolar)),
-		new Definition(new RealValueDescription("eMean")),
 		new Definition(new RealValueDescription("eMax"), null, true, null, null),
 		new Definition(new ConcentrationValueDescription("eMax Conc", LogMolar), null, true, null, null),
 		new Definition(new RealValueDescription("Hill"), null, true, null, null),
@@ -279,12 +278,11 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			CurveParameter.find(outParams, "AIC").numericValue = RUtils.getDoubleFromList(results, "AIC", 3);
 			CurveParameter.find(outParams, "BIC").numericValue = RUtils.getDoubleFromList(results, "BIC", 3);
 
-			double[] eMinMeanMax = calculateEMinMeanMax(output, input);
-			CurveParameter.find(outParams, "eMin").numericValue = eMinMeanMax[0];
-			CurveParameter.find(outParams, "eMin Conc").numericValue = eMinMeanMax[1];
-			CurveParameter.find(outParams, "eMean").numericValue = eMinMeanMax[2];
-			CurveParameter.find(outParams, "eMax").numericValue = eMinMeanMax[3];
-			CurveParameter.find(outParams, "eMax Conc").numericValue = eMinMeanMax[4];
+			double[] eMinMax = calculateEMinMax(output, input);
+			CurveParameter.find(outParams, "eMin").numericValue = eMinMax[0];
+			CurveParameter.find(outParams, "eMin Conc").numericValue = eMinMax[1];
+			CurveParameter.find(outParams, "eMax").numericValue = eMinMax[2];
+			CurveParameter.find(outParams, "eMax Conc").numericValue = eMinMax[3];
 			
 			rServi.evalVoid("library(Cairo)", null);
 			CairoPdfGraphic graphic = new CairoPdfGraphic();
@@ -307,8 +305,8 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		}
 	}
 	
-	/** @return { eMinEffect, eMinConcentration, eMean, eMaxEffect, eMaxConcentration } */
-	private static double[] calculateEMinMeanMax(Curve curve, CurveFitInput input) {
+	/** @return { eMinEffect, eMinConcentration, eMaxEffect, eMaxConcentration } */
+	private static double[] calculateEMinMax(Curve curve, CurveFitInput input) {
 		Map<Double, List<Double>> avgPointMap = new HashMap<Double, List<Double>>();
 		int pointCount = input.getValid().length;
 		for (int point = 0; point < pointCount; point++) {
@@ -337,7 +335,6 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		
 		double eMinEffect = Double.NaN;
 		double eMinConcentration = Double.NaN;
-		double eMeanEffect = StatService.getInstance().calculate("mean", avgValues);
 		double eMaxEffect = Double.NaN;
 		double eMaxConcentration = Double.NaN;
 		
@@ -361,8 +358,8 @@ public class OSBFitModel extends AbstractCurveFitModel {
 		Value type = CurveParameter.find(input.getSettings().getExtraParameters(), "Type");
 		boolean ascending = (type == null) ? true : type.stringValue.equals("A");
 		return (ascending) ?
-				new double[] { eMinEffect, eMinConcentration, eMeanEffect, eMaxEffect, eMaxConcentration } :
-				new double[] { eMaxEffect, eMaxConcentration, eMeanEffect, eMinEffect, eMinConcentration };
+				new double[] { eMinEffect, eMinConcentration, eMaxEffect, eMaxConcentration } :
+				new double[] { eMaxEffect, eMaxConcentration, eMinEffect, eMinConcentration };
 	}
 	
 	
