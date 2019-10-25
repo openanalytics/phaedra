@@ -32,7 +32,7 @@ public abstract class BaseFileServer implements FSInterface {
 			for (String item: dir(path)) {
 				download(path + "/" + item, localDestination + "/" + FileUtils.getName(path));
 			}
-		} else {
+		} else if (exists(path)) {
 			StreamUtils.copyAndClose(getInputStream(path), new FileOutputStream(localDestination + "/" + FileUtils.getName(path)));
 		}
 	}
