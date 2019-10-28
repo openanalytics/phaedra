@@ -6,8 +6,8 @@ import eu.openanalytics.phaedra.base.datatype.DataType;
 public class TimestampDescription extends BaseDataDescription {
 	
 	
-	public TimestampDescription(final String name) {
-		super(name);
+	public TimestampDescription(final String name, final Class<?> entityType) {
+		super(name, entityType);
 	}
 	
 	

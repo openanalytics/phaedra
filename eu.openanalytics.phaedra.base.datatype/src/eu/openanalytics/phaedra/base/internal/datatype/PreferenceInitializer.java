@@ -21,6 +21,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		
 		store.setDefault(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT, LogMolar.name());
 		store.setDefault(DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS, 3);
+		store.setDefault(DataTypePrefs.CURVE_CONCENTRATION_UNIT, LogMolar.name());
 	}
 	
 }

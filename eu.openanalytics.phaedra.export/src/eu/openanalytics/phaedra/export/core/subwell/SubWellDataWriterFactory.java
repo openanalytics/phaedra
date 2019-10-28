@@ -11,6 +11,7 @@ import eu.openanalytics.phaedra.export.core.BaseExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.ExportInfo;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 
@@ -61,7 +62,8 @@ public class SubWellDataWriterFactory {
 					.distinct()
 					.collect(Collectors.toList());
 			writer.initialize(new BaseExportExperimentsSettings(experiments), dataFormatter);
-			writer.addExportInfo(new ExportInfo(new StringValueDescription("Unit of Concentration"), dataFormatter.getConcentrationUnit().getAbbr()));
+			writer.addExportInfo(new ExportInfo(new StringValueDescription("Concentration Unit of Well Compounds", ExportInfo.class),
+					dataFormatter.getConcentrationUnit(WellProperty.Concentration.getDataDescription()).getAbbr() ));
 			
 			writer.write(filteredWells, settings);
 		}

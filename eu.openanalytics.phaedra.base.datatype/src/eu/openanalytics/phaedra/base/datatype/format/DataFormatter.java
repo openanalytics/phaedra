@@ -1,8 +1,12 @@
 package eu.openanalytics.phaedra.base.datatype.format;
 
+import java.util.Collections;
+import java.util.Map;
+
 import eu.openanalytics.phaedra.base.datatype.description.ContentType;
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 
 
 /**
@@ -10,38 +14,43 @@ import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
  * 
  * The formatter is immutable and thread-safe.
  */
-public class DataFormatter extends DataUnitConfig {
+public class DataFormatter implements DataUnitConfig {
 	
 	
-	public static final int ADD_UNIT = 1 << 0;
+//	public static final int ADD_UNIT = 1 << 0;
 	
 	
-	private final ConcentrationFormat concentrationFormat;
-	private volatile ConcentrationFormat concentrationEditFormat;
+	private final ConcentrationFormat defaultConcentrationFormat;
+	
+	private final Map<String, ConcentrationFormat> typeConcentrationFormats;
 	
 	
-	public DataFormatter(final ConcentrationFormat concentrationFormat) {
-		super(concentrationFormat.getUnit());
-		
-		this.concentrationFormat = concentrationFormat;
+	public DataFormatter(final ConcentrationFormat concentrationFormat,
+			final Map<String, ConcentrationFormat> typeConcentrationFormats) {
+		this.defaultConcentrationFormat = concentrationFormat;
+		this.typeConcentrationFormats = (typeConcentrationFormats != null) ? typeConcentrationFormats : Collections.emptyMap();
 	}
 	
 	
-	public final ConcentrationFormat getConcentrationFormat() {
-		return this.concentrationFormat;
+	@Override
+	public ConcentrationUnit getConcentrationUnit(final DataDescription dataDescription) {
+		return getConcentrationFormat(dataDescription).getUnit();
 	}
 	
-	public final ConcentrationFormat getConcentrationEditFormat() {
-		ConcentrationFormat format = this.concentrationEditFormat;
-		if (format == null) {
-			format = createConcentrationEditFormat();
-			this.concentrationEditFormat = format;
+	public ConcentrationFormat getConcentrationFormat(final DataDescription dataDescription) {
+		ConcentrationFormat format = null;
+		if (dataDescription != null) {
+			format = this.typeConcentrationFormats.get(dataDescription.getEntityType().getName());
 		}
-		return format;
+		return (format != null) ? format : this.defaultConcentrationFormat;
 	}
 	
-	protected ConcentrationFormat createConcentrationEditFormat() {
-		return new ConcentrationFormat(getConcentrationUnit(), this.concentrationFormat.getDecimals() + 4);
+	public ConcentrationFormat getConcentrationEditFormat(final DataDescription dataDescription) {
+		return createConcentrationEditFormat(getConcentrationFormat(dataDescription));
+	}
+	
+	protected ConcentrationFormat createConcentrationEditFormat(final ConcentrationFormat concentrationFormat) {
+		return new ConcentrationFormat(concentrationFormat.getUnit(), concentrationFormat.getDecimals() + 4);
 	}
 	
 	
@@ -62,7 +71,8 @@ public class DataFormatter extends DataUnitConfig {
 		case Real: {
 				final double v = ((Number)data).doubleValue();
 				if (dataDescription.getContentType() == ContentType.Concentration) {
-					return getConcentrationFormat().format(v, getConcentrationUnit());
+					final ConcentrationFormat format = getConcentrationFormat(dataDescription);
+					return format.format(v, format.getUnit());
 				}
 				return Double.toString(v);
 			}

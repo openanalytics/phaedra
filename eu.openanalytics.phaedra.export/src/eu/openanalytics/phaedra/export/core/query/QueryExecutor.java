@@ -176,10 +176,10 @@ public class QueryExecutor {
 							&& dataDescription instanceof CensoredValueDescription) {
 						int censorColumn = resultSet.findColumn(Query.checkColumnLabel(
 								((CensoredValueDescription)dataDescription).getCensorName()));
-						result.addColumn(new StringValueDescription(targetLabel));
+						result.addColumn(new StringValueDescription(targetLabel, dataDescription.getEntityType()));
 						dataSuppliers.add(new CensoredConcentrationDataSupplier(resultSet,
 								resultColumn, censorColumn,
-								this.dataFormatter.getConcentrationFormat(),
+								this.dataFormatter.getConcentrationFormat(dataDescription),
 								((ConcentrationDataDescription)dataDescription).getConcentrationUnit()));
 						skip[censorColumn] = true;
 					}
@@ -238,8 +238,8 @@ public class QueryExecutor {
 	
 	private DataDescription getColumnDescription(String name, ResultSetMetaData metadata, int column) throws SQLException {
 		int sqlType = metadata.getColumnType(column);
-		if (SQLUtils.isNumeric(sqlType)) return new RealValueDescription(name);
-		if (SQLUtils.isDate(sqlType)) return new TimestampDescription(name);
-		return new StringValueDescription(name);
+		if (SQLUtils.isNumeric(sqlType)) return new RealValueDescription(name, Object.class);
+		if (SQLUtils.isDate(sqlType)) return new TimestampDescription(name, Object.class);
+		return new StringValueDescription(name, Object.class);
 	}
 }

@@ -3,7 +3,6 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import org.eclipse.core.databinding.conversion.IConverter;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 
 public interface DataDescription {
@@ -36,6 +35,8 @@ public interface DataDescription {
 	 * @return the content type.
 	 */
 	ContentType getContentType();
+	
+	Class<?> getEntityType();
 	
 	
 	String convertNameTo(final String name, final DataUnitConfig dataUnitConfig);

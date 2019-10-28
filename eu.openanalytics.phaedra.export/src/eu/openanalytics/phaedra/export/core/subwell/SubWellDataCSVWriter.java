@@ -1,7 +1,5 @@
 package eu.openanalytics.phaedra.export.core.subwell;
 
-import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
-
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Collections;
@@ -22,6 +20,7 @@ import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.writer.format.AbstractCSVWriter;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
@@ -163,8 +162,7 @@ public class SubWellDataCSVWriter extends AbstractCSVWriter implements IExportWr
 			row[2] = PlateUtils.getWellCoordinate(w);
 			row[3] = index + "";
 			row[4] = w.getCompound() != null ? w.getCompound().getNumber() : w.getWellType();
-			row[5] = Double.toString(this.dataFormatter.getConcentrationUnit()
-					.convert(w.getCompoundConcentration(), Molar) );
+			row[5] = Double.toString(WellProperty.Concentration.getRealValue(w, this.dataFormatter));
 			rowMap.put(rowIndex, row);
 			return row;
 		}

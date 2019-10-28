@@ -33,7 +33,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
-import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationDataDescription;
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -274,8 +274,11 @@ public class WellInspector extends DecoratedView {
 		} else {
 			compoundTxt.setText(c.toString());
 		}
-		concTxt.setText(this.dataFormatSupport.get().getConcentrationEditFormat().format(
-				WellProperty.Concentration.getValue(currentWell), ConcentrationUnit.Molar));
+		{	final WellProperty property = WellProperty.Concentration;
+			final ConcentrationDataDescription dataDescription = (ConcentrationDataDescription)property.getDataDescription();
+			concTxt.setText(this.dataFormatSupport.get().getConcentrationEditFormat(dataDescription)
+					.format(property.getValue(currentWell), dataDescription.getConcentrationUnit()) );
+		}
 
 		descriptionTxt.setText(currentWell.getDescription() == null ? "" : currentWell.getDescription());
 

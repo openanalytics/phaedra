@@ -2,16 +2,18 @@ package eu.openanalytics.phaedra.base.datatype.description;
 
 import org.eclipse.core.databinding.conversion.IConverter;
 
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 public abstract class BaseDataDescription implements DataDescription {
 	
 	
 	private final String name;
 	
+	private final Class<?> entityType;
 	
-	public BaseDataDescription(final String name) {
+	
+	public BaseDataDescription(final String name, final Class<?> entityType) {
 		this.name = name;
+		this.entityType = entityType;
 	}
 	
 	@Override
@@ -23,6 +25,11 @@ public abstract class BaseDataDescription implements DataDescription {
 	@Override
 	public final String getName() {
 		return this.name;
+	}
+	
+	@Override
+	public Class<?> getEntityType() {
+		return this.entityType;
 	}
 	
 	
@@ -58,7 +65,9 @@ public abstract class BaseDataDescription implements DataDescription {
 		}
 		if (obj instanceof DataDescription) {
 			final DataDescription other = (DataDescription)obj;
-			return (equalsType(other) && this.name.equals(other.getName()));
+			return (equalsType(other)
+					&& this.name.equals(other.getName())
+					&& this.entityType.equals(other.getEntityType()) );
 		}
 		return false;
 	}

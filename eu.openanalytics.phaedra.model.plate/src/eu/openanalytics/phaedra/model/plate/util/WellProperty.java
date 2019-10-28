@@ -8,11 +8,11 @@ import java.util.List;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.description.ConcentrationValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.description.EntityIdDescription;
 import eu.openanalytics.phaedra.base.datatype.description.IntegerValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -21,17 +21,17 @@ import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 
 public enum WellProperty {
 	
-	Number(new IntegerValueDescription("Well Number")),
-	Position(new StringValueDescription("Well Position")),
-	Row(new IntegerValueDescription("Well Row")),
-	Column(new IntegerValueDescription("Well Column")),
-	Type(new StringValueDescription("Well Type")),
-	Compound(new StringValueDescription("Compound")),
-	Concentration(new ConcentrationValueDescription("Concentration", Molar)),
-	LogConcentration(new RealValueDescription("Log Concentration")),
-	PlateSequence(new IntegerValueDescription("Plate Sequence")),
-	PlateId(new EntityIdDescription("Plate ID", Plate.class)),
-	ExperimentId(new EntityIdDescription("Experiment ID", Experiment.class));
+	Number(new IntegerValueDescription("Well Number", Well.class)),
+	Position(new StringValueDescription("Well Position", Well.class)),
+	Row(new IntegerValueDescription("Well Row", Well.class)),
+	Column(new IntegerValueDescription("Well Column", Well.class)),
+	Type(new StringValueDescription("Well Type", Well.class)),
+	Compound(new StringValueDescription("Compound", Well.class)),
+	Concentration(new ConcentrationValueDescription("Concentration", Well.class, Molar)),
+	LogConcentration(new RealValueDescription("Log Concentration", Well.class)),
+	PlateSequence(new IntegerValueDescription("Plate Sequence", Well.class)),
+	PlateId(new EntityIdDescription("Plate ID", Well.class, Plate.class)),
+	ExperimentId(new EntityIdDescription("Experiment ID", Well.class, Experiment.class));
 	
 	
 	private final String label;
@@ -97,7 +97,7 @@ public enum WellProperty {
 		case Column:
 			return well.getColumn();
 		case Concentration:
-			return units.getConcentrationUnit().convert(well.getCompoundConcentration(), Molar);
+			return units.getConcentrationUnit(this.dataDescription).convert(well.getCompoundConcentration(), Molar);
 		case LogConcentration:
 			return well.getCompoundConcentration() == 0.0 ? Double.NaN : Math.log10(well.getCompoundConcentration());
 		case PlateSequence:

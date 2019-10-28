@@ -20,7 +20,7 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.hdf5.HDF5File;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.density.Density2DChart;

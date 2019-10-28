@@ -1,7 +1,5 @@
 package eu.openanalytics.phaedra.ui.plate.table;
 
-import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +23,7 @@ import org.eclipse.nebula.widgets.nattable.sort.SortConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.graphics.Point;
 
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.columnChooser.IColumnMatcher;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.AsyncColumnAccessor;
@@ -45,6 +43,7 @@ import eu.openanalytics.phaedra.calculation.AsyncWellDataAccessor;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.calculation.WellDataAccessor;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -219,7 +218,7 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 				Compound c = well.getCompound();
 				return c != null ? c.getType() + " " + c.getNumber() : "";
 			case CONCENTRATION:
-				return dataUnitSupplier.get().getConcentrationUnit().convert(well.getCompoundConcentration(), Molar);
+				return WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get());
 			case PLATE:
 				return well.getPlate().getBarcode();
 			default:

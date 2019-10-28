@@ -2,8 +2,8 @@ package eu.openanalytics.phaedra.ui.subwell.chart.v2.view;
 
 import java.util.function.Supplier;
 
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractChart.ChartName;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractLegend;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.ChartLayerFactory;

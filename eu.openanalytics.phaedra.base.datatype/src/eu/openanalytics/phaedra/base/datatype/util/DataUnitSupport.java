@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.util;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
 import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 
 
 public class DataUnitSupport extends DataConfigSupport<DataUnitConfig> {
@@ -25,7 +25,7 @@ public class DataUnitSupport extends DataConfigSupport<DataUnitConfig> {
 	
 	@Override
 	protected void onPreferenceChanged(final PropertyChangeEvent event) {
-		if (event.getProperty().equals(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT)) {
+		if (event.getProperty().startsWith(DataTypePrefs.CONCENTRATION_UNIT_PREFIX)) {
 			super.onPreferenceChanged(event);
 		}
 	}

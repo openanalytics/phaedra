@@ -5,22 +5,24 @@ import org.eclipse.core.databinding.conversion.IConverter;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationValueConverter;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 
 public class ConcentrationValueDescription extends AbstractConcentrationDataDescription {
 	
 	
-	public ConcentrationValueDescription(final String name, final ConcentrationUnit unit) {
-		super(name, unit);
+	public ConcentrationValueDescription(final String name, final Class<?> entityType,
+			final ConcentrationUnit unit) {
+		super(name, entityType, unit);
 	}
 	
 	@Override
 	public ConcentrationValueDescription alterTo(final DataUnitConfig dataUnitConfig) {
-		if (dataUnitConfig.getConcentrationUnit() == getConcentrationUnit()) {
+		final ConcentrationUnit toUnit = dataUnitConfig.getConcentrationUnit(this);
+		if (toUnit == getConcentrationUnit()) {
 			return this;
 		}
-		return new ConcentrationValueDescription(getName(), dataUnitConfig.getConcentrationUnit());
+		return new ConcentrationValueDescription(getName(), getEntityType(),
+				toUnit );
 	}
 	
 	
@@ -37,12 +39,11 @@ public class ConcentrationValueDescription extends AbstractConcentrationDataDesc
 	
 	@Override
 	public IConverter getDataConverterTo(final DataUnitConfig dataUnitConfig) {
-		if (dataUnitConfig.getConcentrationUnit() == getConcentrationUnit()) {
+		final ConcentrationUnit toUnit = dataUnitConfig.getConcentrationUnit(this);
+		if (toUnit == getConcentrationUnit()) {
 			return null;
 		}
-		return new ConcentrationValueConverter(
-				getConcentrationUnit(),
-				dataUnitConfig.getConcentrationUnit() );
+		return new ConcentrationValueConverter(getConcentrationUnit(), toUnit);
 	}
 	
 }

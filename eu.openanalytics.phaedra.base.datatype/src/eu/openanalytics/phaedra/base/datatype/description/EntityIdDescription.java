@@ -6,12 +6,13 @@ import eu.openanalytics.phaedra.base.datatype.DataType;
 public class EntityIdDescription extends BaseDataDescription {
 	
 	
-	private final Class<?> entityType;
+	private final Class<?> referredEntityType;
 	
 	
-	public EntityIdDescription(final String name, final Class<?> entityType) {
-		super(name);
-		this.entityType = entityType;
+	public EntityIdDescription(final String name, final Class<?> entityType,
+			final Class<?> referredEntityType) {
+		super(name, entityType);
+		this.referredEntityType = referredEntityType;
 	}
 	
 	
@@ -25,27 +26,27 @@ public class EntityIdDescription extends BaseDataDescription {
 		return ContentType.EntityId;
 	}
 	
-	public final Class<?> getEntityType() {
-		return this.entityType;
+	public final Class<?> getReferredEntityType() {
+		return this.referredEntityType;
 	}
 	
 	
 	@Override
 	public int hashCode() {
 		int hash = super.hashCode();
-		hash = 31 * hash + this.entityType.hashCode();
+		hash = 31 * hash + this.referredEntityType.hashCode();
 		return hash;
 	}
 	
 	@Override
 	public boolean equalsType(final DataDescription other) {
 		return (super.equalsType(other)
-				&& this.entityType == ((EntityIdDescription)other).entityType );
+				&& this.referredEntityType == ((EntityIdDescription)other).referredEntityType );
 	}
 	
 	@Override
 	public String toString() {
-		return super.toString() + " (" + this.entityType.getSimpleName() + ")";
+		return super.toString() + " (" + this.referredEntityType.getSimpleName() + ")";
 	}
 	
 }

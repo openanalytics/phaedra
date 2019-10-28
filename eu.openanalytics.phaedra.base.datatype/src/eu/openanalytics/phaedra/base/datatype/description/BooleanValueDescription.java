@@ -6,8 +6,8 @@ import eu.openanalytics.phaedra.base.datatype.DataType;
 public class BooleanValueDescription extends BaseDataDescription {
 	
 	
-	public BooleanValueDescription(final String name) {
-		super(name);
+	public BooleanValueDescription(final String name, final Class<?> entityType) {
+		super(name, entityType);
 	}
 	
 	

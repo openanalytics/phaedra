@@ -18,6 +18,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationDataDescription;
+import eu.openanalytics.phaedra.base.datatype.format.ConcentrationFormat;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationValueConverter;
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
@@ -26,12 +28,14 @@ import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.link.platedef.template.PlateTemplate;
 import eu.openanalytics.phaedra.link.platedef.template.WellTemplate;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 
 public class ConcentrationTab extends BaseTemplateTab {
 	
 	
 	private final DataFormatSupport dataFormatSupport;
-	private DataFormatter uiFormatter;
+	private ConcentrationFormat uiConcentrationFormat;
+	private ConcentrationFormat uiEditConcentrationFormat;
 	private ConcentrationValueConverter uiToModelConverter;
 	
 	private Label informationControl;
@@ -58,7 +62,7 @@ public class ConcentrationTab extends BaseTemplateTab {
 			String s = well.getConcentration();
 			if (s != null) {
 				final double value = Double.parseDouble(s);
-				s = uiFormatter.getConcentrationFormat().format(value, Molar);
+				s = uiConcentrationFormat.format(value, Molar);
 			}
 			return new String[] { s };
 		}
@@ -74,7 +78,7 @@ public class ConcentrationTab extends BaseTemplateTab {
 		String s = well.getConcentration();
 		if (s != null) {
 			double value = Double.parseDouble(s);
-			return this.uiFormatter.getConcentrationEditFormat().format(value, Molar);
+			return this.uiEditConcentrationFormat.format(value, Molar);
 		}
 		return "";
 	}
@@ -124,8 +128,8 @@ public class ConcentrationTab extends BaseTemplateTab {
 							String.format("Invalid concentration value: %1$s" + conc + "\n\n"
 									+ "Please specify the concentration in %2$s, for example: %3$s.",
 									conc,
-									uiFormatter.getConcentrationUnit().getLabel(true),
-									uiFormatter.getConcentrationFormat().format(1e-6, Molar) ));
+									uiConcentrationFormat.getUnit().getLabel(true),
+									uiConcentrationFormat.format(1e-6, Molar) ));
 					return;
 				}
 				for (WellTemplate well: currentSelection) applyValue(well, conc);
@@ -151,10 +155,13 @@ public class ConcentrationTab extends BaseTemplateTab {
 	}
 	
 	private void updateFormatting() {
-		this.uiFormatter = this.dataFormatSupport.get();
+		final DataFormatter dataFormatter = this.dataFormatSupport.get();
+		final ConcentrationDataDescription dataDescription = (ConcentrationDataDescription)WellProperty.Concentration.getDataDescription();
+		this.uiConcentrationFormat = dataFormatter.getConcentrationFormat(dataDescription);
+		this.uiConcentrationFormat = dataFormatter.getConcentrationEditFormat(dataDescription);
 		
-		this.uiToModelConverter = (this.uiFormatter.getConcentrationUnit() != Molar) ?
-				new ConcentrationValueConverter(this.uiFormatter.getConcentrationUnit(), Molar) :
+		this.uiToModelConverter = (this.uiConcentrationFormat.getUnit() != dataDescription.getConcentrationUnit()) ?
+				new ConcentrationValueConverter(this.uiConcentrationFormat.getUnit(), dataDescription.getConcentrationUnit()) :
 				null;
 		
 		if (this.wellConcentrationText == null || this.wellConcentrationText.isDisposed()) {
@@ -162,8 +169,8 @@ public class ConcentrationTab extends BaseTemplateTab {
 		}
 		
 		this.informationControl.setText(String.format("In %1$s, for example: %2$s.",
-				this.uiFormatter.getConcentrationUnit().getLabel(true),
-				this.uiFormatter.getConcentrationFormat().format(1e-6, Molar) ));
+				this.uiConcentrationFormat.getUnit().getLabel(true),
+				this.uiConcentrationFormat.format(1e-6, Molar) ));
 	}
 	
 }

@@ -3,8 +3,8 @@ package eu.openanalytics.phaedra.base.datatype.special;
 import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.LogMolar;
 
 import eu.openanalytics.phaedra.base.datatype.description.ConcentrationValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 
 /**
@@ -27,24 +27,30 @@ public class ConcentrationLogPNamedValueDescription extends ConcentrationValueDe
 	}
 	
 	
-	public ConcentrationLogPNamedValueDescription(final String name, final ConcentrationUnit unit) {
-		super(name, unit);
+	public ConcentrationLogPNamedValueDescription(final String name, final Class<?> entityType,
+			final ConcentrationUnit unit) {
+		super(name, entityType, unit);
 	}
 	
 	@Override
 	public ConcentrationLogPNamedValueDescription alterTo(final DataUnitConfig dataUnitConfig) {
-		final ConcentrationUnit unit = dataUnitConfig.getConcentrationUnit();
-		if (unit == getConcentrationUnit()) {
+		final ConcentrationUnit toUnit = dataUnitConfig.getConcentrationUnit(this);
+		if (toUnit == getConcentrationUnit()) {
 			return this;
 		}
 		return new ConcentrationLogPNamedValueDescription(
-				convertNameTo(getName(), dataUnitConfig), unit );
+				convertNameTo(getName(), toUnit), getEntityType(),
+				toUnit );
 	}
 	
 	
 	@Override
 	public String convertNameTo(final String name, final DataUnitConfig dataUnitConfig) {
-		return convertName(name, getConcentrationUnit(), dataUnitConfig.getConcentrationUnit());
+		return convertNameTo(name, dataUnitConfig.getConcentrationUnit(this));
+	}
+	
+	protected String convertNameTo(final String name, final ConcentrationUnit unit) {
+		return convertName(name, getConcentrationUnit(), unit);
 	}
 	
 }

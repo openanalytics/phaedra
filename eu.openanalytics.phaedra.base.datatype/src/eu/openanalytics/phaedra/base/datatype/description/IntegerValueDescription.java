@@ -6,8 +6,8 @@ import eu.openanalytics.phaedra.base.datatype.DataType;
 public class IntegerValueDescription extends BaseDataDescription {
 	
 	
-	public IntegerValueDescription(final String name) {
-		super(name);
+	public IntegerValueDescription(final String name, final Class<?> entityType) {
+		super(name, entityType);
 	}
 	
 	

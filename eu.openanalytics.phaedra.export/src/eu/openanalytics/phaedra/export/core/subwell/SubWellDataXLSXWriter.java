@@ -30,6 +30,7 @@ import eu.openanalytics.phaedra.export.Activator;
 import eu.openanalytics.phaedra.export.core.IExportExperimentsSettings;
 import eu.openanalytics.phaedra.export.core.writer.format.AbstractXLSXWriter;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
@@ -54,7 +55,7 @@ public class SubWellDataXLSXWriter extends AbstractXLSXWriter implements IExport
 		super.initialize(settings);
 		
 		this.dataFormatter = dataFormatter;
-		this.concDataDescription = new ConcentrationValueDescription("Concentration", dataFormatter.getConcentrationUnit());
+		this.concDataDescription = (ConcentrationValueDescription)WellProperty.Concentration.getDataDescription().alterTo(dataFormatter);
 	}
 	
 	@Override

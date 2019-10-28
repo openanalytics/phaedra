@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.base.ui.search;
 
 import static java.util.Objects.requireNonNull;
 
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationDataDescription;
 import eu.openanalytics.phaedra.base.datatype.format.ConcentrationValueFormatConverter;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
@@ -17,7 +18,7 @@ public class ConcentrationValueQueryValuePanelUnitExtension extends DataFormatSu
 	
 	private final AbstractRealQueryValuePanelFactory.Panel panel;
 	
-	private final ConcentrationUnit modelUnit;
+	private final ConcentrationDataDescription dataDescription;
 	
 	
 	/**
@@ -25,9 +26,9 @@ public class ConcentrationValueQueryValuePanelUnitExtension extends DataFormatSu
 	 * @param unit the unit of the model value.
 	 */
 	public ConcentrationValueQueryValuePanelUnitExtension(final AbstractRealQueryValuePanelFactory.Panel panel,
-			final ConcentrationUnit unit) {
+			final ConcentrationDataDescription dataDescription) {
 		this.panel = requireNonNull(panel);
-		this.modelUnit = requireNonNull(unit);
+		this.dataDescription = requireNonNull(dataDescription);
 		
 		onConfigChanged();
 	}
@@ -36,10 +37,13 @@ public class ConcentrationValueQueryValuePanelUnitExtension extends DataFormatSu
 	@Override
 	protected void onConfigChanged() {
 		final DataFormatter dataFormatter = get();
+		final ConcentrationUnit uiUnit = dataFormatter.getConcentrationUnit(this.dataDescription);
 		this.panel.setConverter(
-				new ConcentrationValueFormatConverter(this.modelUnit, dataFormatter.getConcentrationEditFormat()),
-				(dataFormatter.getConcentrationUnit() != this.modelUnit) ?
-						new ConcentrationValueConverter(dataFormatter.getConcentrationUnit(), this.modelUnit) :
+				new ConcentrationValueFormatConverter(
+						this.dataDescription.getConcentrationUnit(),
+						dataFormatter.getConcentrationEditFormat(this.dataDescription) ),
+				(uiUnit != this.dataDescription.getConcentrationUnit()) ?
+						new ConcentrationValueConverter(uiUnit, this.dataDescription.getConcentrationUnit()) :
 						null );
 	}
 	

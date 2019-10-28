@@ -18,8 +18,8 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.description.ContentType;
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.density.Density2DChart;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.DataProviderSettings;
 import eu.openanalytics.phaedra.base.ui.charting.v2.filter.IFilter;
@@ -201,7 +201,7 @@ public class WellDataProvider extends JEPAwareDataProvider<Plate, Well> {
 					DataDescription dataDescription = prop.getDataDescription();
 					if (dataDescription.getDataType() == DataType.Real
 							&& dataDescription.getContentType() == ContentType.Concentration) {
-						ConcentrationUnit outputUnit = this.dataUnitSupplier.get().getConcentrationUnit();
+						ConcentrationUnit outputUnit = this.dataUnitSupplier.get().getConcentrationUnit(dataDescription);
 						labels[i] += " [" + outputUnit.getAbbr() + "]";
 					}
 				}

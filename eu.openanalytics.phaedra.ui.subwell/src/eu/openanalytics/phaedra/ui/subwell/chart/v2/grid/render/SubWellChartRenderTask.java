@@ -2,7 +2,7 @@ package eu.openanalytics.phaedra.ui.subwell.chart.v2.grid.render;
 
 import java.util.Map;
 
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.data.IDataProvider;
 import eu.openanalytics.phaedra.base.ui.charting.v2.layer.ChartLayerFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;

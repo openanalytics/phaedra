@@ -6,8 +6,8 @@ import eu.openanalytics.phaedra.base.datatype.DataType;
 public class RealValueDescription extends BaseDataDescription {
 	
 	
-	public RealValueDescription(final String name) {
-		super(name);
+	public RealValueDescription(final String name, final Class<?> entityType) {
+		super(name, entityType);
 	}
 	
 	
