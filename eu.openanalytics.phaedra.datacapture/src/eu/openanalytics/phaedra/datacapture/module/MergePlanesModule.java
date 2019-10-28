@@ -76,6 +76,7 @@ public class MergePlanesModule extends AbstractModule {
 			tempFolders.add(outputPath);
 			context.getParameters(reading).setParameter("image.path.merged", outputPath);
 			Map<String, List<PatternMatch>> groups = locateInputFiles(reading);
+			context.getLogger().info(reading, String.format("Merging planes for %d groups", groups.size()));
 			groups.entrySet().parallelStream().forEach(entry -> {
 				if (mon.isCanceled()) return;
 				mergePlanes(reading.getSourcePath(), entry.getKey(), entry.getValue(), outputPath);	

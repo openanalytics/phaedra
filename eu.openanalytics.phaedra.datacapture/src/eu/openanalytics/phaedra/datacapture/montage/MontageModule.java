@@ -106,6 +106,7 @@ public class MontageModule extends AbstractModule {
 		}
 		
 		if (importSubWellData == null || importSubWellData.booleanValue()) {
+			if (monitor.isCanceled()) return;
 			context.getLogger().info(reading, "Recalculating sub-well data for all fields");
 			Point dims = new Point(0,0);
 			AtomicBoolean fullDims = new AtomicBoolean();
