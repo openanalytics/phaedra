@@ -1,61 +1,48 @@
 package eu.openanalytics.phaedra.model.user.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.Date;
 
 import eu.openanalytics.phaedra.base.util.misc.DateUtils;
-import eu.openanalytics.phaedra.model.user.vo.User;
-import eu.openanalytics.phaedra.model.user.vo.UserSession;
 
 public class UserActivity {
 
-	private User user;
-	
-	private boolean isActive;
+	private String userName;
+	private boolean isActiveToday;
 	private int loginCount;
+	private Date latestSessionDate;
+	private String latestSessionHost;
+	private String latestSessionVersion;
 	
-	private List<UserSession> allSessions;
-	private List<UserSession> activeSessions;
-	
-	public UserActivity(User user, List<UserSession> sessions) {
-		if (sessions == null) sessions = new ArrayList<>();
-		
-		this.user = user;
-		this.isActive = DateUtils.isToday(user.getLastLogon());
-		this.loginCount = sessions.size();
-		this.allSessions = new ArrayList<>(sessions);
-		this.activeSessions = new ArrayList<>();
-		
-		for (UserSession session: sessions) {
-			if (DateUtils.isToday(session.getLoginDate())) {
-				activeSessions.add(session);
-			}
-		}
-		
-		// Order: most recent session first.
-		Collections.sort(activeSessions, new Comparator<UserSession>() {
-			@Override
-			public int compare(UserSession o1, UserSession o2) {
-				return o2.getLoginDate().compareTo(o1.getLoginDate());
-			}
-		});
+	public UserActivity(String userName, int loginCount, Date latestSessionDate, String latestSessionHost, String latestSessionVersion) {
+		this.userName = userName;
+		this.isActiveToday = DateUtils.isToday(latestSessionDate);
+		this.loginCount = loginCount;
+		this.latestSessionDate = latestSessionDate;
+		this.latestSessionHost = latestSessionHost;
+		this.latestSessionVersion = latestSessionVersion;
 	}
 	
-	public User getUser() {
-		return user;
+	public String getUserName() {
+		return userName;
 	}
-	public boolean isActive() {
-		return isActive;
+	
+	public boolean isActiveToday() {
+		return isActiveToday;
 	}
+	
 	public int getLoginCount() {
 		return loginCount;
 	}
-	public List<UserSession> getAllSessions() {
-		return allSessions;
+	
+	public Date getLatestSessionDate() {
+		return latestSessionDate;
 	}
-	public List<UserSession> getActiveSessions() {
-		return activeSessions;
+	
+	public String getLatestSessionHost() {
+		return latestSessionHost;
+	}
+	
+	public String getLatestSessionVersion() {
+		return latestSessionVersion;
 	}
 }

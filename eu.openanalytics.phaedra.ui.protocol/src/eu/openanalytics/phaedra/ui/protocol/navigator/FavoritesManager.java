@@ -15,7 +15,7 @@ import org.w3c.dom.NodeList;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.db.jpa.EntityClassManager;
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.ui.navigator.Navigator;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -89,7 +89,7 @@ public class FavoritesManager {
 			return null;
 		}
 		
-		Object instance = Screening.getEnvironment().getEntityManager().find(clazz, favorite.id);
+		Object instance = GenericEntityService.getInstance().findEntity(clazz, favorite.id);
 		if (instance instanceof IValueObject) vo = (IValueObject)instance;
 		return vo;
 	}

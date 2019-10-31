@@ -3,8 +3,7 @@ package eu.openanalytics.phaedra.datacapture.store.persist;
 import java.io.IOException;
 import java.util.List;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.fs.store.IFileStore;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
@@ -23,13 +22,11 @@ public class WellDataPersistor extends BaseDataPersistor {
 	@Override
 	public void persist(IFileStore store, Plate plate) throws DataCaptureException, IOException {
 		// Prevent JPA deadlock: loop through all wells and features inside a lock to ensure they are cached.
-		JDBCUtils.lockEntityManager(Screening.getEnvironment().getEntityManager());
-		try {
+		GenericEntityService.getInstance().runInLock(() -> {
 			for (Well w: plate.getWells()) w.getWellType();
 			for (Feature f: PlateUtils.getFeatures(plate)) f.getDisplayName();
-		} finally {
-			JDBCUtils.unlockEntityManager(Screening.getEnvironment().getEntityManager());	
-		}
+			return null;
+		});
 		
 		// Retrieve existing well data, if any.
 		List<FeatureValue> existingData = PlateService.getInstance().getWellData(plate);

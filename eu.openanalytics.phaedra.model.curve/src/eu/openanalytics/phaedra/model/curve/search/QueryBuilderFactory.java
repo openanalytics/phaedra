@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.eclipse.core.runtime.PlatformObject;
 
 import eu.openanalytics.phaedra.base.search.AbstractQueryBuilderFactory;
@@ -11,6 +13,7 @@ import eu.openanalytics.phaedra.base.search.IQueryBuilder;
 import eu.openanalytics.phaedra.model.curve.vo.CRCurve;
 
 public class QueryBuilderFactory extends AbstractQueryBuilderFactory {
+	
 	@Override
 	public Set<Class<? extends PlatformObject>> getSupportedTypes() {
 		return new HashSet<Class<? extends PlatformObject>>(Arrays.asList(CRCurve.class));
@@ -18,9 +21,9 @@ public class QueryBuilderFactory extends AbstractQueryBuilderFactory {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T extends PlatformObject> IQueryBuilder<T> getBuilder(Class<T> clazz) {
+	public <T extends PlatformObject> IQueryBuilder<T> getBuilder(Class<T> clazz, EntityManager entityManager) {
 		if (clazz.equals(CRCurve.class)) {
-			return (IQueryBuilder<T>) new CRCurveQueryBuilder();
+			return (IQueryBuilder<T>) new CRCurveQueryBuilder(entityManager);
 		}
 		return null;
 	}

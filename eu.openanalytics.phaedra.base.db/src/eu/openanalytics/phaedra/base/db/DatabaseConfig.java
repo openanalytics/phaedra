@@ -10,9 +10,9 @@ public class DatabaseConfig extends ConfigResolver {
 	
 	public static final String CONN_PARAM_PREFIX = "connection.parameter.";
 	
+	public static final String JPA_SESSION_EM = "jpa.session.entity.manager";
 	public static final String JPA_LOG_LEVEL = "jpa.logging";
 	public static final String JPA_CACHE_L2_ENABLED = "jpa.cache.l2.enabled";
-	public static final String JPA_CACHE_L1_CLEAR_INTERVAL = "jpa.cache.l1.clearinterval";
 	
 	public DatabaseConfig() {
 		super("phaedra.db.");

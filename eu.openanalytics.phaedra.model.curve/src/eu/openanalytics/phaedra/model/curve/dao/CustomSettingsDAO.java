@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.model.curve.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -11,11 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
@@ -29,12 +27,6 @@ import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class CustomSettingsDAO {
 
-private EntityManager em;
-
-	public CustomSettingsDAO(EntityManager em) {
-		this.em = em;
-	}
-
 	public List<CustomCurveSettings> loadSettings(Plate plate) {
 		List<CustomCurveSettings> returnValue = new ArrayList<>();
 		
@@ -44,25 +36,26 @@ private EntityManager em;
 				+ " and pc.plate_id = " + plate.getId()
 				+ " order by curve_id";
 		
-		Query query = em.createNativeQuery(queryString);
-		List<?> resultSet = JDBCUtils.queryWithLock(query, em);
-		if (resultSet == null || resultSet.isEmpty()) return returnValue;
-
-		Map<Long, List<CustomSettingRecord>> records = resultSet.stream()
-			.map(r -> {
-				Object[] row = (Object[]) r;
-				return new CustomSettingRecord(((Number)row[0]).longValue(), ((Number)row[1]).longValue(), (String) row[2], (String) row[3]);	
-			})
-			.collect(Collectors.groupingBy(r -> r.curveId));
-
+		List<CustomSettingRecord> records = new ArrayList<>();
+		try (Connection conn = getConnection()) {
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			while (rs.next()) {
+				CustomSettingRecord rec = new CustomSettingRecord(rs.getLong(1), rs.getLong(2), rs.getString(3), rs.getString(4));
+				records.add(rec);
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+		Map<Long, List<CustomSettingRecord>> recordsPerCurve = records.stream().collect(Collectors.groupingBy(r -> r.curveId));
+		
 		List<Feature> features = CollectionUtils.findAll(ProtocolUtils.getFeatures(plate), CurveUtils.FEATURES_WITH_CURVES);
 		Map<Long, CurveFitSettings> featureSettings = new HashMap<>();
 		for (Feature feature: features) {
 			featureSettings.put(feature.getId(), CurveFitService.getInstance().getSettings(feature));
 		}
 		
-		for (long curveId: records.keySet()) {
-			List<CustomSettingRecord> curveRecords = records.get(curveId);
+		for (long curveId: recordsPerCurve.keySet()) {
+			List<CustomSettingRecord> curveRecords = recordsPerCurve.get(curveId);
 			if (curveRecords.isEmpty()) continue;
 			
 			CustomCurveSettings settings = new CustomCurveSettings();
@@ -126,6 +119,10 @@ private EntityManager em;
 		}
 	}
 
+	private Connection getConnection() {
+		return Screening.getEnvironment().getJDBCConnection();
+	}
+	
 	public static class CustomCurveSettings {
 		public long curveId;
 		public CurveFitSettings settings;

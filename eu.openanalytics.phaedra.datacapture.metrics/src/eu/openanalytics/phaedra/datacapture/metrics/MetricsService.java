@@ -12,9 +12,6 @@ import java.util.Map;
 import java.util.function.ToLongFunction;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.datacapture.metrics.internal.MetricCollector;
 import eu.openanalytics.phaedra.datacapture.metrics.internal.NetworkMetrics;
 import eu.openanalytics.phaedra.datacapture.metrics.internal.ServerMetrics;
@@ -27,11 +24,7 @@ public class MetricsService {
 	private ServerMetricDAO serverMetricDAO;
 	
 	private MetricsService() {
-		serverMetricDAO = new ServerMetricDAO(getEntityManager());
-	}
-	
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
+		serverMetricDAO = new ServerMetricDAO();
 	}
 
 	public static synchronized MetricsService getInstance() {

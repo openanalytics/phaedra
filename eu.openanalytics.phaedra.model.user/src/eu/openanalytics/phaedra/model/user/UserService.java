@@ -3,14 +3,15 @@ package eu.openanalytics.phaedra.model.user;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.naming.directory.DirContext;
-import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.Status;
 
@@ -45,25 +46,14 @@ public class UserService extends BaseJPAService {
 		return instance;
 	}
 
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
 	/*
 	 * **********
 	 * Public API
 	 * **********
 	 */
 
-	/* User & UserLog */
-
 	public List<User> getUsers() {
-		EntityManager em = Screening.getEnvironment().getEntityManager();
-		List<User> users = getList(User.class);
-		// By refreshing we are sure to have recent data, e.g. updated by other clients.
-		for (User user: users) em.refresh(user);
-		return users;
+		return getList(User.class);
 	}
 
 	public User getUser(String userName) {
@@ -72,24 +62,25 @@ public class UserService extends BaseJPAService {
 	}
 
 	public List<UserActivity> getAllUserActivity() {
-		List<UserSession> sessions = getList(UserSession.class);
-
-		Map<User, List<UserSession>> userSessions = new HashMap<>();
-		for (UserSession session: sessions) {
-			// Fixes the strange issue that JPA slows down enormously due to
-			// many UserSession objects staying in an internal object change map.
-			getEntityManager().detach(session);
-			
-			List<UserSession> userSessionList = userSessions.get(session.getUser());
-			if (userSessionList == null) {
-				userSessionList = new ArrayList<>();
-				userSessions.put(session.getUser(), userSessionList);
-			}
-			userSessionList.add(session);
-		}
 		List<UserActivity> activities = new ArrayList<>();
-		for (User user: userSessions.keySet()) {
-			activities.add(new UserActivity(user, userSessions.get(user)));
+		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+			String queryString = "select s.user_code, s.login_date, s.host, s.version,"
+					+ " (select count(*) from phaedra.hca_user_session where user_code = s.user_code) as login_count"
+					+ " from phaedra.hca_user_session s where s.session_id in"
+					+ " (select max(session_id) as latest_session from"
+					+ " (select * from phaedra.hca_user_session order by login_date desc) as subquery group by user_code)"
+					+ " order by s.login_date desc";
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			while (rs.next()) {
+				activities.add(new UserActivity(
+						rs.getString(1),
+						rs.getInt(5),
+						rs.getTimestamp(2),
+						rs.getString(3),
+						rs.getString(4)));
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
 		return activities;
 	}

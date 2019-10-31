@@ -2,6 +2,8 @@ package eu.openanalytics.phaedra.base.search;
 
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.core.runtime.PlatformObject;
 
@@ -32,5 +34,5 @@ public interface IQueryBuilderFactory extends IExecutableExtension {
 	 * @param clazz
 	 * @return
 	 */
-	public <T extends PlatformObject> IQueryBuilder<T> getBuilder(Class<T> clazz);
+	public <T extends PlatformObject> IQueryBuilder<T> getBuilder(Class<T> clazz, EntityManager entityManager);
 }

@@ -25,7 +25,7 @@ import org.postgresql.util.PGobject;
 
 import com.zaxxer.hikari.HikariConfig;
 
-import eu.openanalytics.phaedra.base.db.jpa.LockingEntityManager;
+import eu.openanalytics.phaedra.base.db.jpa.SessionEntityManager;
 import eu.openanalytics.phaedra.base.db.jpa.PatchedOraclePlatform;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
@@ -223,16 +223,14 @@ public class JDBCUtils {
 		}
 	}
 	
-	public static long getSequenceNextVal(EntityManager em, String sequenceName) {
+	public static String getSequenceNextValStatement(String sequenceName) {
 		String statement = null;
 		if (isOracle()) {
 			statement = "select " + getSequenceNextValSQL(sequenceName) + " from dual";
 		} else {
 			statement = "select " + getSequenceNextValSQL(sequenceName);
 		}
-		Query query = em.createNativeQuery(statement);
-		List<?> res = JDBCUtils.queryWithLock(query, em);
-		return ((Number)res.get(0)).longValue();
+		return statement;
 	}
 	
 	public static String getSequenceNextValSQL(String sequenceName) {
@@ -421,14 +419,14 @@ public class JDBCUtils {
 	}
 
 	public static void lockEntityManager(EntityManager em) {
-		if (em instanceof LockingEntityManager) {
-			((LockingEntityManager)em).getLock().lock();
+		if (em instanceof SessionEntityManager) {
+			((SessionEntityManager)em).getLock().lock();
 		}
 	}
 
 	public static void unlockEntityManager(EntityManager em) {
-		if (em instanceof LockingEntityManager) {
-			((LockingEntityManager)em).getLock().unlock();
+		if (em instanceof SessionEntityManager) {
+			((SessionEntityManager)em).getLock().unlock();
 		}
 	}
 

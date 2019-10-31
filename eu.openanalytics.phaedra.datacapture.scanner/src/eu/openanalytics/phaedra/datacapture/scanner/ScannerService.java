@@ -3,15 +3,12 @@ package eu.openanalytics.phaedra.datacapture.scanner;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import com.google.common.collect.Lists;
 
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Roles;
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
@@ -25,11 +22,6 @@ public class ScannerService extends BaseJPAService {
 
 	private static ScannerService instance;
 	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
 	private ScannerService() {
 		// Hidden constructor.
 	}

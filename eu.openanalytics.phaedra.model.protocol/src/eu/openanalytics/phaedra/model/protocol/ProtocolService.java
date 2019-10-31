@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
@@ -188,7 +186,7 @@ public class ProtocolService extends BaseJPAService {
 	 * @return The matching protocol class, or null if no match was found.
 	 */
 	public ProtocolClass getProtocolClass(long protocolClassId) {
-		ProtocolClass pc = getEntityManager().find(ProtocolClass.class, protocolClassId);
+		ProtocolClass pc = getEntity(ProtocolClass.class, protocolClassId);
 		if (!SecurityService.getInstance().check(Permissions.PROTOCOLCLASS_OPEN, pc)) return null;
 		return pc;
 	}
@@ -435,7 +433,7 @@ public class ProtocolService extends BaseJPAService {
 	 * @return The matching protocol, or null if no match was found.
 	 */
 	public Protocol getProtocol(long protocolId) {
-		Protocol p = getEntityManager().find(Protocol.class, protocolId);
+		Protocol p = getEntity(Protocol.class, protocolId);
 		if (!SecurityService.getInstance().check(Permissions.PROTOCOL_OPEN, p)) return null;
 		return p;
 	}
@@ -616,8 +614,4 @@ public class ProtocolService extends BaseJPAService {
 		fire(ModelEventType.ObjectRemoved, o, 0);
 	}
 
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
 }

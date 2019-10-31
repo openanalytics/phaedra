@@ -20,7 +20,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.postgresql.jdbc;bundle-version="9.3.0";visibility:=reexport,
  org.h2;bundle-version="1.4.191",
  org.monetdb.jdbc;bundle-version="2.26.0",
- com.mysql.jdbc;bundle-version="5.1.40"
+ com.mysql.jdbc;bundle-version="5.1.40",
+ org.apache.commons.lang3;bundle-version="3.2.1";visibility:=reexport
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.db,

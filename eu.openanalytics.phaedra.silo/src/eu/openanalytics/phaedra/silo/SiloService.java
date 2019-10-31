@@ -6,12 +6,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.core.runtime.PlatformObject;
 
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -39,11 +36,6 @@ public class SiloService extends BaseJPAService {
 
 	public static SiloService getInstance() {
 		return instance;
-	}
-
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
 	}
 
 	/*

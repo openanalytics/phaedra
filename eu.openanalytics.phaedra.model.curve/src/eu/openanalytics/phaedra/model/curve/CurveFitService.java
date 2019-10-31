@@ -11,8 +11,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
@@ -24,7 +22,6 @@ import eu.openanalytics.phaedra.base.cache.CacheKey;
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -88,8 +85,8 @@ public class CurveFitService extends BaseJPAService {
 	
 	private CurveFitService() {
 		// Hidden constructor
-		curveDAO = new CurveDAO(getEntityManager());
-		customSettingsDAO = new CustomSettingsDAO(getEntityManager());
+		curveDAO = new CurveDAO();
+		customSettingsDAO = new CustomSettingsDAO();
 		
 		curveCache = CacheService.getInstance().createCache(new CacheConfig("CurveCache", false));
 		curveIdCache = CacheService.getInstance().createCache("CurveIdCache");
@@ -529,11 +526,6 @@ public class CurveFitService extends BaseJPAService {
 		return input;
 	}
 	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
 	private void triggerFitFailed(Curve curve, boolean saveCurve, CurveFitException exception) throws CurveFitException {
 		if (saveCurve) curveDAO.saveCurve(curve);
 		else curveDAO.deleteCurve(curve);

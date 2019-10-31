@@ -15,8 +15,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -40,11 +38,6 @@ public class ObjectPropertyService extends BaseJPAService {
 	
 	public static ObjectPropertyService getInstance() {
 		return instance;
-	}
-	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
 	}
 	
 	/**

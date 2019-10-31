@@ -10,12 +10,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import com.google.common.base.Objects;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
@@ -37,15 +35,8 @@ public class ProjectService extends BaseJPAService {
 		return instance;
 	}
 
-
 	private ProjectService() {
 	}
-
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
 
 	public List<Project> getReadableProjects() {
 		return getProjects()
@@ -141,18 +132,16 @@ public class ProjectService extends BaseJPAService {
 
 
 	public List<Experiment> getExperiments(Project project) {
-		EntityManager em = getEntityManager();
 		PlateService plateService = PlateService.getInstance();
 		PreparedStatement selectExp = null;
-		JDBCUtils.lockEntityManager(em);
 		List<Long> ids;
+		
 		try (Connection connection = Screening.getEnvironment().getJDBCConnection()) {
 			ids = getExperimentIds(project, connection);
 		} catch (SQLException e) {
 			EclipseLog.error(e.getMessage(), e, Activator.PLUGIN_ID);
 			return Collections.emptyList();
 		} finally {
-			JDBCUtils.unlockEntityManager(em);	
 			if (selectExp != null) try { selectExp.close(); } catch (SQLException e) {};
 		}
 		
@@ -163,9 +152,7 @@ public class ProjectService extends BaseJPAService {
 	}
 	
 	public List<Experiment> addExperiments(Project project, List<Experiment> experiments) {
-		EntityManager em = getEntityManager();
 		PreparedStatement insertExperiment = null;
-		JDBCUtils.lockEntityManager(em);
 		try (Connection connection = Screening.getEnvironment().getJDBCConnection()) {
 			List<Experiment> added = new ArrayList<>(experiments.size());
 			List<Long> existingIds = getExperimentIds(project, connection);
@@ -189,15 +176,12 @@ public class ProjectService extends BaseJPAService {
 			EclipseLog.error(e.getMessage(), e, Activator.PLUGIN_ID);
 			throw new PersistenceException(e);
 		} finally {
-			JDBCUtils.unlockEntityManager(em);	
 			if (insertExperiment != null) try { insertExperiment.close(); } catch (SQLException e) {};
 		}
 	}
 	
 	public void removeExperiments(Project project, List<Experiment> experiments) {
-		EntityManager em = getEntityManager();
 		PreparedStatement deleteExperiment = null;
-		JDBCUtils.lockEntityManager(em);
 		try (Connection connection = Screening.getEnvironment().getJDBCConnection()) {
 			deleteExperiment = connection.prepareStatement(
 					"delete from phaedra.hca_project_experiment"
@@ -215,7 +199,6 @@ public class ProjectService extends BaseJPAService {
 			EclipseLog.error(e.getMessage(), e, Activator.PLUGIN_ID);
 			throw new PersistenceException(e);
 		} finally {
-			JDBCUtils.unlockEntityManager(em);	
 			if (deleteExperiment != null) try { deleteExperiment.close(); } catch (SQLException e) {};
 		}
 	}

@@ -18,7 +18,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.Platform;
@@ -40,7 +39,7 @@ public class FeatureValueDAO {
 
 	private Lock updateLock;
 
-	public FeatureValueDAO(EntityManager em) {
+	public FeatureValueDAO() {
 		this.updateLock = new ReentrantLock();
 	}
 
@@ -54,7 +53,7 @@ public class FeatureValueDAO {
 				+ " and fv.well_id in (" + getCommaSeparatedIDs(wells) + ")";
 
 		List<FeatureValue> values = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			ResultSet resultSet = conn.createStatement().executeQuery(queryString);
 			values = mapValues(resultSet, wells, Arrays.asList(feature));
 		} catch (SQLException e) {
@@ -78,7 +77,7 @@ public class FeatureValueDAO {
 				+ " and fv.feature_id in (" + getCommaSeparatedIDs(features) + ")";
 
 		List<FeatureValue> values = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			ResultSet resultSet = conn.createStatement().executeQuery(queryString);
 			values = mapValues(resultSet, Arrays.asList(well), features);
 		} catch (SQLException e) {
@@ -102,7 +101,7 @@ public class FeatureValueDAO {
 				+ " and fv.feature_id in (" + getCommaSeparatedIDs(features) + ")";
 
 		List<FeatureValue> values = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			ResultSet resultSet = conn.createStatement().executeQuery(queryString);
 			values = mapValues(resultSet, wells, features);
 		} catch (SQLException e) {
@@ -136,7 +135,7 @@ public class FeatureValueDAO {
 				+ " and fv.feature_id in (" + getCommaSeparatedIDs(features) + ")";
 
 		List<FeatureValue> values = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			ResultSet resultSet = conn.createStatement().executeQuery(queryString);
 			values = mapValues(resultSet, plate);
 		} catch (SQLException e) {
@@ -159,7 +158,7 @@ public class FeatureValueDAO {
 				+ " and fv.well_id = w.well_id";
 
 		List<FeatureValue> values = null;
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			ResultSet resultSet = conn.createStatement().executeQuery(queryString);
 			values = mapValues(resultSet, plate);
 		} catch (SQLException e) {
@@ -212,7 +211,7 @@ public class FeatureValueDAO {
 
 		PreparedStatement ps = null;
 		updateLock.lock();
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			if (valueCount == -1) {
 				String queryString = "select count(*) from phaedra.hca_feature_value fv"
 						+ " where fv.feature_id = " + f.getId()
@@ -381,7 +380,7 @@ public class FeatureValueDAO {
 			}
 		};
 		
-		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+		try (Connection conn = getConnection()) {
 			String sql = String.format("copy phaedra.hca_feature_value (well_id,feature_id,raw_numeric_value,raw_string_value,normalized_value) from stdin (format csv)");
 			CopyManager cm = conn.unwrap(PgConnection.class).getCopyAPI();
 			
@@ -394,5 +393,9 @@ public class FeatureValueDAO {
 		} catch (IOException | SQLException e) {
 			throw new PersistenceException(e);
 		}
+	}
+	
+	private Connection getConnection() {
+		return Screening.getEnvironment().getJDBCConnection();
 	}
 }

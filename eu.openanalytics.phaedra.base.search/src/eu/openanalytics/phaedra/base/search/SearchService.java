@@ -11,15 +11,14 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.core.runtime.PlatformObject;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ComparisonChain;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.search.internal.QueryBuilderFactoryRegistry;
 import eu.openanalytics.phaedra.base.search.model.Operator;
 import eu.openanalytics.phaedra.base.search.model.QueryException;
@@ -60,8 +59,8 @@ public final class SearchService extends BaseJPAService {
 	 * @param clazz
 	 * @return
 	 */
-	public <T extends PlatformObject> IQueryBuilder<T> createQueryBuilder(Class<T> clazz) {
-		return getQueryBuilderFactory(clazz).getBuilder(clazz);
+	public <T extends PlatformObject> IQueryBuilder<T> createQueryBuilder(Class<T> clazz, EntityManager em) {
+		return getQueryBuilderFactory(clazz).getBuilder(clazz, em);
 	}
 	
 	/**
@@ -90,43 +89,23 @@ public final class SearchService extends BaseJPAService {
 	}
 	
 	/**
-	 * Generates a typed query from a query model.
-	 * @param queryModel
-	 * @return
-	 * @throws QueryException
-	 */
-	@SuppressWarnings("unchecked")
-	public <T extends PlatformObject> TypedQuery<T> buildQuery(QueryModel queryModel) throws QueryException {
-		IQueryBuilder<T> queryBuilder = (IQueryBuilder<T>) createQueryBuilder(queryModel.getType());
-		queryBuilder.setQueryModel(queryModel);
-		return queryBuilder.buildQuery();
-	}
-	
-	/**
-	 * Searches the database using a typed query.
-	 * @param query
-	 * @return
-	 */
-	public <T extends PlatformObject> List<T> search(TypedQuery<T> query) {
-		try {
-			JDBCUtils.lockEntityManager(getEntityManager());
-			return query.getResultList();
-		} finally {
-			JDBCUtils.unlockEntityManager(getEntityManager());
-		}
-	}
-
-	/**
 	 * Searches the database using a QueryModel.
 	 * @param queryModel
 	 * @return
 	 * @throws QueryException
 	 */
+	@SuppressWarnings("unchecked")
 	public <T extends PlatformObject> List<T> search(QueryModel queryModel) throws QueryException {
-		TypedQuery<T> query = buildQuery(queryModel);
-		return search(query);
+		EntityManager em = getEntityManager();
+		try {
+			IQueryBuilder<T> queryBuilder = (IQueryBuilder<T>) createQueryBuilder(queryModel.getType(), em);
+			queryBuilder.setQueryModel(queryModel);
+			TypedQuery<T> query = queryBuilder.buildQuery();
+			return query.getResultList();
+		} finally {
+			releaseEntityManager(em);
+		}
 	}
-	
 	
 	public PlatformObject searchById(String typeName, long id) throws QueryException {
 		Class<? extends PlatformObject> type = getSupportedClasses().stream().filter(c -> c.getSimpleName().equalsIgnoreCase(typeName)).findAny().orElse(null);
@@ -182,56 +161,48 @@ public final class SearchService extends BaseJPAService {
 	 * @param queryModel
 	 */
 	public void refreshQuery(QueryModel queryModel) {
-		if (getEntityManager().contains(queryModel)) {
-			getEntityManager().refresh(queryModel);
-		}
+		refresh(queryModel);
 	}
 	
 	/**
 	 * Returns a list of saved queries with the public flag set to <code>true</code> and example flag set to <code>false</code>.
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public List<QueryModel> getPublicQueries() {
-		List<QueryModel> resultList = getEntityManager().createNamedQuery(QueryModel.NAMED_QUERY_GET_PUBLIC_QUERIES).getResultList();		
+		List<QueryModel> resultList = executeNamedQuery(QueryModel.NAMED_QUERY_GET_PUBLIC_QUERIES);
 		Collections.sort(resultList, queryComparator);
 		return resultList;
 	}
 	
 	/**
 	 * Returns a list of saved queries with the public flag set to <code>false</code>, example flag set to <code>false</code> and owner set to the current user.
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public List<QueryModel> getMyQueries() {
-		List<QueryModel> resultList = getEntityManager().createNamedQuery(QueryModel.NAMED_QUERY_GET_MY_QUERIES).setParameter("owner", SecurityService.getInstance().getCurrentUserName()).getResultList();		
+		List<QueryModel> resultList = executeNamedQuery(QueryModel.NAMED_QUERY_GET_EXAMPLE_QUERIES,
+				Pair.of("owner", SecurityService.getInstance().getCurrentUserName()));
 		Collections.sort(resultList, queryComparator);
 		return resultList;
 	}
 
 	/**
 	 * Returns a list of saved queries with the example flag set to <code>true</code>.
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public List<QueryModel> getExampleQueries() {
-		List<QueryModel> resultList = getEntityManager().createNamedQuery(QueryModel.NAMED_QUERY_GET_EXAMPLE_QUERIES).getResultList();		
+		List<QueryModel> resultList = executeNamedQuery(QueryModel.NAMED_QUERY_GET_EXAMPLE_QUERIES);
 		Collections.sort(resultList, queryComparator);
 		return resultList;
 	}
 
 	/**
 	 * Returns the number of queries with the same name as the given name.
-	 * @param queryName
-	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public int getSimilarQueryCount(String queryName) {
-		return getEntityManager().createNamedQuery(QueryModel.NAMED_QUERY_GET_SIMILAR_QUERIES).setParameter("name", queryName).setParameter("owner", SecurityService.getInstance().getCurrentUserName()).getResultList().size();
-	}
-	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
+		return executeNamedQuery(QueryModel.NAMED_QUERY_GET_SIMILAR_QUERIES,
+				Pair.of("name", queryName),
+				Pair.of("owner", SecurityService.getInstance().getCurrentUserName())).size();
 	}
 	
 	private IQueryBuilderFactory getQueryBuilderFactory(Class<? extends PlatformObject> clazz) {

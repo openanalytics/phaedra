@@ -1,31 +1,27 @@
 package eu.openanalytics.phaedra.model.plate.dao;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.xml.XmlUtils;
 import eu.openanalytics.phaedra.model.plate.Activator;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 
 public class PlatePropertyDAO {
-
-	private EntityManager em;
-
-	public PlatePropertyDAO(EntityManager em) {
-		this.em = em;
-	}
 
 	public String getProperty(Plate plate, String name) {
 		String xml = queryPropertyXML(plate.getId());
@@ -99,28 +95,28 @@ public class PlatePropertyDAO {
 	}
 
 	private String queryPropertyXML(long plateId) {
-		Query query = em.createNativeQuery("select " + JDBCUtils.selectXMLColumn("p.data_xml") + " from phaedra.hca_plate p where p.plate_id = " + plateId);
-		List<?> results = JDBCUtils.queryWithLock(query, em);
-		if (!results.isEmpty()) {
-			return (String)results.get(0);
+		try (Connection conn = getConnection()) {
+			String sql = "select " + JDBCUtils.selectXMLColumn("p.data_xml") + " from phaedra.hca_plate p where p.plate_id = " + plateId;
+			ResultSet rs = conn.createStatement().executeQuery(sql);
+			if (rs.next()) return rs.getString(1);
+			else return null;
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
-		return null;
 	}
 
 	private void updatePropertyXML(long plateId, String xml) {
-		JDBCUtils.lockEntityManager(em);
-		try {
-			em.getTransaction().begin();
-			Query query = em.createNativeQuery("update phaedra.hca_plate p set " + JDBCUtils.updateXMLColumn("data_xml") + " where p.plate_id = ?");
-			query.setParameter(1, JDBCUtils.getXMLObjectParameter(xml));
-			query.setParameter(2, plateId);
-			JDBCUtils.updateWithLock(query, em);
-			em.getTransaction().commit();
-		} catch (PersistenceException e) {
-			if (em.getTransaction().isActive()) em.getTransaction().rollback();
-			throw e;
-		} finally {
-			JDBCUtils.unlockEntityManager(em);
+		try (Connection conn = getConnection()) {
+			String sql = "update phaedra.hca_plate p set " + JDBCUtils.updateXMLColumn("data_xml") + " where p.plate_id = ?";
+			try (PreparedStatement ps = conn.prepareStatement(sql)) {
+				ps.setObject(1, JDBCUtils.getXMLObjectParameter(xml));
+				ps.setLong(2, plateId);
+				ps.addBatch();
+				ps.execute();
+			}
+			conn.commit();
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
 	}
 
@@ -162,5 +158,9 @@ public class PlatePropertyDAO {
 			propertiesTag.appendChild(tagToUse);
 		}
 		tagToUse.setAttribute("value", value);
+	}
+	
+	private Connection getConnection() {
+		return Screening.getEnvironment().getJDBCConnection();
 	}
 }

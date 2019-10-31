@@ -1,6 +1,9 @@
 package eu.openanalytics.phaedra.datacapture;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -10,14 +13,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.ListenerList;
 import org.eclipse.core.runtime.Status;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
@@ -69,11 +71,6 @@ public class DataCaptureService extends BaseJPAService {
 		return instance;
 	}
 	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-
 	public boolean isServerEnabled() {
 		return serverEnabled;
 	}
@@ -87,9 +84,13 @@ public class DataCaptureService extends BaseJPAService {
 	public String getCaptureConfigId(long protocolId) {
 		String query = "select pc.default_capture_config from phaedra.hca_protocolclass pc, phaedra.hca_protocol p"
 				+ " where pc.protocolclass_id = p.protocolclass_id and p.protocol_id = " + protocolId;
-		List<?> res = JDBCUtils.queryWithLock(getEntityManager().createNativeQuery(query), getEntityManager());
-		if (res.isEmpty() || res.get(0) == null) return null;
-		return res.get(0).toString();
+		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+			ResultSet rs = conn.createStatement().executeQuery(query);
+			if (rs.next()) return rs.getString(1);
+			else return null;
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
 	}
 
 	public CaptureConfig getCaptureConfig(String captureId) throws IOException, DataCaptureException {

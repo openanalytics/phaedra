@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 
 import org.eclipse.jface.dialogs.IInputValidator;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.partsettings.vo.PartSettings;
 
@@ -50,7 +50,7 @@ public class PartSettingsUtils {
 		List<Feature> features = Arrays.stream(featureIds.split(DELIMITER))
 				.filter(id -> NumberUtils.isDigit(id))
 				.map(id -> Long.valueOf(id))
-				.map(id -> Screening.getEnvironment().getEntityManager().find(Feature.class, id))
+				.map(id -> ProtocolService.getInstance().getFeature(id))
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 		return features;

@@ -14,7 +14,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.persistence.EntityManager;
 
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.email.model.DistributionList;
@@ -153,11 +152,6 @@ public class MailService extends BaseJPAService {
 	 * Non-public
 	 * **********
 	 */
-	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
 	
 	private DistributionList getList(String name) {
 		DistributionList list = getEntity("select l from DistributionList l where l.name = ?1", DistributionList.class, name);

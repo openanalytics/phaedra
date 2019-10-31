@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.From;
 import javax.persistence.criteria.Join;
 
@@ -85,12 +86,12 @@ public final class QueryBuilderHelper {
 	 * @param queryBuilder
 	 * @return
 	 */
-	public static Map<Class<? extends PlatformObject>, IQueryBuilder<? extends PlatformObject>> getParentQueryBuilders(IQueryBuilder<? extends PlatformObject> queryBuilder) {
+	public static Map<Class<? extends PlatformObject>, IQueryBuilder<? extends PlatformObject>> getParentQueryBuilders(IQueryBuilder<? extends PlatformObject> queryBuilder, EntityManager entityManager) {
 		Map<Class<? extends PlatformObject>, IQueryBuilder<? extends PlatformObject>> builders = new HashMap<>();
 		builders.put(queryBuilder.getType(), queryBuilder);
 		for (Class<? extends PlatformObject> parentClass : queryBuilder.getDirectParentClasses()) {
-			IQueryBuilder<? extends PlatformObject> parentQueryBuilder = SearchService.getInstance().createQueryBuilder(parentClass);			 
-			builders.putAll(QueryBuilderHelper.getParentQueryBuilders(parentQueryBuilder));
+			IQueryBuilder<? extends PlatformObject> parentQueryBuilder = SearchService.getInstance().createQueryBuilder(parentClass, entityManager);			 
+			builders.putAll(QueryBuilderHelper.getParentQueryBuilders(parentQueryBuilder, entityManager));
 		}
 		return Collections.unmodifiableMap(builders);
 	}

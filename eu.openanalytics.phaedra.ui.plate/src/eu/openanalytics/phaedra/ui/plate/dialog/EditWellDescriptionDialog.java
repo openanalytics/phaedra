@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 
@@ -78,7 +78,7 @@ public class EditWellDescriptionDialog extends TitleAreaDialog {
 			PlateService.getInstance().updatePlate(well.getPlate());
 		} catch (Exception e) {
 			MessageDialog.openError(getShell(), "Update failed", "Failed to update well: " + e.getMessage());
-			Screening.getEnvironment().getEntityManager().refresh(well);
+			GenericEntityService.getInstance().refreshEntity(well);
 			return false;
 		}
 		return true;

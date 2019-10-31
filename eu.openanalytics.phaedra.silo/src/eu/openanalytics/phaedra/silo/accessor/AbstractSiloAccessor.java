@@ -11,13 +11,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -393,21 +389,8 @@ public abstract class AbstractSiloAccessor<T> implements ISiloAccessor<T> {
 	}
 	
 	private void queryWells(long[] ids, int from, int to, List<Well> results) {
-		StringBuilder sb = new StringBuilder();
-		for (int i=from; i<to; i++) sb.append(ids[i] + ",");
-		sb.deleteCharAt(sb.length()-1);
-		String jpql = "select w from Well w where w.id in (" + sb.toString() + ")";
-
-		EntityManager em = Screening.getEnvironment().getEntityManager();
-		Query query = em.createQuery(jpql);
-		List<?> resultSet = JDBCUtils.queryWithLock(query, em);
-
-		for (int i=from; i<to; i++) {
-			for (Object res: resultSet) {
-				Well well = (Well)res;
-				if (ids[i] == well.getId()) results.add(well);
-			}
-		}
+		List<Well> wells = GenericEntityService.getInstance().findEntities(Well.class, ids);
+		results.addAll(wells);
 	}
 	
 	/**

@@ -2,11 +2,8 @@ package eu.openanalytics.phaedra.datacapture.metrics.internal;
 
 import java.util.Date;
 
-import javax.persistence.EntityManager;
-
 import org.hyperic.sigar.Sigar;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.datacapture.metrics.internal.dao.ServerMetricDAO;
 import eu.openanalytics.phaedra.datacapture.metrics.model.ServerMetric;
 
@@ -19,14 +16,6 @@ public class MetricCollector {
 	
 	private static ServerMetricDAO serverMetricDAO;
 	private static Thread collectorThread;
-	
-	private MetricCollector() {
-		setEntityManager();
-	}
-	
-	protected static EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
 	
 	public static void setTimeInterval(long milliseconds) {
 		if(milliseconds <= 1000) {
@@ -45,12 +34,6 @@ public class MetricCollector {
         }
 		ServerMetrics.setSigar(sigar);
 		NetworkMetrics.setSigar(sigar);
-	}
-	
-	private static void setEntityManager() {
-		if(serverMetricDAO == null) { 
-			serverMetricDAO = new ServerMetricDAO(getEntityManager());
-        }
 	}
 	
 	private static void collectorThread() {
@@ -85,7 +68,6 @@ public class MetricCollector {
 		if(!running){
 			running = true;
 			setSigar();
-			setEntityManager();
 			Runnable myRunnable = () -> collectorThread();
 	        collectorThread = new Thread(myRunnable, "serverMetricsCollector");
 	        collectorThread.start();

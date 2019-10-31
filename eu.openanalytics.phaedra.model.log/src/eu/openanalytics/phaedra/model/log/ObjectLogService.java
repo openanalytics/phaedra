@@ -6,10 +6,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.util.reflect.ReflectionUtils;
 import eu.openanalytics.phaedra.model.log.vo.ObjectLog;
@@ -34,11 +31,6 @@ public class ObjectLogService extends BaseJPAService {
 	
 	public static ObjectLogService getInstance() {
 		return instance;
-	}
-	
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
 	}
 	
 	/*

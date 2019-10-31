@@ -9,7 +9,7 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
 public class VOElementFactory implements IElementFactory {
@@ -35,7 +35,7 @@ public class VOElementFactory implements IElementFactory {
 			String className = tag.getString("class");
 			try {
 				//TODO Find a better way to do this. This requires Eclipse-BuddyPolicy: global.
-				IValueObject vo = (IValueObject)Screening.getEnvironment().getEntityManager().find(Class.forName(className), id);
+				IValueObject vo = (IValueObject) GenericEntityService.getInstance().findEntity(Class.forName(className), id);
 				if (vo != null) objects.add(vo);
 				else EclipseLog.warn("Failed to restore value object: cannot find " + className + " (" + id + ")", Activator.getDefault());
 			} catch (Exception e) {

@@ -6,9 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
 
 import org.w3c.dom.Document;
 
@@ -78,20 +76,16 @@ public class PersistentStatAccessor {
 	}
 	
 	private void writePlateXML(Plate plate, String xml) {
-		EntityManager em = Screening.getEnvironment().getEntityManager();
-		JDBCUtils.lockEntityManager(em);
-		try {
-			em.getTransaction().begin();
-			Query query = em.createNativeQuery("update phaedra.hca_plate p set " + JDBCUtils.updateXMLColumn("data_xml") + " where p.plate_id = ?");
-			query.setParameter(1, JDBCUtils.getXMLObjectParameter(xml));
-			query.setParameter(2, plate.getId());
-			JDBCUtils.updateWithLock(query, em);
-			em.getTransaction().commit();
-		} catch (PersistenceException e) {
-			if (em.getTransaction().isActive()) em.getTransaction().rollback();
-			throw e;
-		} finally {
-			JDBCUtils.unlockEntityManager(em);
+		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+			String queryString = "update phaedra.hca_plate p set " + JDBCUtils.updateXMLColumn("data_xml") + " where p.plate_id = ?";
+			try (PreparedStatement stmt = conn.prepareStatement(queryString)) {
+				stmt.setObject(1, JDBCUtils.getXMLObjectParameter(xml));
+				stmt.setLong(2, plate.getId());
+				stmt.execute();
+				conn.commit();
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
 	}
 }

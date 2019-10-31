@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -70,17 +68,12 @@ public class PlateService extends BaseJPAService {
 
 	private PlateService() {
 		// Hidden constructor
-		featureValueDAO = new FeatureValueDAO(getEntityManager());
-		platePropertyDAO = new PlatePropertyDAO(getEntityManager());
+		featureValueDAO = new FeatureValueDAO();
+		platePropertyDAO = new PlatePropertyDAO();
 	}
 
 	public static PlateService getInstance() {
 		return instance;
-	}
-
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
 	}
 
 	/**
@@ -319,7 +312,7 @@ public class PlateService extends BaseJPAService {
 			PlateActionHookManager.postAction(plate, changeType);
 		} catch (Throwable t) {
 			// Undo the local changes to the plate.
-			try { getEntityManager().refresh(plate); } catch (Exception e) {}
+			refresh(plate);
 			throw t;
 		}
 	}
@@ -639,6 +632,17 @@ public class PlateService extends BaseJPAService {
 		platePropertyDAO.setProperties(plate, props);
 	}
 
+	/**
+	 * Retrieve a compound using its primary ID.
+	 * @param compoundId
+	 * @return
+	 */
+	public Compound getCompound(long compoundId) {
+		Compound compound = getEntity(Compound.class, compoundId);
+		if (!SecurityService.getInstance().check(Permissions.PLATE_OPEN, compound)) return null;
+		return compound;
+	}
+	
 	/**
 	 * Get a list of all compounds that match the given type and number.
 	 * 

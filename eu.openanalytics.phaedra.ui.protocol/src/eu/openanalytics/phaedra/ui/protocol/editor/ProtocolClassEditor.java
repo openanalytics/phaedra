@@ -4,8 +4,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -26,8 +24,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.editor.FormEditor;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
@@ -111,12 +108,8 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 			public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
 				monitor.beginTask("Saving Protocol Class", IProgressMonitor.UNKNOWN);
 
-				EntityManager em = Screening.getEnvironment().getEntityManager();
-
 				// Query JPA. If object is detached (see exception handling below) it will be re-fetched.
-				JDBCUtils.lockEntityManager(em);
-				ProtocolClass pc = Screening.getEnvironment().getEntityManager().find(ProtocolClass.class, getOriginalProtocolClass().getId());
-				JDBCUtils.unlockEntityManager(em);
+				ProtocolClass pc = ProtocolService.getInstance().getProtocolClass(getOriginalProtocolClass().getId());
 				// Query may fail if a new protocol class is being edited.
 				if (pc == null) pc = getOriginalProtocolClass();
 
@@ -138,9 +131,7 @@ public class ProtocolClassEditor extends FormEditor implements ISaveablePart {
 				});
 
 				// Fix: explicitly refresh the image settings because the sequence nr of channels is maintained by JPA.
-				JDBCUtils.lockEntityManager(em);
-				Screening.getEnvironment().getEntityManager().refresh(pc.getImageSettings());
-				JDBCUtils.unlockEntityManager(em);
+				GenericEntityService.getInstance().refreshEntity(pc.getImageSettings());
 
 				// Save succeeded: remove the dirty flag.
 				dirty = false;

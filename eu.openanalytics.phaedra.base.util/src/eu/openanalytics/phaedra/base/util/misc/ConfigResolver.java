@@ -22,6 +22,14 @@ public abstract class ConfigResolver {
 		return value;
 	}
 	
+	public String get(String key, String defaultValue) {
+		String value = null;
+		if (sysPropPrefix != null) value = System.getProperty(sysPropPrefix + key);
+		if (resolver != null && (value == null || value.isEmpty())) value = resolver.apply(key);
+		if (value == null || value.isEmpty()) return value = defaultValue;
+		return value;
+	}
+	
 	public String getEncrypted(String key) {
 		String value = null;
 		if (sysPropPrefix != null) value = System.getProperty(sysPropPrefix + key);

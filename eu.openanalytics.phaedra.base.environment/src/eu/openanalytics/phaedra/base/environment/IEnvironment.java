@@ -28,6 +28,7 @@ public interface IEnvironment {
 	
 	public SecureFileServer getFileServer();
 	
+	@Deprecated
 	public EntityManager getEntityManager();
 	
 	public Connection getJDBCConnection();

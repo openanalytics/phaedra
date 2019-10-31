@@ -1,18 +1,19 @@
 package eu.openanalytics.phaedra.validation;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
+import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -150,17 +151,13 @@ public class ValidationService {
 	 */
 	public PlateStatus getPlateStatus(Plate plate) {
 		String sql = "select validate_status, approve_status from phaedra.hca_plate where plate_id = " + plate.getId();
-		EntityManager em = Screening.getEnvironment().getEntityManager();
-		Query query = em.createNativeQuery(sql);
-
-		List<?> results = JDBCUtils.queryWithLock(query, em);
-		if (!results.isEmpty()) {
-			Object[] row = (Object[])results.get(0);
-			PlateStatus status = new PlateStatus(((Number)row[0]).intValue(), ((Number)row[1]).intValue());
-			return status;
+		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+			ResultSet rs = conn.createStatement().executeQuery(sql);
+			if (rs.next()) return new PlateStatus(rs.getInt(1), rs.getInt(2));
+			else return new PlateStatus(PlateValidationStatus.VALIDATION_NOT_SET.code, PlateApprovalStatus.APPROVAL_NOT_SET.code);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
-
-		return new PlateStatus(PlateValidationStatus.VALIDATION_NOT_SET.code, PlateApprovalStatus.APPROVAL_NOT_SET.code);
 	}
 
 	public static class PlateStatus {

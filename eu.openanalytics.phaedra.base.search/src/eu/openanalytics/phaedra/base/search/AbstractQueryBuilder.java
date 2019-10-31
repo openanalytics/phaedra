@@ -26,7 +26,6 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.search.internal.QueryBuilderHelper;
 import eu.openanalytics.phaedra.base.search.internal.SecurityFilterRegistry;
 import eu.openanalytics.phaedra.base.search.model.QueryException;
@@ -35,6 +34,7 @@ import eu.openanalytics.phaedra.base.search.model.QueryModel;
 import eu.openanalytics.phaedra.base.search.model.QueryOrdering;
 
 public abstract class AbstractQueryBuilder<T extends PlatformObject> implements IQueryBuilder<T> {
+	
 	private QueryModel queryModel;
 	private EntityManager entityManager;
 	private CriteriaBuilder criteriaBuilder;
@@ -42,8 +42,8 @@ public abstract class AbstractQueryBuilder<T extends PlatformObject> implements 
 	private Map<Class<? extends PlatformObject>, IQueryBuilder<? extends PlatformObject>> queryBuilders;
 	private Map<Class<? extends PlatformObject>, From<? extends PlatformObject, ? extends PlatformObject>> criteriaNodes = new HashMap<>();
 
-	public AbstractQueryBuilder() {
-		this.entityManager = Screening.getEnvironment().getEntityManager();
+	public AbstractQueryBuilder(EntityManager entityManager) {
+		this.entityManager = entityManager;
 		this.criteriaBuilder = entityManager.getCriteriaBuilder();
 		this.criteriaQuery = criteriaBuilder.createQuery(getType());
 		this.criteriaNodes.put(getType(), criteriaQuery.from(getType()));
@@ -66,7 +66,7 @@ public abstract class AbstractQueryBuilder<T extends PlatformObject> implements 
 	@Override
 	public Map<Class<? extends PlatformObject>, IQueryBuilder<? extends PlatformObject>> getQueryBuilders() {
 		if (queryBuilders == null) {
-			this.queryBuilders = QueryBuilderHelper.getParentQueryBuilders(this);
+			this.queryBuilders = QueryBuilderHelper.getParentQueryBuilders(this, entityManager);
 		}		
 		return this.queryBuilders;
 	}
@@ -160,7 +160,7 @@ public abstract class AbstractQueryBuilder<T extends PlatformObject> implements 
 		// subquery part
 		for (QueryFilter queryFilter : getQueryFilters(false, classesWithCurrent)) {
 			Map<Class<? extends PlatformObject>, From<? extends PlatformObject, ? extends PlatformObject>> criteriaNodes = new HashMap<>();
-			IQueryBuilder<? extends PlatformObject> subqueryBuilder = SearchService.getInstance().createQueryBuilder(queryFilter.getType());
+			IQueryBuilder<? extends PlatformObject> subqueryBuilder = SearchService.getInstance().createQueryBuilder(queryFilter.getType(), entityManager);
 			
 			List<Class<? extends PlatformObject>> classesToJoin = subqueryBuilder.getParentClassesToNode(getType());
 

@@ -3,12 +3,9 @@ package eu.openanalytics.phaedra.ui.partsettings.service;
 import java.util.List;
 import java.util.Optional;
 
-import javax.persistence.EntityManager;
-
 import org.eclipse.ui.IWorkbenchPart;
 
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -34,11 +31,6 @@ public class PartSettingsService extends BaseJPAService {
 		return instance;
 	}
 
-	@Override
-	protected EntityManager getEntityManager() {
-		return Screening.getEnvironment().getEntityManager();
-	}
-	
 	/*
 	 * **********
 	 * Public API
@@ -88,6 +80,10 @@ public class PartSettingsService extends BaseJPAService {
 		copy.setProperties(partSettings.getProperties().deepClone());
 		copy.setUserName(username);
 		save(copy);
+	}
+	
+	public PartSettings getPartSettings(long partSettingsId) {
+		return getEntity(PartSettings.class, partSettingsId);
 	}
 	
 	/**

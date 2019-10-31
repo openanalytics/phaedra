@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.PlatformObject;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -107,7 +107,7 @@ public class ImageSettingsService implements IUIEventListener, IModelEventListen
 			// Fix: saving channels in a new protocol class doesn't immediately show correct sequence nrs.
 			List<ImageChannel> channels = currentProtocolClass.getImageSettings().getImageChannels();
 			for (ImageChannel ch: channels) {
-				if (ch.getSequence() == 0) Screening.getEnvironment().getEntityManager().refresh(ch);
+				if (ch.getSequence() == 0) GenericEntityService.getInstance().refreshEntity(ch);
 			}
 			ObjectCopyFactory.copySettings(currentProtocolClass.getImageSettings(), currentSettings, true);
 		}

@@ -10,7 +10,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.colormethod.BaseColorMethod;
 import eu.openanalytics.phaedra.base.ui.colormethod.BaseColorMethodDialog;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethodData;
@@ -18,6 +17,7 @@ import eu.openanalytics.phaedra.base.ui.colormethod.LegendDrawer;
 import eu.openanalytics.phaedra.base.ui.colormethod.lookup.LookupRule;
 import eu.openanalytics.phaedra.calculation.ClassificationService;
 import eu.openanalytics.phaedra.calculation.ClassificationService.PatternType;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 
@@ -34,7 +34,7 @@ public class ClassificationColorMethod extends BaseColorMethod {
 		String featureIdString = settings.get(SETTING_FEATURE_ID);
 		if (featureIdString != null) {
 			long featureId = Long.parseLong(featureIdString);
-			classificationFeature = Screening.getEnvironment().getEntityManager().find(Feature.class, featureId);
+			classificationFeature = ProtocolService.getInstance().getFeature(featureId);
 		}
 	}
 

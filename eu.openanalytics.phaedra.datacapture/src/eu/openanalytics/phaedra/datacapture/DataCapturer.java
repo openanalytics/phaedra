@@ -12,7 +12,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.SubMonitor;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
@@ -177,10 +177,10 @@ public class DataCapturer {
 			Protocol protocol = (Protocol) task.getParameters().get(DataCaptureParameter.TargetProtocol.name());
 			if (protocol == null || experimentName == null) throw new DataCaptureException("Cannot create new experiment: target protocol and/or experiment name not set");
 			
-			Screening.getEnvironment().getEntityManager().refresh(protocol);
+			GenericEntityService.getInstance().refreshEntity(protocol);
 			List<Experiment> experiments = PlateService.getInstance().getExperiments(protocol);
 			for (Experiment e: experiments) {
-				Screening.getEnvironment().getEntityManager().refresh(e);
+				GenericEntityService.getInstance().refreshEntity(e);
 				if (e.getName().equalsIgnoreCase(experimentName)) { experiment = e; break; }
 			}
 			if (experiment == null) experiment = createNewExperiment(experimentName, protocol, task.getUser());

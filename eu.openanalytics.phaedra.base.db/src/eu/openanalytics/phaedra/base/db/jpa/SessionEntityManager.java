@@ -30,12 +30,12 @@ import org.eclipse.persistence.sessions.Session;
  * <li>Queries obtained via createQuery() and similar methods</li>
  * </ul>
  */
-public class LockingEntityManager implements EntityManager {
+public class SessionEntityManager implements EntityManager {
 
 	private EntityManager wrappedManager;
 	private Lock lock;
 	
-	public LockingEntityManager(EntityManager wrappedManager) {
+	public SessionEntityManager(EntityManager wrappedManager) {
 		this.wrappedManager = wrappedManager;
 		lock = new ReentrantLock();
 	}
@@ -51,22 +51,24 @@ public class LockingEntityManager implements EntityManager {
 	
 	@Override
 	public void clear() {
-		lock.lock();
-		try {
-			wrappedManager.clear();
-		} finally {
-			lock.unlock();
-		}
+		// This is a NOOP: SessionEntityManagers cannot be cleared, their lifecycle is bound to the application lifecycle.
+//		lock.lock();
+//		try {
+//			wrappedManager.clear();
+//		} finally {
+//			lock.unlock();
+//		}
 	}
 
 	@Override
 	public void close() {
-		lock.lock();
-		try {
-			wrappedManager.close();
-		} finally {
-			lock.unlock();
-		}
+		// This is a NOOP: SessionEntityManagers cannot be closed, their lifecycle is bound to the application lifecycle.
+//		lock.lock();
+//		try {
+//			wrappedManager.close();
+//		} finally {
+//			lock.unlock();
+//		}
 	}
 
 	@Override

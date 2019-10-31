@@ -9,8 +9,10 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.persistence.indirection.IndirectList;
 
+import eu.openanalytics.phaedra.base.db.Database;
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 
 /**
@@ -24,12 +26,22 @@ import eu.openanalytics.phaedra.base.db.JDBCUtils;
  */
 public abstract class BaseJPAService {
 
-	/**
-	 * Get the EntityManager this service should use for all its operations.
-	 * 
-	 * @return The EntityManager to use.
-	 */
-	protected abstract EntityManager getEntityManager();
+	private static Database database;
+	
+	public static void setDatabase(Database db) {
+		if (database != null) throw new IllegalStateException("Database is already set");
+		database = db;
+	}
+	
+	protected EntityManager getEntityManager() {
+		EntityManager em = database.getEntityManager();
+		JDBCUtils.lockEntityManager(em);
+		return em;
+	}
+	
+	protected void releaseEntityManager(EntityManager em) {
+		JDBCUtils.unlockEntityManager(em);
+	}
 	
 	/**
 	 * Get an entity based on its primary key.
@@ -57,11 +69,10 @@ public abstract class BaseJPAService {
 	 */
 	protected <E> E getEntity(Class<E> entityClass, Object id) {
 		EntityManager em = getEntityManager();
-		JDBCUtils.lockEntityManager(em);
 		try {
 			return em.find(entityClass, id);
 		} finally {
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
 		}
 	}
 	
@@ -76,17 +87,16 @@ public abstract class BaseJPAService {
 	 */
 	protected <E> E getEntity(String jpql, Class<E> entityClass, Object... params) {
 		EntityManager em = getEntityManager();
-		TypedQuery<E> typedQuery = em.createQuery(jpql, entityClass);
-		for (int i=1; i<=params.length; i++) {
-			typedQuery.setParameter(i, params[i-1]);
-		}
-		JDBCUtils.lockEntityManager(em);
 		try {
+			TypedQuery<E> typedQuery = em.createQuery(jpql, entityClass);
+			for (int i=1; i<=params.length; i++) {
+				typedQuery.setParameter(i, params[i-1]);
+			}
 			return typedQuery.getSingleResult();
 		} catch (NoResultException e) {
 			return null;
 		} finally {
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
 		}
 	}
 	
@@ -98,13 +108,11 @@ public abstract class BaseJPAService {
 	 */
 	protected <E> List<E> getList(Class<E> returnClass) {
 		EntityManager em = getEntityManager();
-		TypedQuery<E> typedQuery = em.createQuery(
-				"select o from " + returnClass.getSimpleName() + " o", returnClass);
-		JDBCUtils.lockEntityManager(em);
 		try {
+			TypedQuery<E> typedQuery = em.createQuery("select o from " + returnClass.getSimpleName() + " o", returnClass);
 			return typedQuery.getResultList();
 		} finally {
-			JDBCUtils.unlockEntityManager(em);	
+			releaseEntityManager(em);
 		}
 	}
 	
@@ -118,15 +126,14 @@ public abstract class BaseJPAService {
 	 */
 	protected <E> List<E> getList(String jpql, Class<E> returnClass, List<?> params) {
 		EntityManager em = getEntityManager();
-		TypedQuery<E> typedQuery = em.createQuery(jpql, returnClass);
-		for (int i=1; i<=params.size(); i++) {
-			typedQuery.setParameter(i, params.get(i-1));
-		}
-		JDBCUtils.lockEntityManager(em);
 		try {
+			TypedQuery<E> typedQuery = em.createQuery(jpql, returnClass);
+			for (int i=1; i<=params.size(); i++) {
+				typedQuery.setParameter(i, params.get(i-1));
+			}
 			return typedQuery.getResultList();
 		} finally {
-			JDBCUtils.unlockEntityManager(em);	
+			releaseEntityManager(em);
 		}
 	}
 	
@@ -140,15 +147,56 @@ public abstract class BaseJPAService {
 	 */
 	protected <E> List<E> getList(String jpql, Class<E> returnClass, Object... params) {
 		EntityManager em = getEntityManager();
-		TypedQuery<E> typedQuery = em.createQuery(jpql, returnClass);
-		for (int i=1; i<=params.length; i++) {
-			typedQuery.setParameter(i, params[i-1]);
-		}
-		JDBCUtils.lockEntityManager(em);
 		try {
+			TypedQuery<E> typedQuery = em.createQuery(jpql, returnClass);
+			for (int i=1; i<=params.length; i++) {
+				typedQuery.setParameter(i, params[i-1]);
+			}
 			return typedQuery.getResultList();
 		} finally {
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected <E> List<E> executeQuery(String jpql, Pair<String,Object>... parameters) {
+		EntityManager em = getEntityManager();
+		try {
+			Query query = em.createQuery(jpql);
+			for (Pair<String,Object> param: parameters) {
+				query.setParameter(param.getLeft(), param.getRight());
+			}
+			return query.getResultList();
+		} finally {
+			releaseEntityManager(em);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected <E> List<E> executeNamedQuery(String queryName, Pair<String,Object>... parameters) {
+		EntityManager em = getEntityManager();
+		try {
+			Query query = em.createNamedQuery(queryName);
+			for (Pair<String,Object> param: parameters) {
+				query.setParameter(param.getLeft(), param.getRight());
+			}
+			return query.getResultList();
+		} finally {
+			releaseEntityManager(em);
+		}
+	}
+	
+	/**
+	 * Refresh a managed entity.
+	 * 
+	 * @param The managed entity to refresh.
+	 */
+	protected void refresh(Object o) {
+		EntityManager em = getEntityManager();
+		try {
+			em.refresh(o);
+		} finally {
+			releaseEntityManager(em);
 		}
 	}
 	
@@ -160,7 +208,6 @@ public abstract class BaseJPAService {
 	protected void save(Object o) {
 		beforeSave(o);
 		EntityManager em = getEntityManager();
-		JDBCUtils.lockEntityManager(em);
 		try {
 			em.getTransaction().begin();
 			em.persist(o);
@@ -168,7 +215,7 @@ public abstract class BaseJPAService {
 			em.getTransaction().commit();
 		} finally {
 			if (em.getTransaction().isActive()) em.getTransaction().rollback();
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
 		}
 		afterSave(o);
 	}
@@ -189,7 +236,6 @@ public abstract class BaseJPAService {
 	protected void saveCollection(Collection<?> items) {
 		beforeSave(items);
 		EntityManager em = getEntityManager();
-		JDBCUtils.lockEntityManager(em);
 		try {
 			em.getTransaction().begin();
 			for (Object o: items) em.persist(o);
@@ -197,7 +243,7 @@ public abstract class BaseJPAService {
 			em.getTransaction().commit();
 		} finally {
 			if (em.getTransaction().isActive()) em.getTransaction().rollback();
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
 		}
 		afterSave(items);
 	}
@@ -210,14 +256,13 @@ public abstract class BaseJPAService {
 	protected void delete(Object o) {
 		beforeDelete(o);
 		EntityManager em = getEntityManager();
-		JDBCUtils.lockEntityManager(em);
 		try {
 			em.getTransaction().begin();
 			em.remove(o);
 			em.getTransaction().commit();
 		} finally {
 			if (em.getTransaction().isActive()) em.getTransaction().rollback();
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
 		}
 		afterDelete(o);
 	}
@@ -239,7 +284,6 @@ public abstract class BaseJPAService {
 	 */
 	protected int executeUpdate(String jpql, Object... params) {
 		EntityManager em = getEntityManager();
-		JDBCUtils.lockEntityManager(em);
 		try {
 			Query query = em.createQuery(jpql);
 			for (int i=1; i<=params.length; i++) {
@@ -247,7 +291,7 @@ public abstract class BaseJPAService {
 			}
 			return query.executeUpdate();
 		} finally {
-			JDBCUtils.unlockEntityManager(em);
+			releaseEntityManager(em);
 		}
 	}
 

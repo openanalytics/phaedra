@@ -12,7 +12,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 
@@ -78,7 +78,7 @@ public class EditCompoundDescriptionDialog extends TitleAreaDialog {
 			PlateService.getInstance().updatePlate(compound.getPlate());
 		} catch (Exception e) {
 			MessageDialog.openError(getShell(), "Update failed", "Failed to update compound: " + e.getMessage());
-			Screening.getEnvironment().getEntityManager().refresh(compound);
+			GenericEntityService.getInstance().refreshEntity(compound);
 			return false;
 		}
 		return true;

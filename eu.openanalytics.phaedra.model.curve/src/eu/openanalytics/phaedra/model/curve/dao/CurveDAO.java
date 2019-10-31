@@ -4,18 +4,16 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
@@ -27,8 +25,10 @@ import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.curve.util.CurveGrouping;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
+import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 public class CurveDAO {
@@ -40,87 +40,98 @@ public class CurveDAO {
 	private static final String[] CURVE_PROPERTY_COLUMNS = {
 		"CURVE_ID", "PROPERTY_NAME", "NUMERIC_VALUE", "STRING_VALUE", "BINARY_VALUE"
 	};
-	
-	private EntityManager em;
-
-	public CurveDAO(EntityManager em) {
-		this.em = em;
-	}
 
 	public Curve getCurve(long curveId) {
-		String queryString = "select " + StringUtils.createSeparatedString(CURVE_COLUMNS, ",")
-				+ " from phaedra.hca_curve"
-				+ " where curve_id = " + curveId;
-		List<?> resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
-		if (resultSet.isEmpty()) return null;
+		Curve curve = null;
 		
-		Curve curve = toCurve((Object[]) resultSet.get(0));
-		setCurveCompounds(curve);
-		
-		queryString = "select " + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",")
-				+ " from phaedra.hca_curve_property"
-				+ " where curve_id = " + curve.getId();
-		resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
-		applyProperties(curve, resultSet);
+		try (Connection conn = getConnection()) {
+			String queryString = "select " + StringUtils.createSeparatedString(CURVE_COLUMNS, ",")
+					+ " from phaedra.hca_curve"
+					+ " where curve_id = " + curveId;
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			if (rs.next()) curve = toCurve(rs);
+			else return null;
+			
+			setCurveCompounds(curve);
+			
+			queryString = "select " + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",")
+					+ " from phaedra.hca_curve_property"
+					+ " where curve_id = " + curve.getId();
+			rs = conn.createStatement().executeQuery(queryString);
+			applyProperties(curve, getPropertyValues(rs));
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
 		
 		return curve;
 	}
 	
 	public Curve getCurve(Feature f, Compound c, CurveGrouping grouping) {
-		String queryString = "select c." + StringUtils.createSeparatedString(CURVE_COLUMNS, ",c.", false)
-				+ " from phaedra.hca_curve c, phaedra.hca_curve_compound cc"
-				+ " where c.feature_id = " + f.getId()
-				+ " and c.curve_id = cc.curve_id and cc.platecompound_id = " + c.getId();
-		for (int i = 0; i < grouping.getCount(); i++) {
-			queryString += " and c.group_by_" + (i+1) + " = '" + grouping.get(i) + "'";
+		Curve curve = null;
+		
+		try (Connection conn = getConnection()) {
+			String queryString = "select c." + StringUtils.createSeparatedString(CURVE_COLUMNS, ",c.", false)
+					+ " from phaedra.hca_curve c, phaedra.hca_curve_compound cc"
+					+ " where c.feature_id = " + f.getId()
+					+ " and c.curve_id = cc.curve_id and cc.platecompound_id = " + c.getId();
+			for (int i = 0; i < grouping.getCount(); i++) {
+				queryString += " and c.group_by_" + (i+1) + " = '" + grouping.get(i) + "'";
+			}
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			if (rs.next()) curve = toCurve(rs);
+			else return null;
+			
+			setCurveCompounds(curve);
+			
+			queryString = "select " + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",")
+					+ " from phaedra.hca_curve_property"
+					+ " where curve_id = " + curve.getId();
+			rs = conn.createStatement().executeQuery(queryString);
+			applyProperties(curve, getPropertyValues(rs));
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
-		List<?> resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
-		if (resultSet.isEmpty()) return null;
-		
-		Curve curve = toCurve((Object[]) resultSet.get(0));
-		setCurveCompounds(curve);
-		
-		queryString = "select " + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",")
-				+ " from phaedra.hca_curve_property"
-				+ " where curve_id = " + curve.getId();
-		resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
-		applyProperties(curve, resultSet);
 		
 		return curve;
 	}
 	
 	public List<Curve> getCurveBatch(Plate plate) {
-		// Query 1: curves
-		String queryString = "select c." + StringUtils.createSeparatedString(CURVE_COLUMNS, ",c.", false)
-				+ " from phaedra.hca_curve c, phaedra.hca_curve_compound cc, phaedra.hca_plate_compound pc"
-				+ " where c.curve_id = cc.curve_id and cc.platecompound_id = pc.platecompound_id and pc.plate_id =  " + plate.getId()
-				+ " order by c.curve_id asc";
-		List<?> resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
 		List<Curve> curves = new ArrayList<>();
-		for (Object record: resultSet) curves.add(toCurve((Object[]) record));
-
-		// Query 2: compounds (with support for multiplo)
-		queryString = "select curve_id, platecompound_id from phaedra.hca_curve_compound where curve_id in"
-				+ " (select cc.curve_id from phaedra.hca_curve_compound cc, phaedra.hca_plate_compound pc"
-				+ " where cc.platecompound_id = pc.platecompound_id and pc.plate_id = " + plate.getId() + ")"
-				+ " order by curve_id asc";
-		resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
-		for (Object record: resultSet) {
-			Object[] row = (Object[]) record;
-			long curveId = ((Number) row[0]).longValue();
-			long compId = ((Number) row[1]).longValue();
-			Curve curve = curves.stream().filter(c -> c.getId() == curveId).findAny().orElse(null);
-			curve.getCompounds().add(em.find(Compound.class, compId));
+		
+		try (Connection conn = getConnection()) {
+			// Query 1: curves
+			String queryString = "select c." + StringUtils.createSeparatedString(CURVE_COLUMNS, ",c.", false)
+					+ " from phaedra.hca_curve c, phaedra.hca_curve_compound cc, phaedra.hca_plate_compound pc"
+					+ " where c.curve_id = cc.curve_id and cc.platecompound_id = pc.platecompound_id and pc.plate_id =  " + plate.getId()
+					+ " order by c.curve_id asc";
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			while (rs.next()) curves.add(toCurve(rs));
+	
+			// Query 2: compounds (with support for multiplo)
+			queryString = "select curve_id, platecompound_id from phaedra.hca_curve_compound where curve_id in"
+					+ " (select cc.curve_id from phaedra.hca_curve_compound cc, phaedra.hca_plate_compound pc"
+					+ " where cc.platecompound_id = pc.platecompound_id and pc.plate_id = " + plate.getId() + ")"
+					+ " order by curve_id asc";
+			rs = conn.createStatement().executeQuery(queryString);
+			while (rs.next()) {
+				long curveId = rs.getLong(1);
+				long compId = rs.getLong(2);
+				Curve curve = curves.stream().filter(c -> c.getId() == curveId).findAny().orElse(null);
+				curve.getCompounds().add(PlateService.getInstance().getCompound(compId));
+			}
+			
+			// Query 3: curve properties
+			queryString = "select cp." + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",cp.", false)
+					+ " from phaedra.hca_curve_property cp, phaedra.hca_curve_compound cc, phaedra.hca_plate_compound pc"
+					+ " where cp.curve_id = cc.curve_id and cc.platecompound_id = pc.platecompound_id and pc.plate_id = " + plate.getId()
+					+ " order by cp.curve_id asc";
+			rs = conn.createStatement().executeQuery(queryString);
+			Object[][] properties = getPropertyValues(rs);
+			for (Curve curve: curves) applyProperties(curve, properties);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
 		
-		// Query 3: curve properties
-		queryString = "select cp." + StringUtils.createSeparatedString(CURVE_PROPERTY_COLUMNS, ",cp.", false)
-				+ " from phaedra.hca_curve_property cp, phaedra.hca_curve_compound cc, phaedra.hca_plate_compound pc"
-				+ " where cp.curve_id = cc.curve_id and cc.platecompound_id = pc.platecompound_id and pc.plate_id = " + plate.getId()
-				+ " order by cp.curve_id asc";
-		resultSet = JDBCUtils.queryWithLock(em.createNativeQuery(queryString), em);
-		for (Curve curve: curves) applyProperties(curve, resultSet);
-
 		return curves;
 	}
 	
@@ -174,15 +185,26 @@ public class CurveDAO {
 	}
 	
 	private long getNewCurveId() {
-		return JDBCUtils.getSequenceNextVal(em, "phaedra.hca_curve_s");
+		String queryString = JDBCUtils.getSequenceNextValStatement("phaedra.hca_curve_s");
+		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			if (rs.next()) return rs.getLong(1);
+			else return -1;
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
 	}
 	
 	private void setCurveCompounds(Curve curve) {
-		Query query = em.createNativeQuery("select platecompound_id from phaedra.hca_curve_compound where curve_id = " + curve.getId());
-		List<?> res = JDBCUtils.queryWithLock(query, em);
-		for (Object o: res) {
-			long id = ((Number) o).longValue();
-			curve.getCompounds().add(em.find(Compound.class, id));
+		try (Connection conn = getConnection()) {
+			String queryString = "select platecompound_id from phaedra.hca_curve_compound where curve_id = " + curve.getId();
+			ResultSet rs = conn.createStatement().executeQuery(queryString);
+			while (rs.next()) {
+				long id = rs.getLong(1);
+				curve.getCompounds().add(PlateService.getInstance().getCompound(id));
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
 		}
 	}
 	
@@ -287,36 +309,48 @@ public class CurveDAO {
 		}
 	}
 	
-	private Curve toCurve(Object[] record) {
-		long curveId = ((Number) record[0]).longValue();
-		long featureId = ((Number) record[1]).longValue();
+	private Curve toCurve(ResultSet rs) throws SQLException {
+		long curveId = rs.getLong(1);
+		long featureId = rs.getLong(2);
 		Curve curve = new Curve();
 		curve.setId(curveId);
-		curve.setFeature(em.find(Feature.class, featureId));
-		curve.setModelId((String) record[2]);
-		curve.setFitDate((Date) record[3]);
-		curve.setFitVersion((String) record[4]);
+		curve.setFeature(ProtocolService.getInstance().getFeature(featureId));
+		curve.setModelId(rs.getString(3));
+		curve.setFitDate(rs.getDate(4));
+		curve.setFitVersion(rs.getString(5));
 		
-		curve.setErrorCode(((Number) record[5]).intValue());
+		curve.setErrorCode(rs.getInt(6));
 		String[] groupingValues = new String[] {
-				(String) record[6],
-				(String) record[7],
-				(String) record[8]
+				rs.getString(7),
+				rs.getString(8),
+				rs.getString(9)
 		};
 		if (groupingValues[0] == null) groupingValues = null;
 		curve.setGroupingValues(groupingValues);
-		curve.setPlot((byte[]) record[9]);
+		curve.setPlot(rs.getBytes(10));
 		return curve;
 	}
 	
-	private void applyProperties(Curve curve, List<?> resultSet) {
+	private Object[][] getPropertyValues(ResultSet rs) throws SQLException {
+		List<Object[]> values = new ArrayList<>();
+		while (rs.next()) {
+			Object[] row = new Object[5];
+			row[0] = rs.getLong(1);
+			row[1] = rs.getString(2);
+			row[2] = (Double) rs.getObject(3);
+			row[3] = rs.getString(4);
+			row[4] = rs.getBytes(5);
+			values.add(row);
+		}
+		return values.toArray(new Object[values.size()][]);
+	}
+	
+	private void applyProperties(Curve curve, Object[][] allProperties) throws SQLException {
 		ICurveFitModel model = CurveFitService.getInstance().getModel(curve.getModelId());
 		List<Definition> outputParameterDefs = model.getOutputParameters(CurveFitService.getInstance().getSettings(curve));
 		
 		List<Value> properties = new ArrayList<>();
-		for (Object record: resultSet) {
-			Object[] row = (Object[]) record;
-			
+		for (Object[] row: allProperties) {
 			long curveId = ((Number) row[0]).longValue();
 			if (curveId != curve.getId()) continue;
 
@@ -342,5 +376,9 @@ public class CurveDAO {
 		}
 		
 		curve.setOutputParameters(orderedValues);
+	}
+	
+	private Connection getConnection() {
+		return Screening.getEnvironment().getJDBCConnection();
 	}
 }

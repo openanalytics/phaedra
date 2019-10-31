@@ -2,31 +2,22 @@ package eu.openanalytics.phaedra.datacapture.metrics.internal.dao;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
-import javax.persistence.Query;
 
-import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.datacapture.metrics.model.ServerMetric;
 
 public class ServerMetricDAO {
 
-	private EntityManager em;
-
-	public ServerMetricDAO(EntityManager em) {
-		this.em = em;
-	}
-
 	public List<ServerMetric> getValues(Date from, Date to) {
-		if(from.getTime() > to.getTime()) {
+		if (from.getTime() > to.getTime()) {
 			Date temp = from;
 			from = to;
 			to = temp;
@@ -39,13 +30,19 @@ public class ServerMetricDAO {
 				+ " from phaedra.hca_dc_metric m"
 				+ " where m.timestamp > ?"
 				+ " and m.timestamp < ?";
-
-		Query query = em.createNativeQuery(queryString);
-		query.setParameter(1, from);
-		query.setParameter(2, to);
-
-		List<?> resultSet = JDBCUtils.queryWithLock(query, em);
-		List<ServerMetric> values = mapValues(resultSet);
+		
+		List<ServerMetric> values = null;
+		
+		try (Connection conn = getConnection()) {
+			try (PreparedStatement stmt = conn.prepareStatement(queryString)) {
+				stmt.setObject(1, from);
+				stmt.setObject(2, to);
+				ResultSet rs = stmt.executeQuery();
+				values = mapValues(rs);
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
 
 		long duration = System.currentTimeMillis() - startTime;
 		EclipseLog.debug("ServerMetric lookup in " + duration + "ms"
@@ -93,18 +90,17 @@ public class ServerMetricDAO {
 	 * **********
 	 */
 
-	private List<ServerMetric> mapValues(List<?> resultSet) {
+	private List<ServerMetric> mapValues(ResultSet rs) throws SQLException {
 		List<ServerMetric> values = new ArrayList<ServerMetric>();
 
-		for (Object o: resultSet) {
-			Object[] row = (Object[])o;
-			long metricId = ((Number)row[0]).longValue();
-			long timestamp = ((Timestamp)row[1]).getTime();
-			long diskUsage = ((Number)row[2]).longValue();
-			long ramUsage = ((Number)row[3]).longValue();
-			Double cpu = ((Number)row[4]).doubleValue();
-			long downloadSpeed = ((Number)row[5]).longValue();
-			long uploadSpeed = ((Number)row[6]).longValue();
+		while (rs.next()) {
+			long metricId = rs.getLong(1);
+			long timestamp = rs.getTimestamp(2).getTime();
+			long diskUsage = rs.getLong(3);
+			long ramUsage = rs.getLong(4);
+			Double cpu = (Double) rs.getObject(5);
+			long downloadSpeed = rs.getLong(6);
+			long uploadSpeed = rs.getLong(7);
 
 			ServerMetric serverMetric = new ServerMetric();
 			serverMetric.setId(metricId);
@@ -122,4 +118,7 @@ public class ServerMetricDAO {
 		return values;
 	}
 
+	private Connection getConnection() {
+		return Screening.getEnvironment().getJDBCConnection();
+	}
 }
