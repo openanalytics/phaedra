@@ -2,7 +2,7 @@ package eu.openanalytics.phaedra.ui.subwell.chart.v2.grid.correlationmatrix;
 
 import java.util.List;
 
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.AbstractChart;
 import eu.openanalytics.phaedra.base.ui.charting.v2.chart.histogram.Histogram1DChart;
 import eu.openanalytics.phaedra.model.plate.vo.Well;

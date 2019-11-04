@@ -7,7 +7,7 @@ import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 
 import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 
 
 public abstract class DataConfigSupport<T extends DataUnitConfig> implements Supplier<T> {

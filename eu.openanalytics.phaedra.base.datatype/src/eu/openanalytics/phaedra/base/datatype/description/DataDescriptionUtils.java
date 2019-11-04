@@ -4,8 +4,6 @@ import java.text.Collator;
 import java.util.Comparator;
 import java.util.Locale;
 
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
-
 
 public class DataDescriptionUtils {
 	

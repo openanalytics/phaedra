@@ -20,6 +20,7 @@ import eu.openanalytics.phaedra.export.core.query.QueryResult.Column;
 import eu.openanalytics.phaedra.export.core.statistics.Statistics;
 import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
 import eu.openanalytics.phaedra.export.core.writer.convert.IValueConverter;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
 
 
 public class QueryXLSXWriter extends AbstractXLSXWriter implements IExportWriter {
@@ -124,7 +125,7 @@ public class QueryXLSXWriter extends AbstractXLSXWriter implements IExportWriter
 				writeNameCell(row, c+1, settings.features.get(c).getDisplayName());
 			}
 			sh.createFreezePane(0, 1);
-			DataDescription statDescription = new RealValueDescription("Statistic");
+			DataDescription statDescription = new RealValueDescription("Statistic", Well.class);
 			for (int r = 0; r < statNames.size(); r++) {
 				row = sh.createRow(r+1);
 				String statName = statNames.get(r);

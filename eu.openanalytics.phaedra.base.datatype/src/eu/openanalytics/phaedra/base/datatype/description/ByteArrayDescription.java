@@ -6,8 +6,8 @@ import eu.openanalytics.phaedra.base.datatype.DataType;
 public class ByteArrayDescription extends BaseDataDescription {
 	
 	
-	public ByteArrayDescription(final String name) {
-		super(name);
+	public ByteArrayDescription(final String name, final Class<?> entityType) {
+		super(name, entityType);
 	}
 	
 	

@@ -1,7 +1,6 @@
 package eu.openanalytics.phaedra.base.datatype.description;
 
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 
 public abstract class AbstractConcentrationDataDescription extends BaseDataDescription implements ConcentrationDataDescription {
@@ -10,8 +9,9 @@ public abstract class AbstractConcentrationDataDescription extends BaseDataDescr
 	private final ConcentrationUnit unit;
 	
 	
-	public AbstractConcentrationDataDescription(final String name, final ConcentrationUnit unit) {
-		super(name);
+	public AbstractConcentrationDataDescription(final String name, final Class<?> entityType,
+			final ConcentrationUnit unit) {
+		super(name, entityType);
 		this.unit = unit;
 	}
 	

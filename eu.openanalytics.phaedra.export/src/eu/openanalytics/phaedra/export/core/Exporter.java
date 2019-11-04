@@ -16,6 +16,7 @@ import eu.openanalytics.phaedra.export.core.query.QueryResult;
 import eu.openanalytics.phaedra.export.core.statistics.StatisticsFactory;
 import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
 import eu.openanalytics.phaedra.export.core.writer.WriterFactory;
+import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 /**
@@ -51,7 +52,8 @@ public class /*WellData*/Exporter {
 			monitor.worked(1);
 			
 			DataFormatter dataFormatter = DataTypePrefs.getDefaultDataFormatter();
-			writer.addExportInfo(new ExportInfo(new StringValueDescription("Unit of Concentration"), dataFormatter.getConcentrationUnit().getAbbr()));
+			writer.addExportInfo(new ExportInfo(new StringValueDescription("Concentration Unit of Well Compounds", ExportInfo.class),
+					dataFormatter.getConcentrationUnit(WellProperty.Concentration.getDataDescription()).getAbbr() ));
 			
 			// First, perform the base query (columns that are independent of feature).
 			monitor.subTask("Querying wells");

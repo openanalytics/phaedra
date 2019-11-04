@@ -53,40 +53,48 @@ public class OSBFitModel extends AbstractCurveFitModel {
 	
 	
 	private static final Definition[] IN_PARAMS = {
-		new Definition(new StringValueDescription("Method"), null, false, null, new CurveParameter.ParameterValueList("OLS", "LIN", "CENS")),
-		new Definition(new StringValueDescription("Type"), null, false, null, new CurveParameter.ParameterValueList("A", "D")),
-		new Definition(new RealValueDescription("Lower bound")),
-		new Definition(new RealValueDescription("Upper bound")),
-		new Definition(new StringValueDescription("Custom ICx/pICx"), "Specify comma separated percent x of additional ICx/pICx measures.",
-				false, null, new PICxRestriction())
+		new Definition(new StringValueDescription("Method", Curve.class),
+				null, false, null, new CurveParameter.ParameterValueList("OLS", "LIN", "CENS")),
+		new Definition(new StringValueDescription("Type", Curve.class),
+				null, false, null, new CurveParameter.ParameterValueList("A", "D")),
+		new Definition(new RealValueDescription("Lower bound", Curve.class)),
+		new Definition(new RealValueDescription("Upper bound", Curve.class)),
+		new Definition(new StringValueDescription("Custom ICx/pICx", Curve.class),
+				"Specify comma separated percent x of additional ICx/pICx measures.", false, null, new PICxRestriction())
 	};
 	
 	private static final Definition[] OUT_PARAMS = {
-		new Definition(new ConcentrationLogPNamedCensoredValueDescription("pIC50", LogMolar, "pIC50 Censor"), null, true, new CurveParameter.CensoredValueRenderer("pIC50 Censor"), null),
-		new Definition(new ConcentrationLogPNamedCensorDescription("pIC50 Censor", LogMolar), null, false, null, new CurveParameter.ParameterValueList("<", ">", "~")),
-		new Definition(new RealValueDescription("pIC50 StdErr")),
-		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 LB", LogMolar)),
-		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 LB StdErr", LogMolar)),
-		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 UB", LogMolar)),
-		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 UB StdErr", LogMolar)),
-		new Definition(new ConcentrationLogPNamedValueDescription("pIC50 LCL", LogMolar)),
-		new Definition(new ConcentrationLogPNamedValueDescription("pIC50 UCL", LogMolar)),
-		new Definition(new ConcentrationLogPNamedValueDescription("pIC20", LogMolar)),
-		new Definition(new ConcentrationLogPNamedValueDescription("pIC80", LogMolar)),
-		new Definition(new RealValueDescription("eMin")),
-		new Definition(new ConcentrationValueDescription("eMin Conc", LogMolar)),
-		new Definition(new RealValueDescription("eMax"), null, true, null, null),
-		new Definition(new ConcentrationValueDescription("eMax Conc", LogMolar), null, true, null, null),
-		new Definition(new RealValueDescription("Hill"), null, true, null, null),
-		new Definition(new RealValueDescription("Hill StdErr")),
-		new Definition(new StringValueDescription("Method Fallback")),
-		new Definition(new RealValueDescription("r2"), null, true, null, null),
-		new Definition(new RealValueDescription("AIC")),
-		new Definition(new RealValueDescription("BIC")),
-		new Definition(new RealValueDescription("DFE")),
-		new Definition(new RealValueDescription("SE")),
-		new Definition(new ByteArrayDescription("Confidence Band")),
-		new Definition(new ByteArrayDescription("Weights"))
+		new Definition(new ConcentrationLogPNamedCensoredValueDescription("pIC50", Curve.class, LogMolar, "pIC50 Censor"),
+				null, true, new CurveParameter.CensoredValueRenderer("pIC50 Censor"), null),
+		new Definition(new ConcentrationLogPNamedCensorDescription("pIC50 Censor", Curve.class, LogMolar),
+				null, false, null, new CurveParameter.ParameterValueList("<", ">", "~")),
+		new Definition(new RealValueDescription("pIC50 StdErr", Curve.class)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 LB", Curve.class, LogMolar)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 LB StdErr", Curve.class, LogMolar)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 UB", Curve.class, LogMolar)),
+		new Definition(new RealValueConcentrationLogPNamedDescription("pIC50 UB StdErr", Curve.class, LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC50 LCL", Curve.class, LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC50 UCL", Curve.class, LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC20", Curve.class, LogMolar)),
+		new Definition(new ConcentrationLogPNamedValueDescription("pIC80", Curve.class, LogMolar)),
+		new Definition(new RealValueDescription("eMin", Curve.class)),
+		new Definition(new ConcentrationValueDescription("eMin Conc", Curve.class, LogMolar)),
+		new Definition(new RealValueDescription("eMax", Curve.class),
+				null, true, null, null),
+		new Definition(new ConcentrationValueDescription("eMax Conc", Curve.class, LogMolar),
+				null, true, null, null),
+		new Definition(new RealValueDescription("Hill", Curve.class),
+				null, true, null, null),
+		new Definition(new RealValueDescription("Hill StdErr", Curve.class)),
+		new Definition(new StringValueDescription("Method Fallback", Curve.class)),
+		new Definition(new RealValueDescription("r2", Curve.class),
+				null, true, null, null),
+		new Definition(new RealValueDescription("AIC", Curve.class)),
+		new Definition(new RealValueDescription("BIC", Curve.class)),
+		new Definition(new RealValueDescription("DFE", Curve.class)),
+		new Definition(new RealValueDescription("SE", Curve.class)),
+		new Definition(new ByteArrayDescription("Confidence Band", Curve.class)),
+		new Definition(new ByteArrayDescription("Weights", Curve.class))
 	};
 	private static final List<Definition> OUT_PARAMS_LIST = Arrays.asList(OUT_PARAMS);
 	private static final List<Definition> OUT_KEY_PARAMS_LIST = Arrays.asList(OUT_PARAMS_LIST.stream().filter((def) -> def.key).toArray(Definition[]::new));
@@ -135,7 +143,7 @@ public class OSBFitModel extends AbstractCurveFitModel {
 					System.arraycopy(OUT_PARAMS, 0, params, 0, insert);
 					int i = insert;
 					for (Integer percent : percents) {
-						params[i++] = new Definition(new ConcentrationLogPNamedValueDescription("pIC" + percent, LogMolar));
+						params[i++] = new Definition(new ConcentrationLogPNamedValueDescription("pIC" + percent, Curve.class, LogMolar));
 					}
 					insert += 2;
 					System.arraycopy(OUT_PARAMS, insert, params, i, OUT_PARAMS.length - insert);

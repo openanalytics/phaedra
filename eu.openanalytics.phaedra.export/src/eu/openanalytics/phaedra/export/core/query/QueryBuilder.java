@@ -2,11 +2,13 @@ package eu.openanalytics.phaedra.export.core.query;
 
 import static eu.openanalytics.phaedra.export.core.query.Query.checkColumnLabel;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import eu.openanalytics.phaedra.base.datatype.DataType;
+import eu.openanalytics.phaedra.base.datatype.description.CensoredValueDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
@@ -17,6 +19,7 @@ import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.export.core.util.SQLUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
+import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.curve.ICurveFitModel;
 import eu.openanalytics.phaedra.model.plate.util.WellProperty;
@@ -90,11 +93,14 @@ public class QueryBuilder {
 				String baseCurveQuery = " (SELECT c.${propertyName} FROM PHAEDRA.HCA_CURVE C WHERE C.CURVE_ID = WC.CURVE_ID) AS ${columnAlias},";
 				appendIfIncludes(ExportSettings.Includes.CurveProperties, settings, sb, baseCurveQuery, "MODEL_ID", "MODEL");
 				
-				List<Definition> outputParamDefs = (settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) ?
-						model.getOutputParameters(fitSettings) : model.getOutputKeyParameters();
-				for (Definition def: outputParamDefs) {
+				List<Definition> allOutputParam = model.getOutputParameters(fitSettings);
+				List<Definition> selectedOutputParam = (settings.includes.contains(ExportSettings.Includes.CurvePropertiesAll)) ?
+						allOutputParam : new ArrayList<>(model.getOutputKeyParameters());
+				for (int i = 0; i < selectedOutputParam.size(); i++) {
+					final Definition def = selectedOutputParam.get(i);
+					final DataDescription dataDescription = def.getDataDescription();
 					final String basePropertyQuery;
-					switch (def.getDataDescription().getDataType()) {
+					switch (dataDescription.getDataType()) {
 					case Real:
 						basePropertyQuery = " (SELECT CP.NUMERIC_VALUE"
 								+ " FROM PHAEDRA.HCA_CURVE_PROPERTY CP WHERE CP.CURVE_ID = WC.CURVE_ID AND CP.PROPERTY_NAME = '${propertyName}') AS ${columnAlias},";
@@ -107,8 +113,20 @@ public class QueryBuilder {
 						continue;
 					}
 					final String label = checkColumnLabel(def.getName());
-					query.setColumnDataType(label, def.getDataDescription());
+					query.setColumnDataType(label, dataDescription);
 					append(sb, basePropertyQuery, def.getName(), label);
+					
+					if (selectedOutputParam != allOutputParam && dataDescription instanceof CensoredValueDescription) {
+						// Make sure the censor is included
+						final String censorName = ((CensoredValueDescription)dataDescription).getCensorName();
+						if (CurveParameter.find(selectedOutputParam, censorName) == null) {
+							final Definition censorParam = CurveParameter.find(allOutputParam, censorName);
+							if (censorParam == null) {
+								throw new RuntimeException("Censor parameter missing: " + censorName);
+							}
+							selectedOutputParam.add(i + 1, censorParam);
+						}
+					}
 				}
 			}
 		}

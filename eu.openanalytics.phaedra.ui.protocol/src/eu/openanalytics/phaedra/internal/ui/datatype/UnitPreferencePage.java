@@ -25,12 +25,15 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 	
 	
 	private final WritableValue<ConcentrationUnit> concentrationUnit;
+	private final WritableValue<ConcentrationUnit> curveConcentrationUnit;
 	
 	private ComboViewer concentrationUnitViewer;
+	private ComboViewer curveConcentrationUnitViewer;
 	
 	
 	public UnitPreferencePage() {
 		this.concentrationUnit = new WritableValue<>();
+		this.curveConcentrationUnit = new WritableValue<>();
 	}
 	
 	@Override
@@ -63,23 +66,42 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final Composite composite = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(composite);
 		
-		final Label label = new Label(composite, SWT.NONE);
-		label.setText("Concentration Unit:");
-		GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
-		
-		final ComboViewer viewer = new ComboViewer(composite, SWT.BORDER | SWT.READ_ONLY);
-		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new LabelProvider() {
-			@Override
-			public String getText(final Object element) {
-				final ConcentrationUnit unit = (ConcentrationUnit)element;
-				return unit.getLabel(true);
-			}
-		});
-		viewer.setInput(ConcentrationUnit.values());
-		GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER)
-				.applyTo(viewer.getControl());
-		this.concentrationUnitViewer = viewer;
+		{	final Label label = new Label(composite, SWT.NONE);
+			label.setText("Concentration unit of well compounds:");
+			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
+			
+			final ComboViewer viewer = new ComboViewer(composite, SWT.BORDER | SWT.READ_ONLY);
+			viewer.setContentProvider(new ArrayContentProvider());
+			viewer.setLabelProvider(new LabelProvider() {
+				@Override
+				public String getText(final Object element) {
+					final ConcentrationUnit unit = (ConcentrationUnit)element;
+					return unit.getLabel(true);
+				}
+			});
+			viewer.setInput(ConcentrationUnit.values());
+			GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER)
+					.applyTo(viewer.getControl());
+			this.concentrationUnitViewer = viewer;
+		}
+		{	final Label label = new Label(composite, SWT.NONE);
+			label.setText("Concentration unit of curve properties:");
+			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
+			
+			final ComboViewer viewer = new ComboViewer(composite, SWT.BORDER | SWT.READ_ONLY);
+			viewer.setContentProvider(new ArrayContentProvider());
+			viewer.setLabelProvider(new LabelProvider() {
+				@Override
+				public String getText(final Object element) {
+					final ConcentrationUnit unit = (ConcentrationUnit)element;
+					return unit.getLabel(true);
+				}
+			});
+			viewer.setInput(ConcentrationUnit.values());
+			GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER)
+					.applyTo(viewer.getControl());
+			this.curveConcentrationUnitViewer = viewer;
+		}
 		
 		return composite;
 	}
@@ -88,12 +110,15 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final DataBindingContext dbc = new DataBindingContext();
 		dbc.bindValue(ViewerProperties.singleSelection().observe(this.concentrationUnitViewer),
 				this.concentrationUnit );
+		dbc.bindValue(ViewerProperties.singleSelection().observe(this.curveConcentrationUnitViewer),
+				this.curveConcentrationUnit );
 	}
 	
 	
 	private void load() {
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		this.concentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getString(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT)));
+		this.curveConcentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getString(DataTypePrefs.CURVE_CONCENTRATION_UNIT)));
 	}
 	
 	
@@ -101,6 +126,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 	protected void performDefaults() {
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		this.concentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getDefaultString(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT)));
+		this.curveConcentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getDefaultString(DataTypePrefs.CURVE_CONCENTRATION_UNIT)));
 		
 		super.performDefaults();
 	}
@@ -109,6 +135,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 	public boolean performOk() {
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT, this.concentrationUnit.getValue().name());
+		preferenceStore.setValue(DataTypePrefs.CURVE_CONCENTRATION_UNIT, this.curveConcentrationUnit.getValue().name());
 		return true;
 	}
 	

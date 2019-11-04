@@ -5,8 +5,8 @@ import static eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNa
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.description.AbstractConcentrationDataDescription;
 import eu.openanalytics.phaedra.base.datatype.description.ContentType;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 
 /**
@@ -16,18 +16,20 @@ import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 public class RealValueConcentrationLogPNamedDescription extends AbstractConcentrationDataDescription {
 	
 	
-	public RealValueConcentrationLogPNamedDescription(final String name, final ConcentrationUnit unit) {
-		super(name, unit);
+	public RealValueConcentrationLogPNamedDescription(final String name, final Class<?> entityType,
+			final ConcentrationUnit unit) {
+		super(name, entityType, unit);
 	}
 	
 	@Override
 	public RealValueConcentrationLogPNamedDescription alterTo(final DataUnitConfig dataUnitConfig) {
-		final ConcentrationUnit unit = dataUnitConfig.getConcentrationUnit();
-		if (unit == getConcentrationUnit()) {
+		final ConcentrationUnit toUnit = dataUnitConfig.getConcentrationUnit(this);
+		if (toUnit == getConcentrationUnit()) {
 			return this;
 		}
 		return new RealValueConcentrationLogPNamedDescription(
-				convertNameTo(getName(), dataUnitConfig), unit );
+				convertNameTo(getName(), toUnit), getEntityType(),
+				toUnit );
 	}
 	
 	
@@ -44,7 +46,11 @@ public class RealValueConcentrationLogPNamedDescription extends AbstractConcentr
 	
 	@Override
 	public String convertNameTo(final String name, final DataUnitConfig dataUnitConfig) {
-		return convertName(name, getConcentrationUnit(), dataUnitConfig.getConcentrationUnit());
+		return convertNameTo(name, dataUnitConfig.getConcentrationUnit(this));
+	}
+	
+	protected String convertNameTo(final String name, final ConcentrationUnit unit) {
+		return convertName(name, getConcentrationUnit(), unit);
 	}
 	
 }

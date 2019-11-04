@@ -193,7 +193,7 @@ public class CurveParameter {
 			case Real:
 				if (dataDescription.getContentType() == ContentType.Concentration) {
 					if (formatter == null) formatter = DataTypePrefs.getDefaultDataFormatter();
-					return formatter.getConcentrationFormat().format(getCensor(curve), value.numericValue,
+					return formatter.getConcentrationFormat(dataDescription).format(getCensor(curve), value.numericValue,
 							((ConcentrationDataDescription)dataDescription).getConcentrationUnit() );
 				}
 				return Formatters.getInstance().format(

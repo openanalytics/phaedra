@@ -2,8 +2,8 @@ package eu.openanalytics.phaedra.base.datatype.special;
 
 import eu.openanalytics.phaedra.base.datatype.description.CensoredValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
-import eu.openanalytics.phaedra.base.datatype.unit.DataUnitConfig;
 
 
 public class ConcentrationLogPNamedCensoredValueDescription extends ConcentrationLogPNamedValueDescription
@@ -13,20 +13,21 @@ public class ConcentrationLogPNamedCensoredValueDescription extends Concentratio
 	private final String censorName;
 	
 	
-	public ConcentrationLogPNamedCensoredValueDescription(final String name, final ConcentrationUnit unit,
-		final String censorName) {
-		super(name, unit);
+	public ConcentrationLogPNamedCensoredValueDescription(final String name, final Class<?> entityType,
+			final ConcentrationUnit unit, final String censorName) {
+		super(name, entityType, unit);
 		this.censorName = censorName;
 	}
 	
 	@Override
 	public ConcentrationLogPNamedCensoredValueDescription alterTo(final DataUnitConfig dataUnitConfig) {
-		if (dataUnitConfig.getConcentrationUnit() == getConcentrationUnit()) {
+		final ConcentrationUnit toUnit = dataUnitConfig.getConcentrationUnit(this);
+		if (toUnit == getConcentrationUnit()) {
 			return this;
 		}
 		return new ConcentrationLogPNamedCensoredValueDescription(
-				convertNameTo(getName(), dataUnitConfig), dataUnitConfig.getConcentrationUnit(),
-				convertNameTo(getCensorName(), dataUnitConfig) );
+				convertNameTo(getName(), toUnit), getEntityType(),
+				toUnit, convertNameTo(getCensorName(), toUnit) );
 	}
 	
 	

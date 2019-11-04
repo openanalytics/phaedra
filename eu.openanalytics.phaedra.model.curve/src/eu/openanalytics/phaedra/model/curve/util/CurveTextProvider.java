@@ -88,7 +88,7 @@ public class CurveTextProvider {
 		}
 		
 		public CurveTextField(String label, Function<Curve, String> valueRenderer) {
-			this(new StringValueDescription(label), label, valueRenderer);
+			this(new StringValueDescription(label, Curve.class), label, valueRenderer);
 		}
 		
 		

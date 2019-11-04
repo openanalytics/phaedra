@@ -66,17 +66,23 @@ public class AbstractExportWriter {
 		final List<ExportInfo> infos = new ArrayList<>();
 		
 		if (this.protocol != null) {
-			infos.add(new ExportInfo(new EntityIdDescription("Protocol ID", Protocol.class), this.protocol.getId()));
-			infos.add(new ExportInfo(new StringValueDescription("Protocol Name"), this.protocol.getName()));
-			infos.add(new ExportInfo(new EntityIdDescription("Protocol Class ID", ProtocolClass.class), this.protocol.getProtocolClass().getId()));
-			infos.add(new ExportInfo(new StringValueDescription("Protocol Class Name"), this.protocol.getProtocolClass().getName()));
-			infos.add(new ExportInfo(new EntityIdDescription("Experiment ID", Experiment.class),
-					this.settings.getExperiments().stream().map((experiment) -> (double)experiment.getId()).collect(Collectors.toList()))); 
-			infos.add(new ExportInfo(new StringValueDescription("Experiment Name"),
-					this.settings.getExperiments().stream().map((experiment) -> experiment.getName()).collect(Collectors.toList())));
+			infos.add(new ExportInfo(new EntityIdDescription("Protocol ID", ExportInfo.class, Protocol.class),
+					this.protocol.getId() ));
+			infos.add(new ExportInfo(new StringValueDescription("Protocol Name", ExportInfo.class),
+					this.protocol.getName() ));
+			infos.add(new ExportInfo(new EntityIdDescription("Protocol Class ID", ExportInfo.class, ProtocolClass.class),
+					this.protocol.getProtocolClass().getId() ));
+			infos.add(new ExportInfo(new StringValueDescription("Protocol Class Name", ExportInfo.class),
+					this.protocol.getProtocolClass().getName() ));
+			infos.add(new ExportInfo(new EntityIdDescription("Experiment ID", ExportInfo.class, Experiment.class),
+					this.settings.getExperiments().stream().map((experiment) -> (double)experiment.getId()).collect(Collectors.toList()) )); 
+			infos.add(new ExportInfo(new StringValueDescription("Experiment Name", ExportInfo.class),
+					this.settings.getExperiments().stream().map((experiment) -> experiment.getName()).collect(Collectors.toList()) ));
 		}
-		infos.add(new ExportInfo(new StringValueDescription("Export User"), SecurityService.getInstance().getCurrentUserName()));
-		infos.add(new ExportInfo(new TimestampDescription("Export Timestamp"), this.timestamp));
+		infos.add(new ExportInfo(new StringValueDescription("Export User", ExportInfo.class),
+				SecurityService.getInstance().getCurrentUserName() ));
+		infos.add(new ExportInfo(new TimestampDescription("Export Timestamp", ExportInfo.class),
+				this.timestamp ));
 		
 		infos.addAll(this.additionalExportInfos);
 		

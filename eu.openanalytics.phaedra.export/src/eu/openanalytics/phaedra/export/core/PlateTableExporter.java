@@ -20,6 +20,7 @@ import eu.openanalytics.phaedra.export.core.writer.IExportWriter;
 import eu.openanalytics.phaedra.export.core.writer.WriterFactory;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 
 /**
@@ -102,15 +103,15 @@ public class PlateTableExporter {
 		{	// Header
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Z-Prime"));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/N"));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/B"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Z-Prime", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/N", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/B", Well.class));
 				}
 				if (includeFeatureControlStats) {
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC Mean"));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC %CV"));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC Mean"));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC %CV"));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC Mean", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC %CV", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC Mean", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC %CV", Well.class));
 				}
 			}
 		}
