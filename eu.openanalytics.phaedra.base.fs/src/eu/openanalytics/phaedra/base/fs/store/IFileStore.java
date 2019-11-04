@@ -22,6 +22,7 @@ public interface IFileStore extends AutoCloseable {
 	public String readStringValue(String key) throws IOException;
 	public float readNumericValue(String key) throws IOException;
 	public String[] readStringArray(String key) throws IOException;
+	public int[] readIntArray(String key) throws IOException;
 	public float[] readNumericArray(String key) throws IOException;
 	public byte[] readBinaryValue(String key) throws IOException;
 	public Object readValue(String key) throws IOException;
@@ -29,6 +30,7 @@ public interface IFileStore extends AutoCloseable {
 	public void writeStringValue(String key, String value) throws IOException;
 	public void writeNumericValue(String key, float value) throws IOException;
 	public void writeStringArray(String key, String[] value) throws IOException;
+	public void writeIntArray(String key, int[] value) throws IOException;
 	public void writeNumericArray(String key, float[] value) throws IOException;
 	public void writeBinaryValue(String key, byte[] value) throws IOException;
 	public void writeValue(String key, Object value) throws IOException;

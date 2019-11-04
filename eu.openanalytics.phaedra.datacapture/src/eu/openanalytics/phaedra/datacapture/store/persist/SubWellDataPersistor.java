@@ -17,6 +17,8 @@ import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
+import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
+
 
 public class SubWellDataPersistor extends BaseDataPersistor {
 
@@ -37,9 +39,12 @@ public class SubWellDataPersistor extends BaseDataPersistor {
 					.distinct().toArray(i -> new String[i]);
 			
 			for (String wellId: wellIds) {
+				final Well well = PlateUtils.getWell(plate, Integer.parseInt(wellId));
+				if (well.getStatus() == WellStatus.REJECTED_DATACAPTURE.getCode()) {
+					continue;
+				}
 				String key = String.format("%s%s.%s", DefaultDataCaptureStore.WELL_SWDATA_PREFIX, wellId, featureName);
 				Object value = store.readValue(key);
-				Well well = PlateUtils.getWell(plate, Integer.parseInt(wellId));
 				data.put(well, value);
 			}
 			

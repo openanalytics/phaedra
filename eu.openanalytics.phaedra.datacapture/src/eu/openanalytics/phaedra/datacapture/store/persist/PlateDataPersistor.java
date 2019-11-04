@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.datacapture.store.persist;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.fs.store.IFileStore;
@@ -15,6 +16,8 @@ import eu.openanalytics.phaedra.link.platedef.template.PlateTemplate;
 import eu.openanalytics.phaedra.link.platedef.template.WellTemplate;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.plate.vo.Well;
+
 
 public class PlateDataPersistor extends BaseDataPersistor {
 
@@ -48,6 +51,19 @@ public class PlateDataPersistor extends BaseDataPersistor {
 			} catch (PlateLinkException e) {
 				throw new DataCaptureException("Failed to apply plate layout: " + e.getMessage(), e);
 			}
+		}
+		
+		applyWellStatuses(store, plate.getWells());
+	}
+	
+	private void applyWellStatuses(final IFileStore store, final List<Well> wells) throws IOException {
+		final int[] statusCodes = store.readIntArray(DefaultDataCaptureStore.WELL_PROPERTY_PREFIX + "Status");
+		if (statusCodes == null) {
+			return;
+		}
+		for (int i = 0; i < wells.size() && i < statusCodes.length; i++) {
+			final Well well = wells.get(i);
+			well.setStatus(statusCodes[i]);
 		}
 	}
 

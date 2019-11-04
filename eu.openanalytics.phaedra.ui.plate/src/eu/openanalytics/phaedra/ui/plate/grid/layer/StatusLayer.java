@@ -85,6 +85,8 @@ public class StatusLayer extends PlatesLayer {
 
 						if (status == WellStatus.REJECTED_PHAEDRA.getCode()) {
 							c = gc.getDevice().getSystemColor(SWT.COLOR_RED);
+						} else if (status == WellStatus.REJECTED_DATACAPTURE.getCode()) {
+							c = gc.getDevice().getSystemColor(SWT.COLOR_BLUE);
 						} else {
 							c = gc.getDevice().getSystemColor(SWT.COLOR_YELLOW);
 						}

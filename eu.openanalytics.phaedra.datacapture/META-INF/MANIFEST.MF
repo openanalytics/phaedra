@@ -21,6 +21,7 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.1",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.1",
  eu.openanalytics.phaedra.calculation;bundle-version="1.0.1",
+ eu.openanalytics.phaedra.validation;bundle-version="1.0.7",
  eu.openanalytics.phaedra.link.platedef;bundle-version="1.0.1",
  com.bytecode.opencsv;bundle-version="1.0.0",
  org.apache.poi;bundle-version="3.9.0"

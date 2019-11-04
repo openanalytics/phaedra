@@ -31,6 +31,8 @@ import eu.openanalytics.phaedra.datacapture.store.persist.SubWellHDF5DataPersist
 import eu.openanalytics.phaedra.datacapture.store.persist.WellDataPersistor;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
+import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
+
 
 public class DefaultDataCaptureStore implements IDataCaptureStore {
 
@@ -71,7 +73,8 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 					persistor.persist(store, plate);
 				}
 			} else {
-				Arrays.stream(persistors).parallel().forEach(p -> {
+				persistors[0].persist(store, plate); // well status required
+				Arrays.stream(Arrays.copyOfRange(persistors, 1, persistors.length)).parallel().forEach(p -> {
 					try {
 						p.persist(store, plate);
 					} catch (Exception e) {
@@ -103,6 +106,21 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 			}
 			
 			ParsedWell[] wells = plate.getWells();
+			
+			int[] statusCodes = null;
+			for (final ParsedWell well : wells) {
+				if (well.isRejected()) {
+					if (statusCodes == null) {
+						statusCodes = new int[plate.getRows() * plate.getColumns()];
+					}
+					int wellNr = NumberUtils.getWellNr(well.getRow(), well.getColumn(), plate.getColumns());
+					statusCodes[wellNr - 1] = WellStatus.REJECTED_DATACAPTURE.getCode();
+				}
+			}
+			if (statusCodes != null) {
+				store.writeValue(WELL_PROPERTY_PREFIX + "Status", statusCodes);
+			}
+			
 			String[] featureIds = getWellFeatures(wells);
 			for (String featureId: featureIds) {
 				if (isNumeric(featureId, wells)) {

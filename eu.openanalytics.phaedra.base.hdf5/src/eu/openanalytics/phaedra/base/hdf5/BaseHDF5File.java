@@ -9,8 +9,6 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 
-import ncsa.hdf.hdf5lib.H5;
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMemberInformation;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
@@ -25,6 +23,8 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.base.util.io.StreamUtils;
+import ncsa.hdf.hdf5lib.H5;
+import ncsa.hdf.hdf5lib.HDF5Constants;
 
 /**
  * Interface to HDF5 files. Functionality provided:
@@ -173,6 +173,8 @@ public class BaseHDF5File {
 			return reader.getLongAttribute(path, name);
 		} else if (clazz == byte.class || clazz == String.class) {
 			return reader.getStringAttribute(path, name);
+		} else if (clazz == int[].class) {
+			return reader.getIntArrayAttribute(path, name);
 		} else if (clazz == float[].class) {
 			return reader.getFloatArrayAttribute(path, name);
 		} else if (clazz == String[].class) {
@@ -202,6 +204,8 @@ public class BaseHDF5File {
 				writer.setIntAttribute(path, key, (Integer)value);
 			} else if (value instanceof Long) {
 				writer.setLongAttribute(path, key, (Long)value);
+			} else if (value instanceof int[]) {
+				writer.setIntArrayAttribute(path, key, (int[])value);
 			} else if (value instanceof float[]) {
 				writer.setFloatArrayAttribute(path, key, (float[])value);
 			} else if (value instanceof String) {

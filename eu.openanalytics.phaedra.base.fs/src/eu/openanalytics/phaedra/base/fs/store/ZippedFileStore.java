@@ -98,6 +98,11 @@ public class ZippedFileStore implements IFileStore {
 	}
 
 	@Override
+	public int[] readIntArray(String key) throws IOException {
+		return parseEntry(key, int[].class);
+	}
+
+	@Override
 	public float[] readNumericArray(String key) throws IOException {
 		return parseEntry(key, float[].class);
 	}
@@ -125,6 +130,11 @@ public class ZippedFileStore implements IFileStore {
 
 	@Override
 	public void writeStringArray(String key, String[] value) throws IOException {
+		writeEntry(key, value);
+	}
+
+	@Override
+	public void writeIntArray(String key, int[] value) throws IOException {
 		writeEntry(key, value);
 	}
 

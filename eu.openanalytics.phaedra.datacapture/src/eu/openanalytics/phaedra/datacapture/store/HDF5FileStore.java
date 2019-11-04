@@ -81,6 +81,19 @@ public class HDF5FileStore implements IFileStore {
 	}
 	
 	@Override
+	public int[] readIntArray(final String key) throws IOException {
+		final Object v;
+		final String path = getPath(key);
+		if (path == "/") {
+			v = hdf5File.getAttribute(path, getAttribute(key));
+		}
+		else {
+			v = hdf5File.getAnyData1D(getPath(key), 1);
+		}
+		return (v instanceof int[]) ? (int[]) v : null;
+	}
+	
+	@Override
 	public float[] readNumericArray(String key) throws IOException {
 		if (hdf5File.exists(getPath(key))) return hdf5File.getNumericData1D(getPath(key));
 		else return null;
@@ -114,6 +127,17 @@ public class HDF5FileStore implements IFileStore {
 	}
 
 	@Override
+	public void writeIntArray(final String key, final int[] value) throws IOException {
+		final String path = getPath(key);
+		if (path == "/") {
+			hdf5File.setAttribute(path, getAttribute(key), value);
+		}
+		else {
+			hdf5File.writeNumericData(getPath(key),  value);
+		}
+	}
+	
+	@Override
 	public void writeNumericArray(String key, float[] value) throws IOException {
 		hdf5File.writeNumericData(getPath(key), value);
 	}
@@ -129,6 +153,7 @@ public class HDF5FileStore implements IFileStore {
 		else if (value instanceof Float) writeNumericValue(key, (Float) value);
 		else if (value instanceof Number) writeNumericValue(key, ((Number) value).floatValue());
 		else if (value instanceof String[]) writeStringArray(key, (String[]) value);
+		else if (value instanceof int[]) writeIntArray(key, (int[]) value);
 		else if (value instanceof float[]) writeNumericArray(key, (float[]) value);
 		else if (value instanceof byte[]) writeBinaryValue(key, (byte[]) value);
 	}

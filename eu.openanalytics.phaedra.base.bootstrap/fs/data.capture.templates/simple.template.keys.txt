@@ -30,6 +30,14 @@
 	"welldata.filepattern": {
 		"description": "The regex pattern of the file containing the well data"
 	},
+	"auto.reject.status.column": {
+		"description": "The name of column with status values used to automatically reject wells"
+	},
+	"auto.reject.status.value": {
+		"description": "The status value triggering the automatic rejection of a well",
+		"type": "numeric",
+		"defaultValue": "0"
+	},
 	"subwelldata.path": {
 		"description": "The path where the subwell data files are located",
 		"type": "path"

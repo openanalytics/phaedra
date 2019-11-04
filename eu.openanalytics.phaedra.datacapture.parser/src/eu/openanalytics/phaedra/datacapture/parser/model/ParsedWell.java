@@ -20,6 +20,9 @@ public class ParsedWell {
 	private int row;
 	private int column;
 	
+	private boolean isRejected;
+	
+	
 	public ParsedWell() {
 		features = new HashMap<>();
 		subWellData =  new HashMap<>();
@@ -81,4 +84,21 @@ public class ParsedWell {
 	public void setColumn(int column) {
 		this.column = column;
 	}
+	
+	/**
+	 * Returns if the well is rejected during data capture (WellStatus.REJECTED_DATACAPTURE).
+	 * 
+	 * @return if the well is rejected
+	 */
+	public boolean isRejected() {
+		return this.isRejected;
+	}
+	
+	/**
+	 * Sets if the well is rejected during data capture (WellStatus.REJECTED_DATACAPTURE).
+	 */
+	public void setRejected(boolean rejected) {
+		this.isRejected = rejected;
+	}
+	
 }

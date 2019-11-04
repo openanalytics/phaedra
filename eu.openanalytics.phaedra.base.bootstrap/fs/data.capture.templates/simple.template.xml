@@ -14,6 +14,12 @@
 			<parameter key="parser.id">txt.welldata.parser</parameter>
 			<parameter key="file.path">${welldata.path}</parameter>
 			<parameter key="file.pattern">${welldata.filepattern}</parameter>
+<#if auto.reject.status.column??>
+			<parameter key="auto.reject.status.column">${auto.reject.status.column}</parameter>
+	<#if auto.reject.status.value??>
+			<parameter key="auto.reject.status.value">${auto.reject.status.value}</parameter>
+	</#if>
+</#if>
 		</parameters>
 	</module>
 
