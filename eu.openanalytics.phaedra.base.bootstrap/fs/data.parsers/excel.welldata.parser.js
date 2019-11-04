@@ -25,8 +25,8 @@ if (wellIdColName == null) throw "Well id column not found";
 var wellIdCol = findString(headers, wellIdColName, false);
 if (wellIdCol == -1) throw "Well id column not found: " + wellIdColName;
 
-var dims = calculatePlateSize(dataRows.length, 1, true);
-var plate = modelUtils.createPlate(model, dims[0], dims[1]);
+var plateDims = calculatePlateSize(dataRows.length, 1, true);
+var plate = API.get("ModelUtils").createPlate(model, plateDims[0], plateDims[1]);
 
 for (var i=0; i<dataRows.length; i++) {
 	var wellId = dataRows[i][wellIdCol];
