@@ -3,7 +3,9 @@ package eu.openanalytics.phaedra.base.db.jpa;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import eu.openanalytics.phaedra.base.db.Activator;
 import eu.openanalytics.phaedra.base.db.DatabaseConfig;
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 
 /**
  * A lazy provider for thread-local EntityManagers.
@@ -31,19 +33,23 @@ public class ThreadLocalEntityManager {
 		instance = new ThreadLocalEntityManager();
 		
 		instance.isEnabled = !Boolean.valueOf(cfg.get(DatabaseConfig.JPA_SESSION_EM, "true"));
-		instance.localEM = new ThreadLocal<EntityManager>() {
-			@Override
-			protected EntityManager initialValue() {
-//				EclipseLog.info("Instantiating new thread-local EntityManager for " + Thread.currentThread(), Activator.PLUGIN_ID);
-				return emFactory.createEntityManager();
-			}
-		};
-		instance.isLocalInitialized = new ThreadLocal<Boolean>() {
-			@Override
-			protected Boolean initialValue() {
-				return false;
-			}
-		};
+		if (instance.isEnabled) {
+			EclipseLog.info("Thread-local EntityManager is enabled", Activator.PLUGIN_ID);
+			
+			instance.localEM = new ThreadLocal<EntityManager>() {
+				@Override
+				protected EntityManager initialValue() {
+					EclipseLog.debug("Instantiating new thread-local EntityManager for " + Thread.currentThread(), ThreadLocalEntityManager.class);
+					return emFactory.createEntityManager();
+				}
+			};
+			instance.isLocalInitialized = new ThreadLocal<Boolean>() {
+				@Override
+				protected Boolean initialValue() {
+					return false;
+				}
+			};
+		}
 	}
 	
 	public boolean isEnabled() {
@@ -60,7 +66,7 @@ public class ThreadLocalEntityManager {
 	
 	public void closeCurrent() {
 		if (isEnabled && isLocalInitialized.get()) {
-//			EclipseLog.info("Closing threadlocal EntityManager for " + Thread.currentThread(), Activator.PLUGIN_ID);
+			EclipseLog.debug("Closing threadlocal EntityManager for " + Thread.currentThread(), ThreadLocalEntityManager.class);
 			localEM.get().close();
 			localEM.remove();
 			isLocalInitialized.set(false);
