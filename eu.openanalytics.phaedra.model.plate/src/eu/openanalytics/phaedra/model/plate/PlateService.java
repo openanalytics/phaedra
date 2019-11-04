@@ -89,6 +89,21 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
+	 * Get a list of all experiments the specified user owns.
+	 * 
+	 * @param owner The owner of the experiments, or null to retrieve ALL experiments.
+	 * @return A list of matching experiments.
+	 */
+	public List<Experiment> getExperiments(String owner) {
+		List<Experiment> experiments = null;
+		if (owner == null) experiments = getList(Experiment.class);
+		else experiments = getList("select e from Experiment e where e.creator = ?1", Experiment.class, owner);
+		return streamableList(experiments).stream()
+				.filter(e -> SecurityService.getInstance().check(Permissions.EXPERIMENT_OPEN, e))
+				.collect(Collectors.toList());
+	}
+	
+	/**
 	 * Retrieve an experiment by its primary ID.
 	 * 
 	 * @param experimentId The ID of the experiment.

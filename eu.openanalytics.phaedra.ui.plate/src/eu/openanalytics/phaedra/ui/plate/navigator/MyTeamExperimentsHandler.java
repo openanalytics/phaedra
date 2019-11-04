@@ -14,8 +14,6 @@ import eu.openanalytics.phaedra.base.ui.navigator.interaction.BaseElementHandler
 import eu.openanalytics.phaedra.base.ui.navigator.model.IElement;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
-import eu.openanalytics.phaedra.model.protocol.ProtocolService;
-import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.plate.browser.ExperimentBrowser;
 
 public class MyTeamExperimentsHandler extends BaseElementHandler {
@@ -49,13 +47,7 @@ public class MyTeamExperimentsHandler extends BaseElementHandler {
 
 		@Override
 		public List<IValueObject> collect() {
-			List<Protocol> protocols = ProtocolService.getInstance().getProtocols();
-			List<IValueObject> allExperiments = new ArrayList<>();
-			for (Protocol p: protocols) {
-				List<Experiment> experiments = PlateService.getInstance().getExperiments(p);
-				for (Experiment e: experiments) allExperiments.add(e);
-			}
-			return allExperiments;
+			return new ArrayList<>(PlateService.getInstance().getExperiments((String) null));
 		}
 		
 	}

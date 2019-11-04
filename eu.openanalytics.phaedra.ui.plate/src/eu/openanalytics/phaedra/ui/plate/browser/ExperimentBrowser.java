@@ -43,10 +43,8 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
-import eu.openanalytics.phaedra.model.plate.util.ExperimentSummary;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
-import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates;
 import eu.openanalytics.phaedra.ui.plate.table.ExperimentTableColumns;
@@ -169,16 +167,6 @@ public class ExperimentBrowser extends EditorPart {
 		summaryLoader = new ExperimentSummaryLoader(experiments, exp -> {
 			if (tableViewer != null && !tableViewer.getControl().isDisposed()) tableViewer.refresh(exp);
 		});
-		for (Experiment exp: experiments) {
-			ExperimentSummary summary = new ExperimentSummary();
-			List<Plate> plates = PlateService.getInstance().getPlates(exp);
-			summary.plates = plates.size();
-			summary.platesToCalculate = (int) plates.stream().filter(PlateUtils.CALCULATION_TODO).count();
-			summary.platesToValidate = (int) plates.stream().filter(PlateUtils.VALIDATION_TODO).count();
-			summary.platesToApprove = (int) plates.stream().filter(PlateUtils.APPROVAL_TODO).count();
-			summary.platesToExport = (int) plates.stream().filter(PlateUtils.EXPORT_TODO).count();
-			summaryLoader.update(exp, summary);
-		}
 	}
 
 	private void initEventListener() {

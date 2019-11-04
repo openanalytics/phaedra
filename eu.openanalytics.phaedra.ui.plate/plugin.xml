@@ -3491,6 +3491,7 @@
       </gridLayer>
       <gridLayer
             class="eu.openanalytics.phaedra.ui.plate.grid.layer.HitCallLayer"
+            defaultEnabled="false"
             gridId="hca.singlewell.grid"
             icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
             id="eu.openanalytics.phaedra.ui.plate.grid.layer.HitCallLayer"
@@ -3498,6 +3499,7 @@
       </gridLayer>
       <gridLayer
             class="eu.openanalytics.phaedra.ui.plate.grid.layer.OutlierDetectionLayer"
+            defaultEnabled="false"
             gridId="hca.singlewell.grid"
             icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
             id="eu.openanalytics.phaedra.ui.plate.grid.layer.OutlierDetectionLayer"

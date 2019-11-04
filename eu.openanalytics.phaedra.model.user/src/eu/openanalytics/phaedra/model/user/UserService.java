@@ -15,6 +15,10 @@ import javax.persistence.PersistenceException;
 
 import org.eclipse.core.runtime.Status;
 
+import eu.openanalytics.phaedra.base.cache.CacheConfig;
+import eu.openanalytics.phaedra.base.cache.CacheKey;
+import eu.openanalytics.phaedra.base.cache.CacheService;
+import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.AuthConfig;
@@ -37,9 +41,15 @@ import eu.openanalytics.phaedra.model.user.vo.UserSession;
 public class UserService extends BaseJPAService {
 
 	private static UserService instance = new UserService();
-
+	private ICache preferenceCache;
+	
 	private UserService() {
 		// Hidden constructor
+		CacheConfig cfg = new CacheConfig("PreferenceCache");
+		cfg.maxBytes = 0;
+		cfg.tti = 0;
+		cfg.ttl = 0;
+		preferenceCache = CacheService.getInstance().createCache(cfg);
 	}
 
 	public static UserService getInstance() {
@@ -118,6 +128,8 @@ public class UserService extends BaseJPAService {
 		} catch (Exception e) {
 			EclipseLog.warn("Failed to log user session", e, Activator.getDefault());
 		}
+		
+		initializePreferences();
 	}
 
 	public String getMailAddress(String userName) {
@@ -143,16 +155,13 @@ public class UserService extends BaseJPAService {
 
 	/* Preferences */
 
-	/*
-	 * Note: do not use these methods to access UserPreference type preferences directly.
-	 * Those are handled by the global preference persistor and accessed locally by
-	 * a plugins' Activator.getPreferenceStore().
-	 */
-
 	public List<Preference> getPreferences(String type) {
-		String userName = SecurityService.getInstance().getCurrentUserName();
-		String query = "select pref from Preference pref where pref.type = ?1 and pref.user = ?2";
-		return getList(query, Preference.class, type, userName);
+		List<Preference> prefs = new ArrayList<>();
+		for (Object key: preferenceCache.getKeys()) {
+			CacheKey cKey = (CacheKey) key;
+			if (cKey.getKeyPart(0).equals(type)) prefs.add((Preference) preferenceCache.get(cKey));
+		}
+		return prefs;
 	}
 
 	public void savePreferences(List<Preference> prefs) {
@@ -164,24 +173,42 @@ public class UserService extends BaseJPAService {
 	}
 
 	public String getPreferenceValue(String type, String item) {
-		String userName = SecurityService.getInstance().getCurrentUserName();
-		String query = "select pref from Preference pref where pref.type = ?1 and pref.user = ?2 and pref.item = ?3";
-		Preference pref = getEntity(query, Preference.class, type, userName, item);
-		if (pref != null) return pref.getValue();
-		return null;
+		Preference pref = getPreference(type, item);
+		return (pref == null) ? null : pref.getValue();
 	}
 
 	public void setPreferenceValue(String type, String item, String value) {
-		String userName = SecurityService.getInstance().getCurrentUserName();
-		String query = "select pref from Preference pref where pref.type = ?1 and pref.user = ?2 and pref.item = ?3";
-		Preference pref = getEntity(query, Preference.class, type, userName, item);
+		Preference pref = getPreference(type, item);
 		if (pref == null) {
 			pref = new Preference();
-			pref.setUser(userName);
+			pref.setUser(SecurityService.getInstance().getCurrentUserName());
 			pref.setType(type);
 			pref.setItem(item);
+			
+			CacheKey key = getPrefCacheKey(type, item);
+			preferenceCache.put(key, pref);
 		}
 		pref.setValue(value);
 		save(pref);
+	}
+	
+	private void initializePreferences() {
+		String userName = SecurityService.getInstance().getCurrentUserName();
+		String query = "select pref from Preference pref where pref.user = ?1";
+		List<Preference> prefs = getList(query, Preference.class, userName);
+		for (Preference pref: prefs) {
+			CacheKey key = getPrefCacheKey(pref.getType(), pref.getItem());
+			preferenceCache.put(key, pref);
+		}
+	}
+	
+	private Preference getPreference(String type, String item) {
+		CacheKey key = getPrefCacheKey(type, item);
+		Preference pref = (Preference) preferenceCache.get(key);
+		return pref;
+	}
+	
+	private CacheKey getPrefCacheKey(String type, String item) {
+		return CacheKey.create(type, item);
 	}
 }

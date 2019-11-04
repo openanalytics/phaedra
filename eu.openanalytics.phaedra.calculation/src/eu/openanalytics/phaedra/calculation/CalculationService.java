@@ -539,6 +539,7 @@ public class CalculationService {
 		}
 		
 		public List<Plate> getMultiploPlates(Plate plate) {
+			//TODO This may invoke a DB query (PlateService.getPlates) per invocation, see implementations above.
 			return multiploPlateGetter.apply(plate);
 		}
 	}

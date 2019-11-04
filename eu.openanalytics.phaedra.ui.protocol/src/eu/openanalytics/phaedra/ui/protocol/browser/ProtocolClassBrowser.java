@@ -26,12 +26,13 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 
+import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
+import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
-import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.cmd.BrowseProtocols;
@@ -106,9 +107,12 @@ public class ProtocolClassBrowser extends EditorPart {
 	}
 
 	private void loadTableData() {
-		//TODO This ignores the editorInput
+		VOEditorInput input = (VOEditorInput)getEditorInput();
+		List<IValueObject> valueObjects = input.getValueObjects();
+		
 		// Make a copy of the list and sort it.
-		protocolClasses = new ArrayList<ProtocolClass>(ProtocolService.getInstance().getProtocolClasses());
+		protocolClasses = new ArrayList<ProtocolClass>();
+		for (IValueObject vo: valueObjects) protocolClasses.add((ProtocolClass) vo);
 		Collections.sort(protocolClasses, ProtocolUtils.PROTOCOLCLASS_NAME_SORTER);
 
 		// Pre-fetch summaries.

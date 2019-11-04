@@ -76,6 +76,7 @@ public class ProtocolClass extends PlatformObject implements IValueObject, IOwne
 	@JoinColumn(name="image_setting_id")
 	private ImageSettings imageSettings;
 
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToOne
 	@JoinColumn(name="default_feature_id")
 	private Feature defaultFeature;
