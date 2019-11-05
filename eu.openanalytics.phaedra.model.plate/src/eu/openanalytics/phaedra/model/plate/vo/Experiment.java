@@ -5,7 +5,6 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -17,8 +16,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.eclipse.core.runtime.PlatformObject;
-import org.eclipse.persistence.annotations.JoinFetch;
-import org.eclipse.persistence.annotations.JoinFetchType;
+import org.eclipse.persistence.annotations.BatchFetch;
+import org.eclipse.persistence.annotations.BatchFetchType;
 
 import eu.openanalytics.phaedra.base.cache.IgnoreSizeOf;
 import eu.openanalytics.phaedra.base.db.IValueObject;
@@ -37,8 +36,8 @@ public class Experiment extends PlatformObject implements IValueObject, Serializ
 	private long id;
 
 	@IgnoreSizeOf
-	@JoinFetch(JoinFetchType.INNER)
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
+	@BatchFetch(BatchFetchType.JOIN)
 	@JoinColumn(name="protocol_id")
 	private Protocol protocol;
 

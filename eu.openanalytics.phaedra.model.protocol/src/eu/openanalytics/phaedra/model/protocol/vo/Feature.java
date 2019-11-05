@@ -120,8 +120,7 @@ public class Feature extends PlatformObject implements IFeature, Serializable {
 	private Map<String,String> colorMethodSettings;
 
 	@IgnoreSizeOf
-	@JoinFetch(JoinFetchType.OUTER)
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name="group_id")
 	private FeatureGroup featureGroup;
 

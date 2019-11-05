@@ -6,7 +6,6 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -45,7 +44,7 @@ public class ImageSettings implements IValueObject, Serializable {
 	private float pixelSizeZ;
 
 	@IgnoreSizeOf
-	@OneToMany(mappedBy="imageSettings", fetch=FetchType.LAZY, cascade=CascadeType.ALL, orphanRemoval=true)
+	@OneToMany(mappedBy="imageSettings", cascade=CascadeType.ALL, orphanRemoval=true)
 	@OrderColumn(name="channel_sequence")
 	private List<ImageChannel> imageChannels;
 

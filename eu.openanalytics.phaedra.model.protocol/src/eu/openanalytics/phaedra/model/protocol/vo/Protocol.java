@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -39,8 +38,8 @@ public class Protocol extends PlatformObject implements IValueObject, IOwnedObje
 	private String description;
 
 	@IgnoreSizeOf
+	@ManyToOne
 	@BatchFetch(BatchFetchType.JOIN)
-	@ManyToOne(fetch=FetchType.EAGER)
 	@JoinColumn(name="protocolclass_id")
 	private ProtocolClass protocolClass;
 

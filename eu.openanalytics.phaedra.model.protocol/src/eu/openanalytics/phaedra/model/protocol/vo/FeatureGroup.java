@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -14,8 +13,6 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
 import org.eclipse.core.runtime.PlatformObject;
-import org.eclipse.persistence.annotations.JoinFetch;
-import org.eclipse.persistence.annotations.JoinFetchType;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
@@ -37,8 +34,7 @@ public class FeatureGroup extends PlatformObject implements IValueObject, IOwned
 	@Column(name="description")
 	private String description;
 
-	@JoinFetch(JoinFetchType.INNER)
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name="protocolclass_id")
 	private ProtocolClass protocolClass;
 

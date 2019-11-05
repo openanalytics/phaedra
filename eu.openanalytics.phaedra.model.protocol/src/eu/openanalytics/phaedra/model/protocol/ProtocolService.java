@@ -214,7 +214,6 @@ public class ProtocolService extends BaseJPAService {
 		pClass.setName("New Protocol Class");
 		pClass.setLowWellTypeCode("LC");
 		pClass.setHighWellTypeCode("HC");
-		pClass.setProtocols(new ArrayList<Protocol>());
 		return pClass;
 	}
 

@@ -17,8 +17,6 @@ public class AllProtocolsHandler extends BaseElementHandler {
 
 	@Override
 	public void handleDoubleClick(IElement element) {
-		// Note: as an optimization, load protocol classes first so they are cached for the protocol query.
-		ProtocolService.getInstance().getProtocolClasses();
 		List<Protocol> protocols = ProtocolService.getInstance().getProtocols();
 		EditorFactory.getInstance().openEditor(protocols);
 	}

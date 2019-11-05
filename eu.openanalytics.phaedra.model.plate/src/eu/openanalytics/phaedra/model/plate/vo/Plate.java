@@ -49,6 +49,7 @@ public class Plate extends PlatformObject implements IValueObject, IListAdaptabl
 	private int columns;
 
 	@IgnoreSizeOf
+	@BatchFetch(BatchFetchType.JOIN)
 	@OneToMany(mappedBy="plate", cascade=CascadeType.ALL, orphanRemoval=true)
 	private List<Well> wells;
 
