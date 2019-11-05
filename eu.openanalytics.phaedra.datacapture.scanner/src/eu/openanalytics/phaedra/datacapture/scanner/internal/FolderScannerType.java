@@ -36,7 +36,8 @@ public class FolderScannerType extends BaseScannerType {
 			throw new ScanException("Invalid scanner configuration", e);
 		}
 		if (cfg.path == null || cfg.path.isEmpty()) throw new ScanException("Invalid scanner configuration: no path specified");
-
+		
+		EclipseLog.debug("Scanning path: " + cfg.path, FolderScannerType.class);
 		monitor.subTask("Scanning " + cfg.path);
 		Pattern expPattern = Pattern.compile(cfg.experimentPattern);
 		try (Stream<Path> contents = streamContents(Paths.get(cfg.path))) {
@@ -73,7 +74,7 @@ public class FolderScannerType extends BaseScannerType {
 		}
 
 		if (plateIds.length == 0) {
-			EclipseLog.info("Skipping folder (already captured): " + expFolder, Activator.getDefault());
+			EclipseLog.debug("Skipping folder (already captured): " + expFolder, FolderScannerType.class);
 			return;
 		}
 		
