@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
@@ -46,14 +45,7 @@ public class ScanJobScheduler implements IScheduler {
 			return jobs;
 		}
 		
-		String scanJobNamePatternString = System.getProperty("datacapture.scanjob.pattern");
-		Pattern scanJobNamePattern = scanJobNamePatternString == null ? null : Pattern.compile(scanJobNamePatternString);
-		
-		List<ScanJob> scanJobs = ScannerService.getInstance().getScheduledScanners()
-				.stream()
-				.filter(s -> scanJobNamePattern == null || scanJobNamePattern.matcher(s.getLabel()).matches())
-				.collect(Collectors.toList());
-		
+		List<ScanJob> scanJobs = ScannerService.getInstance().getScheduledScanners();
 		EclipseLog.info("Scheduling " + scanJobs.size() + " scan job(s)", Activator.getDefault());
 		for (ScanJob scanJob: scanJobs) {
 			try {
@@ -78,6 +70,8 @@ public class ScanJobScheduler implements IScheduler {
 	}
 
 	public static void scheduleJob(ScanJob scanJob, Map<JobDetail, List<Trigger>> jobs) throws ScanException {
+		if (!isScanJobSupported(scanJob)) return;
+		
 		//jobKey (Identity) is the combination of the name (unique in a group) and a group
 		JobDetail jobDetail = JobBuilder.newJob(ScanJobSubmitter.class)
 				.withIdentity(String.valueOf(scanJob.getId()), "ScanJobs")
@@ -102,8 +96,9 @@ public class ScanJobScheduler implements IScheduler {
 	}
 	
 	public static void rescheduleJob(ScanJob scanJob) throws ScanException {
+		if (!isScanJobSupported(scanJob)) return;
+		
 		TriggerKey oldTriggerKey = new TriggerKey(String.valueOf(scanJob.getId()), "ScanJobTriggers");
-
 		Trigger newTrigger = TriggerBuilder.newTrigger()
 				.withIdentity(String.valueOf(scanJob.getId()), "ScanJobTriggers")
 				.withSchedule(CronScheduleBuilder.cronSchedule(scanJob.getSchedule()))
@@ -128,4 +123,11 @@ public class ScanJobScheduler implements IScheduler {
 		}
 	}
 	
+	private static boolean isScanJobSupported(ScanJob scanJob) {
+		String scanJobNamePatternString = System.getProperty("datacapture.scanjob.pattern");
+		Pattern scanJobNamePattern = (scanJobNamePatternString == null) ? null : Pattern.compile(scanJobNamePatternString);
+		boolean isSupported = (scanJobNamePattern == null || scanJobNamePattern.matcher(scanJob.getLabel()).matches());
+		if (!isSupported) EclipseLog.debug("Ignoring unsupported scan job: " + scanJob, ScanJobScheduler.class);
+		return isSupported;
+	}
 }

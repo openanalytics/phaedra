@@ -185,8 +185,8 @@ public class SQSScannerType extends BaseScannerType {
 		NodeList mappingTags = XmlUtils.findTags("/config/mappings/mapping", doc);
 		for (int i=0; i < mappingTags.getLength(); i++) {
 			Element mappingTag = (Element) mappingTags.item(i);
-			String pattern = XmlUtils.getNodeByName(mappingTag, "pattern").getNodeValue();
-			Long protocolId = Long.valueOf(XmlUtils.getNodeByName(mappingTag, "protocol").getNodeValue());
+			String pattern = XmlUtils.getNodeByName(mappingTag, "pattern").getTextContent();
+			Long protocolId = Long.valueOf(XmlUtils.getNodeByName(mappingTag, "protocol").getTextContent());
 			cfg.keyMappings.put(pattern, protocolId);
 		}
 		
