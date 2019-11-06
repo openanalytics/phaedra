@@ -3,6 +3,8 @@ package eu.openanalytics.phaedra.datacapture.scanner.internal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
@@ -44,10 +46,16 @@ public class ScanJobScheduler implements IScheduler {
 			return jobs;
 		}
 		
-		List<ScanJob> scanJobs = ScannerService.getInstance().getScheduledScanners();
+		String scanJobNamePatternString = System.getProperty("datacapture.scanjob.pattern");
+		Pattern scanJobNamePattern = scanJobNamePatternString == null ? null : Pattern.compile(scanJobNamePatternString);
+		
+		List<ScanJob> scanJobs = ScannerService.getInstance().getScheduledScanners()
+				.stream()
+				.filter(s -> scanJobNamePattern == null || scanJobNamePattern.matcher(s.getLabel()).matches())
+				.collect(Collectors.toList());
+		
 		EclipseLog.info("Scheduling " + scanJobs.size() + " scan job(s)", Activator.getDefault());
 		for (ScanJob scanJob: scanJobs) {
-			// For each scan job, schedule a quartz job.
 			try {
 				scheduleJob(scanJob, jobs);
 			} catch (ScanException e) {
