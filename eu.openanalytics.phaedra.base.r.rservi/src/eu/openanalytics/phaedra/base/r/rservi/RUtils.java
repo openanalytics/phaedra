@@ -33,6 +33,8 @@ public class RUtils {
 	public static RObject makeRObject(Object value, boolean unknownToNull) {
 		if (value == null) {
 			return RNullImpl.INSTANCE;
+		} else if (value instanceof RObject) {
+			return (RObject) value;
 		} else if (value instanceof String) {
 			return makeStringRVector(new String[] { (String) value });
 		} else if (value instanceof Number) {
@@ -113,6 +115,20 @@ public class RUtils {
 		return new RVectorImpl<RIntegerStore>(new RInteger32Store(array, missingIndexArray));
 	}
 
+	public static RDataFrame makeDataFrame(String[] columnNames, Object[] columnValues) {
+		RObject[] vectors = new RVector[columnNames.length];
+
+		for (int i=0; i<columnNames.length; i++) {
+			Object data = columnValues[i];
+			if (data instanceof double[]) vectors[i] = makeNumericRVector((double[]) data);
+			else if (data instanceof int[]) vectors[i] = makeIntegerRVector((int[]) data);
+			else if (data instanceof String[]) vectors[i] = makeStringRVector((String[]) data);
+			else throw new IllegalArgumentException("Unsupported data type: " + data.getClass());
+		}
+
+		return new RDataFrame32Impl(vectors, "data.frame", columnNames, null);
+	}
+	
 	public static RDataFrame makeDoubleRDataFrame(String[] columnNames, double[][] array2D) {
 		int colCount = columnNames.length;
 		int rowCount = array2D[0].length;
