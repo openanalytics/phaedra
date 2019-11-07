@@ -35,6 +35,8 @@ public class NIOInterface extends BaseFileServer {
 		String fsPath = cfg.get(FileServerConfig.PATH);
 		String userName = cfg.get(FileServerConfig.USERNAME);
 		
+		if (fsPath.toLowerCase().startsWith("http")) return false;
+		
 		if (ProcessUtils.isWindows() && SMBHelper.isSMBPath(fsPath)) {
 			String fsUser = userName.substring(userName.indexOf("\\") + 1);
 			String currentUser = System.getProperty("user.name");
