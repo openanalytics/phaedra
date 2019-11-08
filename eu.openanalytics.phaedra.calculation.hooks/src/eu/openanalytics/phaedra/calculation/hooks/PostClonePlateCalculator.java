@@ -21,6 +21,7 @@ public class PostClonePlateCalculator implements IHook {
 		if (linkArgs.action != ModelEventType.ObjectCloned) return;
 		
 		for (Plate plate: CalculationHookUtils.getNormalizationLinkedPlates(linkArgs.plate)) {
+			CalculationService.getInstance().getAccessor(plate).reset();
 			CalculationService.getInstance().calculate(plate);
 		}
 	}
