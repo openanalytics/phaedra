@@ -236,16 +236,12 @@ public class PlateDataAccessor implements Serializable {
 		if (features == null || features.isEmpty()) return;
 		lock.lock();
 		try {
-			if (features.size() == 1) {
-				fetchValues(features);
-			} else {
-				List<Feature> uncachedFeatures = new ArrayList<>();
-				for (Feature f : features) {
-					if (!isFullyCached(f)) uncachedFeatures.add(f);
-				}
-				if (uncachedFeatures.isEmpty()) return;
-				fetchValues(uncachedFeatures);
+			List<Feature> uncachedFeatures = new ArrayList<>();
+			for (Feature f : features) {
+				if (!isFullyCached(f)) uncachedFeatures.add(f);
 			}
+			if (uncachedFeatures.isEmpty()) return;
+			fetchValues(uncachedFeatures);
 		} finally {
 			lock.unlock();
 		}
