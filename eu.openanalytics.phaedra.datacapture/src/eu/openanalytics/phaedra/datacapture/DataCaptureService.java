@@ -1,6 +1,8 @@
 package eu.openanalytics.phaedra.datacapture;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -53,6 +55,7 @@ public class DataCaptureService extends BaseJPAService {
 	private static DataCaptureService instance = new DataCaptureService();
 	
 	private boolean serverEnabled;
+	private String serverId;
 	private ListenerList<IDataCaptureLogListener> logListeners;
 	private Map<String, RunningDataCaptureJob> runningJobs;
 	
@@ -63,6 +66,17 @@ public class DataCaptureService extends BaseJPAService {
 		
 		if (serverEnabled) {
 			addLogListener(new EmailNotifier());
+			
+			serverId = System.getProperty(DC_SERVER_ENABLED + ".id");
+			if (serverId == null || serverId.trim().isEmpty()) {
+				try {
+					serverId = InetAddress.getLocalHost().getHostName();
+				} catch (UnknownHostException e) {
+					EclipseLog.error("Failed to look up hostname for server id", e, Activator.PLUGIN_ID);
+					serverId = "default";
+				}
+			}
+			
 			checkUnfinishedJobs();
 		}
 	}
@@ -73,6 +87,10 @@ public class DataCaptureService extends BaseJPAService {
 	
 	public boolean isServerEnabled() {
 		return serverEnabled;
+	}
+	
+	public String getServerId() {
+		return serverId;
 	}
 	
 	public String[] getAllCaptureConfigIds() throws IOException {
@@ -277,12 +295,12 @@ public class DataCaptureService extends BaseJPAService {
 	
 	private void checkUnfinishedJobs() {
 		// Find all jobs that have a 'submitted' or 'started' event but not a 'complete', 'error' or 'cancelled' event.
-		String query = "select e from SavedLogEvent e where e.status = 0 and e.taskId is not null and not exists"
-				+ " (select ee.taskId from SavedLogEvent ee where ee.status in (1,-1,-2) and ee.reading is null and ee.taskId = e.taskId)";
-		List<SavedLogEvent> unfinishedJobs = getList(query, SavedLogEvent.class);
+		String query = "select e from SavedLogEvent e"
+				+ " where e.status = 0 and e.taskId is not null and e.serverId = ?1"
+				+ " and not exists (select ee.taskId from SavedLogEvent ee where ee.status in (1,-1,-2) and ee.reading is null and ee.taskId = e.taskId)";
+		List<SavedLogEvent> unfinishedJobs = getList(query, SavedLogEvent.class, getServerId());
 		for (SavedLogEvent e: unfinishedJobs) {
-			SavedLogEvent errorEvent = new SavedLogEvent();
-			errorEvent.setDate(new Date());
+			SavedLogEvent errorEvent = createLogEvent();
 			errorEvent.setSource(e.getSource());
 			errorEvent.setStatus(LogItemSeverity.Error.getLogLevel());
 			errorEvent.setSourceIdentifier(e.getSourceIdentifier());
@@ -316,7 +334,7 @@ public class DataCaptureService extends BaseJPAService {
 	private void saveLogEvent(DataCaptureLogItem item) {
 		if (!isServerEnabled()) return;
 		
-		SavedLogEvent event = new SavedLogEvent();
+		SavedLogEvent event = createLogEvent();
 		event.setDate(item.timestamp);
 		event.setSource(item.logSource);
 		event.setStatus(item.severity.getLogLevel());
@@ -330,11 +348,18 @@ public class DataCaptureService extends BaseJPAService {
 		save(event);
 	}
 	
+	private SavedLogEvent createLogEvent() {
+		SavedLogEvent event = new SavedLogEvent();
+		event.setServerId(getServerId());
+		event.setDate(new Date());
+		return event;
+	}
+	
 	public List<SavedLogEvent> getSavedEvents(Date from, Date to) {
 		if (from == null) from = new Date(0);
 		if (to == null) to = new Date();
-		String jpql = "SELECT e FROM SavedLogEvent e WHERE e.date >= ?1 AND e.date <= ?2 ORDER BY e.date desc";
-		List<SavedLogEvent> items = getList(jpql, SavedLogEvent.class, from, to);
+		String jpql = "SELECT e FROM SavedLogEvent e WHERE e.date >= ?1 AND e.date <= ?2 AND e.serverId = ?3 ORDER BY e.date desc";
+		List<SavedLogEvent> items = getList(jpql, SavedLogEvent.class, from, to, getServerId());
 		return items;
 	}
 	

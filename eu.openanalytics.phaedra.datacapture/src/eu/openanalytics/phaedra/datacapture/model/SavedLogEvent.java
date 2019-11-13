@@ -53,6 +53,9 @@ public class SavedLogEvent {
 	@Column(name="task_user")
 	private String taskUser;
 	
+	@Column(name="dc_server_id")
+	private String serverId;
+	
 	/*
 	 * *****************
 	 * Getters & setters
@@ -145,6 +148,14 @@ public class SavedLogEvent {
 	
 	public void setTaskUser(String taskUser) {
 		this.taskUser = taskUser;
+	}
+	
+	public String getServerId() {
+		return serverId;
+	}
+	
+	public void setServerId(String serverId) {
+		this.serverId = serverId;
 	}
 	
 	/*
