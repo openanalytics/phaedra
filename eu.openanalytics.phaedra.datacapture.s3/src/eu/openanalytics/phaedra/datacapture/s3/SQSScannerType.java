@@ -162,7 +162,7 @@ public class SQSScannerType extends BaseScannerType {
 		}
 		
 		if (protocolId == 0) throw new ScanException("Cannot create datacapture task: no target protocol specified");
-		DataCaptureTask task = DataCaptureService.getInstance().createTask(msg.url, cfg.protocolId);
+		DataCaptureTask task = DataCaptureService.getInstance().createTask(msg.url, protocolId);
 		
 		if (msg.captureConfig != null) task.setConfigId(msg.captureConfig);
 		else if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
