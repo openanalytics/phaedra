@@ -14,7 +14,8 @@ create table hca_dc_log (
 	source_identifier		varchar2(200),
 	reading					varchar2(200),
 	task_id					varchar2(50),
-	task_user				varchar2(50)
+	task_user				varchar2(50),
+	dc_server_id			varchar2(200)
 )
 tablespace phaedra_d;
 

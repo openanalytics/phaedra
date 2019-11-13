@@ -1010,7 +1010,8 @@ CREATE TABLE phaedra.hca_dc_log (
 	source_identifier		varchar(200),
 	reading					varchar(200),
 	task_id					varchar(50),
-	task_user				varchar(50)
+	task_user				varchar(50),
+	dc_server_id			text
 );
 
 ALTER TABLE phaedra.hca_dc_log
