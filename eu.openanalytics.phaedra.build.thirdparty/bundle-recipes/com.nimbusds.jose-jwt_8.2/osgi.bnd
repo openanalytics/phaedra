@@ -1,0 +1,17 @@
+package-version=${version;===;${Bundle-Version}}
+
+Import-Package: \
+ !com.nimbusds.jose.*,\
+ !com.nimbusds.jwt.*,\
+ javax.*,\
+ net.jcip.annotations.*;version="[1.0,1.1)",\
+ net.minidev.json.*;version="[2.3,2.4)",\
+ org.bouncycastle.*;version="[1.64,2.0)";resolution:=optional,\
+ *;resolution:=optional
+
+Export-Package: \
+ !about.html,!about_files,\
+ *.internal.*;x-internal:=true;version="${package-version}",\
+ *.implementation.*;x-internal:=true;version="${package-version}",\
+ *.impl.*;x-internal:=true;version="${package-version}",\
+ *;version="${package-version}"

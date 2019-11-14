@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>eu.openanalytics.phaedra.build</groupId>
+		<artifactId>eu.openanalytics.phaedra.build.parent</artifactId>
+		<version>1.0.7-SNAPSHOT</version>
+		<relativePath>../parent/</relativePath>
+	</parent>
+	
+	<groupId>eu.openanalytics.phaedra.build</groupId>
+	<artifactId>eu.openanalytics.phaedra.build.thirdparty.bundle-recipes</artifactId>
+	<version>1.0.7-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	
+	<properties>
+		<ebr.version>1.0.0</ebr.version>
+		
+		<tycho.scmUrl>scm:git:https://scm.openanalytics.eu/scm/git/phaedra.git</tycho.scmUrl>
+		
+		<!-- include everything from all dependencies by default -->
+		<recipe.includes>**/*</recipe.includes>
+		<!-- but filter out maven instructions, we'll generate new ones below -->
+		<recipe.excludes>META-INF/maven/**/*.*</recipe.excludes>
+		
+		<!-- read BND settings from 'osgi.bnd' located next to pom.xml -->
+		<recipe.bnd.file>osgi.bnd</recipe.bnd.file>
+		
+		<!-- BND specific instructions which can be overridden by recipe -->
+		<recipe.Bundle-Name>${project.name}</recipe.Bundle-Name>
+		<recipe.Bundle-Description />
+		<recipe.Bundle-Vendor>OpenAnalytics Phaedra</recipe.Bundle-Vendor>
+		
+		<!-- remove some clutter from the generated manifests -->
+		<recipe.removeheaders>Ignore-Package,Include-Resource,Private-Package,Embed-Dependency,Built-By,Build-Jdk,Bnd-*,Tool</recipe.removeheaders>
+		 <!-- by default we'll also remove the Require-Bundle header; recipe poms may override if they need this header -->
+		<recipe.removeadditionalheaders>Require-Bundle</recipe.removeadditionalheaders>
+		
+		<!-- set to false if you want to have dependencies embedded as full jars inside the bundle -->
+		<recipe.unpackDependencies>true</recipe.unpackDependencies>
+		<!-- when recipe.unpackDependencies is set to false, this one can be set to true to force removal of the version string from dependency jar names -->
+		<recipe.stripVersion>false</recipe.stripVersion>
+		<!-- when recipe.unpackDependencies is set to false, this one can be set to true to disable inclusion of '.' folder into the Bundle-ClassPath header -->
+		<recipe.excludeDotFolderFromClasspath>false</recipe.excludeDotFolderFromClasspath>
+		
+	</properties>
+	
+	<pluginRepositories>
+		<pluginRepository>
+			<id>ebr-releases</id>
+			<url>https://repo.eclipse.org/content/repositories/ebr-releases/</url>
+		</pluginRepository>
+	</pluginRepositories>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.ebr</groupId>
+				<artifactId>ebr-maven-plugin</artifactId>
+				<extensions>true</extensions>
+				<configuration>
+					<includes>${recipe.includes}</includes>
+					<excludes>${recipe.excludes}</excludes>
+					<unpackDependencies>${recipe.unpackDependencies}</unpackDependencies>
+					<stripVersion>${recipe.stripVersion}</stripVersion>
+					<excludeDotFolderFromBundleClasspath>${recipe.excludeDotFolderFromClasspath}</excludeDotFolderFromBundleClasspath>
+					<bndInstructions>
+						<Bundle-Name>${recipe.Bundle-Name}</Bundle-Name>
+						<Bundle-Vendor>${recipe.Bundle-Vendor}</Bundle-Vendor>
+						<Bundle-Description>${recipe.Bundle-Description}</Bundle-Description>
+						<Automatic-Module-Name>${project.artifactId}</Automatic-Module-Name>
+						<_removeheaders>${recipe.removeheaders},${recipe.removeadditionalheaders}</_removeheaders>
+						<_include>-${recipe.bnd.file}</_include>
+					</bndInstructions>
+				</configuration>
+			</plugin>
+		</plugins>
+		
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.eclipse.ebr</groupId>
+					<artifactId>ebr-maven-plugin</artifactId>
+					<version>${ebr.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.eclipse.ebr</groupId>
+					<artifactId>ebr-tycho-extras-plugin</artifactId>
+					<version>${ebr.version}</version>
+				</plugin>
+				
+			</plugins>
+		</pluginManagement>
+	</build>
+	
+	<modules>
+		<module>com.sun.mail.javax.mail_1.6</module>
+		
+		<module>org.objectweb.asm_5.0</module>
+		
+		<module>com.github.stephenc.jcip.annotations_1.0</module>
+		<module>net.minidev.accessors-smart_1.2</module>
+		<module>net.minidev.json-smart_2.3</module>
+		
+		<module>com.nimbusds.lang-tag_1.4</module>
+		<module>com.nimbusds.jose-jwt_8.2</module>
+		<module>com.nimbusds.oauth2-oidc-sdk_6.18</module>
+		
+	</modules>
+	
+</project>

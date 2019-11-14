@@ -1,0 +1,24 @@
+package-version=${version;===;${Bundle-Version}}
+
+Import-Package: \
+ !com.nimbusds.oauth2.*,\
+ !com.nimbusds.openid.*,\
+ com.nimbusds.jose.*;version="[8.2,8.3)",\
+ com.nimbusds.jwt.*;version="[8.2,8.3)",\
+ com.nimbusds.langtag.*;version="[1.4.3,1.5)",\
+ javax.mail.*;version="[1.6,1.7)",\
+ javax.servlet.*;version="[3.0,4.0)",\
+ javax.*,\
+ org.w3c.*,\
+ org.xml.*,\
+ net.jcip.annotations.*;version="[1.0,1.1)",\
+ net.minidev.json.*;version="[2.3,2.4)",\
+ org.joda.time.*;version="[2.9,2.10)";resolution:=optional,\
+ *;resolution:=optional
+
+Export-Package: \
+ !about.html,!about_files,\
+ *.internal.*;x-internal:=true;version="${package-version}",\
+ *.implementation.*;x-internal:=true;version="${package-version}",\
+ *.impl.*;x-internal:=true;version="${package-version}",\
+ *;version="${package-version}"

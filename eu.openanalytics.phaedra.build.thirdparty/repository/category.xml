@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+	<feature id="eu.openanalytics.phaedra.base.thirdparty.oidc.nimbus" version="0.0.0">
+	</feature>
+	<feature id="eu.openanalytics.phaedra.base.thirdparty.oidc.nimbus.source" version="0.0.0">
+	</feature>
+	
+	<category-def name="eu.openanalytics.phaedra.thirdparty.bundles" label="Phaedra Third-Party Bundles"/>
+	<iu>
+		<category name="eu.openanalytics.phaedra.thirdparty.bundles"/>
+		<query><expression type="match">providedCapabilities.exists(p | p.namespace == 'osgi.bundle') &amp;&amp; properties.exists(p | p.key == 'maven-artifactId')</expression></query>
+	</iu>
+	
+</site>

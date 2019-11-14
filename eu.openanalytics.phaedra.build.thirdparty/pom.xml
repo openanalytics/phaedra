@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<parent>
+		<groupId>eu.openanalytics.phaedra.build</groupId>
+		<artifactId>eu.openanalytics.phaedra.build.parent</artifactId>
+		<version>1.0.7-SNAPSHOT</version>
+		<relativePath>parent/</relativePath>
+	</parent>
+	
+	<groupId>eu.openanalytics.phaedra.build</groupId>
+	<artifactId>eu.openanalytics.phaedra.build.thirdparty</artifactId>
+	<version>1.0.7-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>target-platform-configuration</artifactId>
+				<configuration>
+					<resolver>p2</resolver>
+					<target>
+						<artifact>
+							<groupId>eu.openanalytics.phaedra.build</groupId>
+							<artifactId>eu.openanalytics.phaedra.build.thirdparty.orbit</artifactId>
+							<version>1.0.7-SNAPSHOT</version>
+						</artifact>
+					</target>
+					<targetDefinitionIncludeSource>honor</targetDefinitionIncludeSource>
+				</configuration>
+			</plugin>
+			
+		</plugins>
+	</build>
+	
+	<modules>
+		<module>orbit</module>
+		
+		<module>features</module>
+		
+		<module>repository</module>
+		
+	</modules>
+	
+</project>

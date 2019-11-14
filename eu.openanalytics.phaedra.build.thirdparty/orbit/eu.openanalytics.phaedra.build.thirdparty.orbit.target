@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="Phaedra - Orbit">
+	<locations>
+		
+		<location type="InstallableUnit" includeMode="planner"
+				includeAllPlatforms="false"
+				includeConfigurePhase="false"
+				includeSource="true">
+			<repository location="https://download.eclipse.org/tools/orbit/downloads/drops/R20190827152740/repository"/>
+			<unit id="javax.activation" version="1.1.0.v201211130549"/>
+			<unit id="javax.servlet" version="3.1.0.v201410161800"/>
+		</location>
+		
+	</locations>
+</target>
