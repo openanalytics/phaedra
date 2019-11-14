@@ -6,7 +6,7 @@ public enum ConcentrationUnit {
 	Molar("Molar", "M"),
 	MicroMolar("Micromolar", "μM"),
 	NanoMolar("Nanomolar", "nM"),
-	LogMolar("Negativ log of molar", "-log(M)");
+	LogMolar("Negative log of molar", "-log(M)");
 	
 	
 	private final String abbr;
