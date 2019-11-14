@@ -76,7 +76,17 @@ public class RService {
 		
 		try {
 			PlatformUI.getWorkbench();
-			RjsComConfig.setProperty("rj.servi.graphicFactory", new ERGraphicFactory());
+			RjsComConfig.setProperty("rj.servi.graphicFactory", new ERGraphicFactory() {
+				@Override
+				public Map<String, ? extends Object> getInitServerProperties() {
+					// Note: super.getInitServerProperties() performs a Display.syncExec to obtain display dpi.
+					// This may cause deadlock, if the main thread is locked waiting for the sessionLimiter.
+					// Since we should only use vector format graphics, dpi doesn't really matter anyway.
+					Map<String, Object> map = new HashMap<>();
+					map.put("display.dpi", new double[] { 96.0, 96.0 });
+					return map;
+				}
+			});
 			RjsComConfig.setProperty("rj.servi.comClientGraphicActionsFactory", new ERClientGraphicActionsFactory());
 		} catch (IllegalStateException e) {
 			// No workbench available: continue without ERGraphics.
