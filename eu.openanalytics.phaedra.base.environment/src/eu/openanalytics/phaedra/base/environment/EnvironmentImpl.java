@@ -49,7 +49,7 @@ public class EnvironmentImpl implements IEnvironment {
 		Permissions permissions = new Permissions();
 		permissions.load(key -> config.getValue(name, "permissions", key));
 		SecurityService.createInstance(authConfig, permissions);
-		SecurityService.getInstance().getLoginHandler().authenticate(userName, password);
+		SecurityService.getInstance().getLoginHandler().authenticate(userName, password, true);
 		
 		FileServerConfig fsConfig = new FileServerConfig();
 		fsConfig.setResolver(key -> config.getValue(name, "fs", key)); 

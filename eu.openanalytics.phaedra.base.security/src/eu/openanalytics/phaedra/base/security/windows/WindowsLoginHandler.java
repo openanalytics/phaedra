@@ -28,7 +28,7 @@ public class WindowsLoginHandler implements ILoginHandler {
 	}
 	
 	@Override
-	public void authenticate(String userName, byte[] password) throws AuthenticationException {
+	public void authenticate(String userName, byte[] password, boolean setUserContext) throws AuthenticationException {
 		HANDLEByReference phUser = new HANDLEByReference();
 		try {
 			String domain = authConfig.get(AuthConfig.DEFAULT_DOMAIN);
@@ -45,12 +45,14 @@ public class WindowsLoginHandler implements ILoginHandler {
 					new String(password), WinBase.LOGON32_LOGON_NETWORK, WinBase.LOGON32_PROVIDER_DEFAULT, phUser);
 			if (!loginOk) throw new LastErrorException(Kernel32.INSTANCE.GetLastError());
 			
-			SecurityService.getInstance().setCurrentUser(userName);
-			Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
-			String role = authConfig.get(AuthConfig.GLOBAL_ROLE);
-			role = (role == null) ? Roles.USER : role.toUpperCase();
-			groups.put(new Group(Group.GLOBAL_TEAM, role), Collections.singletonList(SecurityService.getInstance().getCurrentUserName()));
-			SecurityService.getInstance().setSecurityConfig(groups);
+			if (setUserContext) {
+				SecurityService.getInstance().setCurrentUser(userName);
+				Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
+				String role = authConfig.get(AuthConfig.GLOBAL_ROLE);
+				role = (role == null) ? Roles.USER : role.toUpperCase();
+				groups.put(new Group(Group.GLOBAL_TEAM, role), Collections.singletonList(SecurityService.getInstance().getCurrentUserName()));
+				SecurityService.getInstance().setSecurityConfig(groups);
+			}
 		} catch (Exception e) {
 			throw new AuthenticationException("Windows authentication failed", e);
 		}

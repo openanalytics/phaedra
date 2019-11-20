@@ -14,22 +14,26 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
  */
 public class LDAPSecureLoginHandler implements ILoginHandler {
 
-	public void authenticate(String userName, byte[] password) {
+	public void authenticate(String userName, byte[] password, boolean setUserContext) {
 		DirContext ctx = null;
 	    try {
 	    	AuthConfig ldapConfig = SecurityService.getInstance().getLdapConfig();
 	    	ctx = LDAPUtils.bind(userName, password, ldapConfig);
-	    	SecurityService.getInstance().setCurrentUser(userName);
-	    	SecurityService.getInstance().setSecurityConfig(LDAPUtils.loadGroups(ctx, ldapConfig));
+	    	if (setUserContext) {
+		    	SecurityService.getInstance().setCurrentUser(userName);
+		    	SecurityService.getInstance().setSecurityConfig(LDAPUtils.loadGroups(ctx, ldapConfig));
+	    	}
 		} finally {
 			if (ctx != null) try { ctx.close(); } catch (Exception e) {}
 		}
 	    
-	    try {
-		    SecurityService.getInstance().registerAPIToken(userName, new String(password));
-		} catch (Exception e) {
-			EclipseLog.error("Failed to obtain API token", e, Activator.PLUGIN_ID);
-		}
+	    if (setUserContext) {
+		    try {
+			    SecurityService.getInstance().registerAPIToken(userName, new String(password));
+			} catch (Exception e) {
+				EclipseLog.error("Failed to obtain API token", e, Activator.PLUGIN_ID);
+			}
+	    }
 	}
 
 }

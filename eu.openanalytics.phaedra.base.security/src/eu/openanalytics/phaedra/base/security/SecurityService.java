@@ -462,12 +462,14 @@ public class SecurityService {
 	
 	private static class EmbeddedLoginHandler implements ILoginHandler {
 		@Override
-		public void authenticate(String userName, byte[] password) throws AuthenticationException {
+		public void authenticate(String userName, byte[] password, boolean setUserContext) throws AuthenticationException {
 			// Accept any authentication, treat user as global admin.
-			SecurityService.getInstance().setCurrentUser(userName);
-			Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
-			groups.put(Group.GLOBAL_ADMIN_GROUP, Collections.singletonList(SecurityService.getInstance().getCurrentUserName()));
-			SecurityService.getInstance().setSecurityConfig(groups);
+			if (setUserContext) {
+				SecurityService.getInstance().setCurrentUser(userName);
+				Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
+				groups.put(Group.GLOBAL_ADMIN_GROUP, Collections.singletonList(SecurityService.getInstance().getCurrentUserName()));
+				SecurityService.getInstance().setSecurityConfig(groups);
+			}
 		}
 	}
 }
