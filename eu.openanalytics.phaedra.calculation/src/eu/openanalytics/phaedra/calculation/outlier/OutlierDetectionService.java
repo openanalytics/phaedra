@@ -73,7 +73,10 @@ public class OutlierDetectionService {
 			}
 		}
 		
-		long[] wellIds = FormulaService.streamableList(plate.getWells()).stream().mapToLong(w -> w.getId()).toArray();
+		long[] wellIds = FormulaService.streamableList(plate.getWells())
+				.stream()
+				.sorted(PlateUtils.WELL_NR_SORTER)
+				.mapToLong(w -> w.getId()).toArray();
 		outlierValueDAO.saveOutlierValues(wellIds, feature.getId(), outlierValues);
 		outlierValueCache.put(key, toBoolean(outlierValues));
 	}

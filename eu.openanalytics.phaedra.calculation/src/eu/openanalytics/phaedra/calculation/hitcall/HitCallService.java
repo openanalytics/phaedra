@@ -73,7 +73,10 @@ public class HitCallService {
 			}
 		}
 		
-		long[] wellIds = FormulaService.streamableList(plate.getWells()).stream().mapToLong(w -> w.getId()).toArray();
+		long[] wellIds = FormulaService.streamableList(plate.getWells())
+				.stream()
+				.sorted(PlateUtils.WELL_NR_SORTER)
+				.mapToLong(w -> w.getId()).toArray();
 		hitValueDAO.saveHitValues(wellIds, feature.getId(), hitValues);
 		hitValueCache.put(key, toBoolean(hitValues));
 	}
