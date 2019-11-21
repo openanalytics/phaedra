@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.security;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import org.eclipse.core.runtime.IAdaptable;
 import eu.openanalytics.phaedra.api.client.APIClientFactory;
 import eu.openanalytics.phaedra.api.client.APIClientSessionManager;
 import eu.openanalytics.phaedra.api.client.model.SessionToken;
+import eu.openanalytics.phaedra.base.internal.security.oidc.OidcLoginHandler;
 import eu.openanalytics.phaedra.base.security.ldap.LDAPSecureLoginHandler;
 import eu.openanalytics.phaedra.base.security.model.Group;
 import eu.openanalytics.phaedra.base.security.model.IOwnedObject;
@@ -36,6 +38,11 @@ public class SecurityService {
 
 	private static SecurityService instance;
 	
+	public static SecurityService getInstance() {
+		return instance;
+	}
+	
+	
 	private String currentUserName;
 	private Map<Group, List<String>> securityConfig;
 	private Permissions permissions;
@@ -44,28 +51,27 @@ public class SecurityService {
 	private AuthConfig authConfig;
 	private APIClientSessionManager apiSessions;
 	
-	private SecurityService(AuthConfig authConfig, Permissions permissions) {
+	public SecurityService(AuthConfig authConfig, Permissions permissions) {
 		// Hidden constructor
 		this.authConfig = authConfig;
 		this.permissions = permissions;
 		this.apiSessions = new APIClientSessionManager();
 		
-		if (authConfig == null) this.loginHandler = new EmbeddedLoginHandler();
-		else if (Boolean.valueOf(authConfig.get(AuthConfig.WIN_LOGON))) this.loginHandler = new WindowsLoginHandler(authConfig);
-		else this.loginHandler = new LDAPSecureLoginHandler();
-	}
-
-	public static synchronized SecurityService createInstance(AuthConfig ldapConfig, Permissions permissions) {
-		instance = new SecurityService(ldapConfig, permissions);
-		return instance;
+		this.loginHandler = createLoginHandler(authConfig);
 	}
 	
-	public static synchronized SecurityService createInstance(AuthConfig ldapConfig) {
-		return createInstance(ldapConfig, new Permissions());
-	}
-	
-	public static SecurityService getInstance() {
-		return instance;
+	private ILoginHandler createLoginHandler(final AuthConfig authConfig) {
+		if (authConfig == null) {
+			return new EmbeddedLoginHandler(this, authConfig);
+		}
+		else {
+			final String method = authConfig.get("method");
+			if (method != null && method.equals("oidc")) {
+				return new OidcLoginHandler(this, authConfig);
+			}
+			else if (Boolean.valueOf(authConfig.get(AuthConfig.WIN_LOGON))) return new WindowsLoginHandler(this, authConfig);
+			else return new LDAPSecureLoginHandler(this, authConfig);
+		}
 	}
 	
 	/*
@@ -82,8 +88,14 @@ public class SecurityService {
 	public ILoginHandler getLoginHandler() {
 		return loginHandler;
 	}
-
-	//TODO Rename method
+	
+	public void login(final String userName, final byte[] password) {
+		this.loginHandler.authenticate(userName, password, true);
+		instance = this;
+	}
+	
+	//TODO Rename/remove method
+	@Deprecated
 	public AuthConfig getLdapConfig() {
 		return authConfig;
 	}
@@ -460,16 +472,29 @@ public class SecurityService {
 		}
 	}
 	
-	private static class EmbeddedLoginHandler implements ILoginHandler {
+	private static class EmbeddedLoginHandler extends AbstractLoginHandler {
+		
+		public EmbeddedLoginHandler(final SecurityService securityService, final AuthConfig authConfig) {
+			super(securityService, authConfig);
+		}
+		
+		@Override
+		public Collection<String> getRequiredParameter() {
+			return Collections.emptyList();
+		}
+		
 		@Override
 		public void authenticate(String userName, byte[] password, boolean setUserContext) throws AuthenticationException {
 			// Accept any authentication, treat user as global admin.
 			if (setUserContext) {
-				SecurityService.getInstance().setCurrentUser(userName);
+				final SecurityService securityService = getSecurityService();
+				securityService.setCurrentUser(userName);
 				Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
-				groups.put(Group.GLOBAL_ADMIN_GROUP, Collections.singletonList(SecurityService.getInstance().getCurrentUserName()));
-				SecurityService.getInstance().setSecurityConfig(groups);
+				groups.put(Group.GLOBAL_ADMIN_GROUP, Collections.singletonList(securityService.getCurrentUserName()));
+				securityService.setSecurityConfig(groups);
 			}
 		}
+		
 	}
+	
 }

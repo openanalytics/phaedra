@@ -1,18 +1,27 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Security
-Bundle-SymbolicName: eu.openanalytics.phaedra.base.security
+Bundle-SymbolicName: eu.openanalytics.phaedra.base.security;singleton:=true
 Bundle-Version: 1.0.7.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.security.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms,
  org.eclipse.core.runtime,
+ com.nimbusds.oauth2-oidc-sdk;bundle-version="[6.18.0,6.19.0)",
  eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
  eu.openanalytics.phaedra.api.client;bundle-version="1.0.0";visibility:=reexport,
  com.sun.jna,
  com.sun.jna.platform
+Import-Package: com.nimbusds.jose,
+ com.nimbusds.jose.proc;version="8.2.1",
+ com.nimbusds.jwt;version="8.2.1",
+ com.nimbusds.jwt.proc;version="8.2.1",
+ javax.servlet;version="3.1.0",
+ javax.servlet.http;version="2.5.0",
+ net.minidev.json,
+ org.eclipse.equinox.http.jetty
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.security,

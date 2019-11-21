@@ -1,6 +1,8 @@
 package eu.openanalytics.phaedra.base.security.windows;
 
 import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,25 +14,31 @@ import com.sun.jna.platform.win32.Kernel32;
 import com.sun.jna.platform.win32.WinBase;
 import com.sun.jna.platform.win32.WinNT.HANDLEByReference;
 
+import eu.openanalytics.phaedra.base.security.AbstractLoginHandler;
 import eu.openanalytics.phaedra.base.security.AuthConfig;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
-import eu.openanalytics.phaedra.base.security.ILoginHandler;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Group;
 import eu.openanalytics.phaedra.base.security.model.Roles;
 
-public class WindowsLoginHandler implements ILoginHandler {
-
-	private AuthConfig authConfig;
+public class WindowsLoginHandler extends AbstractLoginHandler {
 	
-	public WindowsLoginHandler(AuthConfig authConfig) {
-		this.authConfig = authConfig;
+	
+	public WindowsLoginHandler(final SecurityService securityService, final AuthConfig authConfig) {
+		super(securityService, authConfig);
+	}
+	
+	
+	@Override
+	public Collection<String> getRequiredParameter() {
+		return Arrays.asList(USERNAME, PASSWORD);
 	}
 	
 	@Override
 	public void authenticate(String userName, byte[] password, boolean setUserContext) throws AuthenticationException {
 		HANDLEByReference phUser = new HANDLEByReference();
 		try {
+			final AuthConfig authConfig = getAuthConfig();
 			String domain = authConfig.get(AuthConfig.DEFAULT_DOMAIN);
 			if (domain == null || domain.trim().isEmpty()) {
 				domain = InetAddress.getLocalHost().getHostName();
@@ -46,12 +54,13 @@ public class WindowsLoginHandler implements ILoginHandler {
 			if (!loginOk) throw new LastErrorException(Kernel32.INSTANCE.GetLastError());
 			
 			if (setUserContext) {
-				SecurityService.getInstance().setCurrentUser(userName);
+				final SecurityService securityService = getSecurityService();
+				securityService.setCurrentUser(userName);
 				Map<Group, List<String>> groups = new HashMap<Group, List<String>>();
 				String role = authConfig.get(AuthConfig.GLOBAL_ROLE);
 				role = (role == null) ? Roles.USER : role.toUpperCase();
-				groups.put(new Group(Group.GLOBAL_TEAM, role), Collections.singletonList(SecurityService.getInstance().getCurrentUserName()));
-				SecurityService.getInstance().setSecurityConfig(groups);
+				groups.put(new Group(Group.GLOBAL_TEAM, role), Collections.singletonList(securityService.getCurrentUserName()));
+				securityService.setSecurityConfig(groups);
 			}
 		} catch (Exception e) {
 			throw new AuthenticationException("Windows authentication failed", e);
