@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.base.environment;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 
 import javax.persistence.EntityManager;
 
@@ -21,6 +22,7 @@ public class EnvironmentImpl implements IEnvironment {
 	private String name;
 	private Config config;
 	
+	private SecurityService securityService;
 	private SecureFileServer fileServer;
 	private Database database;
 	
@@ -39,8 +41,16 @@ public class EnvironmentImpl implements IEnvironment {
 		return config.hasCategory(name, "auth");
 	}
 	
-	@Override
-	public void connect(String userName, byte[] password) throws AuthenticationException, IOException {
+	private synchronized SecurityService getSecurityService() {
+		SecurityService service = this.securityService;
+		if (service == null) {
+			service = createSecurityService();
+			this.securityService = service;
+		}
+		return service;
+	}
+	
+	private SecurityService createSecurityService() {
 		AuthConfig authConfig = null;
 		if (requiresAuthentication()) {
 			authConfig = new AuthConfig();
@@ -48,8 +58,20 @@ public class EnvironmentImpl implements IEnvironment {
 		}
 		Permissions permissions = new Permissions();
 		permissions.load(key -> config.getValue(name, "permissions", key));
-		SecurityService.createInstance(authConfig, permissions);
-		SecurityService.getInstance().getLoginHandler().authenticate(userName, password, true);
+		
+		return new SecurityService(authConfig, permissions);
+	}
+	
+	@Override
+	public Collection<String> getRequiredConnectParameters() {
+		final SecurityService securityService = getSecurityService();
+		return securityService.getLoginHandler().getRequiredParameter();
+	}
+	
+	@Override
+	public void connect(String userName, byte[] password) throws AuthenticationException, IOException {
+		final SecurityService securityService = getSecurityService();
+		securityService.login(userName, password);
 		
 		FileServerConfig fsConfig = new FileServerConfig();
 		fsConfig.setResolver(key -> config.getValue(name, "fs", key)); 

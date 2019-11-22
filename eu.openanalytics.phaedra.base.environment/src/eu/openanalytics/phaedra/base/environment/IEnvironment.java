@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.base.environment;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.util.Collection;
 
 import javax.persistence.EntityManager;
 
@@ -21,7 +22,14 @@ public interface IEnvironment {
 
 	public String getName();
 	
-	public boolean requiresAuthentication();
+	/**
+	 * Returns if authentication is required for this environment.
+	 */
+	boolean requiresAuthentication();
+	/**
+	 * Returns the parameters required for connect.
+	 **/
+	Collection<String> getRequiredConnectParameters();
 	
 	public void connect(String userName, byte[] password) throws AuthenticationException, IOException;
 	public void disconnect();

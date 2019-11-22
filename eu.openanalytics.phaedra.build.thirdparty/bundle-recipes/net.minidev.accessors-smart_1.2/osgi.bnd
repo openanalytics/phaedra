@@ -1,0 +1,13 @@
+package-version=${version;===;${Bundle-Version}}
+
+Import-Package: \
+ !net.minidev.asm.*,\
+ org.objectweb.asm.*;version="[5.0,5.1)",\
+ *;resolution:=optional
+
+Export-Package: \
+ !about.html,!about_files,\
+ *.internal.*;x-internal:=true;version="${package-version}",\
+ *.implementation.*;x-internal:=true;version="${package-version}",\
+ *.impl.*;x-internal:=true;version="${package-version}",\
+ *;version="${package-version}"

@@ -30,5 +30,36 @@
 			</auth>
 		</environment>
 		-->
+		
+		<!-- Example for distributed environment using OIDC authentication:
+				discovery.uri - issuer for OIDC discovery service (WebFinger)
+						(uri without /.well-known/openid-configuration)
+				client.id - client id of Phaedra desktop client, registered in the OP
+				scopes - comma separated scope values with the scopes required to fetch the
+						claims below in the userinfo
+				username.claim - claim for the username of the user in Phaedra
+						(e.g. preferred_username, unique_name)
+				
+		<environment name="Example distributed environment (OIDC)">
+			<fs>
+				<path>\\path\to\fileshare</path>
+				<user>Domain\ServiceAccount</user>
+				<password source="pwd" id="ServiceAccount"/>
+			</fs>
+			<db>
+				<url>jdbc:urlTo/dbInstance</url>
+				<user>dbUser</user>
+				<password source="pwd" id="dbUser"/>
+			</db>
+			<auth>
+				<method>oidc</method>
+				<discovery.uri>https://...</discovery.uri>
+				<client.id>phaedra-client</client.id>
+				<scopes>profile,groups</scopes>
+				<username.claim>preferred_username</username.claim>
+				<groups.claim>groups</groups.claim>
+			</auth>
+		</environment>
+		-->
 	</environments>
 </config>

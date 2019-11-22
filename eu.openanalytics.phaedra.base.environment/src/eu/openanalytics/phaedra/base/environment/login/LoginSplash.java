@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.environment.login;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -34,6 +35,7 @@ import eu.openanalytics.phaedra.base.environment.EnvironmentRegistry;
 import eu.openanalytics.phaedra.base.environment.IEnvironment;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.security.AuthenticationException;
+import eu.openanalytics.phaedra.base.security.ILoginHandler;
 import eu.openanalytics.phaedra.base.security.ldap.LDAPUtils;
 import eu.openanalytics.phaedra.base.security.ui.AccessDialog;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
@@ -241,11 +243,11 @@ public class LoginSplash extends BasicSplashHandler {
 	private void handleEnvironmentSelected() {
 		String envId = environmentCmb.getItem(environmentCmb.getSelectionIndex());
 		IEnvironment env = EnvironmentRegistry.getInstance().getEnvironment(envId);
-		boolean auth = env.requiresAuthentication();
-		usernameLbl.setVisible(auth);
-		usernameTxt.setVisible(auth);
-		passwordLbl.setVisible(auth);
-		passwordTxt.setVisible(auth);
+		Collection<String> required = env.getRequiredConnectParameters();
+		usernameLbl.setVisible(required.contains(ILoginHandler.USERNAME));
+		usernameTxt.setVisible(required.contains(ILoginHandler.USERNAME));
+		passwordLbl.setVisible(required.contains(ILoginHandler.PASSWORD));
+		passwordTxt.setVisible(required.contains(ILoginHandler.PASSWORD));
 	}
 
 	private void handleButtonOKWidgetSelected() {
