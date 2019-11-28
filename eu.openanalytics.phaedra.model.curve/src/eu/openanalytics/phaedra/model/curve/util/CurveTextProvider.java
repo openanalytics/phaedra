@@ -15,6 +15,7 @@ import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.protocol.property.ObjectPropertyService;
+import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 
 
 public class CurveTextProvider {
@@ -47,7 +48,11 @@ public class CurveTextProvider {
 			List<String> propNames = new ArrayList<>(extraProps.keySet());
 			propNames.sort(null);
 			for (String name: propNames) {
-				allFields.add(new CurveTextField(name, cu -> String.valueOf(extraProps.get(name))));
+				allFields.add(new CurveTextField(name, cu -> {
+					Object value = extraProps.get(name);
+					if (value instanceof Number) return Formatters.getInstance().format(((Number) value).doubleValue(), "#.##");
+					else return String.valueOf(value);
+				}));
 			}
 		}
 		
