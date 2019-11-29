@@ -84,7 +84,17 @@ public class LinkedResizeSupport {
 	}
 
 	private static void resetSize(SizeManager sm) {
+		// Workaround for a StackOverflowError in some UIs. Probably row height keeps going +1 for some reason?
+		Integer resizeCount = (Integer) sm.table.getData("resizeCount");
+		if (resizeCount != null && resizeCount > 1) {
+			sm.table.setData("resizeCount", null);
+			return;
+		}
+		resizeCount = (resizeCount == null) ? 1 : resizeCount + 1;
+		sm.table.setData("resizeCount", resizeCount);
 		NatTableUtils.resizeAllRows(sm.table, sm.currentHeight);
+		sm.table.setData("resizeCount", null);
+		
 		NatTableUtils.resizeColumns(sm.table, sm.linkedColumnAccessor.getLinkedColumns(), sm.currentWidth);
 		sm.callback.resized(sm.currentWidth, sm.currentHeight);
 	}
