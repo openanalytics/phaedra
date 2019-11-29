@@ -42,12 +42,12 @@ public class StatisticsFactory {
 			Plate plate = allPlates.get(i);
 			
 			double zprime = StatService.getInstance().calculate("zprime", plate, feature, null, null);
-			double sb = StatService.getInstance().calculate("sb", plate, feature, null, null);
 			double sn = StatService.getInstance().calculate("sn", plate, feature, null, null);
+			double sb = StatService.getInstance().calculate("sb", plate, feature, null, null);
 			
 			values[0][i] = zprime;
-			values[1][i] = sb;
-			values[2][i] = sn;
+			values[1][i] = sn;
+			values[2][i] = sb;
 			
 			int index = 3;
 			for (String controlType : controlTypes) {
