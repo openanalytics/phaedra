@@ -59,7 +59,8 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 	public static final int IMAGE_COLUMN_INDEX = 0;
 
 	private static final String CONCENTRATION = "Concentration";
-	private static final String COMPOUND = "Compound";
+	private static final String COMPOUND_TYPE = "Compound Type";
+	private static final String COMPOUND_NR = "Compound";
 	private static final String DESCRIPTION = "Description";
 	public static final String WELL_STATUS = "V";
 	private static final String WELL_TYPE = "Well Type";
@@ -70,9 +71,9 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 	private static final String IMAGE = "Image";
 
 	private static final String[] COLUMNS = new String[] { IMAGE, PLATE, WELL_NR, ROW, COLUMN, WELL_TYPE, WELL_STATUS
-		, DESCRIPTION, COMPOUND, CONCENTRATION };
+		, DESCRIPTION, COMPOUND_TYPE, COMPOUND_NR, CONCENTRATION };
 	private static final String[] COLUMNS_TOOLTIPS = new String[] { IMAGE, PLATE, WELL_NR, ROW, "Column", WELL_TYPE, "Well Validation Status"
-		, DESCRIPTION, COMPOUND, CONCENTRATION };
+		, DESCRIPTION, COMPOUND_TYPE, COMPOUND_NR, CONCENTRATION };
 	
 	
 	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
@@ -214,9 +215,12 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 				return well.getStatus();
 			case DESCRIPTION:
 				return well.getDescription();
-			case COMPOUND:
+			case COMPOUND_TYPE:
 				Compound c = well.getCompound();
-				return c != null ? c.getType() + " " + c.getNumber() : "";
+				return (c == null) ? "" : c.getType();
+			case COMPOUND_NR:
+				c = well.getCompound();
+				return (c == null) ? "" : c.getNumber();
 			case CONCENTRATION:
 				return WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get());
 			case PLATE:
