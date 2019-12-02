@@ -169,7 +169,7 @@ public class HeatmapImageFactory {
 			if (status == WellStatus.REJECTED_PHAEDRA.getCode()) {
 				c = colorStore.get(new RGB(255, 0, 0));
 			} else if (status == WellStatus.REJECTED_DATACAPTURE.getCode()) {
-				c = gc.getDevice().getSystemColor(SWT.COLOR_BLUE);
+				c = colorStore.get(new RGB(0, 0, 255));
 			} else {
 				c = colorStore.get(new RGB(255, 255, 0));
 			}
