@@ -88,20 +88,13 @@ public class CaptureUtils {
 	 * @throws IOException If the data cannot be parsed.
 	 */
 	public static Workbook parseExcelWorkbook(InputStream input, String fileName) throws IOException {
-		boolean xlsx = false;
-		if (fileName != null) xlsx = FileUtils.getExtension(fileName).equalsIgnoreCase("xlsx");
-		
-		// First, try to parse as an XLSX file.
-		Workbook wb = null;
-		try {
-			wb = new XSSFWorkbook(input);
-		} catch (IOException e) {
-			if (xlsx) throw e;
+		if (fileName == null) {
+			// Try to parse as XLSX
+			return new XSSFWorkbook(input);
 		}
 		
-		// Then, try to parse as an XLS file.
-		if (wb == null) wb = new HSSFWorkbook(input);
-		return wb;
+		boolean xlsx = FileUtils.getExtension(fileName).equalsIgnoreCase("xlsx");
+		return xlsx ? new XSSFWorkbook(input) : new HSSFWorkbook(input);
 	}
 	
 	/**
