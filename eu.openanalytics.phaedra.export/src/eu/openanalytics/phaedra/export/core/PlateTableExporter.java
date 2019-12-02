@@ -130,8 +130,8 @@ public class PlateTableExporter {
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
 					rowValues[col++] = statService.calculate("zprime", plate, feature, null, null);
-					rowValues[col++] = statService.calculate("sb", plate, feature, null, null);
 					rowValues[col++] = statService.calculate("sn", plate, feature, null, null);
+					rowValues[col++] = statService.calculate("sb", plate, feature, null, null);
 				}
 				if (includeFeatureControlStats) {
 					rowValues[col++] = statService.calculate("mean", plate, feature, "LC", null);
