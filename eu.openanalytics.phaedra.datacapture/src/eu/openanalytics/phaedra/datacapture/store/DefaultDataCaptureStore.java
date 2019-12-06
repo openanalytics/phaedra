@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import eu.openanalytics.phaedra.base.environment.GenericEntityService;
 import eu.openanalytics.phaedra.base.fs.store.FileStoreFactory;
 import eu.openanalytics.phaedra.base.fs.store.IFileStore;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
@@ -30,6 +31,7 @@ import eu.openanalytics.phaedra.datacapture.store.persist.SubWellDataPersistor;
 import eu.openanalytics.phaedra.datacapture.store.persist.SubWellHDF5DataPersistor;
 import eu.openanalytics.phaedra.datacapture.store.persist.WellDataPersistor;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.subwell.SubWellService;
 import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
 
@@ -60,6 +62,9 @@ public class DefaultDataCaptureStore implements IDataCaptureStore {
 	public void finish(Plate plate) throws DataCaptureException {
 		try {
 			store.switchMode();
+			
+			// Refresh the protocol class to ensure all features are up-to-date.
+			GenericEntityService.getInstance().refreshEntity(ProtocolUtils.getProtocolClass(plate));
 			
 			IDataPersistor[] persistors = {
 					new PlateDataPersistor(),
