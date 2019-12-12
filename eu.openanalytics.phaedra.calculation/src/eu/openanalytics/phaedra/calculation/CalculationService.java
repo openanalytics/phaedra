@@ -479,8 +479,18 @@ public class CalculationService {
 		
 		AllPlates("All plates of the experiment form a single pool of multiplo plates.",
 				(plate) -> {
+					List<String> nrs = PlateService.streamableList(plate.getCompounds()).stream()
+							.map(c -> c.getNumber())
+							.collect(Collectors.toList());
 					return PlateService.getInstance().getPlates(plate.getExperiment()).stream()
-						.filter(p -> p != plate).collect(Collectors.toList());
+						.filter(p -> p != plate)
+						.filter(p -> {
+							for (Compound c: p.getCompounds()) {
+								if (nrs.contains(c.getNumber())) return true;
+							}
+							return false;
+						})
+						.collect(Collectors.toList());
 				}),
 		
 		Property("Multiplo plates are identified via a plate property, such as 'mother-id', that is"

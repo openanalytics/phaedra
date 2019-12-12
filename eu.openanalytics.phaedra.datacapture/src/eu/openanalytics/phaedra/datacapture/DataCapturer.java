@@ -168,7 +168,9 @@ public class DataCapturer {
 	
 	private void finish(PlateReading reading, DataCaptureContext ctx) throws DataCaptureException {
 		DataCaptureTask task = ctx.getTask();
-		Experiment experiment = (Experiment) task.getParameters().get(DataCaptureParameter.TargetExperiment.name());
+		
+		Experiment experiment = (Experiment) ctx.getParameters(reading).getParameter(DataCaptureParameter.TargetExperiment.name());
+		if (experiment == null) experiment = (Experiment) task.getParameters().get(DataCaptureParameter.TargetExperiment.name());
 		
 		if (experiment == null) {
 			// Create a new experiment, or find the experiment with matching name.
