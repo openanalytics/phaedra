@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Data Capture Framework
 Bundle-SymbolicName: eu.openanalytics.phaedra.datacapture;singleton:=true
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.8.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.datacapture.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
@@ -21,7 +21,7 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.1",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.1",
  eu.openanalytics.phaedra.calculation;bundle-version="1.0.1",
- eu.openanalytics.phaedra.validation;bundle-version="1.0.7",
+ eu.openanalytics.phaedra.validation;bundle-version="1.0.8",
  eu.openanalytics.phaedra.link.platedef;bundle-version="1.0.1",
  com.bytecode.opencsv;bundle-version="1.0.0",
  org.apache.poi;bundle-version="3.9.0"

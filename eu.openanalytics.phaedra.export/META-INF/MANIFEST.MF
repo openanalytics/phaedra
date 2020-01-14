@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Export
 Bundle-SymbolicName: eu.openanalytics.phaedra.export
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.8.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.export.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui,
- eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.7",
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.8",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.subwell;bundle-version="1.0.0",

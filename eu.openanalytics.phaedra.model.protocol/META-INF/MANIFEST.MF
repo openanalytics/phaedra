@@ -2,12 +2,12 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: HCA Protocol Model
 Bundle-SymbolicName: eu.openanalytics.phaedra.model.protocol;singleton:=true
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.8.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.model.protocol.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.7",
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.8",
  eu.openanalytics.phaedra.model.log;bundle-version="1.0.0";visibility:=reexport,
  eu.openanalytics.phaedra.base.environment;bundle-version="1.0.0";visibility:=reexport,
  eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",

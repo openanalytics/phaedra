@@ -2,14 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: SubWell UI
 Bundle-SymbolicName: eu.openanalytics.phaedra.ui.subwell;singleton:=true
-Bundle-Version: 1.0.7.qualifier
+Bundle-Version: 1.0.8.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.ui.subwell.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.expressions,
  org.eclipse.ui,
  org.eclipse.ui.forms,
- eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.7",
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.8",
  eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.gridviewer;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.nattable;bundle-version="1.0.0",
