@@ -25,6 +25,7 @@ import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
 
 import eu.openanalytics.phaedra.base.fs.BaseFileServer;
 import eu.openanalytics.phaedra.base.fs.FileServerConfig;
+import eu.openanalytics.phaedra.base.util.misc.RetryingUtils;
 
 public class S3Interface extends BaseFileServer {
 
@@ -181,14 +182,17 @@ public class S3Interface extends BaseFileServer {
 	@Override
 	public void upload(String path, File file) throws IOException {
 		// Optimized upload case for File objects: enables parallel upload and retrying
-		PutObjectRequest req = new PutObjectRequest(bucketName, getKey(path), file);
-		ObjectMetadata metadata = new ObjectMetadata();
-		if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
-		metadata.setContentLength(file.length());
-		req.setMetadata(metadata);
+		// Note: additional retrying added to deal with 400: Request Timeout which is not retried by the SDK
 		try {
-			transferMgr.upload(req).waitForCompletion();
-		} catch (AmazonClientException | InterruptedException e) {
+			RetryingUtils.doRetrying(() -> {
+				PutObjectRequest req = new PutObjectRequest(bucketName, getKey(path), file);
+				ObjectMetadata metadata = new ObjectMetadata();
+				if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+				metadata.setContentLength(file.length());
+				req.setMetadata(metadata);
+				transferMgr.upload(req).waitForCompletion();
+			}, 5);
+		} catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
@@ -196,13 +200,16 @@ public class S3Interface extends BaseFileServer {
 	@Override
 	protected void doUpload(String path, InputStream input, long length) throws IOException {
 		// Regular upload case for non-File objects: uses serial upload with retrying via a BufferedInputStream
-		ObjectMetadata metadata = new ObjectMetadata();
-		if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
-		if (length > 0) metadata.setContentLength(length);
-		InputStream bufferedInput = new BufferedInputStream(input, 20*1024*1024);
+		// Note: additional retrying added to deal with 400: Request Timeout which is not retried by the SDK
 		try {
-			transferMgr.upload(bucketName, getKey(path), bufferedInput, metadata).waitForCompletion();
-		} catch (AmazonClientException | InterruptedException e) {
+			RetryingUtils.doRetrying(() -> {
+				ObjectMetadata metadata = new ObjectMetadata();
+				if (enableSSE) metadata.setSSEAlgorithm(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+				if (length > 0) metadata.setContentLength(length);
+				InputStream bufferedInput = new BufferedInputStream(input, 20*1024*1024);
+				transferMgr.upload(bucketName, getKey(path), bufferedInput, metadata).waitForCompletion();
+			}, 5);
+		} catch (Exception e) {
 			throw new IOException(e);
 		}
 	}
