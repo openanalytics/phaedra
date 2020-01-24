@@ -83,10 +83,10 @@ public class FSTemplateManager extends AbstractTemplateManager {
 		String path = TEMPLATE_REPO_PATH;
 		try {
 			if (!Screening.getEnvironment().getFileServer().isDirectory(path)) return;
-			List<String> items = Screening.getEnvironment().getFileServer().dir(path);
-			items.stream().forEach(item -> {
-				if (item.contains(".")) templateCache.put(item.substring(0,item.lastIndexOf('.')), UNLOADED_TEMPLATE);
-			});
+			Screening.getEnvironment().getFileServer().dir(path)
+				.stream()
+				.filter(item -> item.endsWith(".xml"))
+				.forEach(item -> templateCache.put(item.substring(0,item.lastIndexOf('.')), UNLOADED_TEMPLATE));
 		} catch (IOException e) {
 			// Template dir unavailable.
 			EclipseLog.error("Error loading plate templates", e, Activator.getDefault());
