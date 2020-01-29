@@ -35,5 +35,6 @@ Export-Package: eu.openanalytics.phaedra.datacapture,
  eu.openanalytics.phaedra.datacapture.module,
  eu.openanalytics.phaedra.datacapture.montage,
  eu.openanalytics.phaedra.datacapture.montage.layout,
+ eu.openanalytics.phaedra.datacapture.queue,
  eu.openanalytics.phaedra.datacapture.store,
  eu.openanalytics.phaedra.datacapture.util

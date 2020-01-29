@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.datacapture.queue;
 
 import eu.openanalytics.phaedra.base.seda.IStage;
 import eu.openanalytics.phaedra.base.seda.IStageEventHandler;
+import eu.openanalytics.phaedra.base.seda.StageConfiguration;
 import eu.openanalytics.phaedra.base.seda.StageEvent;
 import eu.openanalytics.phaedra.base.seda.StageService;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
@@ -13,7 +14,17 @@ import eu.openanalytics.phaedra.datacapture.log.DataCaptureLogItem.LogItemSeveri
 
 public class DataCaptureJobQueue implements IStageEventHandler {
 
-	private final static String ID = "datacapture.DataCaptureJobQueue";
+	private static final String ID = "datacapture.DataCaptureJobQueue";
+	
+	private static final String WORKER_POOL_SIZE = "phaedra.dc.workers";
+	
+	private static int workerPoolSize = 0;
+	
+	@Override
+	public void customizeConfig(StageConfiguration config) {
+		workerPoolSize = Integer.valueOf(System.getProperty(WORKER_POOL_SIZE, "" + config.getInt("threads")));
+		config.set("threads", workerPoolSize);
+	}
 	
 	@Override
 	public void onStartup() {
@@ -69,5 +80,24 @@ public class DataCaptureJobQueue implements IStageEventHandler {
 			}
 		}
 		return false;
+	}
+	
+	/**
+	 * Obtain the number of tasks currently in the queue.
+	 * 
+	 * @return The nr of queued tasks.
+	 */
+	public static int getQueueSize() {
+		IStage stage = StageService.getInstance().getStage(ID);
+		return stage.getQueuedEvents().length;
+	}
+	
+	/**
+	 * Obtain the number of worker threads that are assigned to execute DataCapture tasks.
+	 * 
+	 * @return The nr of datacapture worker threads.
+	 */
+	public static int getWorkerPoolSize() {
+		return workerPoolSize;
 	}
 }

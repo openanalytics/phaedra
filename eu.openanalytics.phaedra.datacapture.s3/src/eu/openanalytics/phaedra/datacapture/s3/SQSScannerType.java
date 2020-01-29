@@ -36,6 +36,7 @@ import eu.openanalytics.phaedra.datacapture.config.ModuleConfig;
 import eu.openanalytics.phaedra.datacapture.config.ParameterGroup;
 import eu.openanalytics.phaedra.datacapture.module.IModule;
 import eu.openanalytics.phaedra.datacapture.module.ModuleFactory;
+import eu.openanalytics.phaedra.datacapture.queue.DataCaptureJobQueue;
 import eu.openanalytics.phaedra.datacapture.scanner.BaseScannerType;
 import eu.openanalytics.phaedra.datacapture.scanner.ScanException;
 import eu.openanalytics.phaedra.datacapture.scanner.model.ScanJob;
@@ -88,7 +89,15 @@ public class SQSScannerType extends BaseScannerType {
 	
  	private boolean canProcess(Message msg, ScannerConfig cfg) {
  		MessageBody body = parseMessage(msg);
- 		return (body != null && body.url != null);
+ 		if (body == null || body.url == null) return false;
+ 		
+ 		long protocolId = getProtocolId(body, cfg);
+ 		if (protocolId == 0) return false;
+ 		
+ 		int queueSize = DataCaptureJobQueue.getQueueSize();
+ 		if (queueSize >= DataCaptureJobQueue.getWorkerPoolSize()) return false;
+ 		
+ 		return true;
 	}
 	
 	private void submitTask(Message msg, ScannerConfig cfg) throws ScanException {
@@ -150,6 +159,17 @@ public class SQSScannerType extends BaseScannerType {
 	}
 	
 	private DataCaptureTask createTask(MessageBody msg, ScannerConfig cfg) throws ScanException {
+		long protocolId = getProtocolId(msg, cfg);
+		if (protocolId == 0) throw new ScanException("Cannot create datacapture task: no target protocol specified");
+		DataCaptureTask task = DataCaptureService.getInstance().createTask(msg.url, protocolId);
+		
+		if (msg.captureConfig != null) task.setConfigId(msg.captureConfig);
+		else if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
+		
+		return task;
+	}
+
+	private long getProtocolId(MessageBody msg, ScannerConfig cfg) {
 		long protocolId = msg.protocolId;
 		if (protocolId == 0) protocolId = cfg.protocolId;
 		if (protocolId == 0) {
@@ -160,16 +180,9 @@ public class SQSScannerType extends BaseScannerType {
 				}
 			}
 		}
-		
-		if (protocolId == 0) throw new ScanException("Cannot create datacapture task: no target protocol specified");
-		DataCaptureTask task = DataCaptureService.getInstance().createTask(msg.url, protocolId);
-		
-		if (msg.captureConfig != null) task.setConfigId(msg.captureConfig);
-		else if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
-		
-		return task;
+		return protocolId;
 	}
-
+	
 	private ScannerConfig parseConfig(String config) throws IOException {
 		ScannerConfig cfg = new ScannerConfig();
 		Document doc = XmlUtils.parse(config);

@@ -28,6 +28,7 @@ public class SimpleStage implements IStage {
 	
 	@Override
 	public void configure(IStageEventHandler handler, StageConfiguration config) {
+		handler.customizeConfig(config);
 		int threads = config.getInt("threads");
 		
 		this.handler = handler;
