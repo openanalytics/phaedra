@@ -3,6 +3,10 @@ package eu.openanalytics.phaedra.base.seda;
 
 public interface IStageEventHandler {
 
+	public default void customizeConfig(StageConfiguration config) {
+		// Default: do nothing.
+	}
+	
 	/**
 	 * Called when the stage starts running.
 	 * A stage may start and stop running multiple times within the lifetime of an application.
