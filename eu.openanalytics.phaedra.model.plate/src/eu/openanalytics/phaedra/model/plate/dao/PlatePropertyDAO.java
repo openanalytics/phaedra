@@ -109,9 +109,8 @@ public class PlatePropertyDAO {
 		try (Connection conn = getConnection()) {
 			String sql = "update phaedra.hca_plate p set " + JDBCUtils.updateXMLColumn("data_xml") + " where p.plate_id = ?";
 			try (PreparedStatement ps = conn.prepareStatement(sql)) {
-				ps.setObject(1, JDBCUtils.getXMLObjectParameter(xml));
+				ps.setObject(1, JDBCUtils.getXMLObjectParameter(xml, conn));
 				ps.setLong(2, plateId);
-				ps.addBatch();
 				ps.execute();
 			}
 			conn.commit();

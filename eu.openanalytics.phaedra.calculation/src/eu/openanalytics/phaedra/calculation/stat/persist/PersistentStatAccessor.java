@@ -79,7 +79,7 @@ public class PersistentStatAccessor {
 		try (Connection conn = Screening.getEnvironment().getJDBCConnection()) {
 			String queryString = "update phaedra.hca_plate p set " + JDBCUtils.updateXMLColumn("data_xml") + " where p.plate_id = ?";
 			try (PreparedStatement stmt = conn.prepareStatement(queryString)) {
-				stmt.setObject(1, JDBCUtils.getXMLObjectParameter(xml));
+				stmt.setObject(1, JDBCUtils.getXMLObjectParameter(xml, conn));
 				stmt.setLong(2, plate.getId());
 				stmt.execute();
 				conn.commit();

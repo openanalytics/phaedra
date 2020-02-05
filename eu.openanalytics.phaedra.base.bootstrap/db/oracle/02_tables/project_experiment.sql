@@ -1,6 +1,6 @@
 create table hca_project_experiment (
-		project_id			bigint not null,
-		experiment_id		bigint not null
+		project_id			number not null,
+		experiment_id		number not null
 	)
 	tablespace phaedra_d;
 
@@ -10,13 +10,13 @@ alter table hca_project_experiment
 	using index tablespace phaedra_i;
 
 alter table hca_project_experiment
-	add constraint hca_project_experiment_fk_project
+	add constraint hca_proj_exp_fk_project
 	foreign key (project_id)
 	references hca_project(project_id)
 	on delete cascade;
 
 alter table phaedra.hca_project_experiment
-	add constraint hca_project_experiment_fk_experiment
+	add constraint hca_proj_exp_fk_experiment
 	foreign key (experiment_id)
 	references hca_experiment(experiment_id)
 	on delete cascade;
