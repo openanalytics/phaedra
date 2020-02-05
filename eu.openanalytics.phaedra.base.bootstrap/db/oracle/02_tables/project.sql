@@ -1,5 +1,5 @@
 create table hca_project (
-		project_id			bigint not null,
+		project_id			number not null,
 		name				varchar2(100) not null,
 		description			varchar2(1000),
 		owner				varchar2(25),

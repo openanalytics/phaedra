@@ -25,8 +25,8 @@ import org.postgresql.util.PGobject;
 
 import com.zaxxer.hikari.HikariConfig;
 
-import eu.openanalytics.phaedra.base.db.jpa.SessionEntityManager;
 import eu.openanalytics.phaedra.base.db.jpa.PatchedOraclePlatform;
+import eu.openanalytics.phaedra.base.db.jpa.SessionEntityManager;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import oracle.jdbc.driver.OracleConnection;
@@ -181,11 +181,14 @@ public class JDBCUtils {
 	 *
 	 * @param xml XML as string
 	 * @return
+	 * @throws SQLException 
 	 */
-	public static Object getXMLObjectParameter(String xml) {
+	public static Object getXMLObjectParameter(String xml, Connection conn) throws SQLException {
 		if (isOracle()) {
 			// Oracle
-			return new XMLTypeHolder(xml);
+			OracleConnection oc = conn.unwrap(OracleConnection.class);
+			return makeCLOB(xml, oc);
+//			return new XMLTypeHolder(xml);
 		} else if (isEmbedded()) {
 			// H2
 			return xml;

@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.base.db.jpa.converter;
 
+import java.sql.SQLException;
+
 import org.eclipse.persistence.mappings.DatabaseMapping;
 import org.eclipse.persistence.mappings.converters.Converter;
 import org.eclipse.persistence.sessions.Session;
@@ -18,8 +20,16 @@ public class XMLConverter implements Converter {
 	@Override
 	public Object convertObjectValueToDataValue(Object objectValue, Session session) {
 		// Oracle can handle Strings by default.
-		if (JDBCUtils.isOracle()) return objectValue;
-		else return JDBCUtils.getXMLObjectParameter(objectValue.toString());
+		if (JDBCUtils.isOracle()) {
+			return objectValue;
+		} else {
+			try {
+				return JDBCUtils.getXMLObjectParameter(objectValue.toString(), null);
+			} catch (SQLException e) {
+				// Cannot happen if backend is not Oracle.
+				return null;
+			}
+		}
 	}
 
 	@Override
