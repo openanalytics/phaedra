@@ -20,6 +20,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.base.ui.util.filter.FilterMatcher;
@@ -97,6 +98,7 @@ public abstract class AbstractExperimentsPage extends BaseExportWizardPage {
 		
 		FilteredCheckboxTable table = new FilteredCheckboxTable(fContainer, SWT.V_SCROLL | SWT.BORDER, new FilterMatcher(), true);
 		featureTableViewer = table.getCheckboxViewer();
+		featureTableViewer.getTable().setHeaderVisible(true);
 		GridDataFactory.fillDefaults().grab(true,true).hint(SWT.DEFAULT,200).applyTo(featureTableViewer.getControl());
 		featureTableViewer.setContentProvider(new ArrayContentProvider());
 		featureTableViewer.setCheckStateProvider(new ICheckStateProvider() {
@@ -114,7 +116,9 @@ public abstract class AbstractExperimentsPage extends BaseExportWizardPage {
 		});
 		
 		TableViewerColumn col = new TableViewerColumn(featureTableViewer, SWT.LEFT);
+		col.getColumn().setText("Well Feature");
 		col.getColumn().setWidth(250);
+		col.getColumn().setResizable(true);
 		col.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
@@ -139,9 +143,15 @@ public abstract class AbstractExperimentsPage extends BaseExportWizardPage {
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
-				for (Feature feature : protocolFeatures) {
-					CollectionUtils.setContains(featureSelection, feature, select.test(feature));
+				for (TableItem item : featureTableViewer.getTable().getItems()) {
+					if (item.getData() instanceof Feature) {
+						Feature feature = (Feature) item.getData();
+						CollectionUtils.setContains(featureSelection, feature, select.test(feature));
+					}
 				}
+//				for (Feature feature : protocolFeatures) {
+//					CollectionUtils.setContains(featureSelection, feature, select.test(feature));
+//				}
 				featureTableViewer.refresh();
 				checkPageComplete();
 			}
