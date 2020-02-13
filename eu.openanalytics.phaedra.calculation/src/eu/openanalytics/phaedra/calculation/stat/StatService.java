@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.calculation.CalculationService;
@@ -310,11 +311,12 @@ public class StatService {
 	private void doUpdatePersistentPlateStats(Plate plate) {
 		PersistentPlateStats stats = new PersistentPlateStats();
 
-		List<Feature> features = PlateUtils.getFeatures(plate);
+		List<Feature> features = PlateUtils.getFeatures(plate)
+				.stream().filter(Feature::isKey).collect(Collectors.toList());
 		List<String> wellTypes = PlateUtils.getWellTypes(plate);
 
 		// Since we'll be needing them, set the accessor to load all features at once.
-		CalculationService.getInstance().getAccessor(plate).loadEager(null);
+		CalculationService.getInstance().getAccessor(plate).loadEager(features);
 
 		// Note: all saved stats are against normalization NONE.
 
