@@ -35,6 +35,11 @@ public class FSTemplateManager extends AbstractTemplateManager {
 	}
 
 	@Override
+	public List<String> getTemplateIds(long protocolClassId) throws IOException {
+		return getTemplates(protocolClassId).stream().map(t -> t.getId()).collect(Collectors.toList());
+	}
+	
+	@Override
 	public List<PlateTemplate> getTemplates(long protocolClassId) throws IOException {
 		loadTemplates();
 		return templateCache.values().stream()
