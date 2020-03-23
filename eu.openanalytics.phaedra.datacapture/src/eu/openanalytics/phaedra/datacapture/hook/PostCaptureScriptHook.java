@@ -18,7 +18,7 @@ import eu.openanalytics.phaedra.datacapture.Activator;
 
 public class PostCaptureScriptHook extends BaseHook {
 
-	private static final String DC_SCRIPT_MAP = "/dc/post.capture";
+	private static final String DC_SCRIPT_MAP = "dc/post.capture";
 	private static final Pattern SCRIPT_NAME_PATTERN = Pattern.compile("(\\d+)\\..*");
 	
 	@Override
