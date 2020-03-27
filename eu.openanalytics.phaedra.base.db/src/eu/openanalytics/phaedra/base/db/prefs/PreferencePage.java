@@ -25,7 +25,6 @@ public class PreferencePage extends FieldEditorPreferencePage implements IWorkbe
 		Composite parent = getFieldEditorParent();
 		addField(new IntegerFieldEditor(Prefs.DB_TIME_OUT, "Connection timeout:", parent));
 		IntegerFieldEditor dbPoolSize = new IntegerFieldEditor(Prefs.DB_POOL_SIZE, "Database pool size:", parent, 2);
-		dbPoolSize.setValidRange(1, 12);
 		addField(dbPoolSize);
 	}
 
