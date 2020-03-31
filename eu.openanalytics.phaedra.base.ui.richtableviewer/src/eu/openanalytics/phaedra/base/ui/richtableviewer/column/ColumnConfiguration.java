@@ -5,27 +5,33 @@ import java.util.Comparator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellLabelProvider;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
+import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
+
+
 public class ColumnConfiguration {
 
 	private String key;
 	private String name;
 	private String tooltip;
 	private ImageDescriptor image;
+	
+	private boolean movable = true;
+	private boolean hidden;
 	private int width;
 	private float aspectRatio;
-	private String formatString;
-	private ColumnDataType dataType;
-	private String userMode;
-	private boolean hidden;
-	private boolean movable = true;
-	private int sortDirection;
+	
+	private DataDescription dataDescription;
+	private DataType dataType;
 	
 	private CellLabelProvider labelProvider;
-	private Comparator<?> sorter;
+	private Comparator<?> sortComparator;
+	private int sortDirection;
+	
 	private ColumnEditingConfiguration editingConfig;
 	
+	
 	public ColumnConfiguration() {
-		// Default constructor.
 	}
 	
 	public ColumnConfiguration(String key, String name) {
@@ -34,8 +40,9 @@ public class ColumnConfiguration {
 		this.tooltip = name;
 		this.width = 100;
 		this.aspectRatio = 1;
-		this.dataType = ColumnDataType.String;
+		this.dataType = DataType.String;
 	}
+	
 	
 	public String getKey() {
 		return key;
@@ -43,6 +50,7 @@ public class ColumnConfiguration {
 	public void setKey(String key) {
 		this.key = key;
 	}
+	
 	public String getName() {
 		return name;
 	}
@@ -61,6 +69,19 @@ public class ColumnConfiguration {
 	public void setImage(ImageDescriptor image) {
 		this.image = image;
 	}
+	
+	public boolean isMovable() {
+		return movable;
+	}
+	public void setMovable(boolean movable) {
+		this.movable = movable;
+	}
+	public boolean isHidden() {
+		return hidden;
+	}
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
+	}
 	public int getWidth() {
 		return width;
 	}
@@ -73,47 +94,33 @@ public class ColumnConfiguration {
 	public void setAspectRatio(float aspectRatio) {
 		this.aspectRatio = aspectRatio;
 	}
-	public String getFormatString() {
-		return formatString;
+	
+	public DataDescription getDataDescription() {
+		return this.dataDescription;
 	}
-	public void setFormatString(String formatString) {
-		this.formatString = formatString;
+	public void setDataDescription(final DataDescription dataDescription) {
+		this.dataDescription = dataDescription;
+		this.dataType= (dataDescription != null) ? dataDescription.getDataType() : null;
 	}
-	public ColumnDataType getDataType() {
+	public DataType getDataType() {
 		return dataType;
 	}
-	public void setDataType(ColumnDataType dataType) {
+	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
 	}
-	public String getUserMode() {
-		return userMode;
-	}
-	public void setUserMode(String userMode) {
-		this.userMode = userMode;
-	}
-	public boolean isHidden() {
-		return hidden;
-	}
-	public void setHidden(boolean hidden) {
-		this.hidden = hidden;
-	}
+	
 	public CellLabelProvider getLabelProvider() {
 		return labelProvider;
 	}
 	public void setLabelProvider(CellLabelProvider labelProvider) {
 		this.labelProvider = labelProvider;
 	}
-	public Comparator<?> getSorter() {
-		return sorter;
+	
+	public Comparator<?> getSortComparator() {
+		return sortComparator;
 	}
-	public void setSorter(Comparator<?> sorter) {
-		this.sorter = sorter;
-	}
-	public boolean isMovable() {
-		return movable;
-	}
-	public void setMovable(boolean movable) {
-		this.movable = movable;
+	public void setSortComparator(Comparator<?> sorter) {
+		this.sortComparator = sorter;
 	}
 	public int getSortDirection() {
 		return sortDirection;
@@ -121,10 +128,12 @@ public class ColumnConfiguration {
 	public void setSortDirection(int sortDirection) {
 		this.sortDirection = sortDirection;
 	}
+	
 	public ColumnEditingConfiguration getEditingConfig() {
 		return editingConfig;
 	}
 	public void setEditingConfig(ColumnEditingConfiguration editingConfig) {
 		this.editingConfig = editingConfig;
 	}
+	
 }

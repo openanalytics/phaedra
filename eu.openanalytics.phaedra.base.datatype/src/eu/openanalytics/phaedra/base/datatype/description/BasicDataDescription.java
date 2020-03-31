@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import org.eclipse.core.databinding.conversion.IConverter;
 
 
-public abstract class BaseDataDescription implements DataDescription {
+public abstract class BasicDataDescription implements DataDescription {
 	
 	
 	private final String name;
@@ -11,7 +11,7 @@ public abstract class BaseDataDescription implements DataDescription {
 	private final Class<?> entityType;
 	
 	
-	public BaseDataDescription(final String name, final Class<?> entityType) {
+	public BasicDataDescription(final String name, final Class<?> entityType) {
 		this.name = name;
 		this.entityType = entityType;
 	}

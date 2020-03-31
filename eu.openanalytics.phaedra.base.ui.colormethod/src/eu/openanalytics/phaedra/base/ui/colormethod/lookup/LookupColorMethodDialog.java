@@ -28,11 +28,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Text;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.colormethod.BaseColorMethodDialog;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.ColorStore;
 
@@ -185,7 +185,7 @@ public class LookupColorMethodDialog extends BaseColorMethodDialog {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 		
-		config = ColumnConfigFactory.create("Color", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Color", DataType.String, 100);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -195,7 +195,7 @@ public class LookupColorMethodDialog extends BaseColorMethodDialog {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Condition", ColumnDataType.String, 80);
+		config = ColumnConfigFactory.create("Condition", DataType.String, 80);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -206,7 +206,7 @@ public class LookupColorMethodDialog extends BaseColorMethodDialog {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Value", "getValue", ColumnDataType.Numeric, 80);
+		config = ColumnConfigFactory.create("Value", "getValue", DataType.Real, 80);
 		configs.add(config);
 		
 		return configs.toArray(new ColumnConfiguration[configs.size()]);
@@ -226,15 +226,18 @@ public class LookupColorMethodDialog extends BaseColorMethodDialog {
 		}
 		
 		
+		@Override
 		protected void configureShell(Shell newShell) {
 			super.configureShell(newShell);
 			newShell.setText("Edit Lookup Rule");
 		}
 
+		@Override
 		protected Point getInitialSize() {
 			return super.getInitialSize();
 		}
 
+		@Override
 		protected Control createDialogArea(Composite parent) {
 			Composite area = (Composite) super.createDialogArea(parent);
 

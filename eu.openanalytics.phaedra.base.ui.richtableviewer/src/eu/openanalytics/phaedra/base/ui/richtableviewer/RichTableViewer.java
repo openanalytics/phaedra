@@ -37,9 +37,9 @@ import org.eclipse.ui.swt.IFocusService;
 
 import com.google.common.collect.Lists;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnViewerSorter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.CustomizeColumnsDialog;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.state.IStateStore;
@@ -64,7 +64,7 @@ public class RichTableViewer extends TableViewer {
 	private SearchBar searchBar;
 	private RichTableFilter searchFilter;
 
-	private Set<ColumnDataType> dataTypes;
+	private Set<DataType> dataTypes;
 
 	private int selConf;
 
@@ -100,12 +100,12 @@ public class RichTableViewer extends TableViewer {
 		initTable(tableKey, searchEnabled);
 
 		// Track focus of table, this is required for command handlers that want to know which table triggered the command.
-		IFocusService service = (IFocusService)PlatformUI.getWorkbench().getService(IFocusService.class);
+		IFocusService service = PlatformUI.getWorkbench().getService(IFocusService.class);
 		service.addFocusTracker(getTable(), "richTableViewer");
 		getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
-				IFocusService service = (IFocusService)PlatformUI.getWorkbench().getService(IFocusService.class);
+				IFocusService service = PlatformUI.getWorkbench().getService(IFocusService.class);
 				service.removeFocusTracker(getTable());
 			}
 		});
@@ -196,9 +196,9 @@ public class RichTableViewer extends TableViewer {
 				col.getColumn().setData("Image", true);
 			col.setLabelProvider(labelProvider);
 
-			Comparator<?> sorter = config.getSorter();
+			Comparator<?> sorter = config.getSortComparator();
 			if (sorter != null) {
-				ColumnViewerSorter<?> colSorter = new ColumnViewerSorter<>(this, col, sorter);
+				ColumnViewerSorter<?> colSorter = new ColumnViewerSorter<>(col, sorter);
 				if (config.getSortDirection() != SWT.NONE) {
 					colSorter.setSorter(config.getSortDirection());
 				}
@@ -300,7 +300,7 @@ public class RichTableViewer extends TableViewer {
 		return searchFilter != null;
 	}
 
-	public boolean hasColumnDataType(ColumnDataType type) {
+	public boolean hasColumnDataType(DataType type) {
 		return dataTypes.contains(type);
 	}
 

@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IMemento;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -50,7 +51,6 @@ import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.Activator;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.misc.PlotShape;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
@@ -483,10 +483,10 @@ public class DrawCellsPaletteTool extends AbstractPaletteTool {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Class", "getLabel", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Class", "getLabel", DataType.String, 100);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Symbol", ColumnDataType.String, 60);
+		config = ColumnConfigFactory.create("Symbol", DataType.String, 60);
 		config.setLabelProvider(new OwnerDrawLabelProvider() {
 			@Override
 			protected void paint(Event event, Object element) {
@@ -500,7 +500,7 @@ public class DrawCellsPaletteTool extends AbstractPaletteTool {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Description", "getDescription", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Description", "getDescription", DataType.String, 150);
 		configs.add(config);
 
 		return configs.toArray(new ColumnConfiguration[configs.size()]);

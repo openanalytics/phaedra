@@ -6,10 +6,10 @@ import java.util.List;
 
 import org.eclipse.swt.graphics.Image;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 
@@ -24,7 +24,7 @@ public class CompoundTableColumns {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Protocol", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Protocol", DataType.String, 200);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -33,7 +33,7 @@ public class CompoundTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Compound>() {
+		config.setSortComparator(new Comparator<Compound>() {
 			@Override
 			public int compare(Compound c1, Compound c2) {
 				if (c1 == null) return -1;
@@ -45,7 +45,7 @@ public class CompoundTableColumns {
 		configs.add(config);
 
 
-		config = ColumnConfigFactory.create("Experiment", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Experiment", DataType.String, 200);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -54,7 +54,7 @@ public class CompoundTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Compound>() {
+		config.setSortComparator(new Comparator<Compound>() {
 			@Override
 			public int compare(Compound c1, Compound c2) {
 				if (c1 == null) return -1;
@@ -65,7 +65,7 @@ public class CompoundTableColumns {
 		config.setTooltip("Experiment");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Plate", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Plate", DataType.String, 100);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -74,7 +74,7 @@ public class CompoundTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Compound>() {
+		config.setSortComparator(new Comparator<Compound>() {
 			@Override
 			public int compare(Compound c1, Compound c2) {
 				if (c1 == null) return -1;
@@ -85,7 +85,7 @@ public class CompoundTableColumns {
 		config.setTooltip("Plate");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("V", ColumnDataType.String, 30);
+		config = ColumnConfigFactory.create("V", DataType.String, 30);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public Image getImage(Object element) {
@@ -97,7 +97,7 @@ public class CompoundTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Compound>(){
+		config.setSortComparator(new Comparator<Compound>(){
 			@Override
 			public int compare(Compound c1, Compound c2) {
 				if (c1 == null) return -1;
@@ -108,13 +108,13 @@ public class CompoundTableColumns {
 		config.setTooltip("Validation Status");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Compound Type", "getType", ColumnDataType.String, 120);
+		config = ColumnConfigFactory.create("Compound Type", "getType", DataType.String, 120);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Compound Nr", "getNumber", ColumnDataType.String, 120);
+		config = ColumnConfigFactory.create("Compound Nr", "getNumber", DataType.String, 120);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Saltform", "getSaltform", ColumnDataType.String, 120);
+		config = ColumnConfigFactory.create("Saltform", "getSaltform", DataType.String, 120);
 		configs.add(config);
 
 		return configs.toArray(new ColumnConfiguration[configs.size()]);

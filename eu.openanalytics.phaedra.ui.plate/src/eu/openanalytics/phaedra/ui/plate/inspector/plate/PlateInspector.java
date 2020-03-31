@@ -28,13 +28,13 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.copy.cmd.CopyItems;
@@ -319,21 +319,21 @@ public class PlateInspector extends DecoratedView {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Property", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Property", DataType.String, 100);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
 				cell.setText(cell.getElement().toString());
 			}
 		});
-		config.setSorter((String o1, String o2) -> {
+		config.setSortComparator((String o1, String o2) -> {
 			if (o1 == null && o2 == null) return 0;
 			if (o1 == null) return -1;
 			return o1.compareToIgnoreCase(o2);
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Value", ColumnDataType.String, 250);
+		config = ColumnConfigFactory.create("Value", DataType.String, 250);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -353,21 +353,21 @@ public class PlateInspector extends DecoratedView {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Compound", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Compound", DataType.String, 100);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
 				cell.setText(cell.getElement().toString());
 			}
 		});
-		config.setSorter((Compound o1, Compound o2) -> {
+		config.setSortComparator((Compound o1, Compound o2) -> {
 			if (o1 == null && o2 == null) return 0;
 			if (o1 == null) return -1;
 			return o1.toString().compareTo(o2.toString());
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Samples", ColumnDataType.String, 250);
+		config = ColumnConfigFactory.create("Samples", DataType.String, 250);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {

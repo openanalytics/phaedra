@@ -27,9 +27,9 @@ import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
@@ -134,7 +134,7 @@ public class WellMetaDataView extends DecoratedView {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Position", ColumnDataType.String, 75);
+		config = ColumnConfigFactory.create("Position", DataType.String, 75);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -142,7 +142,7 @@ public class WellMetaDataView extends DecoratedView {
 				cell.setText(NumberUtils.getWellCoordinate(well.getRow(), well.getColumn()));
 			}
 		});
-		config.setSorter(new Comparator<Well>(){
+		config.setSortComparator(new Comparator<Well>(){
 			@Override
 			public int compare(Well o1, Well o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -155,7 +155,7 @@ public class WellMetaDataView extends DecoratedView {
 		configs.add(config);
 
 		for (final String columnName : calc.getKeywords()) {
-			config = ColumnConfigFactory.create(columnName, ColumnDataType.String, 100);
+			config = ColumnConfigFactory.create(columnName, DataType.String, 100);
 			config.setLabelProvider(new CellLabelProvider() {
 				@Override
 				public void update(ViewerCell cell) {
@@ -164,7 +164,7 @@ public class WellMetaDataView extends DecoratedView {
 					cell.setText((null == calc.getMappedKeywords().get(wellNr) || null == calc.getMappedKeywords().get(wellNr).get(columnName)) ? "" : calc.getMappedKeywords().get(wellNr).get(columnName));
 				}
 			});
-			config.setSorter(new Comparator<Well>(){
+			config.setSortComparator(new Comparator<Well>(){
 				@Override
 				public int compare(Well o1, Well o2) {
 					if (o1 == null && o2 == null) return 0;

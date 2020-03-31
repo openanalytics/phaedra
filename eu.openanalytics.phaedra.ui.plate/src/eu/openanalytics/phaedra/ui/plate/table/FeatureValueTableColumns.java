@@ -9,9 +9,9 @@ import org.eclipse.jface.viewers.ViewerCell;
 
 import com.google.common.base.Strings;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -24,7 +24,7 @@ public class FeatureValueTableColumns {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Protocol", ColumnDataType.String, 190);
+		config = ColumnConfigFactory.create("Protocol", DataType.String, 190);
 		CellLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -33,7 +33,7 @@ public class FeatureValueTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<FeatureValue>() {
+		config.setSortComparator(new Comparator<FeatureValue>() {
 			@Override
 			public int compare(FeatureValue o1, FeatureValue o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -45,7 +45,7 @@ public class FeatureValueTableColumns {
 		config.setTooltip("Protocol");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Experiment", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Experiment", DataType.String, 200);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -54,7 +54,7 @@ public class FeatureValueTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<FeatureValue>() {
+		config.setSortComparator(new Comparator<FeatureValue>() {
 			@Override
 			public int compare(FeatureValue o1, FeatureValue o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -66,7 +66,7 @@ public class FeatureValueTableColumns {
 		config.setTooltip("Experiment");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Plate", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Plate", DataType.String, 100);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -75,7 +75,7 @@ public class FeatureValueTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<FeatureValue>() {
+		config.setSortComparator(new Comparator<FeatureValue>() {
 			@Override
 			public int compare(FeatureValue o1, FeatureValue o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -87,7 +87,7 @@ public class FeatureValueTableColumns {
 		config.setTooltip("Plate");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Well Nr", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create("Well Nr", DataType.String, 60);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public void update(ViewerCell cell) {
@@ -95,7 +95,7 @@ public class FeatureValueTableColumns {
 				cell.setText(NumberUtils.getWellCoordinate(fv.getWell().getRow(), fv.getWell().getColumn()));
 			}
 		});
-		config.setSorter(new Comparator<FeatureValue>() {
+		config.setSortComparator(new Comparator<FeatureValue>() {
 			@Override
 			public int compare(FeatureValue fv1, FeatureValue fv2) {
 				String s1 = (fv1.getWell().getRow() < 10 ? "0" : "") + fv1.getWell().getRow() + (fv1.getWell().getColumn() < 10 ? "0" : "") + fv1.getWell().getColumn();
@@ -105,14 +105,14 @@ public class FeatureValueTableColumns {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Feature", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Feature", DataType.String, 200);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
 				return ((FeatureValue) element).getFeature().getName();
 			}
 		});
-		config.setSorter(new Comparator<FeatureValue>() {
+		config.setSortComparator(new Comparator<FeatureValue>() {
 			@Override
 			public int compare(FeatureValue o1, FeatureValue o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -123,7 +123,7 @@ public class FeatureValueTableColumns {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Normalized", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Normalized", DataType.String, 150);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -131,10 +131,10 @@ public class FeatureValueTableColumns {
 				return Formatters.getInstance().format(fv.getNormalizedValue(), fv.getFeature());
 			}
 		});
-		config.setSorter(PlateUtils.NORMALIZED_FEATURE_VALUE_SORTER);
+		config.setSortComparator(PlateUtils.NORMALIZED_FEATURE_VALUE_SORTER);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Raw", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Raw", DataType.String, 150);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -145,7 +145,7 @@ public class FeatureValueTableColumns {
 				return fv.getRawStringValue();
 			}
 		});
-		config.setSorter(PlateUtils.RAW_FEATURE_VALUE_SORTER);
+		config.setSortComparator(PlateUtils.RAW_FEATURE_VALUE_SORTER);
 		configs.add(config);
 
 		return configs.toArray(new ColumnConfiguration[configs.size()]);

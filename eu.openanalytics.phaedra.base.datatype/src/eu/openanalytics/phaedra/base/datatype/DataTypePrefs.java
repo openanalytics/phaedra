@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import eu.openanalytics.phaedra.base.datatype.description.BaseDataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.BasicDataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.format.ConcentrationFormat;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
@@ -47,7 +47,7 @@ public class DataTypePrefs {
 		final Map<String, ConcentrationUnit> typeConcentrationUnits = (curveConcentrationUnit != defaultConcentrationUnit) ?
 				Collections.singletonMap(CURVE_PROPERTY_ID, curveConcentrationUnit) :
 				null;
-		return new BaseDataUnitConfig(defaultConcentrationUnit, typeConcentrationUnits);
+		return new BasicDataUnitConfig(defaultConcentrationUnit, typeConcentrationUnits);
 	}
 	
 	

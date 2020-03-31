@@ -11,11 +11,11 @@ import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.ColorStore;
 import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
@@ -23,7 +23,6 @@ import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.util.WellProperty;
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -38,7 +37,7 @@ public class MultiplateWellTableColumns {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Plate", ColumnDataType.String, 50);
+		config = ColumnConfigFactory.create("Plate", DataType.String, 50);
 		RichLabelProvider labelProviderPlate = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -46,55 +45,35 @@ public class MultiplateWellTableColumns {
 				return well.getPlate().getBarcode();
 			}
 		};
-
 		config.setLabelProvider(labelProviderPlate);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Row", "getRow", ColumnDataType.Numeric, 50);
+		config = ColumnConfigFactory.create(WellProperty.Row, dataFormatSupplier, 50);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Column", "getColumn", ColumnDataType.Numeric, 50);
+		config = ColumnConfigFactory.create(WellProperty.Column, dataFormatSupplier, 50);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Well Type", "getWellType", ColumnDataType.String, 75);
+		config = ColumnConfigFactory.create(WellProperty.WellType, dataFormatSupplier, 75);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Status", "getStatus", ColumnDataType.Numeric, 75);
+		config = ColumnConfigFactory.create("Status", "getStatus", DataType.Integer, 75);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Compound", ColumnDataType.String, 100);
-		RichLabelProvider labelProvider = new RichLabelProvider(config){
-			@Override
-			public String getText(Object element) {
-				Well well = (Well)element;
-				Compound c = well.getCompound();
-				if (c != null) {
-					return c.getType() + " " + c.getNumber();
-				}
-				return "";
-			}
-		};
-		config.setSorter(PlateUtils.WELL_COMPOUND_NR_SORTER);
-		config.setLabelProvider(labelProvider);
-		config.setTooltip("Compound");
+		config = ColumnConfigFactory.create(WellProperty.Compound, dataFormatSupplier, 100);
+		config.setSortComparator(PlateUtils.WELL_COMPOUND_NR_SORTER);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Concentration", "getCompoundConcentration", ColumnDataType.Numeric, 90);
-		WellPropertyLabelProvider concLabelProvider = new WellPropertyLabelProvider(config,
-				WellProperty.Concentration, dataFormatSupplier);
-		config.setLabelProvider(concLabelProvider);
+		config = ColumnConfigFactory.create(WellProperty.Concentration, dataFormatSupplier, 90);
 		configs.add(config);
 		
 		/* Feature columns*/
-		
 		List<Feature> features = dataAccessor.getPlate().getExperiment().getProtocol().getProtocolClass().getFeatures();
-		
-
 		for (final Feature f: features) {
-			config = ColumnConfigFactory.create(f.getDisplayName(), ColumnDataType.Numeric, 90);
-			labelProvider = new WellFeatureLabelProvider(config, f, dataAccessor, tableViewer);
+			config = ColumnConfigFactory.create(f.getDisplayName(), f.isNumeric() ? DataType.Real : DataType.String, 90);
+			WellFeatureLabelProvider labelProvider = new WellFeatureLabelProvider(config, f, dataAccessor, tableViewer);
 			config.setLabelProvider(labelProvider);
-			config.setSorter(new Comparator<Well>() {
+			config.setSortComparator(new Comparator<Well>() {
 				@Override
 				public int compare(Well w1, Well w2) {
 					PlateDataAccessor dataAccessor1 = CalculationService.getInstance().getAccessor(w1.getPlate());

@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.protocol.util.FeaturePropertyProvider;
@@ -16,13 +16,13 @@ public class FeatureTableColumns {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 	
-		config = ColumnConfigFactory.create("Feature Id", "getId", ColumnDataType.Numeric, 80);
+		config = ColumnConfigFactory.create("Feature Id", "getId", DataType.Integer, 80);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Feature name", "getName", ColumnDataType.String, 250); 
+		config = ColumnConfigFactory.create("Feature name", "getName", DataType.String, 250);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Protocol Class", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Protocol Class", DataType.String, 150);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -31,7 +31,7 @@ public class FeatureTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Feature>() {
+		config.setSortComparator(new Comparator<Feature>() {
 			@Override
 			public int compare(Feature f1, Feature f2) {
 				if (f1 == null) return -1;
@@ -42,7 +42,7 @@ public class FeatureTableColumns {
 		config.setTooltip("Protocol Class");
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Key", ColumnDataType.Boolean, 35);
+		config = ColumnConfigFactory.create("Key", DataType.Boolean, 35);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -51,7 +51,7 @@ public class FeatureTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Feature>() {
+		config.setSortComparator(new Comparator<Feature>() {
 			@Override
 			public int compare(Feature f1, Feature f2) {
 				if (f1 == null) return -1;
@@ -62,7 +62,7 @@ public class FeatureTableColumns {
 		config.setTooltip("Key");
 		configs.add(config);		
 		
-		config = ColumnConfigFactory.create("N", ColumnDataType.Boolean, 35);
+		config = ColumnConfigFactory.create("N", DataType.Boolean, 35);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -71,7 +71,7 @@ public class FeatureTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Feature>() {
+		config.setSortComparator(new Comparator<Feature>() {
 			@Override
 			public int compare(Feature f1, Feature f2) {
 				if (f1 == null) return -1;
@@ -82,7 +82,7 @@ public class FeatureTableColumns {
 		config.setTooltip("Numeric");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Curve", ColumnDataType.String, 85);
+		config = ColumnConfigFactory.create("Curve", DataType.String, 85);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -91,7 +91,7 @@ public class FeatureTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Feature>() {
+		config.setSortComparator(new Comparator<Feature>() {
 			@Override
 			public int compare(Feature f1, Feature f2) {
 				if (f1 == null) return -1;
@@ -102,7 +102,7 @@ public class FeatureTableColumns {
 		config.setTooltip("Curve");
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Low Control", ColumnDataType.Boolean, 85);
+		config = ColumnConfigFactory.create("Low Control", DataType.Boolean, 85);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -111,7 +111,7 @@ public class FeatureTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Feature>() {
+		config.setSortComparator(new Comparator<Feature>() {
 			@Override
 			public int compare(Feature f1, Feature f2) {
 				if (f1 == null) return -1;
@@ -122,7 +122,7 @@ public class FeatureTableColumns {
 		config.setTooltip("High Control");
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("High Control", ColumnDataType.Boolean, 85);
+		config = ColumnConfigFactory.create("High Control", DataType.Boolean, 85);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -131,7 +131,7 @@ public class FeatureTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Feature>() {
+		config.setSortComparator(new Comparator<Feature>() {
 			@Override
 			public int compare(Feature f1, Feature f2) {
 				if (f1 == null) return -1;
@@ -142,10 +142,10 @@ public class FeatureTableColumns {
 		config.setTooltip("High Control");
 		configs.add(config);
 	
-		config = ColumnConfigFactory.create("Alias", "getShortName", ColumnDataType.String, 80);
+		config = ColumnConfigFactory.create("Alias", "getShortName", DataType.String, 80);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Description", "getDescription", ColumnDataType.String, 200); 
+		config = ColumnConfigFactory.create("Description", "getDescription", DataType.String, 200);
 		configs.add(config);
 	
 		return configs.toArray(new ColumnConfiguration[configs.size()]);

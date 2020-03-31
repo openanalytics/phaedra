@@ -32,6 +32,7 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -43,7 +44,6 @@ import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethodData;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.autocomplete.ComboAutoCompleteField;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormulaTooltip;
@@ -507,7 +507,7 @@ public class FeatureInspector extends ViewPart {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Property", ColumnDataType.String, 90);
+		config = ColumnConfigFactory.create("Property", DataType.String, 90);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -516,7 +516,7 @@ public class FeatureInspector extends ViewPart {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Value", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Value", DataType.String, 150);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {

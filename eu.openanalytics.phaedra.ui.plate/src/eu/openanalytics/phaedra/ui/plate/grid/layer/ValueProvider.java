@@ -85,7 +85,7 @@ public static class ValueKey {
 			if (parts.length == 0 || VALUE_TYPE_NONE.equals(parts[0])) return ValueKey.create(VALUE_TYPE_NONE);
 			Object arg1 = null;
 			if (parts[0].equals(VALUE_TYPE_FEATURE)) arg1 = ProtocolService.getInstance().getFeature(Long.parseLong(parts[1]));
-			else if (parts[0].equals(VALUE_TYPE_PROPERTY)) arg1 = WellProperty.getByName(parts[1]);
+			else if (parts[0].equals(VALUE_TYPE_PROPERTY)) arg1 = WellProperty.getByLabel(parts[1]);
 			else if (parts.length > 1 && !"null".equals(parts[1])) arg1 = parts[1];
 			String arg2 = null;
 			if (parts.length > 2 && parts[2] != null && !"null".equals(parts[2])) arg2 = parts[2];

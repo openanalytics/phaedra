@@ -3,8 +3,10 @@ Bundle-ManifestVersion: 2
 Bundle-Name: UI Utilities
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.ui.util;singleton:=true
 Bundle-Version: 1.0.8.qualifier
-Bundle-Activator: eu.openanalytics.phaedra.base.ui.util.Activator
 Bundle-Vendor: OpenAnalytics
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: eu.openanalytics.phaedra.base.ui.util.Activator
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.core.expressions,
  org.eclipse.core.databinding,
@@ -13,13 +15,12 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.jface.databinding,
  org.eclipse.ui,
  org.eclipse.ui.forms,
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.8",
  eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
  org.sf.feeling.swt;bundle-version="1.0.5",
  org.jfree.jfreechart;bundle-version="1.0.14"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.base.ui.util.autocomplete,
  eu.openanalytics.phaedra.base.ui.util.copy,
  eu.openanalytics.phaedra.base.ui.util.copy.cmd,
@@ -38,4 +39,5 @@ Export-Package: eu.openanalytics.phaedra.base.ui.util.autocomplete,
  eu.openanalytics.phaedra.base.ui.util.toolitem,
  eu.openanalytics.phaedra.base.ui.util.tooltip,
  eu.openanalytics.phaedra.base.ui.util.view,
+ eu.openanalytics.phaedra.base.ui.util.viewer,
  eu.openanalytics.phaedra.base.ui.util.wizard

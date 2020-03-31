@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 
 
-public abstract class AbstractConcentrationDataDescription extends BaseDataDescription implements ConcentrationDataDescription {
+public abstract class AbstractConcentrationDataDescription extends BasicDataDescription implements ConcentrationDataDescription {
 	
 	
 	private final ConcentrationUnit unit;

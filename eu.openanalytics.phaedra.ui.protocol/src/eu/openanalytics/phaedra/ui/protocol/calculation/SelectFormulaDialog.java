@@ -28,9 +28,9 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
@@ -127,12 +127,12 @@ public class SelectFormulaDialog extends TitleAreaDialog {
 	private void configureColumns() {
 		List<ColumnConfiguration> configs = new ArrayList<>();
 		
-		configs.add(ColumnConfigFactory.create("ID", "getId", ColumnDataType.Numeric, 50));
-		configs.add(ColumnConfigFactory.create("Name", "getName", ColumnDataType.String, 150));
-		configs.add(ColumnConfigFactory.create("Category", "getCategory", ColumnDataType.String, 150));
+		configs.add(ColumnConfigFactory.create("ID", "getId", DataType.Integer, 50));
+		configs.add(ColumnConfigFactory.create("Name", "getName", DataType.String, 150));
+		configs.add(ColumnConfigFactory.create("Category", "getCategory", DataType.String, 150));
 		configs.add(ColumnConfigFactory.create("Language",
-				f -> FormulaService.getInstance().getLanguage(((CalculationFormula) f).getLanguage()).getLabel(), ColumnDataType.String, 75));
-		configs.add(ColumnConfigFactory.create("Author", "getAuthor", ColumnDataType.String, 75));
+				f -> FormulaService.getInstance().getLanguage(((CalculationFormula) f).getLanguage()).getLabel(), DataType.String, 75));
+		configs.add(ColumnConfigFactory.create("Author", "getAuthor", DataType.String, 75));
 		
 		tableViewer.applyColumnConfig(configs);
 	}

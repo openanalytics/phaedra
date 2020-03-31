@@ -8,13 +8,6 @@
       </initializer>
    </extension>
    <extension
-         point="eu.openanalytics.phaedra.base.ui.richtableviewer.configurableColumnType">
-      <configurableColumnType
-            class="eu.openanalytics.phaedra.ui.wellimage.table.JP2KImageConfigurableColumnType"
-            id="eu.openanalytics.phaedra.ui.wellimage.table.JP2KImageConfigurableColumnType">
-      </configurableColumnType>
-   </extension>
-   <extension
          point="eu.openanalytics.phaedra.base.imaging.overlay.imageOverlay">
       <imageOverlay
             class="eu.openanalytics.phaedra.ui.wellimage.overlay.ImageThumbOverlay"

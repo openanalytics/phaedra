@@ -6,7 +6,7 @@ import java.util.Map;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 
 
-public class BaseDataUnitConfig implements DataUnitConfig {
+public class BasicDataUnitConfig implements DataUnitConfig {
 	
 	
 	private final ConcentrationUnit defaultConcentrationUnit;
@@ -14,7 +14,7 @@ public class BaseDataUnitConfig implements DataUnitConfig {
 	private final Map<String, ConcentrationUnit> typeConcentrationUnits;
 	
 	
-	public BaseDataUnitConfig(final ConcentrationUnit concentrationUnit,
+	public BasicDataUnitConfig(final ConcentrationUnit concentrationUnit,
 			final Map<String, ConcentrationUnit> typeConcentrationUnits) {
 		this.defaultConcentrationUnit = concentrationUnit;
 		this.typeConcentrationUnits = (typeConcentrationUnits != null) ? typeConcentrationUnits : Collections.emptyMap();

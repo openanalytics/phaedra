@@ -95,7 +95,13 @@ public class MultiplateWellBrowser extends EditorPart {
 		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(container);
 		tableTab.setControl(container);
 
-		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName());
+		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName()) {
+//			@Override
+//			protected CustomizeColumnsDialog createConfigureColumnDialog() {
+//				return new WellBrowserConfigColumnDialog(Display.getDefault().getActiveShell(), this,
+//						getFeatures() );
+//			}
+		};
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(tableViewer.getControl());
 

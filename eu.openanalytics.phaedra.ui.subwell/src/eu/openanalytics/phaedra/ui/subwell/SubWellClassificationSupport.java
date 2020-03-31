@@ -15,12 +15,12 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchPart;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
@@ -231,7 +231,7 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 	protected ColumnConfiguration[] createItemTableColumns() {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 
-		ColumnConfiguration config = ColumnConfigFactory.create("Well", ColumnDataType.String, 50);
+		ColumnConfiguration config = ColumnConfigFactory.create("Well", DataType.String, 50);
 		RichLabelProvider lp = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -242,7 +242,7 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 		config.setLabelProvider(lp);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Subwell Item", ColumnDataType.String, 80);
+		config = ColumnConfigFactory.create("Subwell Item", DataType.String, 80);
 		lp = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -251,7 +251,7 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 			}
 		};
 		config.setLabelProvider(lp);
-		config.setSorter(new Comparator<SubWellItem>() {
+		config.setSortComparator(new Comparator<SubWellItem>() {
 			@Override
 			public int compare(SubWellItem i1, SubWellItem i2) {
 				if (i1 == null && i2 == null) return 0;
@@ -269,7 +269,7 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 			for (int i=0; i<features.size(); i++) {
 				final SubWellFeature feature = features.get(i);
 
-				ColumnDataType type = feature.isNumeric() ? ColumnDataType.Numeric : ColumnDataType.String;
+				DataType type = feature.isNumeric() ? DataType.Real : DataType.String;
 				config = ColumnConfigFactory.create(feature.getName(), type, 100);
 
 				RichLabelProvider labelProvider = new RichLabelProvider(config){
@@ -290,7 +290,7 @@ public class SubWellClassificationSupport extends BaseClassificationSupport<SubW
 				};
 				config.setLabelProvider(labelProvider);
 
-				config.setSorter(new Comparator<SubWellItem>() {
+				config.setSortComparator(new Comparator<SubWellItem>() {
 					@Override
 					public int compare(SubWellItem i1, SubWellItem i2) {
 						if (i1 == null && i2 == null) return 0;

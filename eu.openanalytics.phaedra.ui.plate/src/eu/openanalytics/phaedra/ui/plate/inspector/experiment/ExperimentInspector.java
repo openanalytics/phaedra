@@ -22,10 +22,10 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
@@ -336,7 +336,7 @@ public class ExperimentInspector extends DecoratedView {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("", ColumnDataType.String, 60);
+		config = ColumnConfigFactory.create("", DataType.String, 60);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -345,7 +345,7 @@ public class ExperimentInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Z-Prime", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create("Z-Prime", DataType.Real, 60);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -361,7 +361,7 @@ public class ExperimentInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("S/N", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create("S/N", DataType.Real, 60);
 		config.setTooltip("Signal to Noise ratio");
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
@@ -378,7 +378,7 @@ public class ExperimentInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("S/B", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create("S/B", DataType.Real, 60);
 		config.setTooltip("Signal to Background ratio");
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override

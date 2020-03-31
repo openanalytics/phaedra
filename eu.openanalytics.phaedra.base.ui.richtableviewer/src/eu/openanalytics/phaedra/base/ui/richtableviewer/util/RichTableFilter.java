@@ -1,10 +1,10 @@
 package eu.openanalytics.phaedra.base.ui.richtableviewer.util;
 
 import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 
-import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.ui.util.misc.StringMatcher;
 
@@ -32,7 +32,6 @@ public class RichTableFilter extends ViewerFilter {
 
 	@Override
 	public boolean select(Viewer viewer, Object parentElement, Object element) {
-
 		if (matcher == null || columns == null || columnName == null) {
 			return true;
 		}
@@ -47,10 +46,10 @@ public class RichTableFilter extends ViewerFilter {
 		if (column == null) return true;
 
 		CellLabelProvider cellLabelProvider = column.getLabelProvider();
-		if (!(cellLabelProvider instanceof RichLabelProvider)) return true;
-		RichLabelProvider richLabelProvider = (RichLabelProvider)cellLabelProvider;
+		if (!(cellLabelProvider instanceof ColumnLabelProvider)) return true;
+		ColumnLabelProvider columnLabelProvider = (ColumnLabelProvider)cellLabelProvider;
 
-		String text = richLabelProvider.getText(element);
+		String text = columnLabelProvider.getText(element);
 		return matcher.match(text);
 	}
 

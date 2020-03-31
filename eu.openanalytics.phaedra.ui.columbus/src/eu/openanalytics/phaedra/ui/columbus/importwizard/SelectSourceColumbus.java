@@ -29,11 +29,11 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.google.common.collect.Lists;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.misc.HyperlinkLabelProvider;
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizardPage;
@@ -138,7 +138,7 @@ public class SelectSourceColumbus extends BaseStatefulWizardPage {
 		List<ColumnConfiguration> configs = new ArrayList<>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Import?", ColumnDataType.String, 70);
+		config = ColumnConfigFactory.create("Import?", DataType.String, 70);
 		config.setLabelProvider(new HyperlinkLabelProvider(plateTableViewer.getTable(), 0) {
 			@Override
 			protected Image getImage(Object o) {
@@ -161,7 +161,7 @@ public class SelectSourceColumbus extends BaseStatefulWizardPage {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Plate", ColumnDataType.String, 170);
+		config = ColumnConfigFactory.create("Plate", DataType.String, 170);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public void update(ViewerCell cell) {
@@ -173,7 +173,7 @@ public class SelectSourceColumbus extends BaseStatefulWizardPage {
 				}
 			}
 		});
-		config.setSorter(new Comparator<Object>() {
+		config.setSortComparator(new Comparator<Object>() {
 			@Override
 			public int compare(Object o1, Object o2) {
 				if (o1 == null && o2 != null) return -1;
@@ -186,7 +186,7 @@ public class SelectSourceColumbus extends BaseStatefulWizardPage {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Measurement", ColumnDataType.Date, 100);
+		config = ColumnConfigFactory.create("Measurement", DataType.DateTime, 100);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public void update(ViewerCell cell) {
@@ -197,7 +197,7 @@ public class SelectSourceColumbus extends BaseStatefulWizardPage {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Analysis", ColumnDataType.Date, 250);
+		config = ColumnConfigFactory.create("Analysis", DataType.DateTime, 250);
 		config.setLabelProvider(new HyperlinkLabelProvider(plateTableViewer.getTable(), 3) {
 			@Override
 			protected String getText(Object o) {
@@ -228,6 +228,7 @@ public class SelectSourceColumbus extends BaseStatefulWizardPage {
 			final List<Meas> sourceList = new ArrayList<>();
 			
 			getContainer().run(true, false, new IRunnableWithProgress() {
+				@Override
 				public void run(IProgressMonitor monitor) {
 					monitor.beginTask("Loading analysis results", IProgressMonitor.UNKNOWN);
 					selectedMeasurements = ColumbusImportHelper.findMeasSources(screen, screenSelector.getSelectedInstanceId());

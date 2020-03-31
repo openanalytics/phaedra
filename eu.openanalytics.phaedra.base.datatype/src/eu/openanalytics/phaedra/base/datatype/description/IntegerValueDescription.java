@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 
 
-public class IntegerValueDescription extends BaseDataDescription {
+public class IntegerValueDescription extends BasicDataDescription {
 	
 	
 	public IntegerValueDescription(final String name, final Class<?> entityType) {

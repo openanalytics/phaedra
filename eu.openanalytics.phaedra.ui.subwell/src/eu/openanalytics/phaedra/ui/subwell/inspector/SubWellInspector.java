@@ -142,7 +142,7 @@ public class SubWellInspector extends DecoratedView {
 		col.setText("Feature");
 		col.setToolTipText("Feature (Group)");
 		col.setWidth(180);
-		new ColumnViewerSorter<>(treeViewer, column, new Comparator<Object>() {
+		new ColumnViewerSorter<>(column, new Comparator<Object>() {
 			@Override
 			public int compare(Object o1, Object o2) {
 				if (o1 instanceof FeatureGroup && o2 instanceof FeatureGroup) {
@@ -164,7 +164,7 @@ public class SubWellInspector extends DecoratedView {
 		col.setText("Feature Value");
 		col.setToolTipText("Feature Value");
 		col.setWidth(100);
-		new ColumnViewerSorter<>(treeViewer, column, new Comparator<Object>() {
+		new ColumnViewerSorter<>(column, new Comparator<Object>() {
 			@Override
 			public int compare(Object o1, Object o2) {
 				if (o1 instanceof SubWellFeature && o2 instanceof SubWellFeature) {
@@ -311,7 +311,7 @@ public class SubWellInspector extends DecoratedView {
 
 	private Protocol getProtocol() {
 		if (currentWell == null) return null;
-		return (Protocol) currentWell.getAdapter(Protocol.class);
+		return currentWell.getAdapter(Protocol.class);
 	}
 	
 	private Properties getProperties() {

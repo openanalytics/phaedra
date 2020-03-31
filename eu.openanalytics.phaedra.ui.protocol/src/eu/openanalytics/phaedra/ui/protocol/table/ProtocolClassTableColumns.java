@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.util.ProtocolClassSummaryLoader;
@@ -24,20 +24,20 @@ public class ProtocolClassTableColumns {
 	private static void addGeneralColumns(List<ColumnConfiguration> configs) {
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Protocol Class Id", "getId", ColumnDataType.Numeric, 100);
+		config = ColumnConfigFactory.create("Protocol Class Id", "getId", DataType.Integer, 100);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Protocol Class Name", "getName", ColumnDataType.String, 250);
+		config = ColumnConfigFactory.create("Protocol Class Name", "getName", DataType.String, 250);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Description", "getDescription", ColumnDataType.String, 250);
+		config = ColumnConfigFactory.create("Description", "getDescription", DataType.String, 250);
 		configs.add(config);
 	}
 
 	private static void addProtocolColumns(List<ColumnConfiguration> configs, ProtocolClassSummaryLoader summaryLoader) {
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Protocols", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Protocols", DataType.String, 100);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -46,7 +46,7 @@ public class ProtocolClassTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<ProtocolClass>(){
+		config.setSortComparator(new Comparator<ProtocolClass>(){
 			@Override
 			public int compare(ProtocolClass p1, ProtocolClass p2) {
 				return Integer.compare(summaryLoader.getSummary(p1).protocols, summaryLoader.getSummary(p2).protocols);
@@ -59,7 +59,7 @@ public class ProtocolClassTableColumns {
 	private static void addFeatureColumns(List<ColumnConfiguration> configs, ProtocolClassSummaryLoader summaryLoader) {
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Well Features", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Well Features", DataType.String, 100);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -68,7 +68,7 @@ public class ProtocolClassTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<ProtocolClass>(){
+		config.setSortComparator(new Comparator<ProtocolClass>(){
 			@Override
 			public int compare(ProtocolClass p1, ProtocolClass p2) {
 				return Integer.compare(summaryLoader.getSummary(p1).features, summaryLoader.getSummary(p2).features);
@@ -77,7 +77,7 @@ public class ProtocolClassTableColumns {
 		config.setTooltip("Well Features");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Subwell Features", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Subwell Features", DataType.String, 100);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -86,7 +86,7 @@ public class ProtocolClassTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<ProtocolClass>(){
+		config.setSortComparator(new Comparator<ProtocolClass>(){
 			@Override
 			public int compare(ProtocolClass p1, ProtocolClass p2) {
 				return Integer.compare(summaryLoader.getSummary(p1).swFeatures, summaryLoader.getSummary(p2).swFeatures);
@@ -95,7 +95,7 @@ public class ProtocolClassTableColumns {
 		config.setTooltip("Subwell Features");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Image Channels", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Image Channels", DataType.String, 100);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -104,7 +104,7 @@ public class ProtocolClassTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<ProtocolClass>(){
+		config.setSortComparator(new Comparator<ProtocolClass>(){
 			@Override
 			public int compare(ProtocolClass p1, ProtocolClass p2) {
 				return Integer.compare(summaryLoader.getSummary(p1).imageChannels, summaryLoader.getSummary(p2).imageChannels);

@@ -8,9 +8,13 @@ public class ReflectingLabelProvider extends RichLabelProvider {
 
 	private String methodName;
 	
-	public ReflectingLabelProvider(String method, ColumnConfiguration config) {
-		super(config);
+	public ReflectingLabelProvider(String method, ColumnConfiguration config, String formatString) {
+		super(config, formatString);
 		methodName = method;
+	}
+	
+	public ReflectingLabelProvider(String method, ColumnConfiguration config) {
+		this(method, config, null);
 	}
 
 	@Override
