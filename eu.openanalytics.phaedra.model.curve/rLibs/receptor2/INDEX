@@ -1,0 +1,7 @@
+fittingLogisticModel    fits a logistic model to the dose-response data
+isSaneED50              checks sanity conditions for an estimated ED50
+makingDoseResponseData
+                        creates suitable dose-response data out of the
+                        provided Excel files
+strEndsWith             checks if a strings ends with certain
+                        characters
