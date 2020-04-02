@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.statet.rj.data.RArray;
 import org.eclipse.statet.rj.data.RList;
+import org.eclipse.statet.rj.data.RNumericStore;
 import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.statet.rj.services.FunctionCall;
 import org.eclipse.statet.rj.services.util.Graphic;
@@ -33,6 +35,8 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 	private static final int MIN_SAMPLES_FOR_FIT = 4; //TODO check with Vahid
 	private static final String PACKAGE_NAME = "receptor2";
 	
+	public static final String MODEL_ID = PACKAGE_NAME;
+	
 	private static final Definition[] IN_PARAMS = {
 			new Definition(new RealValueDescription("Fixed Bottom", Curve.class)),
 			new Definition(new RealValueDescription("Fixed Top", Curve.class)),
@@ -46,6 +50,9 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 
 	private static final Definition[] OUT_PARAMS = {
 			new Definition(new ConcentrationLogPNamedValueDescription("pIC50", Curve.class, LogMolar), null, true, null, null),
+			new Definition(new RealValueDescription("Bottom", Curve.class)),
+			new Definition(new RealValueDescription("Top", Curve.class)),
+			new Definition(new RealValueDescription("Slope", Curve.class)),
 			new Definition(new RealValueDescription("Residual Variance", Curve.class)),
 			new Definition(new StringValueDescription("Warning PD", Curve.class)),
 	};
@@ -128,7 +135,14 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			//TODO pICx ?
 
 			CurveParameter.find(outParams, "pIC50").numericValue = RUtils.getDoubleFromList(results, "validpIC50", 3);
-			CurveParameter.find(outParams, "Residual Variance").numericValue = RUtils.getDoubleFromList(results, "residualVariance", 3);
+			
+			@SuppressWarnings("unchecked")
+			RNumericStore coefs = ((RArray<RNumericStore>) results.get("modelCoefs")).getData();
+			CurveParameter.find(outParams, "Slope").numericValue = coefs.getNum(0);
+			CurveParameter.find(outParams, "Bottom").numericValue = coefs.getNum(1);
+			CurveParameter.find(outParams, "Top").numericValue = coefs.getNum(2);
+			
+			CurveParameter.find(outParams, "Residual Variance").numericValue = RUtils.getDoubleFromList(results, "residulaVariance");
 			CurveParameter.find(outParams, "Warning PD").stringValue = RUtils.getStringFromList(results, "warningPD");
 			
 			rServi.evalVoid("library(Cairo)", null);
@@ -141,6 +155,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			byte[] plot = graphic.create(plotFun, rServi, null);
 			output.setPlot(plot);
 			
+			output.setErrorCode(0);
 		} catch (CoreException e) {
 			throw new CurveFitException(e.getMessage(), e);
 		} finally {

@@ -107,6 +107,12 @@
       </fitModel>
    </extension>
    <extension
+         point="eu.openanalytics.phaedra.model.curve.curveRenderer">
+      <curveRenderer
+            class="eu.openanalytics.phaedra.model.curve.receptor2.Receptor2CurveRenderer">
+      </curveRenderer>
+   </extension>
+   <extension
          point="org.eclipse.statet.rj.RSetups">
       <library
             group="R_LIBS_USER"
