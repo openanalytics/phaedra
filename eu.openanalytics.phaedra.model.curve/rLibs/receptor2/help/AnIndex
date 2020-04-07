@@ -1,4 +1,7 @@
+extractLogisticModelFit	extractLogisticModelFit
+extractLogisticNoModelFit	extractLogisticNoModelFit
 fittingLogisticModel	fittingLogisticModel
-isSaneED50	isSaneED50
+isSaneEDx	isSaneEDx
 makingDoseResponseData	makingDoseResponseData
 strEndsWith	strEndsWith
+validEDx	validEDx

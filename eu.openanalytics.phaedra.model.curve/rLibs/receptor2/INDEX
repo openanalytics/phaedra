@@ -1,7 +1,13 @@
+extractLogisticModelFit
+                        extracts required stuff from a fitted drc model
+extractLogisticNoModelFit
+                        extracts required stuff when no suitable model
+                        could be fitted
 fittingLogisticModel    fits a logistic model to the dose-response data
-isSaneED50              checks sanity conditions for an estimated ED50
+isSaneEDx               checks sanity conditions for an estimated ED50
 makingDoseResponseData
                         creates suitable dose-response data out of the
                         provided Excel files
 strEndsWith             checks if a strings ends with certain
                         characters
+validEDx                returns the valid estimated EDx results

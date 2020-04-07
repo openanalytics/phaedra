@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.statet.rj.data.RArray;
 import org.eclipse.statet.rj.data.RList;
+import org.eclipse.statet.rj.data.RLogicalStore;
 import org.eclipse.statet.rj.data.RNumericStore;
 import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.statet.rj.services.FunctionCall;
@@ -32,7 +32,7 @@ import eu.openanalytics.phaedra.model.curve.vo.Curve;
 
 public class Receptor2FitModel extends AbstractCurveFitModel {
 
-	private static final int MIN_SAMPLES_FOR_FIT = 4; //TODO check with Vahid
+	private static final int MIN_SAMPLES_FOR_FIT = 4;
 	private static final String PACKAGE_NAME = "receptor2";
 	
 	public static final String MODEL_ID = PACKAGE_NAME;
@@ -54,7 +54,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			new Definition(new RealValueDescription("Top", Curve.class)),
 			new Definition(new RealValueDescription("Slope", Curve.class)),
 			new Definition(new RealValueDescription("Residual Variance", Curve.class)),
-			new Definition(new StringValueDescription("Warning PD", Curve.class)),
+			new Definition(new StringValueDescription("Warning", Curve.class)),
 	};
 	
 	private static final List<Definition> OUT_PARAMS_LIST = Arrays.asList(OUT_PARAMS);
@@ -116,8 +116,17 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 					.toArray(i -> new Value[i]);
 			output.setOutputParameters(outParams);
 			
-			//TODO filter out rejected values?
-			//TODO double[] plateBounds = CurveUtils.calculateBounds(output);
+			double fixedBottom = CurveParameter.find(inParams, "Fixed Bottom").numericValue;
+			double fixedTop = CurveParameter.find(inParams, "Fixed Top").numericValue;
+			double fixedSlope = CurveParameter.find(inParams, "Fixed Slope").numericValue;
+			double confLevel = CurveParameter.find(inParams, "Confidence Level").numericValue;
+			String method = CurveParameter.find(inParams, "Method").stringValue;
+			String responseName = output.getFeature().getDisplayName();
+			
+			//TODO Show biological outliers as red crosses?
+			//TODO Use plate bounds? double[] plateBounds = CurveUtils.calculateBounds(output);
+			//TODO Support pICx ?
+			
 			rServi.assignData("dose", RUtils.makeNumericRVector(concs), null);
 			rServi.assignData("response", RUtils.makeNumericRVector(values), null);
 			rServi.evalData("inputData <- data.frame(dose, response)", null);
@@ -125,25 +134,27 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			RList results = (RList)rServi.evalData(
 					"value <- fittingLogisticModel("
 					+ "inputData = inputData,"
-					+ "fixedBottom = NA,"
-					+ "fixedTop = NA,"
-					+ "fixedSlope = NA,"
-					+ "confLevel = 0.95,"
-					+ "robustMethod = 'mean',"
-					+ "responseName = 'Effect')", null);
+					+ "fixedBottom = " + (Double.isNaN(fixedBottom) ? "NA" : fixedBottom) + ","
+					+ "fixedTop = " + (Double.isNaN(fixedTop) ? "NA" : fixedTop) + ","
+					+ "fixedSlope = " + (Double.isNaN(fixedSlope) ? "NA" : fixedSlope) + ","
+					+ "confLevel = " + (Double.isNaN(confLevel) ? "0.95" : confLevel) + ","
+					+ "robustMethod = '" + method + "',"
+					+ "responseName = '" + responseName + "')", null);
 			
-			//TODO pICx ?
-
 			CurveParameter.find(outParams, "pIC50").numericValue = RUtils.getDoubleFromList(results, "validpIC50", 3);
 			
-			@SuppressWarnings("unchecked")
-			RNumericStore coefs = ((RArray<RNumericStore>) results.get("modelCoefs")).getData();
-			CurveParameter.find(outParams, "Slope").numericValue = coefs.getNum(0);
-			CurveParameter.find(outParams, "Bottom").numericValue = coefs.getNum(1);
-			CurveParameter.find(outParams, "Top").numericValue = coefs.getNum(2);
+			Object data = results.get("modelCoefs").getData();
+			if (data instanceof RLogicalStore) {
+				// Fit failed, no coefs available.
+			} else {
+				RNumericStore coefs = (RNumericStore) data;
+				CurveParameter.find(outParams, "Slope").numericValue = coefs.getNum(0);
+				CurveParameter.find(outParams, "Bottom").numericValue = coefs.getNum(1);
+				CurveParameter.find(outParams, "Top").numericValue = coefs.getNum(2);
+			}
 			
 			CurveParameter.find(outParams, "Residual Variance").numericValue = RUtils.getDoubleFromList(results, "residulaVariance");
-			CurveParameter.find(outParams, "Warning PD").stringValue = RUtils.getStringFromList(results, "warningPD");
+			CurveParameter.find(outParams, "Warning").stringValue = RUtils.getStringFromList(results, "warningFit");
 			
 			rServi.evalVoid("library(Cairo)", null);
 			CairoPdfGraphic graphic = new CairoPdfGraphic();
