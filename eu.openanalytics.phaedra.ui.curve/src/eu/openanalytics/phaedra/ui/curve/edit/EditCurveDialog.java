@@ -28,6 +28,9 @@ import eu.openanalytics.phaedra.model.curve.vo.Curve;
  */
 public class EditCurveDialog extends TitleAreaDataBindingDialog {
 
+	private static final int APPLY_ID = IDialogConstants.YES_ID;
+	
+	
 	private CurveFitSettings customizedSettings;
 	private Curve[] curves;
 	
@@ -63,14 +66,20 @@ public class EditCurveDialog extends TitleAreaDataBindingDialog {
 	
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, 2, "Apply", true);
+		createButton(parent, APPLY_ID, "Apply", true);
 		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, false);
 		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
 	}
 	
 	@Override
+	protected void applyValidationResult(final boolean isValid) {
+		super.applyValidationResult(isValid);
+		getButton(APPLY_ID).setEnabled(isValid);
+	}
+	
+	@Override
 	protected void buttonPressed(int buttonId) {
-		if (buttonId == 2) {
+		if (buttonId == APPLY_ID) {
 			fitCustomCurve();
 		} else {
 			super.buttonPressed(buttonId);
