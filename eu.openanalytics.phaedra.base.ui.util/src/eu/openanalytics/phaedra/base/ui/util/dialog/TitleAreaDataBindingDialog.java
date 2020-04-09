@@ -70,6 +70,7 @@ public class TitleAreaDataBindingDialog extends TitleAreaDialog {
 		initDataBinding(dbc);
 		dbc.updateTargets();
 		if (dbValidation) {
+			dbc.updateModels();
 			TitleAreaDialogSupport.create(this, dbc);
 		}
 		getShell().addDisposeListener(new DisposeListener() {
@@ -102,13 +103,17 @@ public class TitleAreaDataBindingDialog extends TitleAreaDialog {
 			super.setMessage(newMessage, newType);
 		}
 		if (newType >= 0) {
-			getButton(IDialogConstants.OK_ID).setEnabled(newType != IMessageProvider.ERROR);
+			applyValidationResult(newType != IMessageProvider.ERROR);
 		}
 	}
 	
 	@Override
 	public void setErrorMessage(String newMessage) {
 		setMessage(newMessage, IMessageProvider.ERROR);
+	}
+	
+	protected void applyValidationResult(final boolean isValid) {
+		getButton(IDialogConstants.OK_ID).setEnabled(isValid);
 	}
 	
 	
