@@ -30,6 +30,9 @@ import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 
+//TODO Show biological outliers as red crosses?
+//TODO Use plate bounds: double[] plateBounds = CurveUtils.calculateBounds(output);
+//TODO Support pICx
 public class Receptor2FitModel extends AbstractCurveFitModel {
 
 	private static final int MIN_SAMPLES_FOR_FIT = 4;
@@ -122,10 +125,6 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			double confLevel = CurveParameter.find(inParams, "Confidence Level").numericValue;
 			String method = CurveParameter.find(inParams, "Method").stringValue;
 			String responseName = output.getFeature().getDisplayName();
-			
-			//TODO Show biological outliers as red crosses?
-			//TODO Use plate bounds? double[] plateBounds = CurveUtils.calculateBounds(output);
-			//TODO Support pICx ?
 			
 			rServi.assignData("dose", RUtils.makeNumericRVector(concs), null);
 			rServi.assignData("response", RUtils.makeNumericRVector(values), null);
