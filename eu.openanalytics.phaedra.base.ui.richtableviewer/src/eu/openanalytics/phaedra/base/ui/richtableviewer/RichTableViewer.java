@@ -614,7 +614,7 @@ public class RichTableViewer extends TableViewer {
 		List<ColumnConfiguration> configs = getCurrentConfigs(true, false);
 		for (ColumnConfiguration config : configs) {
 			if (!config.isHidden()
-					&& getLabelProvider() instanceof ColumnLabelProvider) {
+					&& config.getLabelProvider() instanceof ColumnLabelProvider) {
 				String name = config.getName();
 				if (name != null && !name.isEmpty()) {
 					names.add(name);

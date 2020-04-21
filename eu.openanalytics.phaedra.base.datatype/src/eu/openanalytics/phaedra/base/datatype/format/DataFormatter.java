@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.datatype.format;
 
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -26,6 +27,8 @@ public class DataFormatter implements DataUnitConfig {
 //	public static final int ADD_UNIT = 1 << 0;
 	
 	
+	private final NumberFormat defaultRealFormat;
+	
 	private final ConcentrationFormat defaultConcentrationFormat;
 	
 	private final Map<String, ConcentrationFormat> typeConcentrationFormats;
@@ -33,14 +36,26 @@ public class DataFormatter implements DataUnitConfig {
 	private final DateTimeFormatter defaultTimestampFormat;
 	
 	
-	public DataFormatter(final ConcentrationFormat concentrationFormat,
+	public DataFormatter(final NumberFormat realFormat,
+			final ConcentrationFormat concentrationFormat,
 			final Map<String, ConcentrationFormat> typeConcentrationFormats,
 			final DateTimeFormatter timestampFormat) {
+		this.defaultRealFormat = realFormat;
 		this.defaultConcentrationFormat = concentrationFormat;
 		this.typeConcentrationFormats = (typeConcentrationFormats != null) ? typeConcentrationFormats : Collections.emptyMap();
 		this.defaultTimestampFormat = timestampFormat;
 	}
 	
+	public DataFormatter(final ConcentrationFormat concentrationFormat,
+			final Map<String, ConcentrationFormat> typeConcentrationFormats,
+			final DateTimeFormatter timestampFormat) {
+		this(null, concentrationFormat, typeConcentrationFormats, timestampFormat);
+	}
+	
+	
+	public NumberFormat getRealFormat(final DataDescription dataDescription) {
+		return this.defaultRealFormat;
+	}
 	
 	@Override
 	public ConcentrationUnit getConcentrationUnit(final DataDescription dataDescription) {
@@ -88,6 +103,11 @@ public class DataFormatter implements DataUnitConfig {
 				if (dataDescription.getContentType() == ContentType.Concentration) {
 					final ConcentrationFormat format = getConcentrationFormat(dataDescription);
 					return format.format(v, format.getUnit());
+				}
+				{	final NumberFormat numberFormat = getRealFormat(dataDescription);
+					if (numberFormat != null) {
+						return numberFormat.format(v);
+					}
 				}
 				return Double.toString(v);
 			}

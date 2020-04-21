@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.scripting.javascript;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +19,11 @@ public class JavaScriptEngine extends BaseScriptEngine {
 	private Map<String, Object> rootObjects;
 	private ScriptEngine engine;
 	private Bindings consoleBindings;
+	
+	private Class<?> mirrorClass;
+	private Method mirrorIsArray;
+	private Method mirrorTo;
+	
 	
 	@Override
 	public void initialize() throws ScriptException {
@@ -44,6 +50,10 @@ public class JavaScriptEngine extends BaseScriptEngine {
 			Class<?> filterClass = getClass().getClassLoader().loadClass("jdk.nashorn.api.scripting.ClassFilter");
 			Object filter = getClass().getClassLoader().loadClass(getClass().getPackage().getName() + ".EngineClassFilter").newInstance();
 			engine = (ScriptEngine) ReflectionUtils.invoke("getScriptEngine", factory, new Object[] {filter}, new Class<?>[] {filterClass});
+			
+			this.mirrorClass = getClass().getClassLoader().loadClass("jdk.nashorn.api.scripting.ScriptObjectMirror");
+			this.mirrorIsArray = mirrorClass.getMethod("isArray");
+			this.mirrorTo = mirrorClass.getMethod("to", Class.class);
 		} catch (Throwable t) {
 			throw new ScriptException("Cannot initialize Nashorn script engine. Please make sure the following property is set: -Dosgi.parentClassloader=ext");
 		}
@@ -98,9 +108,14 @@ public class JavaScriptEngine extends BaseScriptEngine {
 			}
 		}
 		try {
-			return engine.eval(script, bindings);
-		} catch (Exception e) {
-			if (e instanceof ScriptException) throw e;
+			Object value = engine.eval(script, bindings);
+			if (this.mirrorClass.isInstance(value) && Boolean.TRUE.equals(this.mirrorIsArray.invoke(value))) {
+				return mirrorTo.invoke(value, Object[].class);
+			}
+			return value;
+		} catch (final ScriptException e) {
+			throw e;
+		} catch (final Exception e) {
 			throw new ScriptException(e);
 		}
 	}

@@ -32,10 +32,13 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
+import eu.openanalytics.phaedra.base.ui.util.misc.WorkbenchSiteJobScheduler;
 import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectViewerInput;
 import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataViewerInput;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -45,11 +48,20 @@ import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.ui.protocol.table.ProtocolTableColumns;
+import eu.openanalytics.phaedra.ui.protocol.util.ProtocolClasses;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.DynamicColumnSupport;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationContext;
 
 public class ProtocolBrowser extends EditorPart {
 	
 	
 	private AsyncDataViewerInput<Protocol, Protocol> viewerInput;
+	private ProtocolClasses<Protocol> protocolClasses;
+	private AsyncDataLoader<Protocol> dataLoader;
+	
+	private EvaluationContext<Protocol> evaluationContext;
+	
+	private DataFormatSupport dataFormatSupport;
 	
 	private BreadcrumbViewer breadcrumb;
 	private RichTableViewer tableViewer;
@@ -63,7 +75,9 @@ public class ProtocolBrowser extends EditorPart {
 		setInput(input);
 		setPartName(input.getName());
 		
-		this.viewerInput = new AsyncDataDirectViewerInput<Protocol>(Protocol.class) {
+		this.dataLoader = new AsyncDataLoader<Protocol>("data for protocol browser",
+				new WorkbenchSiteJobScheduler(this) );
+		this.viewerInput = new AsyncDataDirectViewerInput<Protocol>(Protocol.class, this.dataLoader) {
 			
 			@Override
 			protected List<Protocol> loadElements() {
@@ -97,11 +111,15 @@ public class ProtocolBrowser extends EditorPart {
 			}
 			
 		};
+		this.protocolClasses = new ProtocolClasses<>(this.viewerInput, Protocol::getProtocolClass);
 	}
 	
 	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
+
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
@@ -110,7 +128,11 @@ public class ProtocolBrowser extends EditorPart {
 		if (isProtocolClassInput && !protocols.isEmpty()) breadcrumb.setInput(protocols.get(0).getProtocolClass());
 		GridDataFactory.fillDefaults().grab(true, false).hint(SWT.DEFAULT, 23).applyTo(breadcrumb.getControl());
 
-		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(), true);
+		final DynamicColumnSupport<Protocol, Protocol> customColumnSupport = new DynamicColumnSupport<>(
+				this.viewerInput, this.evaluationContext, this.dataFormatSupport );
+		
+		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(),
+				customColumnSupport, true );
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.applyColumnConfig(ProtocolTableColumns.configureColumns());
 		tableViewer.setDefaultSearchColumn("Protocol Name");
@@ -147,6 +169,9 @@ public class ProtocolBrowser extends EditorPart {
 	@Override
 	public void dispose() {
 		if (this.viewerInput != null) this.viewerInput.dispose();
+		if (this.dataLoader != null) this.dataLoader.dispose();
+		if (this.evaluationContext != null) this.evaluationContext.dispose();
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		super.dispose();
 	}
 

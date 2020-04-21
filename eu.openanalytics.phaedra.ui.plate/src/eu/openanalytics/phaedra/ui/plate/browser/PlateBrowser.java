@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.ui.plate.browser;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.databinding.observable.ChangeEvent;
 import org.eclipse.core.databinding.observable.IChangeListener;
@@ -56,7 +57,6 @@ import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.model.plate.PlateService;
-import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
@@ -72,8 +72,9 @@ import eu.openanalytics.phaedra.ui.plate.table.PlateTableColumns;
 import eu.openanalytics.phaedra.ui.plate.util.PlateGrid;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
-import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
-import eu.openanalytics.phaedra.ui.protocol.event.UIEvent.EventType;
+import eu.openanalytics.phaedra.ui.protocol.util.ProtocolClasses;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.DynamicColumnSupport;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationContext;
 
 public class PlateBrowser extends DecoratedEditor {
 
@@ -81,8 +82,11 @@ public class PlateBrowser extends DecoratedEditor {
 	
 	
 	private AsyncDataViewerInput<Plate, Plate> viewerInput;
-	private Experiment singleExperiment;
+	private volatile Experiment singleExperiment;
+	private ProtocolClasses<Plate> protocolClasses;
 	private AsyncDataLoader<Plate> dataLoader;
+	
+	private EvaluationContext<Plate> evaluationContext;
 	
 	private DataFormatSupport dataFormatSupport;
 	
@@ -90,7 +94,6 @@ public class PlateBrowser extends DecoratedEditor {
 	private CTabFolder tabFolder;
 
 	private SelectionProviderIntermediate selectionProvider;
-	private IUIEventListener featureSelectionListener;
 
 	/* Tab 1: table */
 	private CTabItem tableTab;
@@ -106,6 +109,7 @@ public class PlateBrowser extends DecoratedEditor {
 	private CTabItem featureHeatmapsTab;
 	private PlateFeatureHeatmapsTab featureHeatmapsTabComposite;
 	private boolean featureHeatmapsLoaded;
+
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
@@ -175,6 +179,8 @@ public class PlateBrowser extends DecoratedEditor {
 			}
 			
 		};
+		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
+				(plate) -> plate.getExperiment().getProtocol().getProtocolClass() );
 	}
 	
 	private Protocol getProtocol() {
@@ -185,7 +191,8 @@ public class PlateBrowser extends DecoratedEditor {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.dataFormatSupport = new DataFormatSupport(this::reloadHeadmaps);
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		this.dataFormatSupport = new DataFormatSupport(() -> { this.viewerInput.refreshViewer(); reloadHeadmaps(); });
 		
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
@@ -203,7 +210,8 @@ public class PlateBrowser extends DecoratedEditor {
 		});
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(tabFolder);
 
-		/* Plate List Tab */
+		final DynamicColumnSupport<Plate, Plate> customColumnSupport = new DynamicColumnSupport<>(
+				this.viewerInput, this.evaluationContext, this.dataFormatSupport );
 
 		tableTab = new CTabItem(tabFolder, SWT.NONE);
 		tableTab.setText("Plate List");
@@ -212,10 +220,13 @@ public class PlateBrowser extends DecoratedEditor {
 		container.setLayout(new FillLayout());
 		tableTab.setControl(container);
 
-		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(), true);
+		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(),
+				customColumnSupport, true );
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.applyColumnConfig(PlateTableColumns.configureColumns(this.dataLoader, false, true));
 		tableViewer.setDefaultSearchColumn("Barcode");
+		
+		this.viewerInput.connect(tableViewer);
 
 		/* Plate Thumbnails Tab */
 
@@ -284,9 +295,6 @@ public class PlateBrowser extends DecoratedEditor {
 
 		/* Other behavior */
 
-		this.viewerInput.connect(tableViewer);
-		initSelectionListener();
-
 		DNDSupport.addDragSupport(tableViewer, this);
 		DNDSupport.addDropSupport(tableViewer, this, e -> singleExperiment);
 
@@ -326,11 +334,15 @@ public class PlateBrowser extends DecoratedEditor {
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewPlateBrowser");
 		
 		// Set the current protocolclass, when this editor is opened directly (for example via My Favorites).
-		final Experiment singleExperiment = this.singleExperiment;
-		if (singleExperiment != null) {
-			Display.getDefault().asyncExec(() -> ProtocolUIService.getInstance().setCurrentProtocolClass(singleExperiment.getProtocol().getProtocolClass()));
-		}
+		container.getDisplay().asyncExec(() -> {
+			final Set<ProtocolClass> pClasses;
+			if (getSite().getPage().getActivePart() == this
+					&& (pClasses = this.protocolClasses.getValue()).size() == 1) {
+				ProtocolUIService.getInstance().setCurrentProtocolClass(pClasses.iterator().next());
+			}
+		});
 	}
+	
 
 	@Override
 	public void setFocus() {
@@ -341,10 +353,10 @@ public class PlateBrowser extends DecoratedEditor {
 	public void dispose() {
 		if (this.viewerInput != null) this.viewerInput.dispose();
 		if (this.dataLoader != null) this.dataLoader.dispose();
+		if (this.evaluationContext != null) this.evaluationContext.dispose();
 		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		if (plateGrid != null) plateGrid.dispose();
 		if (gridLayerSupport != null) gridLayerSupport.dispose();
-		ProtocolUIService.getInstance().removeUIEventListener(featureSelectionListener);
 		featureHeatmapsTabComposite.dispose();
 		super.dispose();
 	}
@@ -399,26 +411,6 @@ public class PlateBrowser extends DecoratedEditor {
 		}
 	}
 	
-	private void initSelectionListener() {
-		featureSelectionListener = event -> {
-			if (tableViewer.getTable() == null || tableViewer.getTable().isDisposed()) return;
-
-			if (event.type == EventType.FeatureSelectionChanged || event.type == EventType.NormalizationSelectionChanged
-					|| event.type == EventType.ColorMethodChanged) {
-				ProtocolClass pClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
-				final List<Plate> plates = viewerInput.getBaseElements();
-				for (Plate plate: plates) {
-					ProtocolClass thisPClass = PlateUtils.getProtocolClass(plate);
-					if (thisPClass.equals(pClass)) {
-						viewerInput.reload(null);
-						return;
-					}
-				}
-			}
-		};
-		ProtocolUIService.getInstance().addUIEventListener(featureSelectionListener);
-	}
-
 	private void hookDoubleClickAction() {
 		tableViewer.addDoubleClickListener(event -> openWellBrowser(event.getSelection()));
 	}

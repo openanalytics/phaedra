@@ -49,7 +49,8 @@ public class ExperimentTableColumns {
 	private static void addGeneralColumns(List<ColumnConfiguration> configs) {
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("", DataType.String, 30);
+		config = ColumnConfigFactory.create("", DataType.Image, 30);
+		config.setTooltip("Icon");
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {

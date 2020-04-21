@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.ui.protocol.browser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuListener;
@@ -26,22 +27,33 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
+import eu.openanalytics.phaedra.base.ui.util.misc.WorkbenchSiteJobScheduler;
 import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectViewerInput;
 import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataViewerInput;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.cmd.BrowseProtocols;
 import eu.openanalytics.phaedra.ui.protocol.table.ProtocolClassTableColumns;
+import eu.openanalytics.phaedra.ui.protocol.util.ProtocolClasses;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.DynamicColumnSupport;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationContext;
+
 
 public class ProtocolClassBrowser extends EditorPart {
 	
 	
 	private AsyncDataViewerInput<ProtocolClass, ProtocolClass> viewerInput;
+	private ProtocolClasses<ProtocolClass> protocolClasses;
 	private AsyncDataLoader<ProtocolClass> dataLoader;
+	
+	private EvaluationContext<ProtocolClass> evaluationContext;
+	
+	private DataFormatSupport dataFormatSupport;
 	
 	private RichTableViewer tableViewer;
 
@@ -52,7 +64,8 @@ public class ProtocolClassBrowser extends EditorPart {
 		setInput(input);
 		setPartName(input.getName());
 		
-		this.dataLoader = new AsyncDataLoader<>("data for protocol class browser");
+		this.dataLoader = new AsyncDataLoader<>("data for protocol class browser",
+				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<ProtocolClass>(ProtocolClass.class, this.dataLoader) {
 			
 			@Override
@@ -66,11 +79,19 @@ public class ProtocolClassBrowser extends EditorPart {
 			}
 			
 		};
+		this.protocolClasses = new ProtocolClasses<>(this.viewerInput, Function.identity());
 	}
 
 	@Override
 	public void createPartControl(Composite parent) {
-		tableViewer = new RichTableViewer(parent, SWT.VIRTUAL, getClass().getSimpleName(), true);
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
+		
+		final DynamicColumnSupport<ProtocolClass, ProtocolClass> customColumnSupport = new DynamicColumnSupport<>(
+				this.viewerInput, this.evaluationContext, this.dataFormatSupport );
+		
+		tableViewer = new RichTableViewer(parent, SWT.VIRTUAL, getClass().getSimpleName(),
+				customColumnSupport, true );
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.applyColumnConfig(ProtocolClassTableColumns.configureColumns(this.dataLoader));
 		tableViewer.setDefaultSearchColumn("Protocol Class Name");
@@ -95,6 +116,8 @@ public class ProtocolClassBrowser extends EditorPart {
 	public void dispose() {
 		if (this.viewerInput != null) this.viewerInput.dispose();
 		if (this.dataLoader != null) this.dataLoader.dispose();
+		if (this.evaluationContext != null) this.evaluationContext.dispose();
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		super.dispose();
 	}
 
@@ -116,6 +139,10 @@ public class ProtocolClassBrowser extends EditorPart {
 	@Override
 	public void doSaveAs() {
 		// Do nothing.
+	}
+	
+	private void refresh() {
+		this.tableViewer.refresh();
 	}
 
 	private void hookDoubleClickAction() {

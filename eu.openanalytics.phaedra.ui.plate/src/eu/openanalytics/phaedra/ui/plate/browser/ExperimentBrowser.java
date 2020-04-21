@@ -32,11 +32,13 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
+import eu.openanalytics.phaedra.base.ui.util.misc.WorkbenchSiteJobScheduler;
 import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectViewerInput;
 import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataViewerInput;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -47,12 +49,21 @@ import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates;
 import eu.openanalytics.phaedra.ui.plate.table.ExperimentTableColumns;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
+import eu.openanalytics.phaedra.ui.protocol.util.ProtocolClasses;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.DynamicColumnSupport;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationContext;
+
 
 public class ExperimentBrowser extends EditorPart {
 	
 	
 	private AsyncDataViewerInput<Experiment, Experiment> viewerInput;
+	private ProtocolClasses<Experiment> protocolClasses;
 	private AsyncDataLoader<Experiment> dataLoader;
+	
+	private EvaluationContext<Experiment> evaluationContext;
+	
+	private DataFormatSupport dataFormatSupport;
 	
 	private BreadcrumbViewer breadcrumb;
 	private RichTableViewer tableViewer;
@@ -64,7 +75,8 @@ public class ExperimentBrowser extends EditorPart {
 		setInput(input);
 		setPartName(input.getName());
 		
-		this.dataLoader = new AsyncDataLoader<>("data for experiment browser");
+		this.dataLoader = new AsyncDataLoader<>("data for experiment browser",
+				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<Experiment>(Experiment.class, this.dataLoader) {
 			
 			@Override
@@ -94,11 +106,16 @@ public class ExperimentBrowser extends EditorPart {
 			}
 			
 		};
+		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
+				(experiment) -> experiment.getProtocol().getProtocolClass() );
 	}
 	
 	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
+
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
@@ -107,7 +124,11 @@ public class ExperimentBrowser extends EditorPart {
 		breadcrumb.setInput((experiments != null && !experiments.isEmpty()) ? experiments.get(0).getProtocol() : null);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(breadcrumb.getControl());
 
-		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(), true);
+		final DynamicColumnSupport<Experiment, Experiment> customColumnSupport = new DynamicColumnSupport<>(
+				this.viewerInput, this.evaluationContext, this.dataFormatSupport );
+		
+		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(),
+				customColumnSupport, true );
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.applyColumnConfig(ExperimentTableColumns.configureColumns(this.dataLoader));
 		tableViewer.setDefaultSearchColumn("Name");
@@ -145,6 +166,8 @@ public class ExperimentBrowser extends EditorPart {
 	public void dispose() {
 		if (this.viewerInput != null) this.viewerInput.dispose();
 		if (this.dataLoader != null) this.dataLoader.dispose();
+		if (this.evaluationContext != null) this.evaluationContext.dispose();
+		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		super.dispose();
 	}
 

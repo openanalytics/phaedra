@@ -42,12 +42,18 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.plate.table.MultiplateWellTableColumns;
+import eu.openanalytics.phaedra.ui.protocol.util.ProtocolClasses;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.DynamicColumnSupport;
+import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationContext;
 
 public class MultiplateWellBrowser extends EditorPart {
 	
 	
 	private AsyncData1toNViewerInput<Plate, Well> viewerInput;
+	private ProtocolClasses<Plate> protocolClasses;
 	private AsyncDataLoader<Plate> dataLoader;
+	
+	private EvaluationContext<Plate> evaluationContext;
 	
 	private DataFormatSupport dataFormatSupport;
 
@@ -98,6 +104,8 @@ public class MultiplateWellBrowser extends EditorPart {
 			}
 			
 		};
+		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
+				(plate) -> plate.getExperiment().getProtocol().getProtocolClass() );
 	}
 	
 	private List<Feature> getFeatures() {
@@ -111,6 +119,12 @@ public class MultiplateWellBrowser extends EditorPart {
 	
 	@Override
 	public void createPartControl(Composite parent) {
+		this.evaluationContext = new EvaluationContext<Plate>(this.viewerInput, this.protocolClasses) {
+			@Override
+			public String getScriptNote() {
+				return "evaluated per plate.";
+			}
+		};
 		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
 		
 		tabFolder = new CTabFolder(parent, SWT.BOTTOM | SWT.V_SCROLL | SWT.H_SCROLL);
@@ -118,6 +132,8 @@ public class MultiplateWellBrowser extends EditorPart {
 		tabFolder.addListener(SWT.Selection, e -> tabChanged(e.item));
 
 		/* Table tab */
+		final DynamicColumnSupport<Plate, Well> customColumnSupport = new DynamicColumnSupport<>(
+				this.viewerInput, this.evaluationContext, this.dataFormatSupport );
 
 		tableTab = new CTabItem(tabFolder, SWT.NONE);
 		tableTab.setText("Multi-Plate Table View");
@@ -127,7 +143,8 @@ public class MultiplateWellBrowser extends EditorPart {
 		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(container);
 		tableTab.setControl(container);
 
-		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName()) {
+		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(),
+				customColumnSupport, false ) {
 //			@Override
 //			protected CustomizeColumnsDialog createConfigureColumnDialog() {
 //				return new WellBrowserConfigColumnDialog(Display.getDefault().getActiveShell(), this,
@@ -171,6 +188,8 @@ public class MultiplateWellBrowser extends EditorPart {
 	@Override
 	public void dispose() {
 		if (this.viewerInput != null) this.viewerInput.dispose();
+		if (this.dataLoader != null) this.dataLoader.dispose();
+		if (this.evaluationContext != null) this.evaluationContext.dispose();
 		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
 		super.dispose();
