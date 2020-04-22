@@ -4,10 +4,12 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -35,12 +37,11 @@ import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.swt.IFocusService;
 
-import com.google.common.collect.Lists;
-
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnViewerSorter;
+import eu.openanalytics.phaedra.base.ui.richtableviewer.column.CustomColumnSupport;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.CustomizeColumnsDialog;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.state.IStateStore;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.state.StateStoreRegistry;
@@ -57,9 +58,21 @@ import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 public class RichTableViewer extends TableViewer {
 
 	public final static int NO_SEPARATOR = 1 << 10;
-
+	
+	private final static String VIEWER_COLUMN_KEY = "org.eclipse.jface.columnViewer";
+	private final static String SORTER_KEY = "eu.openanalytics.phaedra.base.ui.richtableviewer.Sorter";
+	
+	protected static final ColumnConfiguration getConfig(final TableColumn column) {
+		return (ColumnConfiguration)column.getData();
+	}
+	
+	
 	private String tableKey;
 	private String storeId;
+	private IStateStore stateStore;
+	private final Consumer<IStateStore.StateChangedEvent> stateStoreListener = this::onStateChanged;
+	
+	private CustomColumnSupport customColumnSupport;
 
 	private SearchBar searchBar;
 	private RichTableFilter searchFilter;
@@ -67,6 +80,7 @@ public class RichTableViewer extends TableViewer {
 	private Set<DataType> dataTypes;
 
 	private int selConf;
+
 
 	public RichTableViewer(Table table) {
 		this(table, null);
@@ -86,8 +100,12 @@ public class RichTableViewer extends TableViewer {
 		this(parent, style, tableKey, false);
 	}
 
-	public RichTableViewer(Composite parent, int style, String tableKey, boolean searchEnabled) {
+	public RichTableViewer(Composite parent, int style, String tableKey, CustomColumnSupport customColumnSupport,
+			boolean searchEnabled) {
 		super(createTableContainer(parent, searchEnabled, style), style | SWT.FULL_SELECTION | SWT.MULTI);
+		
+		this.customColumnSupport = customColumnSupport;
+		
 		if (searchEnabled) {
 			getTable().addDisposeListener(new DisposeListener() {
 				@Override
@@ -105,6 +123,8 @@ public class RichTableViewer extends TableViewer {
 		getTable().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
+				disconnectStateStore();
+				
 				IFocusService service = PlatformUI.getWorkbench().getService(IFocusService.class);
 				service.removeFocusTracker(getTable());
 			}
@@ -112,7 +132,16 @@ public class RichTableViewer extends TableViewer {
 
 		ContextHelper.attachContext(getTable(), CopyItems.COPY_PASTE_CONTEXT_ID);
 	}
-
+	
+	public RichTableViewer(Composite parent, int style, String tableKey, boolean searchEnabled) {
+		this(parent, style, tableKey, null, searchEnabled);
+	}
+	
+	
+	public CustomColumnSupport getCustomColumnSupport() {
+		return this.customColumnSupport;
+	}
+	
 	@Override
 	public ISelection getSelection() {
 		Control control = getControl();
@@ -137,6 +166,34 @@ public class RichTableViewer extends TableViewer {
 		// Must be called before columns are configured.
 		this.storeId = storeId;
 	}
+	
+	private IStateStore getStateStore() {
+		final String tableKey = this.tableKey;
+		if (tableKey == null) {
+			return null;
+		}
+		IStateStore stateStore = this.stateStore;
+		if (stateStore == null) {
+			stateStore = StateStoreRegistry.getStore(this.storeId);
+			if (stateStore != null) {
+				stateStore.addListener(tableKey, this.stateStoreListener);
+			}
+		}
+		return stateStore;
+	}
+	
+	private void disconnectStateStore() {
+		IStateStore stateStore = this.stateStore;
+		if (stateStore != null) {
+			this.stateStore = null;
+			stateStore.removeListener(tableKey, this.stateStoreListener);
+		}
+	}
+	
+	private void onStateChanged(final List<ColumnConfiguration> configs, final int notification) {
+		System.out.println("XXX");
+	}
+
 
 	public void contributeConfigButton(IMenuManager manager) {
 		manager.add(new Separator());
@@ -151,85 +208,251 @@ public class RichTableViewer extends TableViewer {
 		manager.add(configureColumnsAction);
 	}
 
+
+	private List<ColumnConfiguration> getCurrentConfigs(final boolean ordered, final boolean updateView) {
+		final TableColumn[] columns = getTable().getColumns();
+		final List<ColumnConfiguration> list = new ArrayList<>(columns.length);
+		final int[] order = (ordered) ? getTable().getColumnOrder() : null;
+		for (int i = 0; i < columns.length; i++) {
+			final TableColumn column = columns[(order != null) ? order[i] : i];
+			final ColumnConfiguration config = getConfig(column);
+			if (updateView) {
+				updateConfigFromView(config, column);
+			}
+			list.add(config);
+		}
+		return list;
+	}
+	
+	public List<ColumnConfiguration> getColumnConfigs(final boolean ordered) {
+		return getCurrentConfigs(ordered, true);
+	}
+	
 	public void applyColumnConfig(List<ColumnConfiguration> configs) {
 		applyColumnConfig(configs.toArray(new ColumnConfiguration[configs.size()]));
 	}
 	
 	public void applyColumnConfig(ColumnConfiguration[] configs) {
-		getTable().setRedraw(false);
-		// If there currently are columns present, dispose them first.
 		TableColumn[] existingColumns = getTable().getColumns();
 		boolean hadColumns = existingColumns.length > 0;
-		if (hadColumns) {
-			// Prevent error when custom LabelProvider was set.
-			setLabelProvider(new ColumnLabelProvider());
-			for (TableColumn col : existingColumns) {
-				col.dispose();
-			}
-		}
-		dataTypes.clear();
-
-		ColumnConfiguration[] savedConfigs = null;
-		IStateStore store = StateStoreRegistry.getStore(storeId);
-		if (tableKey != null && store != null) {
-			try {
-				savedConfigs = store.loadState(tableKey);
-			} catch (IOException e) {
-				EclipseLog.warn("Failed to load column state", e, Activator.getDefault());
-			}
-		}
-
-		ColumnConfiguration[] mergedConfigs = merge(configs, savedConfigs);
 		
-		for (ColumnConfiguration config : mergedConfigs) {
-
-			TableViewerColumn col = new TableViewerColumn(this, SWT.NONE);
-			col.getColumn().setText(config.getName());
-			col.getColumn().setWidth(config.getWidth());
-			col.getColumn().setToolTipText(config.getTooltip());
-			col.getColumn().setMoveable(config.isMovable());
-
-			CellLabelProvider labelProvider = config.getLabelProvider();
-			if (labelProvider == null)
-				labelProvider = new RichLabelProvider(config);
-			if (labelProvider instanceof ImageLabelProvider)
-				col.getColumn().setData("Image", true);
-			col.setLabelProvider(labelProvider);
-
-			Comparator<?> sorter = config.getSortComparator();
-			if (sorter != null) {
-				ColumnViewerSorter<?> colSorter = new ColumnViewerSorter<>(col, sorter);
-				if (config.getSortDirection() != SWT.NONE) {
-					colSorter.setSorter(config.getSortDirection());
+		getTable().setRedraw(false);
+		try {
+			// If there currently are columns present, dispose them first.
+			if (hadColumns) {
+				// Prevent error when custom LabelProvider was set.
+				setLabelProvider(new ColumnLabelProvider());
+				for (TableColumn column : existingColumns) {
+					column.dispose();
 				}
 			}
-
-			ColumnEditingFactory.apply(col, config.getEditingConfig());
-			
-			if (config.isHidden()) {
-				col.getColumn().setWidth(0);
-				col.getColumn().setResizable(false);
-			}
-			
-			col.getColumn().setData(config);
-			dataTypes.add(config.getDataType());
-		}
-
-		if (searchBar != null) {
-			List<String> names = new ArrayList<String>();
-			for (ColumnConfiguration config: configs) {
-				String name = config.getName();
-				if (config.getLabelProvider() instanceof RichLabelProvider) {
-					if (name != null && !name.isEmpty()) names.add(name);
+			dataTypes.clear();
+	
+			List<ColumnConfiguration> savedConfigs = null;
+			IStateStore store = getStateStore();
+			if (store != null) {
+				try {
+					ColumnConfiguration[] array = store.loadState(tableKey);
+					savedConfigs = (array != null) ? Arrays.asList(array) : null;
+				} catch (IOException e) {
+					EclipseLog.warn("Failed to load column state", e, Activator.getDefault());
 				}
 			}
-			searchBar.setNames(names.toArray(new String[names.size()]));
-			searchFilter.setColumns(configs);
+			List<ColumnConfiguration> mergedConfigs = mergeSavedConfigs(Arrays.asList(configs), savedConfigs, true);
+			
+			for (ColumnConfiguration config : mergedConfigs) {
+				newColumn(config);
+			}
+			
+			final int[] columnOrder = mergeSavedOrder(mergedConfigs, savedConfigs);
+			if (columnOrder != null) {
+				getTable().setColumnOrder(columnOrder);
+			}
+			
+			updateSearch();
 		}
-
-		getTable().setRedraw(true);
+		finally {
+			getTable().setRedraw(true);
+		}
 		if (hadColumns) refresh();
 	}
+	
+	private void reload(final List<ColumnConfiguration> savedConfigs) {
+		getTable().setRedraw(false);
+		try {
+			boolean refresh = false;
+			
+			final List<ColumnConfiguration> mergedConfigs = mergeSavedConfigs(
+					getCurrentConfigs(false, true), savedConfigs, false );
+			
+			final TableColumn[] existingColumns = getTable().getColumns();
+			int existingIndex = 0;
+			ITER_CONFIGS: for (final ColumnConfiguration config : mergedConfigs) {
+				ITER_EXISTING: while (existingIndex < existingColumns.length) {
+					final TableColumn column = existingColumns[existingIndex++];
+					if (column.getData() != config) {
+						removeColumn(column);
+						continue ITER_EXISTING;
+					}
+					else {
+						refresh |= applyConfig(column);
+						continue ITER_CONFIGS;
+					}
+				}
+				// else
+				newColumn(config);
+				continue ITER_CONFIGS;
+			}
+			while (existingIndex < existingColumns.length) {
+				final TableColumn column = existingColumns[existingIndex++];
+				removeColumn(column);
+			}
+			
+			final int[] columnOrder = mergeSavedOrder(mergedConfigs, savedConfigs);
+			if (columnOrder != null) {
+				getTable().setColumnOrder(columnOrder);
+			}
+			
+			if (refresh) {
+				refresh();
+			}
+			
+			updateSearch();
+		}
+		finally {
+			getTable().setRedraw(true);
+		}
+	}
+	
+	
+	public TableColumn addColumn(final ColumnConfiguration config) {
+		cancelEditing();
+		getTable().setRedraw(false);
+		try {
+			final TableColumn column = newColumn(config);
+			refresh();
+			
+			return column;
+		}
+		finally {
+			getTable().setRedraw(true);
+		}
+	}
+	
+	public void updateColumn(final TableColumn column) {
+		updateColumns(Collections.singletonList(column));
+	}
+	
+	public void updateColumns(final List<TableColumn> columns) {
+		cancelEditing();
+		getTable().setRedraw(false);
+		try {
+			boolean refresh = false;
+			for (final TableColumn column : columns) {
+				refresh |= applyConfig(column);
+			}
+			if (refresh) {
+				refresh();
+			}
+		}
+		finally {
+			getTable().setRedraw(true);
+		}
+	}
+	
+	public void deleteColumn(final TableColumn column) {
+		cancelEditing();
+		getTable().setRedraw(false);
+		try {
+			removeColumn(column);
+		}
+		finally {
+			getTable().setRedraw(true);
+		}
+	}
+	
+	
+	private TableColumn newColumn(final ColumnConfiguration config) {
+		final TableViewerColumn viewerColumn = new TableViewerColumn(this, SWT.NONE);
+		final TableColumn column = viewerColumn.getColumn();
+		column.setData(config);
+		if (column.getData(VIEWER_COLUMN_KEY) == null) {
+			column.setData(VIEWER_COLUMN_KEY, viewerColumn);
+		}
+		applyConfig(viewerColumn, config);
+		return column;
+	}
+	
+	private boolean applyConfig(final TableViewerColumn viewerColumn, final ColumnConfiguration config) {
+		boolean refresh = true;
+		
+		final TableColumn column = viewerColumn.getColumn();
+		column.setText(config.getName());
+		column.setToolTipText(config.getTooltip());
+		
+		column.setMoveable(config.isMovable());
+		if (config.isHidden()) {
+			column.setWidth(0);
+			column.setResizable(false);
+		}
+		else {
+			column.setWidth(config.getWidth());
+			column.setResizable(true);
+		}
+		
+		final CellLabelProvider configLabelProvider = config.getLabelProvider();
+		CellLabelProvider labelProvider = getLabelProvider(getTable().indexOf(column));
+		if (labelProvider == null || labelProvider != configLabelProvider) {
+			labelProvider = configLabelProvider;
+			if (labelProvider == null)
+				labelProvider = new RichLabelProvider(config);
+			viewerColumn.setLabelProvider(labelProvider);
+			column.setData("Image", labelProvider instanceof ImageLabelProvider);
+			refresh = true;
+		}
+		
+		final Comparator<?> configComparator = config.getSortComparator();
+		ColumnViewerSorter<?> sorter = (ColumnViewerSorter<?>)column.getData(SORTER_KEY);
+		if (sorter != null && sorter.getColumnComparator() != configComparator) {
+			sorter.dispose();
+			sorter = null;
+		}
+		if (sorter == null && configComparator != null) {
+			sorter = new ColumnViewerSorter<>(viewerColumn, configComparator);
+			column.setData(SORTER_KEY, sorter);
+			if (config.getSortDirection() != SWT.NONE && !config.isHidden()) {
+				sorter.setSorter(config.getSortDirection());
+			}
+		}
+		
+		ColumnEditingFactory.apply(viewerColumn, config.getEditingConfig());
+		return refresh;
+	}
+	
+	private boolean applyConfig(final TableColumn column) {
+		final ColumnConfiguration config = getConfig(column);
+		final TableViewerColumn viewerColumn = (TableViewerColumn)column.getData(VIEWER_COLUMN_KEY);
+		return applyConfig(viewerColumn, config);
+	}
+	
+	private void removeColumn(final TableColumn column) {
+		ColumnViewerSorter<?> sorter = (ColumnViewerSorter<?>)column.getData(SORTER_KEY);
+		if (sorter != null) {
+			sorter.dispose();
+			sorter = null;
+		}
+		column.dispose();
+	}
+	
+	private ColumnConfiguration updateConfigFromView(final ColumnConfiguration config, final TableColumn column) {
+		if (column.getWidth() != 0) {
+			config.setWidth(column.getWidth());
+		}
+		config.setHidden(column.getWidth() == 0);
+		config.setSortDirection((column == getTable().getSortColumn()) ? getTable().getSortDirection() : 0);
+		return config;
+	}
+	
 
 	public void resizeTable() {
 		getTable().setRedraw(false);
@@ -262,33 +485,24 @@ public class RichTableViewer extends TableViewer {
 	}
 
 	public ColumnConfiguration[] getCurrentColumnState() {
-		TableColumn[] columns = getTable().getColumns();
-		int[] order = getTable().getColumnOrder();
-		ColumnConfiguration[] configs = new ColumnConfiguration[columns.length];
-		
-		for (int i = 0; i < columns.length; i++) {
-			int orderedIndex = order[i];
-			TableColumn column = columns[orderedIndex];
-			configs[i] = (ColumnConfiguration) column.getData();
-			if (column.getWidth() != 0) {
-				configs[i].setWidth(column.getWidth());
-			}
-			configs[i].setHidden(column.getWidth() == 0);
-			configs[i].setSortDirection((column == getTable().getSortColumn()) ? getTable().getSortDirection() : 0);
-		}
-
-		return configs;
+		List<ColumnConfiguration> currentConfigs = getCurrentConfigs(true, true);
+		return currentConfigs.toArray(new ColumnConfiguration[currentConfigs.size()]);
 	}
-
-	public void saveColumnState() {
-		IStateStore store = StateStoreRegistry.getStore(storeId);
-		if (tableKey == null || store == null) return;
-
+	
+	public void saveColumnState(final boolean sync) {
+		IStateStore store = getStateStore();
+		if (store == null) return;
 		try {
 			ColumnConfiguration[] configs = getCurrentColumnState();
-			store.saveState(configs, tableKey);
+			store.saveState(configs, tableKey, this, (sync) ? 1 : 0);
 		} catch (IOException e) {
 			EclipseLog.warn("Failed to save column state", e, Activator.getDefault());
+		}
+	}
+	
+	private void onStateChanged(final IStateStore.StateChangedEvent event) {
+		if (event.getDetail() == 1 && event.getSource() != this && !getTable().isDisposed()) {
+			reload(event.getConfigs());
 		}
 	}
 
@@ -357,7 +571,7 @@ public class RichTableViewer extends TableViewer {
 		table.getParent().addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
-				saveColumnState();
+				saveColumnState(false);
 			}
 		});
 
@@ -369,6 +583,7 @@ public class RichTableViewer extends TableViewer {
 			GridDataFactory.fillDefaults().grab(true, true).applyTo(table);
 		}
 	}
+
 
 	private void addSearchbar(Composite parent) {
 		searchBar = new SearchBar(parent, SWT.NONE, true);
@@ -390,6 +605,26 @@ public class RichTableViewer extends TableViewer {
 			}
 		});
 	}
+	
+	public void updateSearch() {
+		if (searchBar == null) {
+			return;
+		}
+		List<String> names = new ArrayList<String>();
+		List<ColumnConfiguration> configs = getCurrentConfigs(true, false);
+		for (ColumnConfiguration config : configs) {
+			if (!config.isHidden()
+					&& getLabelProvider() instanceof ColumnLabelProvider) {
+				String name = config.getName();
+				if (name != null && !name.isEmpty()) {
+					names.add(name);
+				}
+			}
+		}
+		searchBar.setNames(names.toArray(new String[names.size()]));
+		searchFilter.setColumns(configs.toArray(new ColumnConfiguration[configs.size()]));
+	}
+
 
 	private static Composite createTableContainer(Composite parent, boolean searchEnabled, int style) {
 		if (!searchEnabled) return parent;
@@ -411,26 +646,83 @@ public class RichTableViewer extends TableViewer {
 		GridLayoutFactory.fillDefaults().numColumns(1).applyTo(tableArea);
 		return tableArea;
 	}
-
-	private ColumnConfiguration[] merge(ColumnConfiguration[] runtimeConfigs, ColumnConfiguration[] savedConfigs) {
-		if (savedConfigs == null || savedConfigs.length == 0) return runtimeConfigs;
-		
-		List<ColumnConfiguration> merged = new ArrayList<>();
-		List<ColumnConfiguration> remaining = Lists.newArrayList(runtimeConfigs);
-		
-		// Merge runtime and saved configs in the order of the saved configs.
-		Arrays.stream(savedConfigs).forEach(sc -> {
-			ColumnConfiguration rt = Arrays.stream(runtimeConfigs).filter(c -> c.getKey().equals(sc.getKey())).findFirst().orElse(null);
-			if (rt != null) {
-				rt.setWidth(sc.getWidth());
-				rt.setSortDirection(sc.getSortDirection());
-				if (sc.isHidden()) rt.setWidth(0);
-				merged.add(rt);
-				remaining.remove(rt);
+	
+	
+	private static int indexOfConfig(final List<ColumnConfiguration> configs, final String key) {
+		for (int i = 0; i < configs.size(); i++) {
+			if (configs.get(i).getKey().equals(key)) {
+				return i;
 			}
-		});
-		
-		merged.addAll(remaining);
-		return merged.toArray(new ColumnConfiguration[merged.size()]);
+		}
+		return -1;
 	}
+
+	private List<ColumnConfiguration> mergeSavedConfigs(final List<ColumnConfiguration> configs, final List<ColumnConfiguration> savedConfigs,
+			final boolean updateView) {
+		if (savedConfigs == null || savedConfigs.isEmpty()) {
+			return configs;
+		}
+		
+		List<ColumnConfiguration> merged = new ArrayList<ColumnConfiguration>(Math.max(configs.size(), savedConfigs.size()));
+		List<ColumnConfiguration> savedTodo = new ArrayList<ColumnConfiguration>(savedConfigs);
+		for (final ColumnConfiguration config : configs) {
+			int savedIndex = indexOfConfig(savedTodo, config.getKey());
+			if (savedIndex >= 0) {
+				ColumnConfiguration savedConfig = savedTodo.remove(savedIndex);
+				if (config.isCustom()) {
+					config.setName(savedConfig.getName());
+					config.setTooltip(savedConfig.getTooltip());
+				}
+				if (updateView) {
+					config.setWidth(savedConfig.getWidth());
+					config.setSortDirection(savedConfig.getSortDirection());
+				}
+				config.setCustomData(savedConfig.getCustomData());
+				if (this.customColumnSupport != null && this.customColumnSupport.isSupported(config)) {
+					this.customColumnSupport.applyCustomData(config);
+				}
+				merged.add(config);
+			}
+			else if (!config.isCustom()) {
+				merged.add(config);
+			}
+		}
+		
+		if (this.customColumnSupport != null && !savedTodo.isEmpty()) {
+			savedTodo.sort(Comparator.comparing(ColumnConfiguration::getKey));
+			for (final ColumnConfiguration savedConfig : savedTodo) {
+				if (this.customColumnSupport.isSupported(savedConfig)) {
+					final ColumnConfiguration config = new ColumnConfiguration(savedConfig);
+					this.customColumnSupport.applyCustomData(config);
+					merged.add(config);
+				}
+			}
+		}
+		
+		return merged;
+	}
+	
+	private int[] mergeSavedOrder(List<ColumnConfiguration> configs, List<ColumnConfiguration> savedConfigs) {
+		if (savedConfigs == null || savedConfigs.isEmpty()) {
+			return null;
+		}
+		
+		final int[] order = new int[configs.size()];
+		final boolean[] orgDone = new boolean[configs.size()];
+		int index = 0;
+		for (final ColumnConfiguration savedConfig : savedConfigs) {
+			int orgIndex = indexOfConfig(configs, savedConfig.getKey());
+			if (orgIndex >= 0) {
+				order[index++] = orgIndex;
+				orgDone[orgIndex] = true;
+			}
+		}
+		for (int i = 0; i < order.length; i++) {
+			if (!orgDone[i]) {
+				order[index++] = i;
+			}
+		}
+		return order;
+	}
+	
 }

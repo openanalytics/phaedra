@@ -68,9 +68,9 @@ public class TitleAreaDataBindingDialog extends TitleAreaDialog {
 		}
 		
 		initDataBinding(dbc);
-		dbc.updateTargets();
+		updateTargets();
 		if (dbValidation) {
-			dbc.updateModels();
+			updateModels();
 			TitleAreaDialogSupport.create(this, dbc);
 		}
 		getShell().addDisposeListener(new DisposeListener() {
@@ -119,6 +119,14 @@ public class TitleAreaDataBindingDialog extends TitleAreaDialog {
 	
 	protected DataBindingContext getDataBindingContext() {
 		return this.dbc;
+	}
+	
+	protected void updateModels() {
+		this.dbc.updateModels();
+	}
+	
+	protected void updateTargets() {
+		this.dbc.updateTargets();
 	}
 	
 	protected void initDataBinding(DataBindingContext dbc) {

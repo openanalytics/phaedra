@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 
@@ -37,8 +38,12 @@ public class RichLabelProvider extends ColumnLabelProvider {
 	}
 	
 	private Format createFormatter(String formatString) {
+		DataType dataType = config.getDataType();
+		if (dataType == null) {
+			return null;
+		}
 		
-		switch (config.getDataType()) {
+		switch (dataType) {
 		case Integer:
 		case Real:
 			if (formatString == null) formatString = DEFAULT_DECIMAL_FORMAT;

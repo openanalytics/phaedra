@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.base.ui.richtableviewer.column;
 
 import java.util.Comparator;
+import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -24,6 +25,8 @@ public class ColumnConfiguration {
 	private DataDescription dataDescription;
 	private DataType dataType;
 	
+	private Map<String, Object> customData;
+	
 	private CellLabelProvider labelProvider;
 	private Comparator<?> sortComparator;
 	private int sortDirection;
@@ -40,7 +43,29 @@ public class ColumnConfiguration {
 		this.tooltip = name;
 		this.width = 100;
 		this.aspectRatio = 1;
-		this.dataType = DataType.String;
+	}
+	
+	public ColumnConfiguration(ColumnConfiguration config) {
+		load(config);
+	}
+	
+	
+	public void load(ColumnConfiguration config) {
+		this.key = config.key;
+		this.name = config.name;
+		this.tooltip = config.tooltip;
+		this.image = config.image;
+		this.movable = config.movable;
+		this.hidden = config.hidden;
+		this.width = config.width;
+		this.aspectRatio = config.aspectRatio;
+		this.dataDescription = config.dataDescription;
+		this.dataType = config.dataType;
+		this.customData = config.customData;
+		this.labelProvider = config.labelProvider;
+		this.sortComparator = config.sortComparator;
+		this.sortDirection = config.sortDirection;
+		this.editingConfig = config.editingConfig;
 	}
 	
 	
@@ -49,6 +74,9 @@ public class ColumnConfiguration {
 	}
 	public void setKey(String key) {
 		this.key = key;
+	}
+	public boolean isCustom() {
+		return key.startsWith(CustomColumnSupport.CUSTOM_KEY_PREFIX);
 	}
 	
 	public String getName() {
@@ -93,6 +121,13 @@ public class ColumnConfiguration {
 	}
 	public void setAspectRatio(float aspectRatio) {
 		this.aspectRatio = aspectRatio;
+	}
+	
+	public Map<String, Object> getCustomData() {
+		return customData;
+	}
+	public void setCustomData(Map<String, Object> data) {
+		this.customData = data;
 	}
 	
 	public DataDescription getDataDescription() {

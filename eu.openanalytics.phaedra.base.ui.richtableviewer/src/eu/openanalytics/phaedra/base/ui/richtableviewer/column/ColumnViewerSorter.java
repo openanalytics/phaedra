@@ -22,6 +22,7 @@ public class ColumnViewerSorter<E> extends ViewerComparator {
 
 	private final ColumnViewer viewer;
 	private final ViewerColumn column;
+	private SelectionListener listener;
 	
 	private final Comparator<E> comparator;
 	
@@ -33,7 +34,7 @@ public class ColumnViewerSorter<E> extends ViewerComparator {
 		this.column = column;
 		this.comparator = comparator;
 		
-		final SelectionListener listener = new SelectionAdapter() {
+		this.listener = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				int direction = SWT.NONE;
@@ -44,12 +45,32 @@ public class ColumnViewerSorter<E> extends ViewerComparator {
 			}
 		};
 		if (this.column instanceof TableViewerColumn) {
-			((TableViewerColumn)column).getColumn().addSelectionListener(listener);
+			((TableViewerColumn)column).getColumn().addSelectionListener(this.listener);
 		} else if (this.column instanceof TreeViewerColumn) {
-			((TreeViewerColumn)column).getColumn().addSelectionListener(listener);
+			((TreeViewerColumn)column).getColumn().addSelectionListener(this.listener);
 		} else {
 			throw new RuntimeException("ViewerColumn type not supported: " + column.getClass());
 		}
+	}
+	
+	public void dispose() {
+		final SelectionListener listener = this.listener;
+		if (listener != null) {
+			this.listener = null;
+			if (this.column instanceof TableViewerColumn) {
+				((TableViewerColumn)column).getColumn().removeSelectionListener(listener);
+			} else if (this.column instanceof TreeViewerColumn) {
+				((TreeViewerColumn)column).getColumn().removeSelectionListener(listener);
+			}
+		}
+		if (this.viewer.getComparator() == this) {
+			set(SWT.NONE);
+		}
+	}
+	
+	
+	public Comparator<E> getColumnComparator() {
+		return this.comparator;
 	}
 	
 	

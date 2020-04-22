@@ -45,11 +45,13 @@ public class ColumnEditingFactory {
 		return cfg;
 	}
 	
-	public static EditingSupport apply(TableViewerColumn tvc, ColumnEditingConfiguration cfg) {
-		if (cfg == null) return null;
+	public static void apply(TableViewerColumn tvc, ColumnEditingConfiguration cfg) {
+		if (cfg == null) {
+			tvc.setEditingSupport(null);
+			return;
+		}
 		EditingSupport support = new TextEditingSupport(tvc.getViewer(), cfg);
 		tvc.setEditingSupport(support);
-		return support;
 	}
 	
 	public static void toggleColumnEditing(boolean enabled) {

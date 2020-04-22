@@ -35,8 +35,8 @@
    <extension
          point="eu.openanalytics.phaedra.base.ui.richtableviewer.stateStore">
       <stateStore
-            class="eu.openanalytics.phaedra.ui.user.MementoStateStore"
-            id="MementoStateStore">
+            id="UserPreferenceStateStore"
+            class="eu.openanalytics.phaedra.ui.user.UserPreferenceStateStore">
       </stateStore>
    </extension>
 
