@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.statet.rj.data.RDataFrame;
 import org.eclipse.statet.rj.data.RList;
 import org.eclipse.statet.rj.data.RLogicalStore;
 import org.eclipse.statet.rj.data.RNumericStore;
@@ -14,6 +15,7 @@ import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.statet.rj.services.FunctionCall;
 import org.eclipse.statet.rj.services.util.Graphic;
 
+import eu.openanalytics.phaedra.base.datatype.description.ConcentrationValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
 import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedValueDescription;
@@ -53,9 +55,16 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 
 	private static final Definition[] OUT_PARAMS = {
 			new Definition(new ConcentrationLogPNamedValueDescription("pIC50", Curve.class, LogMolar), null, true, null, null),
+			new Definition(new RealValueDescription("pIC50 StdErr", Curve.class)),
 			new Definition(new RealValueDescription("Bottom", Curve.class)),
 			new Definition(new RealValueDescription("Top", Curve.class)),
 			new Definition(new RealValueDescription("Slope", Curve.class)),
+			new Definition(new RealValueDescription("eMin", Curve.class)),
+			new Definition(new ConcentrationValueDescription("eMin Conc", Curve.class, LogMolar)),
+			new Definition(new RealValueDescription("eMax", Curve.class)),
+			new Definition(new ConcentrationValueDescription("eMax Conc", Curve.class, LogMolar)),
+			new Definition(new ConcentrationLogPNamedValueDescription("pIC20", Curve.class, LogMolar)),
+			new Definition(new ConcentrationLogPNamedValueDescription("pIC80", Curve.class, LogMolar)),
 			new Definition(new RealValueDescription("Residual Variance", Curve.class)),
 			new Definition(new StringValueDescription("Warning", Curve.class)),
 	};
@@ -140,7 +149,18 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 					+ "robustMethod = '" + method + "',"
 					+ "responseName = '" + responseName + "')", null);
 			
-			CurveParameter.find(outParams, "pIC50").numericValue = RUtils.getDoubleFromList(results, "validpIC50", 3);
+			CurveParameter.find(outParams, "pIC50").numericValue = results.get("validpIC50").getData().getNum(0);
+			CurveParameter.find(outParams, "pIC50 StdErr").numericValue = results.get("validpIC50").getData().getNum(1);
+			
+			RDataFrame rangeResults = (RDataFrame) results.get("rangeResults");
+			if (rangeResults != null) {
+				CurveParameter.find(outParams, "eMin").numericValue = rangeResults.get("response").getData().getNum(0);
+				CurveParameter.find(outParams, "eMax").numericValue = rangeResults.get("response").getData().getNum(1);
+				CurveParameter.find(outParams, "eMin Conc").numericValue = rangeResults.get("dose").getData().getNum(0);
+				CurveParameter.find(outParams, "eMax Conc").numericValue = rangeResults.get("dose").getData().getNum(1);
+			}
+			CurveParameter.find(outParams, "pIC20").numericValue = results.get("validpIC20").getData().getNum(0);
+			CurveParameter.find(outParams, "pIC80").numericValue = results.get("validpIC80").getData().getNum(0);
 			
 			Object data = results.get("modelCoefs").getData();
 			if (data instanceof RLogicalStore) {
