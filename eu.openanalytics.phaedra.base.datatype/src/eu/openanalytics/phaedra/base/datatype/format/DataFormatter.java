@@ -1,6 +1,12 @@
 package eu.openanalytics.phaedra.base.datatype.format;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.chrono.ChronoLocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.datatype.description.ContentType;
@@ -24,11 +30,15 @@ public class DataFormatter implements DataUnitConfig {
 	
 	private final Map<String, ConcentrationFormat> typeConcentrationFormats;
 	
+	private final DateTimeFormatter defaultTimestampFormat;
+	
 	
 	public DataFormatter(final ConcentrationFormat concentrationFormat,
-			final Map<String, ConcentrationFormat> typeConcentrationFormats) {
+			final Map<String, ConcentrationFormat> typeConcentrationFormats,
+			final DateTimeFormatter timestampFormat) {
 		this.defaultConcentrationFormat = concentrationFormat;
 		this.typeConcentrationFormats = (typeConcentrationFormats != null) ? typeConcentrationFormats : Collections.emptyMap();
+		this.defaultTimestampFormat = timestampFormat;
 	}
 	
 	
@@ -54,6 +64,11 @@ public class DataFormatter implements DataUnitConfig {
 	}
 	
 	
+	public DateTimeFormatter getTimestampFormat(final DataDescription dataDescription) {
+		return this.defaultTimestampFormat;
+	}
+	
+	
 	public String getNAString(final DataDescription dataDescription) {
 		return "";
 	}
@@ -76,9 +91,32 @@ public class DataFormatter implements DataUnitConfig {
 				}
 				return Double.toString(v);
 			}
+		case DateTime: {
+				if (dataDescription.getContentType() == ContentType.Timestamp) {
+					final DateTimeFormatter format = getTimestampFormat(dataDescription);
+					return format.format(toTimestamp(data));
+				}
+				return data.toString();
+			}
 		default:
 			return data.toString();
 		}
+	}
+	
+	private LocalDateTime toTimestamp(Object data) {
+		if (data instanceof ChronoLocalDateTime) {
+			return LocalDateTime.from((ChronoLocalDateTime)data);
+		}
+		if (data instanceof Number) {
+			data = Instant.ofEpochMilli(((Number)data).longValue());
+		}
+		else if (data instanceof Date) {
+			data = ((Date)data).toInstant();
+		}
+		if (data instanceof Instant) {
+			return LocalDateTime.ofInstant((Instant)data, ZoneId.systemDefault());
+		}
+		throw new IllegalArgumentException("class= " + data.getClass());
 	}
 	
 }

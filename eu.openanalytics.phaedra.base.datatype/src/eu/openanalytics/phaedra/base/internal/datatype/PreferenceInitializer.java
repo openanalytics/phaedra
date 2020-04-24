@@ -1,7 +1,7 @@
 package eu.openanalytics.phaedra.base.internal.datatype;
 
-import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
 import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.LogMolar;
+import static eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit.Molar;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -23,6 +23,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT, Molar.name());
 		store.setDefault(DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS, 3);
 		store.setDefault(DataTypePrefs.CURVE_CONCENTRATION_UNIT, LogMolar.name());
+		
+//		store.setDefault(DataTypePrefs.TIMESTAMP_FORMAT_DEFAULT, "pattern:dd/MM/yyyy");
 	}
 	
 }

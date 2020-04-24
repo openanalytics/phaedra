@@ -26,7 +26,8 @@ public class DataFormatSupport extends DataConfigSupport<DataFormatter> {
 	@Override
 	protected void onPreferenceChanged(final PropertyChangeEvent event) {
 		if (event.getProperty().startsWith(DataTypePrefs.CONCENTRATION_UNIT_PREFIX)
-				|| event.getProperty().equals(DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS) ) {
+				|| event.getProperty().equals(DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS)
+				|| event.getProperty().equals(DataTypePrefs.TIMESTAMP_FORMAT_DEFAULT) ) {
 			super.onPreferenceChanged(event);
 		}
 	}
