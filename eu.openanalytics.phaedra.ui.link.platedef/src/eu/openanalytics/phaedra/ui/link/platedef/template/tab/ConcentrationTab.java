@@ -158,7 +158,7 @@ public class ConcentrationTab extends BaseTemplateTab {
 		final DataFormatter dataFormatter = this.dataFormatSupport.get();
 		final ConcentrationDataDescription dataDescription = (ConcentrationDataDescription)WellProperty.Concentration.getDataDescription();
 		this.uiConcentrationFormat = dataFormatter.getConcentrationFormat(dataDescription);
-		this.uiConcentrationFormat = dataFormatter.getConcentrationEditFormat(dataDescription);
+		this.uiEditConcentrationFormat = dataFormatter.getConcentrationEditFormat(dataDescription);
 		
 		this.uiToModelConverter = (this.uiConcentrationFormat.getUnit() != dataDescription.getConcentrationUnit()) ?
 				new ConcentrationValueConverter(this.uiConcentrationFormat.getUnit(), dataDescription.getConcentrationUnit()) :
