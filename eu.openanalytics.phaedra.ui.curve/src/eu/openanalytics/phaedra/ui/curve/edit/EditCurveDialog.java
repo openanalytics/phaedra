@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDatabindingDialog;
+import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDataBindingDialog;
 import eu.openanalytics.phaedra.model.curve.CurveFitException;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
@@ -26,7 +26,7 @@ import eu.openanalytics.phaedra.model.curve.vo.Curve;
  * the plate is recalculated.</strong>
  *  </p>
  */
-public class EditCurveDialog extends TitleAreaDatabindingDialog {
+public class EditCurveDialog extends TitleAreaDataBindingDialog {
 
 	private CurveFitSettings customizedSettings;
 	private Curve[] curves;

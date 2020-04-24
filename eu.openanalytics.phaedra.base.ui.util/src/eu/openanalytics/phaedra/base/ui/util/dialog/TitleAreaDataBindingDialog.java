@@ -14,7 +14,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
-public class TitleAreaDatabindingDialog extends TitleAreaDialog {
+
+public class TitleAreaDataBindingDialog extends TitleAreaDialog {
 
 	private String title;
 
@@ -25,7 +26,7 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 	private boolean dbValidation = true;
 
 
-	public TitleAreaDatabindingDialog(Shell parentShell) {
+	public TitleAreaDataBindingDialog(Shell parentShell) {
 		super(parentShell);
 	}
 
@@ -66,7 +67,7 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 			setTitle(title);
 		}
 		
-		initDatabinding(dbc);
+		initDataBinding(dbc);
 		dbc.updateTargets();
 		if (dbValidation) {
 			TitleAreaDialogSupport.create(this, dbc);
@@ -115,7 +116,7 @@ public class TitleAreaDatabindingDialog extends TitleAreaDialog {
 		return this.dbc;
 	}
 	
-	protected void initDatabinding(DataBindingContext dbc) {
+	protected void initDataBinding(DataBindingContext dbc) {
 	}
 
 }
