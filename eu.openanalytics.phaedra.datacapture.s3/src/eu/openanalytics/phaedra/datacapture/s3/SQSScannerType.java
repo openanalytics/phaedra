@@ -1,7 +1,9 @@
 package eu.openanalytics.phaedra.datacapture.s3;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -50,6 +52,11 @@ public class SQSScannerType extends BaseScannerType {
 	public void run(ScanJob scanJob, IProgressMonitor monitor) throws ScanException {
 		monitor.beginTask("SQS Scanner", IProgressMonitor.UNKNOWN);
 
+ 		if (DataCaptureJobQueue.getQueueSize() >= DataCaptureJobQueue.getWorkerPoolSize()) {
+ 			monitor.done();
+ 			return;
+ 		}
+ 		
 		monitor.subTask("Reading config");
 		ScannerConfig cfg = null;
 		try {
@@ -57,9 +64,7 @@ public class SQSScannerType extends BaseScannerType {
 		} catch (IOException e) {
 			throw new ScanException("Failed to parse scan job configuration", e);
 		}
-		if (cfg.queue == null || cfg.queue.isEmpty()) throw new ScanException("Invalid scanner configuration: no queue specified");
-		
-		monitor.subTask(String.format("Polling %s for max %d messages", cfg.queue, cfg.maxMsgPerRun));
+		if (cfg.queues == null || cfg.queues.isEmpty()) throw new ScanException("Invalid scanner configuration: no queue specified");
 		
 		BasicAWSCredentials credentials = null;
 		try {
@@ -70,18 +75,28 @@ public class SQSScannerType extends BaseScannerType {
 		} catch (IOException e) {
 			throw new ScanException("Failed to load API key credentials", e);
 		}
+		
 		AmazonSQS sqs = AmazonSQSClientBuilder
 				.standard()
 				.withCredentials(new AWSStaticCredentialsProvider(credentials))
 				.build();
 
-		ReceiveMessageRequest req = new ReceiveMessageRequest(cfg.queue).withMaxNumberOfMessages(cfg.maxMsgPerRun);
-		ReceiveMessageResult res = sqs.receiveMessage(req);
-		for (Message msg: res.getMessages()) {
-			if (canProcess(msg, cfg)) {
-				submitTask(msg, cfg);
-				sqs.deleteMessage(new DeleteMessageRequest(cfg.queue, msg.getReceiptHandle()));
+		for (String queue: cfg.queues) {
+			monitor.subTask(String.format("Polling %s for max %d messages", queue, cfg.maxMsgPerRun));
+			ReceiveMessageRequest req = new ReceiveMessageRequest(queue).withMaxNumberOfMessages(cfg.maxMsgPerRun);
+			ReceiveMessageResult res = sqs.receiveMessage(req);
+			
+			int submitCount = 0;
+			for (Message msg: res.getMessages()) {
+				if (canProcess(msg, cfg)) {
+					submitTask(msg, cfg);
+					submitCount++;
+					sqs.deleteMessage(new DeleteMessageRequest(queue, msg.getReceiptHandle()));
+				}
 			}
+			
+			// Proceed to the next queue only if this queue was empty.
+			if (submitCount > 0) break;
 		}
 		
 		monitor.done();
@@ -94,8 +109,7 @@ public class SQSScannerType extends BaseScannerType {
  		long protocolId = getProtocolId(body, cfg);
  		if (protocolId == 0) return false;
  		
- 		int queueSize = DataCaptureJobQueue.getQueueSize();
- 		if (queueSize >= DataCaptureJobQueue.getWorkerPoolSize()) return false;
+ 		if (DataCaptureJobQueue.getQueueSize() >= DataCaptureJobQueue.getWorkerPoolSize()) return false;
  		
  		return true;
 	}
@@ -186,7 +200,7 @@ public class SQSScannerType extends BaseScannerType {
 	private ScannerConfig parseConfig(String config) throws IOException {
 		ScannerConfig cfg = new ScannerConfig();
 		Document doc = XmlUtils.parse(config);
-		cfg.queue = getConfigValue(doc, "/config/queue", null);
+
 		cfg.maxMsgPerRun = Integer.parseInt(getConfigValue(doc, "/config/maxMsgPerRun", "10"));
 		cfg.createMissingWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingWellFeatures", "false"));
 		cfg.createMissingSubWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingSubWellFeatures", "false"));
@@ -194,6 +208,12 @@ public class SQSScannerType extends BaseScannerType {
 		cfg.protocolId = Long.valueOf(getConfigValue(doc, "/config/protocolId", "0"));
 		cfg.downloadScriptId = getConfigValue(doc, "/config/downloadScriptId", "download.s3.files");
 		cfg.s3KeyPattern = getConfigValue(doc, "/config/s3KeyPattern", null);
+		
+		NodeList queuesTags = XmlUtils.findTags("/config/queues/queue", doc);
+		for (int i=0; i < queuesTags.getLength(); i++) {
+			Element queueTag = (Element) queuesTags.item(i);
+			cfg.queues.add(XmlUtils.getNodeValue(queueTag));
+		}
 		
 		NodeList mappingTags = XmlUtils.findTags("/config/mappings/mapping", doc);
 		for (int i=0; i < mappingTags.getLength(); i++) {
@@ -217,7 +237,6 @@ public class SQSScannerType extends BaseScannerType {
 	}
 	
 	private static class ScannerConfig {
-		public String queue;
 		public int maxMsgPerRun;
 		
 		public boolean createMissingWellFeatures;
@@ -229,6 +248,7 @@ public class SQSScannerType extends BaseScannerType {
 		public String captureConfig;
 		public long protocolId;
 		
+		public List<String> queues = new ArrayList<>();
 		public Map<String, Long> keyMappings = new HashMap<>();
 	}
 }
