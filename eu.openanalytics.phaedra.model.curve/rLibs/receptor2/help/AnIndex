@@ -1,3 +1,7 @@
+checkED50Range	checkED50Range
+compoundStatus	compoundStatus
+determineTheSlope	determineTheSlope
+estimateRange	estimateRange
 extractLogisticModelFit	extractLogisticModelFit
 extractLogisticNoModelFit	extractLogisticNoModelFit
 fittingLogisticModel	fittingLogisticModel

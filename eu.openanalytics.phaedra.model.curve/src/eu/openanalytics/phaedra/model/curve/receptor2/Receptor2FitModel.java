@@ -15,9 +15,12 @@ import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.statet.rj.services.FunctionCall;
 import org.eclipse.statet.rj.services.util.Graphic;
 
+import eu.openanalytics.phaedra.base.datatype.description.ByteArrayDescription;
 import eu.openanalytics.phaedra.base.datatype.description.ConcentrationValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedCensorDescription;
+import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedCensoredValueDescription;
 import eu.openanalytics.phaedra.base.datatype.special.ConcentrationLogPNamedValueDescription;
 import eu.openanalytics.phaedra.base.r.rservi.CairoPdfGraphic;
 import eu.openanalytics.phaedra.base.r.rservi.RService;
@@ -32,7 +35,6 @@ import eu.openanalytics.phaedra.model.curve.CurveParameter.Definition;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 
-//TODO Show biological outliers as red crosses?
 //TODO Use plate bounds: double[] plateBounds = CurveUtils.calculateBounds(output);
 //TODO Support pICx
 public class Receptor2FitModel extends AbstractCurveFitModel {
@@ -54,7 +56,10 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 	};
 
 	private static final Definition[] OUT_PARAMS = {
-			new Definition(new ConcentrationLogPNamedValueDescription("pIC50", Curve.class, LogMolar), null, true, null, null),
+			new Definition(new ConcentrationLogPNamedCensoredValueDescription("pIC50", Curve.class, LogMolar, "pIC50 Censor"),
+					null, true, new CurveParameter.CensoredValueRenderer("pIC50 Censor"), null),
+			new Definition(new ConcentrationLogPNamedCensorDescription("pIC50 Censor", Curve.class, LogMolar),
+					null, false, null, new CurveParameter.ParameterValueList("<", ">", "~")),
 			new Definition(new RealValueDescription("pIC50 StdErr", Curve.class)),
 			new Definition(new RealValueDescription("Bottom", Curve.class)),
 			new Definition(new RealValueDescription("Top", Curve.class)),
@@ -67,6 +72,9 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			new Definition(new ConcentrationLogPNamedValueDescription("pIC80", Curve.class, LogMolar)),
 			new Definition(new RealValueDescription("Residual Variance", Curve.class)),
 			new Definition(new StringValueDescription("Warning", Curve.class)),
+			new Definition(new ByteArrayDescription("Confidence Band", Curve.class)),
+			new Definition(new ByteArrayDescription("Predicted Curve Points", Curve.class)),
+			new Definition(new ByteArrayDescription("Predicted pIC50 PlotLocation", Curve.class)),
 	};
 	
 	private static final List<Definition> OUT_PARAMS_LIST = Arrays.asList(OUT_PARAMS);
@@ -116,11 +124,10 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			String version = rServi.evalData(String.format("packageDescription(\"%s\")$Version", PACKAGE_NAME), null).getData().getChar(0);
 			output.setFitVersion(version);
 			
-			int[] validIndices = IntStream.range(0, input.getConcs().length)
-					.filter(i -> input.getValid()[i] && !Double.isNaN(input.getValues()[i]))
-					.toArray();
+			int[] validIndices = IntStream.range(0, input.getConcs().length).filter(i -> !Double.isNaN(input.getValues()[i])).toArray();
 			double[] concs = Arrays.stream(validIndices).mapToDouble(i -> input.getConcs()[i]).toArray();
 			double[] values = Arrays.stream(validIndices).mapToDouble(i -> input.getValues()[i]).toArray();
+			double[] accepts = Arrays.stream(validIndices).mapToDouble(i -> input.getValid()[i] ? 1 : 0).toArray();
 			
 			Value[] inParams = input.getSettings().getExtraParameters();
 			Value[] outParams = getOutputParameters(input.getSettings()).stream()
@@ -137,11 +144,13 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			
 			rServi.assignData("dose", RUtils.makeNumericRVector(concs), null);
 			rServi.assignData("response", RUtils.makeNumericRVector(values), null);
+			rServi.assignData("accept", RUtils.makeNumericRVector(accepts), null);
 			rServi.evalData("inputData <- data.frame(dose, response)", null);
 			
 			RList results = (RList)rServi.evalData(
 					"value <- fittingLogisticModel("
 					+ "inputData = inputData,"
+					+ "accept = accept,"
 					+ "fixedBottom = " + (Double.isNaN(fixedBottom) ? "NA" : fixedBottom) + ","
 					+ "fixedTop = " + (Double.isNaN(fixedTop) ? "NA" : fixedTop) + ","
 					+ "fixedSlope = " + (Double.isNaN(fixedSlope) ? "NA" : fixedSlope) + ","
@@ -149,8 +158,21 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 					+ "robustMethod = '" + method + "',"
 					+ "responseName = '" + responseName + "')", null);
 			
-			CurveParameter.find(outParams, "pIC50").numericValue = results.get("validpIC50").getData().getNum(0);
-			CurveParameter.find(outParams, "pIC50 StdErr").numericValue = results.get("validpIC50").getData().getNum(1);
+			String reportedpIC50 = results.get("pIC50toReport").getData().getChar(0);
+			double pIC50 = Double.NaN;
+			String censor = null;
+			if (reportedpIC50.startsWith("<") || reportedpIC50.startsWith(">")) {
+				pIC50 = Double.parseDouble(reportedpIC50.substring(1).trim());
+				censor = "" + reportedpIC50.charAt(0);
+			} else {
+				pIC50 = Double.parseDouble(reportedpIC50.trim());
+			}
+			
+			CurveParameter.find(outParams, "pIC50").numericValue = pIC50;
+			CurveParameter.find(outParams, "pIC50 Censor").stringValue = censor;
+			
+			Object data = results.get("validpIC50").getData();
+			if (data instanceof RNumericStore) CurveParameter.find(outParams, "pIC50 StdErr").numericValue = ((RNumericStore) data).getNum(1);
 			
 			RDataFrame rangeResults = (RDataFrame) results.get("rangeResults");
 			if (rangeResults != null) {
@@ -159,10 +181,14 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 				CurveParameter.find(outParams, "eMin Conc").numericValue = rangeResults.get("dose").getData().getNum(0);
 				CurveParameter.find(outParams, "eMax Conc").numericValue = rangeResults.get("dose").getData().getNum(1);
 			}
-			CurveParameter.find(outParams, "pIC20").numericValue = results.get("validpIC20").getData().getNum(0);
-			CurveParameter.find(outParams, "pIC80").numericValue = results.get("validpIC80").getData().getNum(0);
 			
-			Object data = results.get("modelCoefs").getData();
+			data = results.get("validpIC20").getData();
+			if (data instanceof RNumericStore) CurveParameter.find(outParams, "pIC20").numericValue = ((RNumericStore) data).getNum(0);
+			
+			data = results.get("validpIC80").getData();
+			if (data instanceof RNumericStore) CurveParameter.find(outParams, "pIC80").numericValue = ((RNumericStore) data).getNum(0);
+			
+			data = results.get("modelCoefs").getData();
 			if (data instanceof RLogicalStore) {
 				// Fit failed, no coefs available.
 			} else {
@@ -174,6 +200,20 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			
 			CurveParameter.find(outParams, "Residual Variance").numericValue = RUtils.getDoubleFromList(results, "residulaVariance");
 			CurveParameter.find(outParams, "Warning").stringValue = RUtils.getStringFromList(results, "warningFit");
+			
+			data = results.get("dataPredict2Plot");
+			if (data instanceof RDataFrame) {
+				double[][] predict = RUtils.getDouble2DArrayFromRDataFrame((RDataFrame) data);
+				predict[0] = Arrays.stream(predict[0]).map(c -> -c).toArray();
+				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Confidence Band"), new double[][] { predict[0], predict[2], predict[3] });
+				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Predicted Curve Points"), new double[][] { predict[0], predict[1] });
+			}
+			data = results.get("pIC50Location").getData();
+			if (data instanceof RNumericStore) {
+				RNumericStore s = (RNumericStore) data;
+				double[] location = new double[] { -s.getNum(0), s.getNum(1) };
+				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Predicted pIC50 PlotLocation"), location);
+			}
 			
 			rServi.evalVoid("library(Cairo)", null);
 			CairoPdfGraphic graphic = new CairoPdfGraphic();
