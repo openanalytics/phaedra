@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import javax.swing.JFrame;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -117,7 +118,7 @@ public abstract class AbstractLegendItem<ENTITY, ITEM> {
 			public void paintControl(PaintEvent e) {
 				if (drag[0] != null && drag[1] != null) {
 					Control source = (Control) e.getSource();
-					e.gc.setBackground(new org.eclipse.swt.graphics.Color(null, 255, 255, 255));
+					e.gc.setBackground(e.gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
 					e.gc.drawLine(drag[0], 0, drag[0], source.getSize().y);
 					e.gc.drawString(df.format(loHiCuts[0]), drag[0] + 5, 10);
 					e.gc.drawLine(drag[1], 0, drag[1], source.getSize().y);
