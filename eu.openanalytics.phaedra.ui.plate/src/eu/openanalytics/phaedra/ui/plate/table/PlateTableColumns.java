@@ -3,11 +3,9 @@ package eu.openanalytics.phaedra.ui.plate.table;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-
-import org.eclipse.ui.PlatformUI;
+import java.util.function.ToIntFunction;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.security.SecurityService;
@@ -20,22 +18,28 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider.FlagFilter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider.FlagMapping;
 import eu.openanalytics.phaedra.base.ui.theme.PhaedraThemes;
-import eu.openanalytics.phaedra.base.ui.util.viewer.BasicNumericValueLabelProvider;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataConditionalLabelProvider;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectComparator;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectLabelProvider;
 import eu.openanalytics.phaedra.base.ui.util.viewer.ConditionalLabelProvider;
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
+import eu.openanalytics.phaedra.base.ui.util.viewer.ConditionalLabelProvider.ProgressBarRenderer;
 import eu.openanalytics.phaedra.calculation.stat.StatUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
+import eu.openanalytics.phaedra.model.plate.util.PlateSummary;
+import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
-import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryLoader;
+import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryWithStats;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class PlateTableColumns {
 
-	public static ColumnConfiguration[] configureColumns(boolean showExperimentFields, PlateSummaryLoader summaryLoader) {
+	public static ColumnConfiguration[] configureColumns(AsyncDataLoader<Plate> dataLoader,
+			boolean showExperimentFields, boolean withSummary) {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		if (showExperimentFields) addExperimentColumns(configs);
-		addGeneralColumns(configs, summaryLoader);
+		addGeneralColumns(configs, dataLoader, withSummary);
 		return configs.toArray(new ColumnConfiguration[configs.size()]);
 	}
 
@@ -55,7 +59,9 @@ public class PlateTableColumns {
 		configs.add(config);
 	}
 
-	private static void addGeneralColumns(List<ColumnConfiguration> configs, PlateSummaryLoader summaryLoader) {
+	private static void addGeneralColumns(List<ColumnConfiguration> configs,
+			final AsyncDataLoader<Plate> dataLoader,
+			final boolean withSummary) {
 		ColumnConfiguration config;
 
 		config = ColumnConfigFactory.create("Plate Id", "getId", DataType.Integer, 60);
@@ -125,14 +131,15 @@ public class PlateTableColumns {
 		config.setTooltip("Upload Status");
 		configs.add(config);
 
-		if (PlatformUI.isWorkbenchRunning() && summaryLoader != null) {
+		final AsyncDataLoader<Plate>.DataAccessor<PlateSummary> summaryAccessor = (dataLoader != null) ?
+				dataLoader.addDataRequest((plate) -> PlateSummaryWithStats.loadSummary(plate)) :
+				null;
+		
+		if (withSummary) {
 			config = ColumnConfigFactory.create("ZPrime", DataType.Real, 50);
-			config.setLabelProvider(createProgressLabelProvider(config,
-					(p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("zprime", f, null, null)),
-					(p, f) -> summaryLoader.getSummary(p).getStat("zprime", f, null, null)));
-			
-			config.setSortComparator(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("zprime", f, null, null)));
 			config.setTooltip("ZPrime");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "zprime", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "zprime", null));
 			configs.add(config);
 		}
 
@@ -146,38 +153,42 @@ public class PlateTableColumns {
 		config = ColumnConfigFactory.create("Link Info", "getInfo", DataType.String, 150);
 		configs.add(config);
 
-		if (summaryLoader != null) {
+		if (withSummary) {
+			ToIntFunction<PlateSummary> summaryIntF;
+			
 			config = ColumnConfigFactory.create("#DRC", DataType.Integer, 50);
-			config.setLabelProvider(createTextLabelProvider(config, p -> String.valueOf(summaryLoader.getSummary(p).crcCount)));
-			config.setSortComparator(createIntSorter(p -> summaryLoader.getSummary(p).crcCount));
 			config.setTooltip("Number of Compounds with Dose-Response Curves");
+			summaryIntF = (plateSummary) -> plateSummary.crcCount;
+			config.setLabelProvider(new SummaryIntLabelProvider(summaryAccessor, summaryIntF));
+			config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 			configs.add(config);
-
+			
 			config = ColumnConfigFactory.create("#SDP", DataType.Integer, 50);
-			config.setLabelProvider(createTextLabelProvider(config, p -> String.valueOf(summaryLoader.getSummary(p).screenCount)));
-			config.setSortComparator(createIntSorter(p -> summaryLoader.getSummary(p).screenCount));
 			config.setTooltip("Number of Single-Dose Points");
+			summaryIntF = (plateSummary) -> plateSummary.screenCount;
+			config.setLabelProvider(new SummaryIntLabelProvider(summaryAccessor, summaryIntF));
+			config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 			configs.add(config);
 		}
 		
-		if (PlatformUI.isWorkbenchRunning() && summaryLoader != null) {
+		if (withSummary) {
 			config = ColumnConfigFactory.create("SB", DataType.Real, 50);
-			config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("sb", f, null, null))));
-			config.setSortComparator(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("sb", f, null, null)));
 			config.setTooltip("Signal/Background");
+			config.setLabelProvider(new SummaryStatLabelProvider(summaryAccessor, "sb", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "sb", null));
 			configs.add(config);
 	
 			config = ColumnConfigFactory.create("SN", DataType.Real, 50);
-			config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("sn", f, null, null))));
-			config.setSortComparator(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("sn", f, null, null)));
 			config.setTooltip("Signal/Noise");
+			config.setLabelProvider(new SummaryStatLabelProvider(summaryAccessor, "sn", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "sn", null));
 			configs.add(config);
 			
 			String[] controlTypes = { "LC", "HC" };
 			for (String controlType: controlTypes) {
 				config = ColumnConfigFactory.create("%CV " + controlType, DataType.Real, 75);
-				config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("cv", f, controlType, null))));
-				config.setSortComparator(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("cv", f, controlType, null)));
+				config.setLabelProvider(new SummaryStatLabelProvider(summaryAccessor, "cv", controlType));
+				config.setSortComparator(createSummaryStatComparator(summaryAccessor, "cv", controlType));
 				config.setTooltip("%CV " + controlType);
 				configs.add(config);
 			}
@@ -208,6 +219,8 @@ public class PlateTableColumns {
 		configs.add(config);
 	}
 
+	public static final Comparator<Plate> DEFAULT_COMPARATOR = PlateUtils.PLATE_EXP_NAME_PLATE_BARCODE_SORTER;
+	
 	private static FlagMapping map(FlagFilter filter, String icon) {
 		return new FlagLabelProvider.FlagMapping(filter, icon);
 	}
@@ -220,41 +233,6 @@ public class PlateTableColumns {
 				return textGetter.apply(plate);
 			}
 		};
-	}
-	
-	private static RichLabelProvider createValueLabelProvider(ColumnConfiguration cfg, BiFunction<Plate, Feature, String> textGetter) {
-		return new RichLabelProvider(cfg) {
-			@Override
-			public String getText(Object element) {
-				Plate plate = (Plate) element;
-				Feature f = ProtocolUIService.getInstance().getCurrentFeature();
-				if (f == null) return "";
-				return textGetter.apply(plate, f);
-			}
-		};
-	}
-	
-	private static ConditionalLabelProvider createProgressLabelProvider(ColumnConfiguration cfg,
-			BiFunction<Plate, Feature, String> textGetter,
-			BiFunction<Plate, Feature, Double> valueGetter) {
-		return ConditionalLabelProvider.withProgressBar(new BasicNumericValueLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				Plate plate = (Plate) element;
-				Feature f = ProtocolUIService.getInstance().getCurrentFeature();
-				if (f == null) return "";
-				return textGetter.apply(plate, f);
-			}
-			@Override
-			public double getNumericValue(Object element) {
-				Plate plate = (Plate) element;
-				Feature f = ProtocolUIService.getInstance().getCurrentFeature();
-				if (f == null) return 0;
-				double value = valueGetter.apply(plate, f);
-				if (Double.isNaN(value)) value = 0;
-				return value;
-			}
-		}, PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor() );
 	}
 	
 	private static Comparator<Plate> createTextSorter(Function<Plate, String> textGetter) {
@@ -285,18 +263,99 @@ public class PlateTableColumns {
 		};
 	}
 	
-	private static Comparator<Plate> createValueSorter(BiFunction<Plate, Feature, Double> valueGetter) {
-		return (Plate p1, Plate p2) -> { 
-			if (p1 == null && p2 == null) return 0;
-			if (p1 == null) return -1;
-			if (p2 == null) return 1;
-			
-			Feature f = ProtocolUIService.getInstance().getCurrentFeature();
+	
+	
+	private static <D> Comparator<Plate> createIntComparator(final AsyncDataLoader<Plate>.DataAccessor<D> dataAccessor,
+			final ToIntFunction<D> f) {
+		return AsyncDataDirectComparator.comparingInt(dataAccessor, f).thenComparing(DEFAULT_COMPARATOR);
+	}
+	
+	private static class SummaryIntLabelProvider extends AsyncDataDirectLabelProvider<Plate, PlateSummary> {
+		
+		private final ToIntFunction<PlateSummary> function;
+		
+		public SummaryIntLabelProvider(final AsyncDataLoader<Plate>.DataAccessor<PlateSummary> summaryAccessor,
+				final ToIntFunction<PlateSummary> function) {
+			super(summaryAccessor);
+			this.function = function;
+		}
+		
+		@Override
+		protected String getText(final Plate element, final PlateSummary data) {
+			return Integer.toString(
+					this.function.applyAsInt(data) );
+		}
+		
+	}
+	
+	private static class SummaryStatComparator extends AsyncDataDirectComparator<Plate, PlateSummary> {
+		
+		private final String stat;
+		private final String wellType;
+		
+		public SummaryStatComparator(final AsyncDataLoader<Plate>.DataAccessor<PlateSummary> summaryAccessor,
+				final String stat, final String wellType) {
+			super(summaryAccessor);
+			this.stat = stat;
+			this.wellType = wellType;
+		}
+		
+		@Override
+		protected int compareData(final Plate element1, final PlateSummary data1,
+				final Plate element2, final PlateSummary data2) {
+			final Feature f = ProtocolUIService.getInstance().getCurrentFeature();
 			if (f == null) return 0;
 			
-			double v1 = valueGetter.apply(p1, f);
-			double v2 = valueGetter.apply(p2, f);
-			return NumberUtils.compare(v1, v2);
+			return Double.compare(
+					data1.getStat(this.stat, f, this.wellType, null),
+					data2.getStat(this.stat, f, this.wellType, null) );
+		}
+		
+	}
+	
+	private static Comparator<Plate> createSummaryStatComparator(final AsyncDataLoader<Plate>.DataAccessor<PlateSummary> dataAccessor,
+			final String stat, final String wellType) {
+		return new SummaryStatComparator(dataAccessor, stat, wellType)
+				.thenComparing(DEFAULT_COMPARATOR);
+	}
+	
+	private static class SummaryStatLabelProvider extends AsyncDataDirectLabelProvider<Plate, PlateSummary> {
+		
+		protected final String stat;
+		protected final String wellType;
+		
+		public SummaryStatLabelProvider(final AsyncDataLoader<Plate>.DataAccessor<PlateSummary> summaryAccessor,
+				final String stat, final String wellType) {
+			super(summaryAccessor);
+			this.stat = stat;
+			this.wellType = wellType;
+		}
+		
+		@Override
+		protected String getText(final Plate element, final PlateSummary data) {
+			final Feature f = ProtocolUIService.getInstance().getCurrentFeature();
+			if (f == null) return "";
+			
+			return StatUtils.format(
+					data.getStat(this.stat, f, this.wellType, null) );
+		}
+		
+	}
+	
+	private static ConditionalLabelProvider createSummaryStatProgressBarLabelProvider(
+			final AsyncDataLoader<Plate>.DataAccessor<PlateSummary> summaryAccessor,
+			final String stat, final String wellType) {
+		return new AsyncDataConditionalLabelProvider<Plate, PlateSummary>(
+				new SummaryStatLabelProvider(summaryAccessor, stat, wellType),
+				new ProgressBarRenderer(PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor()) ) {
+			@Override
+			protected double getNumericValue(final Plate element, final PlateSummary data) {
+				final Feature f = ProtocolUIService.getInstance().getCurrentFeature();
+				if (f == null) return 0;
+				
+				return data.getStat(stat, f, wellType, null);
+			}
 		};
 	}
+	
 }

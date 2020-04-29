@@ -19,6 +19,7 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.base.util;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
+ eu.openanalytics.phaedra.base.event;bundle-version="1.0.0",
  org.sf.feeling.swt;bundle-version="1.0.5",
  org.jfree.jfreechart;bundle-version="1.0.14"
 Export-Package: eu.openanalytics.phaedra.base.ui.util.autocomplete,

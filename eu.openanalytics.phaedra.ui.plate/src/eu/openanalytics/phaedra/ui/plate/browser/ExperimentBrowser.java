@@ -2,9 +2,8 @@ package eu.openanalytics.phaedra.ui.plate.browser;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuListener;
@@ -34,13 +33,12 @@ import org.eclipse.ui.part.EditorPart;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
-import eu.openanalytics.phaedra.base.event.IModelEventListener;
-import eu.openanalytics.phaedra.base.event.ModelEvent;
-import eu.openanalytics.phaedra.base.event.ModelEventService;
-import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectViewerInput;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataViewerInput;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
@@ -48,46 +46,75 @@ import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates;
 import eu.openanalytics.phaedra.ui.plate.table.ExperimentTableColumns;
-import eu.openanalytics.phaedra.ui.plate.util.ExperimentSummaryLoader;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 
 public class ExperimentBrowser extends EditorPart {
-
+	
+	
+	private AsyncDataViewerInput<Experiment, Experiment> viewerInput;
+	private AsyncDataLoader<Experiment> dataLoader;
+	
 	private BreadcrumbViewer breadcrumb;
 	private RichTableViewer tableViewer;
 
-	private ExperimentSummaryLoader summaryLoader;
-
-	private List<Experiment> experiments;
-	private IModelEventListener eventListener;
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-
-		initEventListener();
-		loadData();
+		
+		this.dataLoader = new AsyncDataLoader<>("data for experiment browser");
+		this.viewerInput = new AsyncDataDirectViewerInput<Experiment>(Experiment.class, this.dataLoader) {
+			
+			@Override
+			protected List<Experiment> loadElements() {
+				VOEditorInput input = (VOEditorInput)getEditorInput();
+				List<IValueObject> valueObjects = input.getValueObjects();
+				List<Experiment> experiments = new ArrayList<>();
+				if (!valueObjects.isEmpty()) {
+					if (valueObjects.get(0) instanceof Protocol) {
+						for (IValueObject vo: valueObjects) experiments.addAll(PlateService.getInstance().getExperiments((Protocol)vo));
+					} else if (valueObjects.get(0) instanceof Experiment) {
+						for (IValueObject vo: valueObjects) experiments.add((Experiment)vo);
+					}
+				}
+				Collections.sort(experiments, PlateUtils.EXPERIMENT_NAME_SORTER);
+				return experiments;
+			}
+			
+			@Override
+			protected void checkChangedElements(final Object[] eventElements, final Consumer<Experiment> task) {
+				for (final Object o : eventElements) {
+					final Experiment experiment = SelectionUtils.getAsClass(o, Experiment.class);
+					if (experiment != null) {
+						task.accept(experiment);
+					}
+				}
+			}
+			
+		};
 	}
-
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
-
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
 		breadcrumb = BreadcrumbFactory.createBreadcrumb(container);
-		if (experiments != null && !experiments.isEmpty()) {
-			breadcrumb.setInput(experiments.get(0).getProtocol());
-		}
+		List<Experiment> experiments = viewerInput.getBaseElements();
+		breadcrumb.setInput((experiments != null && !experiments.isEmpty()) ? experiments.get(0).getProtocol() : null);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(breadcrumb.getControl());
 
 		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(), true);
 		tableViewer.setContentProvider(new ArrayContentProvider());
-		tableViewer.applyColumnConfig(ExperimentTableColumns.configureColumns(summaryLoader));
+		tableViewer.applyColumnConfig(ExperimentTableColumns.configureColumns(this.dataLoader));
 		tableViewer.setDefaultSearchColumn("Name");
-		tableViewer.setInput(experiments);
+		// Because TableViewer was created with a toolbar it is actually contained within 2 other composites.
+		GridDataFactory.fillDefaults().grab(true, true).applyTo(tableViewer.getControl().getParent().getParent());
+		
+		this.viewerInput.connect(tableViewer);
 		tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -97,8 +124,6 @@ public class ExperimentBrowser extends EditorPart {
 				}
 			}
 		});
-		// Because TableViewer was created with a toolbar it is actually contained within 2 other composites.
-		GridDataFactory.fillDefaults().grab(true, true).applyTo(tableViewer.getControl().getParent().getParent());
 
 		DNDSupport.addDragSupport(tableViewer, this);
 		getSite().setSelectionProvider(tableViewer);
@@ -107,9 +132,8 @@ public class ExperimentBrowser extends EditorPart {
 		createContextMenu();
 
 		// Link specific help view based on the Context ID
-		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewExperimentBrowser");
-
-		summaryLoader.start();
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent,
+				"eu.openanalytics.phaedra.ui.help.viewExperimentBrowser");
 	}
 
 	@Override
@@ -119,8 +143,8 @@ public class ExperimentBrowser extends EditorPart {
 
 	@Override
 	public void dispose() {
-		summaryLoader.stop();
-		ModelEventService.getInstance().removeEventListener(eventListener);
+		if (this.viewerInput != null) this.viewerInput.dispose();
+		if (this.dataLoader != null) this.dataLoader.dispose();
 		super.dispose();
 	}
 
@@ -143,65 +167,7 @@ public class ExperimentBrowser extends EditorPart {
 	public void doSaveAs() {
 		// Do nothing.
 	}
-
-	private List<Experiment> getExperiments() {
-		VOEditorInput input = (VOEditorInput)getEditorInput();
-		List<IValueObject> valueObjects = input.getValueObjects();
-		List<Experiment> experiments = new ArrayList<>();
-		if (!valueObjects.isEmpty()) {
-			if (valueObjects.get(0) instanceof Protocol) {
-				for (IValueObject vo: valueObjects) experiments.addAll(PlateService.getInstance().getExperiments((Protocol)vo));
-			} else if (valueObjects.get(0) instanceof Experiment) {
-				for (IValueObject vo: valueObjects) experiments.add((Experiment)vo);
-			}
-		}
-		return experiments;
-	}
-
-	private void loadData() {
-		// Make a copy of the list and sort it.
-		experiments = getExperiments();
-		Collections.sort(experiments, PlateUtils.EXPERIMENT_NAME_SORTER);
-
-		// Pre-fetch summaries.
-		summaryLoader = new ExperimentSummaryLoader(experiments, exp -> {
-			if (tableViewer != null && !tableViewer.getControl().isDisposed()) tableViewer.refresh(exp);
-		});
-	}
-
-	private void initEventListener() {
-		eventListener = new IModelEventListener() {
-			@Override
-			public void handleEvent(ModelEvent event) {
-				boolean structChanged = event.type == ModelEventType.ObjectCreated
-						|| event.type == ModelEventType.ObjectChanged
-						|| event.type == ModelEventType.ObjectRemoved;
-				if (!structChanged) return;
-
-				Object[] items = ModelEventService.getEventItems(event);
-
-				List<Experiment> reloadedExperiments = getExperiments();
-				Collections.sort(reloadedExperiments, PlateUtils.EXPERIMENT_NAME_SORTER);
-				Set<Experiment> changedExperiments = new HashSet<>();
-
-				for (Object o: items) {
-					Experiment exp = SelectionUtils.getAsClass(o, Experiment.class);
-					if (exp == null) continue;
-					boolean wasInList = experiments.contains(exp);
-					boolean isInList = reloadedExperiments.contains(exp);
-					if (isInList || (wasInList && !isInList)) changedExperiments.add(exp);
-				}
-
-				for (Experiment exp: changedExperiments) summaryLoader.update(exp);
-				if (!changedExperiments.isEmpty()) {
-					experiments = reloadedExperiments;
-					Display.getDefault().asyncExec(() -> tableViewer.setInput(experiments));
-				}
-			}
-		};
-		ModelEventService.getInstance().addEventListener(eventListener);
-	}
-
+	
 	private void hookDoubleClickAction() {
 		tableViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -209,7 +175,7 @@ public class ExperimentBrowser extends EditorPart {
 				StructuredSelection sel = (StructuredSelection) event.getSelection();
 				Object item = sel.getFirstElement();
 				if (item instanceof Experiment) {
-					IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+					IHandlerService handlerService = getSite().getService(IHandlerService.class);
 					try {
 						handlerService.executeCommand(BrowsePlates.class.getName(), null);
 					} catch (Exception e) {

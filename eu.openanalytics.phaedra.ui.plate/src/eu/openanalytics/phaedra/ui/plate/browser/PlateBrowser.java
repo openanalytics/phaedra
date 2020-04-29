@@ -2,15 +2,11 @@ package eu.openanalytics.phaedra.ui.plate.browser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.IntStream;
 
+import org.eclipse.core.databinding.observable.ChangeEvent;
+import org.eclipse.core.databinding.observable.IChangeListener;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
@@ -40,9 +36,6 @@ import com.google.common.collect.Lists;
 
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
-import eu.openanalytics.phaedra.base.event.IModelEventListener;
-import eu.openanalytics.phaedra.base.event.ModelEventService;
-import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.GridViewerUtils;
@@ -51,13 +44,17 @@ import eu.openanalytics.phaedra.base.ui.gridviewer.layer.IGridLayer;
 import eu.openanalytics.phaedra.base.ui.gridviewer.layer.MultiGridLayerSupport;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
+import eu.openanalytics.phaedra.base.ui.util.misc.WorkbenchSiteJobScheduler;
 import eu.openanalytics.phaedra.base.ui.util.view.DecoratedEditor;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectViewerInput;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataViewerInput;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.base.util.threading.ThreadUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
+import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
@@ -73,7 +70,6 @@ import eu.openanalytics.phaedra.ui.plate.grid.layer.HeatmapLayer;
 import eu.openanalytics.phaedra.ui.plate.grid.layer.MultiFeatureLayer;
 import eu.openanalytics.phaedra.ui.plate.table.PlateTableColumns;
 import eu.openanalytics.phaedra.ui.plate.util.PlateGrid;
-import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryLoader;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
@@ -84,6 +80,10 @@ public class PlateBrowser extends DecoratedEditor {
 	public static final String PLATEGRID_SETTINGS = "SETTINGS_PLATEGRID";
 	
 	
+	private AsyncDataViewerInput<Plate, Plate> viewerInput;
+	private Experiment singleExperiment;
+	private AsyncDataLoader<Plate> dataLoader;
+	
 	private DataFormatSupport dataFormatSupport;
 	
 	private BreadcrumbViewer breadcrumb;
@@ -91,22 +91,16 @@ public class PlateBrowser extends DecoratedEditor {
 
 	private SelectionProviderIntermediate selectionProvider;
 	private IUIEventListener featureSelectionListener;
-	private IModelEventListener eventListener;
-
-	private Experiment singleExperiment;
-	private List<Plate> plates;
 
 	/* Tab 1: table */
 	private CTabItem tableTab;
 	private RichTableViewer tableViewer;
-	private PlateSummaryLoader summaryLoader;
 
 	/* Tab 2: plate heatmaps */
 	private CTabItem thumbnailsTab;
 	private PlateGrid plateGrid;
 	private MultiGridLayerSupport gridLayerSupport;
-	private LoadFeatureDataJob loadDataJob;
-	private boolean thumbsLoaded;
+	private boolean plateGridInitialized;
 
 	/* Tab 3: feature heatmaps */
 	private CTabItem featureHeatmapsTab;
@@ -118,14 +112,77 @@ public class PlateBrowser extends DecoratedEditor {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-
-		loadPlates();
-		loadDataJob = new LoadFeatureDataJob();
-		summaryLoader = new PlateSummaryLoader(plates, plate -> {
-			if (tableViewer != null && !tableViewer.getControl().isDisposed()) tableViewer.refresh(plate);
-		});
+		
+		this.dataLoader = new AsyncDataLoader<Plate>("data for plate browser",
+				new WorkbenchSiteJobScheduler(this) );
+		this.viewerInput = new AsyncDataDirectViewerInput<Plate>(Plate.class, this.dataLoader) {
+			
+			@Override
+			protected List<Plate> loadElements() {
+				VOEditorInput input = (VOEditorInput)getEditorInput();
+				List<IValueObject> valueObjects = input.getValueObjects();
+				List<Plate> plates = new ArrayList<>();
+				if (!valueObjects.isEmpty()) {
+					if (valueObjects.get(0) instanceof Experiment) {
+						for (IValueObject vo: valueObjects) plates.addAll(PlateService.getInstance().getPlates((Experiment)vo));
+					} else if (valueObjects.get(0) instanceof Plate) {
+						for (IValueObject vo: valueObjects) plates.add((Plate)vo);
+					}
+				}
+				if (valueObjects.size() == 1 && valueObjects.get(0) instanceof Experiment) {
+					PlateBrowser.this.singleExperiment = (Experiment)valueObjects.get(0);
+				}
+				return plates;
+			}
+			
+			@Override
+			protected void handleEvent(final List<Plate> currentElements, final Object[] eventElements) {
+				if (eventElements.length > 0) {
+					VOEditorInput input = (VOEditorInput)getEditorInput();
+					if (eventElements[0] instanceof Plate) {
+						for (final Object eventElement : eventElements) {
+							Plate plate = (Plate)eventElement;
+							Experiment experiment = null;
+							if (experiment == null) {
+								experiment = SelectionUtils.getFirstAsClass(input.getValueObjects(), Experiment.class);
+							}
+							if (plate.getExperiment().equals(experiment) || currentElements.contains(plate)) {
+								super.handleEvent(currentElements, eventElements);
+								return;
+							}
+						}
+					}
+					else if (singleExperiment != null && eventElements[0] instanceof Experiment) {
+						for (final Object eventElement : eventElements) {
+							if (eventElement.equals(singleExperiment)) {
+								Display.getDefault().asyncExec(this::updateSingleExperiment);
+								return;
+							}
+						}
+					}
+				}
+			}
+			
+			private void updateSingleExperiment() {
+				Experiment singleExperiment = PlateBrowser.this.singleExperiment;
+				if (singleExperiment != null) {
+					setPartName(singleExperiment.getName());
+					final BreadcrumbViewer breadcrumb = PlateBrowser.this.breadcrumb;
+					if (breadcrumb != null && !breadcrumb.getControl().isDisposed()) {
+						breadcrumb.refresh();
+					}
+				}
+			}
+			
+		};
 	}
-
+	
+	private Protocol getProtocol() {
+		final Experiment singleExperiment = this.singleExperiment;
+		return (singleExperiment != null) ? singleExperiment.getProtocol() : null;
+	}
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
 		this.dataFormatSupport = new DataFormatSupport(this::reloadHeadmaps);
@@ -134,6 +191,7 @@ public class PlateBrowser extends DecoratedEditor {
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
 		breadcrumb = BreadcrumbFactory.createBreadcrumb(container);
+		List<Plate> plates = this.viewerInput.getBaseElements();
 		breadcrumb.setInput(plates != null && !plates.isEmpty() ? plates.get(0).getExperiment() : null);
 		GridDataFactory.fillDefaults().grab(true, false).applyTo(breadcrumb.getControl());
 
@@ -156,9 +214,8 @@ public class PlateBrowser extends DecoratedEditor {
 
 		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(), true);
 		tableViewer.setContentProvider(new ArrayContentProvider());
-		tableViewer.applyColumnConfig(PlateTableColumns.configureColumns(false, summaryLoader));
+		tableViewer.applyColumnConfig(PlateTableColumns.configureColumns(this.dataLoader, false, true));
 		tableViewer.setDefaultSearchColumn("Barcode");
-		tableViewer.setInput(plates);
 
 		/* Plate Thumbnails Tab */
 
@@ -208,6 +265,15 @@ public class PlateBrowser extends DecoratedEditor {
 				gridLayerSupport.linkViewer(viewer);
 			}
 		}
+		this.viewerInput.addChangeListener(new IChangeListener() {
+			@Override
+			public void handleChange(ChangeEvent event) {
+				final PlateGrid grid = PlateBrowser.this.plateGrid;
+				if (grid != null && !grid.isDisposed()) {
+					grid.refreshHeaders();
+				}
+			}
+		});
 
 		/* Feature heatmaps tab */
 
@@ -218,7 +284,7 @@ public class PlateBrowser extends DecoratedEditor {
 
 		/* Other behavior */
 
-		initEventListener();
+		this.viewerInput.connect(tableViewer);
 		initSelectionListener();
 
 		DNDSupport.addDragSupport(tableViewer, this);
@@ -258,8 +324,12 @@ public class PlateBrowser extends DecoratedEditor {
 
 		// Link specific help view based on the Context ID
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "eu.openanalytics.phaedra.ui.help.viewPlateBrowser");
-
-		summaryLoader.start();
+		
+		// Set the current protocolclass, when this editor is opened directly (for example via My Favorites).
+		final Experiment singleExperiment = this.singleExperiment;
+		if (singleExperiment != null) {
+			Display.getDefault().asyncExec(() -> ProtocolUIService.getInstance().setCurrentProtocolClass(singleExperiment.getProtocol().getProtocolClass()));
+		}
 	}
 
 	@Override
@@ -269,14 +339,11 @@ public class PlateBrowser extends DecoratedEditor {
 	
 	@Override
 	public void dispose() {
+		if (this.viewerInput != null) this.viewerInput.dispose();
+		if (this.dataLoader != null) this.dataLoader.dispose();
 		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		if (plateGrid != null) plateGrid.dispose();
 		if (gridLayerSupport != null) gridLayerSupport.dispose();
-		if (loadDataJob != null) loadDataJob.cancel();
-		if (eventListener != null) {
-			ModelEventService.getInstance().removeEventListener(eventListener);
-			eventListener = null;
-		}
 		ProtocolUIService.getInstance().removeUIEventListener(featureSelectionListener);
 		featureHeatmapsTabComposite.dispose();
 		super.dispose();
@@ -319,9 +386,9 @@ public class PlateBrowser extends DecoratedEditor {
 			selectionProvider.setSelectionProviderDelegate(tableViewer);
 		} else if (tab == thumbnailsTab) {
 			selectionProvider.setSelectionProviderDelegate(plateGrid);
-			if (!thumbsLoaded) {
-				thumbsLoaded = true;
-				loadDataJob.schedule();
+			if (!plateGridInitialized) {
+				plateGridInitialized = true;
+				initPlateGrid();
 			}
 		} else if (tab == featureHeatmapsTab) {
 			selectionProvider.setSelectionProviderDelegate(featureHeatmapsTabComposite.getSelectionProvider());
@@ -331,55 +398,7 @@ public class PlateBrowser extends DecoratedEditor {
 			}
 		}
 	}
-
-	private void initEventListener() {
-		eventListener = event -> {
-			boolean structChanged = event.type == ModelEventType.ObjectCreated
-					|| event.type == ModelEventType.ObjectChanged
-					|| event.type == ModelEventType.ObjectRemoved;
-			if (!structChanged) return;
-
-			boolean refreshTable = false;
-			Set<Plate> changedPlates = new HashSet<>();
-			Object[] items = ModelEventService.getEventItems(event);
-			for (Object src: items) {
-				if (src instanceof Plate) {
-					Plate plate = (Plate)src;
-					VOEditorInput input = (VOEditorInput)getEditorInput();
-					Experiment experiment = SelectionUtils.getFirstAsClass(input.getValueObjects(), Experiment.class);
-					if (plate.getExperiment().equals(experiment)) {
-						changedPlates.add(plate);
-						refreshTable = true;
-					} else if (plates.contains(plate)) {
-						// Listed but not same parent: plate moved to another exp.
-						refreshTable = true;
-					}
-				} else if (src.equals(singleExperiment)) {
-					Display.getDefault().asyncExec(() -> {
-						setPartName(singleExperiment.getName());
-						breadcrumb.refresh();
-					});
-				}
-			}
-
-			for (Plate plate: changedPlates) summaryLoader.update(plate);
-			if (refreshTable) {
-				loadPlates();
-				Display.getDefault().asyncExec(refreshTableCallback);
-			}
-		};
-		ModelEventService.getInstance().addEventListener(eventListener);
-	}
-
-	private Runnable refreshTableCallback = () -> {
-		if (tableViewer != null && tableViewer.getTable() != null && !tableViewer.getTable().isDisposed()) {
-			tableViewer.setInput(plates);
-		}
-		if (plateGrid != null && !plateGrid.isDisposed()) {
-			plateGrid.refreshHeaders();
-		}
-	};
-
+	
 	private void initSelectionListener() {
 		featureSelectionListener = event -> {
 			if (tableViewer.getTable() == null || tableViewer.getTable().isDisposed()) return;
@@ -387,11 +406,11 @@ public class PlateBrowser extends DecoratedEditor {
 			if (event.type == EventType.FeatureSelectionChanged || event.type == EventType.NormalizationSelectionChanged
 					|| event.type == EventType.ColorMethodChanged) {
 				ProtocolClass pClass = ProtocolUIService.getInstance().getCurrentProtocolClass();
+				final List<Plate> plates = viewerInput.getBaseElements();
 				for (Plate plate: plates) {
 					ProtocolClass thisPClass = PlateUtils.getProtocolClass(plate);
 					if (thisPClass.equals(pClass)) {
-						tableViewer.setInput(plates);
-						loadDataJob.schedule();
+						viewerInput.reload(null);
 						return;
 					}
 				}
@@ -444,34 +463,11 @@ public class PlateBrowser extends DecoratedEditor {
 		gridLayerSupport.contributeContextMenu(manager);
 	}
 
-	/* Plate loading */
-
-	private void loadPlates() {
-		VOEditorInput input = (VOEditorInput)getEditorInput();
-		List<IValueObject> valueObjects = input.getValueObjects();
-		plates = new ArrayList<>();
-		if (!valueObjects.isEmpty()) {
-			if (valueObjects.get(0) instanceof Experiment) {
-				for (IValueObject vo: valueObjects) plates.addAll(PlateService.getInstance().getPlates((Experiment)vo));
-			} else if (valueObjects.get(0) instanceof Plate) {
-				for (IValueObject vo: valueObjects) plates.add((Plate)vo);
-			}
-		}
-		if (valueObjects.size() == 1 && valueObjects.get(0) instanceof Experiment) {
-			singleExperiment = (Experiment) valueObjects.get(0);
-			// Set the current protocolclass, when this editor is opened directly (for example via My Favorites).
-			Display.getDefault().asyncExec(() -> ProtocolUIService.getInstance().setCurrentProtocolClass(singleExperiment.getProtocol().getProtocolClass()));
-		}
-	}
 
 	private boolean hasFeatureLayer() {
 		return GridViewerUtils.hasGridLayerEnabled(gridLayerSupport, HeatmapLayer.class, MultiFeatureLayer.class);
 	}
 
-	private Protocol getProtocol() {
-		return singleExperiment.getProtocol();
-	}
-	
 	private Properties getProperties() {
 		Properties properties = new Properties();
 		for (IGridLayer layer : gridLayerSupport.getLayers()) {
@@ -509,54 +505,39 @@ public class PlateBrowser extends DecoratedEditor {
 		gridLayerSupport.updateLayers();
 	}
 	
-	private class LoadFeatureDataJob extends Job {
-
-		public LoadFeatureDataJob() {
-			super("Load Plate Data");
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			monitor.beginTask("Loading Plate Data", plates.size());
-
-			try {
-				ThreadUtils.runQuery(() -> {
-					IntStream.range(0, plates.size()).parallel().forEach(i -> {
-						final int plateIndex = i;
-						final Plate plate = plates.get(i);
-
-						if (monitor.isCanceled()) return;
-
-						monitor.subTask("Loading plate " + plate.getBarcode());
-						CalculationService.getInstance().getAccessor(plate).loadEager(Lists.newArrayList(
-								ProtocolUIService.getInstance().getCurrentFeature()));
-
-						if (monitor.isCanceled()) return;
-
-						Display.getDefault().asyncExec(() -> {
-							GridViewer viewer = plateGrid.getGridViewer(plateIndex);
-							if (viewer != null && !viewer.getControl().isDisposed()) {
-								gridLayerSupport.setInput(plate, viewer);
-							}
-						});
-						monitor.worked(1);
-					});
-				});
-			} finally {
-				monitor.done();
+	private void initPlateGrid() {
+		this.plateGridInitialized = true;
+		this.dataLoader.addDataRequest((plate) -> {
+			final PlateDataAccessor plateDataAccessor = CalculationService.getInstance().getAccessor(plate);
+			plateDataAccessor.loadEager(Lists.newArrayList(ProtocolUIService.getInstance().getCurrentFeature()));
+			return plateDataAccessor;
+		});
+		this.dataLoader.asyncReload(false);
+		this.dataLoader.addListener(new AsyncDataLoader.Listener<Plate>() {
+			@Override
+			public void onDataLoaded(final List<? extends Plate> elements, final boolean completed) {
+				final PlateGrid grid = plateGrid;
+				if (grid == null || grid.isDisposed()) {
+					return;
+				}
+				for (final Plate plate : elements) {
+					final int idx = viewerInput.getViewerElements().indexOf(plate);
+					GridViewer viewer = grid.getGridViewer(idx);
+					if (viewer != null && !viewer.getControl().isDisposed()) {
+						gridLayerSupport.setInput(plate, viewer);
+					}
+				}
 			}
-
-			if (monitor.isCanceled()) return Status.CANCEL_STATUS;
-			return Status.OK_STATUS;
-		}
+		});
 	}
 	
 	private void reloadHeadmaps() {
+		final List<Plate> plates = this.viewerInput.getBaseElements();
 		if (this.plateGrid == null || this.plateGrid.isDisposed()
-				|| this.plates == null) {
+				|| plates == null) {
 			return;
 		}
-		for (int plateIndex = 0; plateIndex < this.plates.size(); plateIndex++) {
+		for (int plateIndex = 0; plateIndex < plates.size(); plateIndex++) {
 			GridViewer viewer = plateGrid.getGridViewer(plateIndex);
 			if (viewer != null) {
 				Object input = viewer.getInput();

@@ -37,11 +37,14 @@ import eu.openanalytics.phaedra.base.ui.nattable.misc.LinkedResizeSupport.ILinke
 import eu.openanalytics.phaedra.base.ui.nattable.misc.NatTableToolTip.ITooltipColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.ProgressCellPainter;
-import eu.openanalytics.phaedra.base.ui.nattable.selection.SelectionTransformer;
 import eu.openanalytics.phaedra.base.ui.nattable.selection.NatTableSelectionManager.SelectedCell;
+import eu.openanalytics.phaedra.base.ui.nattable.selection.SelectionTransformer;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
+import eu.openanalytics.phaedra.base.ui.util.misc.DataLoadStatus;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
+import eu.openanalytics.phaedra.model.plate.util.PlateSummary;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
@@ -51,7 +54,7 @@ import eu.openanalytics.phaedra.ui.plate.cmd.BrowseWells;
 import eu.openanalytics.phaedra.ui.plate.table.NatTableStatePersister;
 import eu.openanalytics.phaedra.ui.plate.util.HeatmapImageFactory;
 import eu.openanalytics.phaedra.ui.plate.util.HeatmapImageFactory.HeatmapConfig;
-import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryLoader;
+import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryWithStats;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 import eu.openanalytics.phaedra.ui.protocol.event.IUIEventListener;
 import eu.openanalytics.phaedra.ui.protocol.event.UIEvent;
@@ -232,23 +235,40 @@ public class PlateFeatureHeatmapsTab extends Composite {
 
 	private class ColumnAccessor extends AsyncColumnAccessor<Plate> implements ILinkedColumnAccessor<Plate>, ITooltipColumnAccessor<Plate> {
 
+		private AsyncDataLoader<Plate> dataLoader;
+		private AsyncDataLoader<Plate>.DataAccessor<PlateSummary> summaryAccessor;
+		
 		private int baseColumnCount = 7;
-		private PlateSummaryLoader summaryLoader;
+		
 		private Point currentHeatmapSize = new Point(0,0);
-
+		
+		
+		public ColumnAccessor() {
+			// Pass null because the DataLoader shouldn't do refreshes; AsyncColumnAccessor takes care of that.
+			this.dataLoader = new AsyncDataLoader<Plate>("data for plate browser");
+			this.summaryAccessor = this.dataLoader.addDataRequest((plate) -> PlateSummaryWithStats.loadSummary(plate));
+		}
+		
+		
 		@Override
 		public int getColumnCount() {
 			return baseColumnCount + 2*features.size();
 		}
-
+		
 		@Override
 		public Object getDataValue(Plate plate, int index) {
 			if (index == 0) return plate.getBarcode();
 			if (index == 1) return plate.getValidationStatus();
 			if (index == 2) return plate.getApprovalStatus();
 			if (index == 3) return plate.getUploadStatus();
-			if (index == 4) return summaryLoader.getSummary(plate).crcCount;
-			if (index == 5) return summaryLoader.getSummary(plate).screenCount;
+			if (index == 4) {
+				final Object value = summaryAccessor.getData(plate);
+				return (value instanceof DataLoadStatus) ? value : ((PlateSummary)value).crcCount;
+			}
+			if (index == 5) {
+				final Object value = summaryAccessor.getData(plate);
+				return (value instanceof DataLoadStatus) ? value : ((PlateSummary)value).screenCount;
+			}
 			return super.getDataValue(plate, index);
 		}
 
@@ -320,9 +340,7 @@ public class PlateFeatureHeatmapsTab extends Composite {
 		}
 
 		private void start(List<Plate> rowObjects) {
-			// Pass null because the SummaryLoader shouldn't do refreshes. AsyncColumnAccessor takes care of that.
-			summaryLoader = new PlateSummaryLoader(rowObjects, null);
-			summaryLoader.start();
+			this.dataLoader.asyncLoad(rowObjects, null);
 		}
 
 		private int[] getColumnWidths() {

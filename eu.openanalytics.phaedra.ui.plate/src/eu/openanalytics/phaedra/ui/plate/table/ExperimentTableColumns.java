@@ -5,10 +5,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.ToIntFunction;
 
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
-import org.eclipse.swt.graphics.Color;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.security.SecurityService;
@@ -19,11 +19,16 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfigurati
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnEditingFactory;
 import eu.openanalytics.phaedra.base.ui.theme.PhaedraThemes;
-import eu.openanalytics.phaedra.base.ui.util.viewer.BasicNumericValueLabelProvider;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataConditionalLabelProvider;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectComparator;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectLabelProvider;
 import eu.openanalytics.phaedra.base.ui.util.viewer.ConditionalLabelProvider;
+import eu.openanalytics.phaedra.base.ui.util.viewer.ConditionalLabelProvider.ProgressBarRenderer;
 import eu.openanalytics.phaedra.model.plate.PlateService;
+import eu.openanalytics.phaedra.model.plate.util.ExperimentSummary;
+import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
-import eu.openanalytics.phaedra.ui.plate.util.ExperimentSummaryLoader;
 
 public class ExperimentTableColumns {
 	public static ColumnConfiguration[] configureColumns() {
@@ -33,10 +38,10 @@ public class ExperimentTableColumns {
 		return configs.toArray(new ColumnConfiguration[configs.size()]);
 	}
 
-	public static ColumnConfiguration[] configureColumns(ExperimentSummaryLoader summaryLoader) {
+	public static ColumnConfiguration[] configureColumns(AsyncDataLoader<Experiment> dataLoader) {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		addGeneralColumns(configs);
-		addSummaryColumns(configs, summaryLoader);
+		addSummaryColumns(configs, dataLoader);
 		addProtocolColumns(configs);
 		return configs.toArray(new ColumnConfiguration[configs.size()]);
 	}
@@ -74,166 +79,64 @@ public class ExperimentTableColumns {
 		config.setEditingConfig(ColumnEditingFactory.create("getDescription", "setDescription", saver, editableChecker));
 		configs.add(config);
 	}
-
-	private static  void addSummaryColumns(List<ColumnConfiguration> configs, ExperimentSummaryLoader summaryLoader) {
+	
+	private static void addSummaryColumns(List<ColumnConfiguration> configs,
+			final AsyncDataLoader<Experiment> dataLoader) {
+		final AsyncDataLoader<Experiment>.DataAccessor<ExperimentSummary> summaryAccessor = dataLoader.addDataRequest(
+				(experiment) -> PlateService.getInstance().getExperimentSummary(experiment) );
+		
 		ColumnConfiguration config;
-		Color progressColor = PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor();
+		ToIntFunction<ExperimentSummary> summaryIntF;
 
 		config = ColumnConfigFactory.create("#P", DataType.Integer, 50);
-		config.setLabelProvider(new RichLabelProvider(config){
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return "" + summaryLoader.getSummary(exp).plates;
-			}
-		});
 		config.setTooltip("Number of Plates");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).plates, summaryLoader.getSummary(o2).plates);
-			}
-		});
+		summaryIntF = (summary) -> summary.plates;
+		config.setLabelProvider(new SummaryIntLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("#PC", DataType.Real, 50);
-		config.setLabelProvider(ConditionalLabelProvider.withProgressBar(
-				new BasicNumericValueLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return ""+ summaryLoader.getSummary(exp).platesToCalculate;
-			}
-			@Override
-			public double getNumericValue(Object element) {
-				Experiment exp = (Experiment)element;
-				int total = summaryLoader.getSummary(exp).plates;
-				int todo = summaryLoader.getSummary(exp).platesToCalculate;
-				double pct = (double)(total-todo)/total;
-				return pct;
-			}
-		}, progressColor ));
+		config = ColumnConfigFactory.create("#PC", DataType.Integer, 50);
 		config.setTooltip("Number of Plates to calculate");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).platesToCalculate, summaryLoader.getSummary(o2).platesToCalculate);
-			}
-		});
+		summaryIntF = (summary) -> summary.platesToCalculate;
+		config.setLabelProvider(createSummaryIntTodoProgressBarLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("#PV", DataType.Real, 50);
-		config.setLabelProvider(ConditionalLabelProvider.withProgressBar(
-				new BasicNumericValueLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return "" + summaryLoader.getSummary(exp).platesToValidate;
-			}
-			@Override
-			public double getNumericValue(Object element) {
-				Experiment exp = (Experiment)element;
-				int total = summaryLoader.getSummary(exp).plates;
-				int todo = summaryLoader.getSummary(exp).platesToValidate;
-				double pct = (double)(total-todo)/total;
-				return pct;
-			}
-		}, progressColor ));
+		config = ColumnConfigFactory.create("#PV", DataType.Integer, 50);
 		config.setTooltip("Number of Plates to validate");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).platesToValidate, summaryLoader.getSummary(o2).platesToValidate);
-			}
-		});
+		summaryIntF = (summary) -> summary.platesToValidate;
+		config.setLabelProvider(createSummaryIntTodoProgressBarLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("#PA", DataType.Real, 50);
-		config.setLabelProvider(ConditionalLabelProvider.withProgressBar(
-				new BasicNumericValueLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return "" + summaryLoader.getSummary(exp).platesToApprove;
-			}
-			@Override
-			public double getNumericValue(Object element) {
-				Experiment exp = (Experiment)element;
-				int total = summaryLoader.getSummary(exp).plates;
-				int todo = summaryLoader.getSummary(exp).platesToApprove;
-				double pct = (double)(total-todo)/total;
-				return pct;
-			}
-		}, progressColor ));
+		config = ColumnConfigFactory.create("#PA", DataType.Integer, 50);
 		config.setTooltip("Number of Plates to approve");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).platesToApprove, summaryLoader.getSummary(o2).platesToApprove);
-			}
-		});
+		summaryIntF = (summary) -> summary.platesToApprove;
+		config.setLabelProvider(createSummaryIntTodoProgressBarLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 
 		config = ColumnConfigFactory.create("#PE", DataType.Integer, 50);
-		config.setLabelProvider(ConditionalLabelProvider.withProgressBar(
-				new BasicNumericValueLabelProvider() {
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return "" + summaryLoader.getSummary(exp).platesToExport;
-			}
-			@Override
-			public double getNumericValue(Object element) {
-				Experiment exp = (Experiment)element;
-				int total = summaryLoader.getSummary(exp).plates;
-				int todo = summaryLoader.getSummary(exp).platesToExport;
-				double pct = (double)(total-todo)/total;
-				return pct;
-			}
-		}, progressColor ));
 		config.setTooltip("Number of Plates to export");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).platesToExport, summaryLoader.getSummary(o2).platesToExport);
-			}
-		});
+		summaryIntF = (summary) -> summary.platesToExport;
+		config.setLabelProvider(createSummaryIntTodoProgressBarLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 
 		// Compound counts -----------------------
 
 		config = ColumnConfigFactory.create("#DRC", DataType.Integer, 50);
-		config.setLabelProvider(new RichLabelProvider(config){
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return "" + summaryLoader.getSummary(exp).crcCount;
-			}
-		});
 		config.setTooltip("Number of Compounds with Dose-Response Curves");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).crcCount, summaryLoader.getSummary(o2).crcCount);
-			}
-		});
+		summaryIntF = (summary) -> summary.crcCount;
+		config.setLabelProvider(new SummaryIntLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 
 		config = ColumnConfigFactory.create("#SDP", DataType.Integer, 50);
-		config.setLabelProvider(new RichLabelProvider(config){
-			@Override
-			public String getText(Object element) {
-				Experiment exp = (Experiment)element;
-				return "" + summaryLoader.getSummary(exp).screenCount;
-			}
-		});
 		config.setTooltip("Number of Single-Dose Points");
-		config.setSortComparator(new Comparator<Experiment>() {
-			@Override
-			public int compare(Experiment o1, Experiment o2) {
-				return Integer.compare(summaryLoader.getSummary(o1).screenCount, summaryLoader.getSummary(o2).screenCount);
-			}
-		});
+		summaryIntF = (summary) -> summary.screenCount;
+		config.setLabelProvider(new SummaryIntLabelProvider(summaryAccessor, summaryIntF));
+		config.setSortComparator(createIntComparator(summaryAccessor, summaryIntF));
 		configs.add(config);
 	}
 
@@ -263,4 +166,45 @@ public class ExperimentTableColumns {
 		
 		//TODO Archive information
 	}
+	
+	
+	public static final Comparator<Experiment> DEFAULT_COMPARATOR = PlateUtils.EXPERIMENT_NAME_SORTER;
+	
+	private static <D> Comparator<Experiment> createIntComparator(final AsyncDataLoader<Experiment>.DataAccessor<D> dataAccessor,
+			final ToIntFunction<D> f) {
+		return AsyncDataDirectComparator.comparingInt(dataAccessor, f)
+				.thenComparing(DEFAULT_COMPARATOR);
+	}
+	
+	private static class SummaryIntLabelProvider extends AsyncDataDirectLabelProvider<Experiment, ExperimentSummary> {
+		
+		protected final ToIntFunction<ExperimentSummary> function;
+		
+		public SummaryIntLabelProvider(final AsyncDataLoader<Experiment>.DataAccessor<ExperimentSummary> summaryAccessor,
+				final ToIntFunction<ExperimentSummary> function) {
+			super(summaryAccessor);
+			this.function = function;
+		}
+		
+		@Override
+		protected String getText(final Experiment element, final ExperimentSummary data) {
+			return Integer.toString(this.function.applyAsInt(data));
+		}
+		
+	}
+	
+	private static ConditionalLabelProvider createSummaryIntTodoProgressBarLabelProvider(
+			final AsyncDataLoader<Experiment>.DataAccessor<ExperimentSummary> summaryAccessor,
+			final ToIntFunction<ExperimentSummary> function) {
+		return new AsyncDataConditionalLabelProvider<Experiment, ExperimentSummary>(
+				new SummaryIntLabelProvider(summaryAccessor, function),
+				new ProgressBarRenderer(PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor()) ) {
+			@Override
+			protected double getNumericValue(final Experiment element, final ExperimentSummary data) {
+				final int total = data.plates;
+				return (double)(total - function.applyAsInt(data))/total;
+			}
+		};
+	}
+	
 }

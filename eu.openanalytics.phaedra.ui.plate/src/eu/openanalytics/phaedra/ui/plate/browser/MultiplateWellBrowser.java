@@ -1,12 +1,10 @@
 package eu.openanalytics.phaedra.ui.plate.browser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -31,23 +29,26 @@ import org.eclipse.ui.part.EditorPart;
 
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
-import eu.openanalytics.phaedra.base.event.IModelEventListener;
-import eu.openanalytics.phaedra.base.event.ModelEventService;
-import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
+import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
+import eu.openanalytics.phaedra.base.ui.util.misc.WorkbenchSiteJobScheduler;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncData1toNViewerInput;
 import eu.openanalytics.phaedra.base.util.misc.SelectionProviderIntermediate;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
-import eu.openanalytics.phaedra.calculation.CalculationService;
-import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
-import eu.openanalytics.phaedra.model.plate.util.MultiplateWellAccessor;
+import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.plate.table.MultiplateWellTableColumns;
 
 public class MultiplateWellBrowser extends EditorPart {
-
+	
+	
+	private AsyncData1toNViewerInput<Plate, Well> viewerInput;
+	private AsyncDataLoader<Plate> dataLoader;
+	
 	private DataFormatSupport dataFormatSupport;
 
 	private CTabFolder tabFolder;
@@ -55,32 +56,63 @@ public class MultiplateWellBrowser extends EditorPart {
 
 	private RichTableViewer tableViewer;
 
-	private MultiplateWellAccessor wellAccessor;
-	private List<PlateDataAccessor> dataAccessors;
-
 	private SelectionProviderIntermediate selectionProvider;
 	private ISelectionListener selectionListener;
-	private IModelEventListener modelEventListener;
-
-	private boolean tableTabInitialized;
-
+	
+	
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
+		
+		this.dataLoader = new AsyncDataLoader<>("data for well browser",
+				new WorkbenchSiteJobScheduler(this) );
+		this.viewerInput = new AsyncData1toNViewerInput<Plate, Well>(Plate.class, Well.class, this.dataLoader) {
+			@Override
+			public Plate getBaseElement(final Well well) {
+				return well.getPlate();
+			}
+			@Override
+			public List<Well> getViewerElements(final Plate plate) {
+				List<Well> list = new ArrayList<>(plate.getWells());
+				list.sort(PlateUtils.WELL_NR_SORTER);
+				return list;
+			}
+			@Override
+			public int getViewerElementsSize(Plate plate) {
+				return plate.getWells().size();
+			}
+			@Override
+			public int getViewerElementIndexOf(final Plate plate, Well well) {
+				return PlateUtils.getWellNrIdx(well);
+			}
+			
+			@Override
+			protected List<Plate> loadElements() {
+				VOEditorInput input = (VOEditorInput)getEditorInput();
+				List<IValueObject> valueObjects = input.getValueObjects();
+				List<Plate> plates = new ArrayList<>();
+				for (IValueObject vo: valueObjects) if (vo instanceof Plate) plates.add((Plate)vo);
+				return plates;
+			}
+			
+		};
 	}
-
+	
+	private List<Feature> getFeatures() {
+		final List<Plate> elements = this.viewerInput.getBaseElements();
+		if (elements.isEmpty()) {
+			return Collections.emptyList();
+		}
+		return elements.get(0).getExperiment().getProtocol().getProtocolClass().getFeatures();
+	}
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.dataFormatSupport = new DataFormatSupport(this::refresh);
+		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
 		
-		List<Plate> plates = getPlates();
-
-		wellAccessor = new MultiplateWellAccessor(plates);
-		dataAccessors = new ArrayList<PlateDataAccessor>();
-		for (Plate plate : plates) dataAccessors.add(CalculationService.getInstance().getAccessor(plate));
-
 		tabFolder = new CTabFolder(parent, SWT.BOTTOM | SWT.V_SCROLL | SWT.H_SCROLL);
 		tabFolder.setSelectionBackground(Display.getCurrent().getSystemColor(SWT.COLOR_TITLE_INACTIVE_BACKGROUND));
 		tabFolder.addListener(SWT.Selection, e -> tabChanged(e.item));
@@ -103,8 +135,11 @@ public class MultiplateWellBrowser extends EditorPart {
 //			}
 		};
 		tableViewer.setContentProvider(new ArrayContentProvider());
+		tableViewer.applyColumnConfig(MultiplateWellTableColumns.configureColumns(this.dataLoader,
+				getFeatures(), dataFormatSupport, this.viewerInput::refreshViewer ));
 		GridDataFactory.fillDefaults().grab(true,true).applyTo(tableViewer.getControl());
 
+		this.viewerInput.connect(tableViewer);
 		/* Other */
 
 		createContextMenu();
@@ -130,29 +165,14 @@ public class MultiplateWellBrowser extends EditorPart {
 		};
 		getSite().getPage().addSelectionListener(selectionListener);
 
-		modelEventListener = event -> {
-			if (event.type == ModelEventType.Calculated) {
-				if (event.source instanceof Plate) {
-					Plate plate = (Plate)event.source;
-					List<Plate> currentPlates = getPlates();
-					for(Plate currentPlate : currentPlates)
-						if (currentPlate.equals(plate)) {
-							Display.getDefault().asyncExec(refreshUICallback);
-					}
-				}
-			}
-		};
-		ModelEventService.getInstance().addEventListener(modelEventListener);
-
 		tabFolder.setSelection(tableTab);
-		if (!tableTabInitialized) initializeTableTab();
 	}
 
 	@Override
 	public void dispose() {
+		if (this.viewerInput != null) this.viewerInput.dispose();
 		if (this.dataFormatSupport != null) this.dataFormatSupport.dispose();
 		getSite().getPage().removeSelectionListener(selectionListener);
-		ModelEventService.getInstance().removeEventListener(modelEventListener);
 		super.dispose();
 	}
 
@@ -176,23 +196,6 @@ public class MultiplateWellBrowser extends EditorPart {
 		// Do nothing.
 	}
 	
-	private void refresh() {
-		if (this.tableViewer == null || this.tableViewer.getControl().isDisposed()) {
-			return;
-		}
-		this.tableViewer.refresh();
-	}
-
-	private Runnable refreshUICallback = () -> tableViewer.setInput(wellAccessor.getWells());
-
-	private List<Plate> getPlates() {
-		VOEditorInput input = (VOEditorInput)getEditorInput();
-		List<IValueObject> valueObjects = input.getValueObjects();
-		List<Plate> plates = new ArrayList<>();
-		for (IValueObject vo: valueObjects) if (vo instanceof Plate) plates.add((Plate)vo);
-		return plates;
-	}
-
 	private void createContextMenu() {
 		MenuManager menuMgr = new MenuManager("#Popup");
 		menuMgr.setRemoveAllWhenShown(true);
@@ -218,31 +221,8 @@ public class MultiplateWellBrowser extends EditorPart {
 		// Update the selection provider intermediate.
 		if (tab == tableTab) {
 			selectionProvider.setSelectionProviderDelegate(tableViewer);
-			if (!tableTabInitialized) initializeTableTab();
+//			if (!tableTabInitialized) initializeTableTab();
 		}
-	}
-
-	private void initializeTableTab() {
-		Job loadDataJob = new Job("Loading Data") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				monitor.beginTask("Loading Data", IProgressMonitor.UNKNOWN);
-				dataAccessors.stream().forEach(da -> da.loadEager(null));
-
-				tableTabInitialized = true;
-
-				Display.getDefault().syncExec(() -> {
-					if (!tableViewer.getTable().isDisposed()) {
-						tableViewer.applyColumnConfig(MultiplateWellTableColumns.configureColumns(dataAccessors.get(0), tableViewer, dataFormatSupport));
-						tableViewer.setInput(wellAccessor.getWells());
-					}
-				});
-
-				return Status.OK_STATUS;
-			};
-		};
-		loadDataJob.setUser(true);
-		loadDataJob.schedule();
 	}
 
 	private void selectionChanged(SelectionChangedEvent event) {

@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.ui.protocol.browser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IMenuListener;
@@ -32,13 +33,11 @@ import org.eclipse.ui.part.EditorPart;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
 import eu.openanalytics.phaedra.base.db.IValueObject;
-import eu.openanalytics.phaedra.base.event.IModelEventListener;
-import eu.openanalytics.phaedra.base.event.ModelEvent;
-import eu.openanalytics.phaedra.base.event.ModelEventService;
-import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataDirectViewerInput;
+import eu.openanalytics.phaedra.base.ui.util.viewer.AsyncDataViewerInput;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
@@ -48,31 +47,66 @@ import eu.openanalytics.phaedra.ui.protocol.breadcrumb.BreadcrumbFactory;
 import eu.openanalytics.phaedra.ui.protocol.table.ProtocolTableColumns;
 
 public class ProtocolBrowser extends EditorPart {
-
+	
+	
+	private AsyncDataViewerInput<Protocol, Protocol> viewerInput;
+	
 	private BreadcrumbViewer breadcrumb;
 	private RichTableViewer tableViewer;
 
 	private boolean isProtocolClassInput;
-	private List<Protocol> protocols;
 
-	private IModelEventListener eventListener;
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input) throws PartInitException {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-
-		loadTableData();
+		
+		this.viewerInput = new AsyncDataDirectViewerInput<Protocol>(Protocol.class) {
+			
+			@Override
+			protected List<Protocol> loadElements() {
+				VOEditorInput input = (VOEditorInput)getEditorInput();
+				List<IValueObject> valueObjects = input.getValueObjects();
+				List<Protocol> protocols = new ArrayList<>();
+				if (!valueObjects.isEmpty()) {
+					if (valueObjects.get(0) instanceof ProtocolClass) {
+						for (IValueObject vo: valueObjects) protocols.addAll(ProtocolService.getInstance().getProtocols((ProtocolClass)vo));
+						isProtocolClassInput = true;
+					} else if (valueObjects.get(0) instanceof Protocol) {
+						for (IValueObject vo: valueObjects) protocols.add((Protocol)vo);
+					}
+				}
+				Collections.sort(protocols, ProtocolUtils.PROTOCOL_NAME_SORTER);
+				return protocols;
+			}
+			
+			@Override
+			protected void checkChangedElements(final Object[] eventElement, final Consumer<Protocol> task) {
+				if (eventElement.length >= 0) {
+					if (eventElement[0] instanceof ProtocolClass) {
+						for (final Object o : eventElement) {
+							final List<Protocol> protocols = ProtocolService.getInstance().getProtocols((ProtocolClass)o);
+							protocols.forEach(task);
+						}
+					} else {
+						super.checkChangedElements(eventElement, task);
+					}
+				}
+			}
+			
+		};
 	}
-
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
-
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 
 		breadcrumb = BreadcrumbFactory.createBreadcrumb(container);
+		List<Protocol> protocols = this.viewerInput.getBaseElements();
 		if (isProtocolClassInput && !protocols.isEmpty()) breadcrumb.setInput(protocols.get(0).getProtocolClass());
 		GridDataFactory.fillDefaults().grab(true, false).hint(SWT.DEFAULT, 23).applyTo(breadcrumb.getControl());
 
@@ -80,7 +114,8 @@ public class ProtocolBrowser extends EditorPart {
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.applyColumnConfig(ProtocolTableColumns.configureColumns());
 		tableViewer.setDefaultSearchColumn("Protocol Name");
-		tableViewer.setInput(protocols);
+		
+		this.viewerInput.connect(tableViewer);
 		tableViewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -98,7 +133,6 @@ public class ProtocolBrowser extends EditorPart {
 		DNDSupport.addDragSupport(tableViewer, this);
 		hookDoubleClickAction();
 		createContextMenu();
-		initEventListener();
 
 		// Link specific help view based on the Context ID
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent
@@ -112,7 +146,7 @@ public class ProtocolBrowser extends EditorPart {
 
 	@Override
 	public void dispose() {
-		ModelEventService.getInstance().removeEventListener(eventListener);
+		if (this.viewerInput != null) this.viewerInput.dispose();
 		super.dispose();
 	}
 
@@ -135,51 +169,7 @@ public class ProtocolBrowser extends EditorPart {
 	public void doSaveAs() {
 		// Do nothing.
 	}
-
-	private void loadTableData() {
-		// Make a copy of the list and sort it.
-		VOEditorInput input = (VOEditorInput)getEditorInput();
-		List<IValueObject> valueObjects = input.getValueObjects();
-		protocols = new ArrayList<>();
-		if (!valueObjects.isEmpty()) {
-			if (valueObjects.get(0) instanceof ProtocolClass) {
-				for (IValueObject vo: valueObjects) protocols.addAll(ProtocolService.getInstance().getProtocols((ProtocolClass)vo));
-				isProtocolClassInput = true;
-			} else if (valueObjects.get(0) instanceof Protocol) {
-				for (IValueObject vo: valueObjects) protocols.add((Protocol)vo);
-			}
-		}
-		Collections.sort(protocols, ProtocolUtils.PROTOCOL_NAME_SORTER);
-	}
-
-	private void initEventListener() {
-		eventListener = new IModelEventListener() {
-			@Override
-			public void handleEvent(ModelEvent event) {
-				boolean structChanged = event.type == ModelEventType.ObjectCreated
-						|| event.type == ModelEventType.ObjectChanged
-						|| event.type == ModelEventType.ObjectRemoved;
-				if (!structChanged) return;
-
-				Object src = event.source;
-				if (src instanceof Protocol || src instanceof ProtocolClass) {
-					//TODO Don't load all protocols, depends on editor input.
-					protocols = new ArrayList<Protocol>(ProtocolService.getInstance().getProtocols());
-					Collections.sort(protocols, ProtocolUtils.PROTOCOL_NAME_SORTER);
-					Display.getDefault().asyncExec(refreshTableCallback);
-				}
-			}
-		};
-		ModelEventService.getInstance().addEventListener(eventListener);
-	}
-
-	private Runnable refreshTableCallback = new Runnable(){
-		@Override
-		public void run() {
-			tableViewer.setInput(protocols);
-		}
-	};
-
+	
 	private void hookDoubleClickAction() {
 		tableViewer.addDoubleClickListener(new IDoubleClickListener() {
 			@Override
@@ -187,7 +177,7 @@ public class ProtocolBrowser extends EditorPart {
 				StructuredSelection sel = (StructuredSelection) event.getSelection();
 				Object item = sel.getFirstElement();
 				if (item instanceof Protocol) {
-					IHandlerService handlerService = (IHandlerService)getSite().getService(IHandlerService.class);
+					IHandlerService handlerService = getSite().getService(IHandlerService.class);
 					try {
 						//TODO Get rid of hardcoded command id.
 						handlerService.executeCommand("eu.openanalytics.phaedra.ui.plate.cmd.BrowseExperiments", null);
