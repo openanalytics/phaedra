@@ -9,4 +9,5 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Export-Package: eu.openanalytics.phaedra.base.ui.icons
+Export-Package: eu.openanalytics.phaedra.base.ui.icons,
+ eu.openanalytics.phaedra.base.ui.theme;version=1.0.8

@@ -27,6 +27,7 @@ import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
+import eu.openanalytics.phaedra.base.ui.theme.PhaedraThemes;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
 import eu.openanalytics.phaedra.base.ui.util.pinning.SelectionHandlingDecorator;
@@ -68,9 +69,6 @@ public class ExperimentInspector extends DecoratedView {
 	private IUIEventListener featureListener;
 	private volatile Experiment currentExperiment;
 	private volatile Feature currentFeature;
-
-	private final static Color LBL_BG_RED = new Color(null, 255, 170, 170);
-	private final static Color LBL_BG_GREEN = new Color(null, 170, 255, 170);
 
 	private ExperimentStatistics expStats;
 	private FeatureStatistics featureStats;
@@ -130,7 +128,10 @@ public class ExperimentInspector extends DecoratedView {
 		section = FormEditorUtils.createSection("Status", form.getBody(), formToolkit);
 		sectionContainer = FormEditorUtils.createComposite(4, section, formToolkit);
 
-		Color[] lblcolors = { LBL_BG_RED, LBL_BG_GREEN, null };
+		Color[] lblcolors = {
+				PhaedraThemes.RED_BACKGROUND_INDICATOR_COLOR.getColor(),
+				PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor(),
+				null };
 
 		FormEditorUtils.createLabel("Validation", sectionContainer, formToolkit);
 		validationLbls = new Label[3];

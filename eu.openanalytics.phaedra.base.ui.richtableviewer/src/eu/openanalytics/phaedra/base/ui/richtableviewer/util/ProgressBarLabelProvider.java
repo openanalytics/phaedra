@@ -35,13 +35,6 @@ public class ProgressBarLabelProvider extends OwnerDrawLabelProvider {
 	}
 
 	@Override
-	public void dispose() {
-		if (foreground != null) foreground.dispose();
-		if (background != null) background.dispose();
-		super.dispose();
-	}
-
-	@Override
 	protected void measure(Event event, Object element) {
 		int width = config.getWidth();
 		event.setBounds(new Rectangle(event.x, event.y, width, event.height));

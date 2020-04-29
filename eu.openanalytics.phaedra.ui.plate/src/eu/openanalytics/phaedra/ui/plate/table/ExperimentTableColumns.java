@@ -9,7 +9,6 @@ import java.util.function.Function;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.widgets.Display;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.security.SecurityService;
@@ -20,6 +19,7 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfigurati
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnEditingFactory;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ProgressBarLabelProvider;
+import eu.openanalytics.phaedra.base.ui.theme.PhaedraThemes;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.ui.plate.util.ExperimentSummaryLoader;
@@ -76,7 +76,7 @@ public class ExperimentTableColumns {
 
 	private static  void addSummaryColumns(List<ColumnConfiguration> configs, ExperimentSummaryLoader summaryLoader) {
 		ColumnConfiguration config;
-		Color progressColor = new Color(Display.getCurrent(), 170, 255, 170);
+		Color progressColor = PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor();
 
 		config = ColumnConfigFactory.create("#P", DataType.Integer, 50);
 		CellLabelProvider labelProvider = new RichLabelProvider(config){
