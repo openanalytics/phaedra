@@ -7,7 +7,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.ui.PlatformUI;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
@@ -20,8 +19,9 @@ import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnEditingFactor
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider.FlagFilter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider.FlagMapping;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ProgressBarLabelProvider;
 import eu.openanalytics.phaedra.base.ui.theme.PhaedraThemes;
+import eu.openanalytics.phaedra.base.ui.util.viewer.BasicNumericValueLabelProvider;
+import eu.openanalytics.phaedra.base.ui.util.viewer.ConditionalLabelProvider;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.stat.StatUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
@@ -233,22 +233,20 @@ public class PlateTableColumns {
 			}
 		};
 	}
-
-	private static ProgressBarLabelProvider createProgressLabelProvider(ColumnConfiguration cfg,
+	
+	private static ConditionalLabelProvider createProgressLabelProvider(ColumnConfiguration cfg,
 			BiFunction<Plate, Feature, String> textGetter,
 			BiFunction<Plate, Feature, Double> valueGetter) {
-		Color progressColor = PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor();
-		return new ProgressBarLabelProvider(cfg, null, progressColor) {
+		return ConditionalLabelProvider.withProgressBar(new BasicNumericValueLabelProvider() {
 			@Override
-			protected String getText(Object element) {
+			public String getText(Object element) {
 				Plate plate = (Plate) element;
 				Feature f = ProtocolUIService.getInstance().getCurrentFeature();
 				if (f == null) return "";
 				return textGetter.apply(plate, f);
 			}
-
 			@Override
-			protected double getPercentage(Object element) {
+			public double getNumericValue(Object element) {
 				Plate plate = (Plate) element;
 				Feature f = ProtocolUIService.getInstance().getCurrentFeature();
 				if (f == null) return 0;
@@ -256,7 +254,7 @@ public class PlateTableColumns {
 				if (Double.isNaN(value)) value = 0;
 				return value;
 			}
-		};
+		}, PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor() );
 	}
 	
 	private static Comparator<Plate> createTextSorter(Function<Plate, String> textGetter) {
