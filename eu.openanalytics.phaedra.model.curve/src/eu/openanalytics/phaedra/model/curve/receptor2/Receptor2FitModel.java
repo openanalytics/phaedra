@@ -204,9 +204,15 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			data = results.get("dataPredict2Plot");
 			if (data instanceof RDataFrame) {
 				double[][] predict = RUtils.getDouble2DArrayFromRDataFrame((RDataFrame) data);
-				predict[0] = Arrays.stream(predict[0]).map(c -> -c).toArray();
-				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Confidence Band"), new double[][] { predict[0], predict[2], predict[3] });
-				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Predicted Curve Points"), new double[][] { predict[0], predict[1] });
+				if (predict.length > 0) {
+					predict[0] = Arrays.stream(predict[0]).map(c -> -c).toArray();
+				}
+				if (predict.length >= 2) {
+					CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Predicted Curve Points"), new double[][] { predict[0], predict[1] });
+				}
+				if (predict.length >= 4) {
+					CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Confidence Band"), new double[][] { predict[0], predict[2], predict[3] });
+				}
 			}
 			data = results.get("pIC50Location").getData();
 			if (data instanceof RNumericStore) {
