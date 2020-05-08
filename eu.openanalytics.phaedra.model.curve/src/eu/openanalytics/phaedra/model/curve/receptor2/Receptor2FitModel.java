@@ -9,7 +9,6 @@ import java.util.stream.IntStream;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.statet.rj.data.RDataFrame;
 import org.eclipse.statet.rj.data.RList;
-import org.eclipse.statet.rj.data.RLogicalStore;
 import org.eclipse.statet.rj.data.RNumericStore;
 import org.eclipse.statet.rj.servi.RServi;
 import org.eclipse.statet.rj.services.FunctionCall;
@@ -53,6 +52,13 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 
 			new Definition(new StringValueDescription("Method", Curve.class),
 					null, false, null, new CurveParameter.ParameterValueList("mean", "median")),
+			
+			new Definition(new StringValueDescription("Slope", Curve.class), 
+					null, false, null, new CurveParameter.ParameterValueList("ascending", "descending", "free")),
+	
+			new Definition(new StringValueDescription("Receptor Model", Curve.class), 
+					null, false, null, new CurveParameter.ParameterValueList(
+							"PL4", "PL3L", "PL3U", "2PL", "PL4H1", "PL3LH1", "PL3UH1", "PL2H1")),
 	};
 
 	private static final Definition[] OUT_PARAMS = {
@@ -141,7 +147,9 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			double confLevel = CurveParameter.find(inParams, "Confidence Level").numericValue;
 			String method = CurveParameter.find(inParams, "Method").stringValue;
 			String responseName = output.getFeature().getDisplayName();
-			
+			String slope = CurveParameter.find(inParams, "Slope").stringValue;
+			String receptorModel = CurveParameter.find(inParams, "Receptor Model").stringValue;
+
 			rServi.assignData("dose", RUtils.makeNumericRVector(concs), null);
 			rServi.assignData("response", RUtils.makeNumericRVector(values), null);
 			rServi.assignData("accept", RUtils.makeNumericRVector(accepts), null);
@@ -156,7 +164,10 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 					+ "fixedSlope = " + (Double.isNaN(fixedSlope) ? "NA" : fixedSlope) + ","
 					+ "confLevel = " + (Double.isNaN(confLevel) ? "0.95" : confLevel) + ","
 					+ "robustMethod = '" + method + "',"
-					+ "responseName = '" + responseName + "')", null);
+					+ "responseName = '" + responseName + "',"
+					+ "slope = '" + slope + "',"
+					+ "receptorStyleModel = '" + receptorModel + "')",
+					null);
 			
 			String reportedpIC50 = results.get("pIC50toReport").getData().getChar(0);
 			double pIC50 = Double.NaN;
@@ -189,9 +200,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			if (data instanceof RNumericStore) CurveParameter.find(outParams, "pIC80").numericValue = ((RNumericStore) data).getNum(0);
 			
 			data = results.get("modelCoefs").getData();
-			if (data instanceof RLogicalStore) {
-				// Fit failed, no coefs available.
-			} else {
+			if (data instanceof RNumericStore) {
 				RNumericStore coefs = (RNumericStore) data;
 				CurveParameter.find(outParams, "Slope").numericValue = coefs.getNum(0);
 				CurveParameter.find(outParams, "Bottom").numericValue = coefs.getNum(1);
