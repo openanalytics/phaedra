@@ -42,6 +42,7 @@ import eu.openanalytics.phaedra.datacapture.queue.DataCaptureJobQueue;
 import eu.openanalytics.phaedra.datacapture.scanner.BaseScannerType;
 import eu.openanalytics.phaedra.datacapture.scanner.ScanException;
 import eu.openanalytics.phaedra.datacapture.scanner.model.ScanJob;
+import eu.openanalytics.phaedra.datacapture.util.CaptureUtils;
 
 public class SQSScannerType extends BaseScannerType {
 
@@ -147,6 +148,9 @@ public class SQSScannerType extends BaseScannerType {
 			task.getParameters().put(DataCaptureParameter.CreateMissingWellFeatures.name(), cfg.createMissingWellFeatures);
 			task.getParameters().put(DataCaptureParameter.CreateMissingSubWellFeatures.name(), cfg.createMissingSubWellFeatures);
 			
+			task.getParameters().put("sqs.message.body", msg.getBody());
+			task.setModuleFilter(CaptureUtils.createModuleFilter(task.getConfigId(), body.captureWellData, body.captureSubWellData, body.captureImageData));
+			
 			EclipseLog.info(String.format("Submitting data capture job: %s", task.getSource()), Activator.PLUGIN_ID);
 			DataCaptureService.getInstance().queueTask(task, "SQS Scanner");
 		} catch (DataCaptureException e) {
@@ -234,6 +238,10 @@ public class SQSScannerType extends BaseScannerType {
 		public String url;
 		public String captureConfig;
 		public long protocolId;
+		
+		public Boolean captureWellData;
+		public Boolean captureSubWellData;
+		public Boolean captureImageData;
 	}
 	
 	private static class ScannerConfig {

@@ -18,9 +18,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import au.com.bytecode.opencsv.CSVReader;
+import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.base.util.io.FileUtils;
 import eu.openanalytics.phaedra.datacapture.DataCaptureContext;
 import eu.openanalytics.phaedra.datacapture.DataCaptureException;
+import eu.openanalytics.phaedra.datacapture.DataCaptureService;
+import eu.openanalytics.phaedra.datacapture.config.CaptureConfig;
 import eu.openanalytics.phaedra.datacapture.config.ModuleConfig;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 
@@ -366,6 +369,50 @@ public class CaptureUtils {
 	 */
 	public static FeatureDefinition newFeatureDef(String name) {
 		return new FeatureDefinition(name);
+	}
+	
+	private static final String WELLDATA_IMPORTER_ID = "gather.welldata";
+	private static final String SUBWELLDATA_IMPORTER_ID = "gather.subwelldata";
+	private static final String IMAGEDATA_IMPORTER_ID = "gather.imagedata";
+	
+	public static String[] createModuleFilter(String captureConfigId, Boolean captureWellData, Boolean captureSubWellData, Boolean captureImageData) {
+		try {
+			CaptureConfig captureConfig = DataCaptureService.getInstance().getCaptureConfig(captureConfigId);
+			
+			String[] wellModules 	= getModules(WELLDATA_IMPORTER_ID, captureConfig);
+			String[] subwellModules = getModules(SUBWELLDATA_IMPORTER_ID, captureConfig);
+			String[] imageModules 	= getModules(IMAGEDATA_IMPORTER_ID, captureConfig);
+			
+			List<String> filter = new ArrayList<String>();
+			ModuleConfig[] configs = captureConfig.getModuleConfigs();
+			for (ModuleConfig cfg: configs) {
+				String id = cfg.getId();
+
+				// Skip module only if explicitly disabled. I.e. by default, execute everything.
+				if (captureWellData != null && !captureWellData && CollectionUtils.find(wellModules, id) != -1) continue;
+				if (captureSubWellData != null && !captureSubWellData && CollectionUtils.find(subwellModules, id) != -1) continue;
+				if (captureImageData != null && !captureImageData && CollectionUtils.find(imageModules, id) != -1) continue;
+				
+				filter.add(id);
+			}
+
+			return filter.toArray(new String[filter.size()]);
+		} catch (IOException e) {
+			return null;
+		} catch(DataCaptureException e) {
+			throw new RuntimeException(e.getMessage(), e.getCause());
+		}
+	}
+	
+	private static String[] getModules(String baseId, CaptureConfig cfg) {
+		if (baseId == null || baseId.isEmpty()) return new String[0];
+		baseId = baseId.trim().toLowerCase();
+		List<String> matchingIds = new ArrayList<String>();
+		for (ModuleConfig mod: cfg.getModuleConfigs()) {
+			String id = mod.getId();
+			if (id.toLowerCase().startsWith(baseId)) matchingIds.add(id);
+		}
+		return matchingIds.toArray(new String[matchingIds.size()]);
 	}
 	
 	private static String escapeRegexChars(String value) {
