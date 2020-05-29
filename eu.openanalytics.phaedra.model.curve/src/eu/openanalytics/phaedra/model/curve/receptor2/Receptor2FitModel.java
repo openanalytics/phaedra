@@ -55,10 +55,6 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			
 			new Definition(new StringValueDescription("Slope", Curve.class), 
 					null, false, null, new CurveParameter.ParameterValueList("ascending", "descending", "free")),
-	
-			new Definition(new StringValueDescription("Receptor Model", Curve.class), 
-					null, false, null, new CurveParameter.ParameterValueList(
-							"PL4", "PL3L", "PL3U", "2PL", "PL4H1", "PL3LH1", "PL3UH1", "PL2H1")),
 	};
 
 	private static final Definition[] OUT_PARAMS = {
@@ -148,7 +144,6 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			String method = CurveParameter.find(inParams, "Method").stringValue;
 			String responseName = output.getFeature().getDisplayName();
 			String slope = CurveParameter.find(inParams, "Slope").stringValue;
-			String receptorModel = CurveParameter.find(inParams, "Receptor Model").stringValue;
 
 			rServi.assignData("dose", RUtils.makeNumericRVector(concs), null);
 			rServi.assignData("response", RUtils.makeNumericRVector(values), null);
@@ -165,8 +160,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 					+ "confLevel = " + (Double.isNaN(confLevel) ? "0.95" : confLevel) + ","
 					+ "robustMethod = '" + method + "',"
 					+ "responseName = '" + responseName + "',"
-					+ "slope = '" + slope + "',"
-					+ "receptorStyleModel = '" + receptorModel + "')",
+					+ "slope = '" + slope + "')",
 					null);
 			
 			String reportedpIC50 = results.get("pIC50toReport").getData().getChar(0);
