@@ -8,12 +8,10 @@ import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
 import org.eclipse.jface.viewers.CellLabelProvider;
-import org.eclipse.jface.viewers.ViewerCell;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
-import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
@@ -29,6 +27,7 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.ExperimentSummary;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
+import eu.openanalytics.phaedra.ui.plate.util.ExperimentLabelProvider;
 
 public class ExperimentTableColumns {
 	public static ColumnConfiguration[] configureColumns() {
@@ -51,11 +50,10 @@ public class ExperimentTableColumns {
 
 		config = ColumnConfigFactory.create("", DataType.Image, 30);
 		config.setTooltip("Icon");
-		config.setLabelProvider(new CellLabelProvider() {
+		config.setLabelProvider(new ExperimentLabelProvider() {
 			@Override
-			public void update(ViewerCell cell) {
-				cell.setImage(IconManager.getIconImage("map.png"));
-				cell.setText("");
+			public String getText(Object element) {
+				return ""; //$NON-NLS-1$
 			}
 		});
 		configs.add(config);

@@ -89,6 +89,18 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
+	 * Returns a list of all not-closed experiments in a protocol.
+	 * 
+	 * @param protocol the protocol whose experiments will be listed.
+	 * @return a list of open experiments currently in the protocol.
+	 */
+	public List<Experiment> getOpenExperiments(Protocol protocol) {
+		if (!SecurityService.getInstance().check(Permissions.PROTOCOL_OPEN, protocol)) return new ArrayList<>();
+		String query = "select e from Experiment e where e.protocol = ?1 and e.closed = false";
+		return streamableList(getList(query, Experiment.class, protocol));
+	}
+
+	/**
 	 * Get a list of all experiments the specified user owns.
 	 * 
 	 * @param owner The owner of the experiments, or null to retrieve ALL experiments.

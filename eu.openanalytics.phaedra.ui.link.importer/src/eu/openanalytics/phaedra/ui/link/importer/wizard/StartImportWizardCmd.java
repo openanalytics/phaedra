@@ -57,7 +57,7 @@ public class StartImportWizardCmd extends AbstractHandler implements IHandler {
 	protected void configureState(ImportWizardState preconfiguredState, ExecutionEvent event) {
 		// Pre-select an experiment, use the first one found from the list of selected experiments or plates
 		if (preconfiguredState.task.targetExperiment == null) {
-			ISelection selection = (ISelection)HandlerUtil.getCurrentSelection(event);
+			ISelection selection = HandlerUtil.getCurrentSelection(event);
 			Experiment activeExp = getExperimentFromSelection(selection);
 
 			if (activeExp == null) {
@@ -66,7 +66,7 @@ public class StartImportWizardCmd extends AbstractHandler implements IHandler {
 			
 			// TODO: An open plate list view without selection should be able to return the currently opened experiment.
 			
-			if (activeExp != null) {
+			if (activeExp != null && !activeExp.isClosed()) {
 				preconfiguredState.task.targetExperiment = activeExp;
 			}
 		}	

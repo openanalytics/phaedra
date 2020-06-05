@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+            id="eu.openanalytics.phaedra.ui.propertyTesters.Experiment"
+            namespace="eu.openanalytics.phaedra.ui"
+            properties="isExperimentOpen,isExperimentClosed"
+            type="eu.openanalytics.phaedra.model.plate.vo.Experiment"
+            class="eu.openanalytics.phaedra.internal.model.plate.ExperimentPropertyTester">
+      </propertyTester>
+   </extension>
+   
    <extension
          point="org.eclipse.ui.commands">
       <command
@@ -22,6 +34,16 @@
             defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.CreateExperiment"
             id="eu.openanalytics.phaedra.ui.plate.cmd.CreateExperiment"
             name="Create Experiment">
+      </command>
+      <command
+            id="eu.openanalytics.phaedra.ui.plate.cmd.OpenExperiment"
+            name="Open Experiment(s)"
+            description="Opens the selected experiments">
+      </command>
+      <command
+            id="eu.openanalytics.phaedra.ui.plate.cmd.CloseExperiment"
+            name="Close Experiment(s)"
+            description="Closes the selected experiments">
       </command>
       <command
             defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.BrowsePlates"
@@ -204,6 +226,60 @@
              name="Outlier Detection">
        </command>
    </extension>
+   
+   <extension
+         point="org.eclipse.ui.commandImages">
+      <image
+            commandId="eu.openanalytics.phaedra.ui.plate.cmd.OpenExperiment"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/experiment.png">
+      </image>
+      <image
+            commandId="eu.openanalytics.phaedra.ui.plate.cmd.CloseExperiment"
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/experiment-closed.png">
+      </image>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            commandId="eu.openanalytics.phaedra.ui.plate.cmd.OpenExperiment"
+            class="eu.openanalytics.phaedra.ui.plate.cmd.OpenExperimentHandler">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <iterate ifEmpty="false" operator="and">
+                  <instanceof
+                        value="eu.openanalytics.phaedra.model.plate.vo.Experiment">
+                  </instanceof>
+               </iterate>
+               <iterate operator="or">
+                  <test
+                        property="eu.openanalytics.phaedra.ui.isExperimentClosed">
+                  </test>
+               </iterate>
+            </with>
+         </enabledWhen>
+      </handler>
+      <handler
+            commandId="eu.openanalytics.phaedra.ui.plate.cmd.CloseExperiment"
+            class="eu.openanalytics.phaedra.ui.plate.cmd.CloseExperimentHandler">
+         <enabledWhen>
+            <with
+                  variable="selection">
+               <iterate ifEmpty="false" operator="and">
+                  <instanceof
+                        value="eu.openanalytics.phaedra.model.plate.vo.Experiment">
+                  </instanceof>
+               </iterate>
+               <iterate operator="or">
+                  <test
+                        property="eu.openanalytics.phaedra.ui.isExperimentOpen">
+                  </test>
+               </iterate>
+            </with>
+         </enabledWhen>
+      </handler>
+   </extension>
+   
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
@@ -676,6 +752,18 @@
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.CreateExperiment"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/map_add.png"
                style="push">
+         </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.OpenExperiment"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true"/>
+         </command>
+         <command
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.CloseExperiment"
+               style="push">
+            <visibleWhen
+                  checkEnabled="true"/>
          </command>
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.EditExperiment"

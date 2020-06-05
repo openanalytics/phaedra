@@ -48,7 +48,7 @@ public class ProjectHandler extends AbstractProjectElementHandler {
 				.map((element) -> (Project)element.getData())
 				.collect(Collectors.toList());
 		if (projects.size() == 1) {
-			mgr.add(new Action("Open Experiments", IconManager.getDefaultIconDescriptor(Project.class)) {
+			mgr.add(new Action("Browse Experiments", IconManager.getDefaultIconDescriptor(Project.class)) {
 				@Override
 				public void run() {
 					browseExperiments(projects.get(0));

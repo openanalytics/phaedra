@@ -16,6 +16,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.layout.LayoutConstants;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ISelection;
@@ -27,6 +28,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -73,6 +75,8 @@ public class RichTableViewer extends TableViewer {
 	private final Consumer<IStateStore.StateChangedEvent> stateStoreListener = this::onStateChanged;
 	
 	private CustomColumnSupport customColumnSupport;
+	
+	private Composite toolBar;
 
 	private SearchBar searchBar;
 	private RichTableFilter searchFilter;
@@ -103,6 +107,7 @@ public class RichTableViewer extends TableViewer {
 	public RichTableViewer(Composite parent, int style, String tableKey, CustomColumnSupport customColumnSupport,
 			boolean searchEnabled) {
 		super(createTableContainer(parent, searchEnabled, style), style | SWT.FULL_SELECTION | SWT.MULTI);
+		this.toolBar = (searchEnabled) ? (Composite)getTable().getParent().getParent().getChildren()[0] : null;
 		
 		this.customColumnSupport = customColumnSupport;
 		
@@ -535,29 +540,30 @@ public class RichTableViewer extends TableViewer {
 
 	private void initTable(String tableKey, boolean searchEnabled) {
 		if (searchEnabled) {
-			searchFilter = new RichTableFilter();
-			addFilter(searchFilter);
-
-			Composite toolBar = (Composite)getTable().getParent().getParent().getChildren()[0];
-
-			Composite searchArea = new Composite(toolBar, SWT.NONE);
-			GridDataFactory.fillDefaults().grab(true,false).applyTo(searchArea);
-			GridLayoutFactory.fillDefaults().margins(3,3).spacing(0,0).applyTo(searchArea);
-			addSearchbar(searchArea);
-
-			Composite toolBarButtons = new Composite(toolBar, SWT.NONE);
-			GridDataFactory.fillDefaults().grab(true,false).applyTo(toolBarButtons);
-			GridLayoutFactory.fillDefaults().margins(3,3).spacing(0,0).applyTo(toolBarButtons);
-			Button resizeBtn = new Button(toolBarButtons, SWT.PUSH);
-			resizeBtn.setToolTipText("Resize table columns");
-			resizeBtn.setImage(IconManager.getIconImage("table.png"));
-			resizeBtn.addSelectionListener(new SelectionAdapter() {
-				@Override
-				public void widgetSelected(SelectionEvent e) {
-					resizeTable();
-				}
-			});
-			GridDataFactory.fillDefaults().grab(true, false).align(SWT.END, SWT.CENTER).hint(30, SWT.DEFAULT).applyTo(resizeBtn);
+			{	Composite filterToolBar = new Composite(this.toolBar, SWT.NONE);
+				GridDataFactory.fillDefaults().grab(true, false).applyTo(filterToolBar);
+				RowLayout layout = new RowLayout();
+				layout.center = true;
+				layout.spacing = LayoutConstants.getSpacing().x;
+				layout.wrap = false;
+				filterToolBar.setLayout(layout);
+				addFilters(filterToolBar);
+			}
+			{	Composite rightToolBar = new Composite(this.toolBar, SWT.NONE);
+				GridDataFactory.fillDefaults().grab(true,false).applyTo(rightToolBar);
+				GridLayoutFactory.fillDefaults().margins(3,3).spacing(0,0).applyTo(rightToolBar);
+				
+				Button resizeBtn = new Button(rightToolBar, SWT.PUSH);
+				resizeBtn.setToolTipText("Resize table columns");
+				resizeBtn.setImage(IconManager.getIconImage("table.png"));
+				resizeBtn.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						resizeTable();
+					}
+				});
+				GridDataFactory.fillDefaults().grab(true, false).align(SWT.END, SWT.CENTER).hint(30, SWT.DEFAULT).applyTo(resizeBtn);
+			}
 		}
 
 		Table table = getTable();
@@ -581,11 +587,15 @@ public class RichTableViewer extends TableViewer {
 		}
 	}
 
-
-	private void addSearchbar(Composite parent) {
+	protected void addFilters(Composite parent) {
+		addTextSearch(parent);
+	}
+	
+	protected void addTextSearch(Composite parent) {
+		searchFilter = new RichTableFilter();
+		addFilter(searchFilter);
+		
 		searchBar = new SearchBar(parent, SWT.NONE, true);
-		GridDataFactory.fillDefaults().applyTo(searchBar);
-
 		searchBar.setSearchHandler(new ISearchHandler() {
 			@Override
 			public void doSearch(final String name, final String value) {

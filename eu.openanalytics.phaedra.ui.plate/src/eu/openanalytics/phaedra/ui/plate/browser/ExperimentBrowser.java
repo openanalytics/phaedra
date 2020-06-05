@@ -19,7 +19,12 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
@@ -35,6 +40,7 @@ import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.db.IValueObject;
 import eu.openanalytics.phaedra.base.ui.editor.VOEditorInput;
+import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.util.misc.AsyncDataLoader;
 import eu.openanalytics.phaedra.base.ui.util.misc.DNDSupport;
@@ -55,6 +61,22 @@ import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationConte
 
 
 public class ExperimentBrowser extends EditorPart {
+	
+	
+	private static class ClosedFilter extends ViewerFilter {
+		
+		private boolean hideClosed;
+		
+		@Override
+		public boolean select(final Viewer viewer, final Object parentElement, final Object element) {
+			if (!this.hideClosed) {
+				return true;
+			}
+			final Experiment experiment = (Experiment)element;
+			return !experiment.isClosed();
+		}
+		
+	}
 	
 	
 	private AsyncDataViewerInput<Experiment, Experiment> viewerInput;
@@ -128,7 +150,28 @@ public class ExperimentBrowser extends EditorPart {
 				this.viewerInput, this.evaluationContext, this.dataFormatSupport );
 		
 		tableViewer = new RichTableViewer(container, SWT.NONE, getClass().getSimpleName(),
-				customColumnSupport, true );
+				customColumnSupport, true ) {
+			@Override
+			protected void addFilters(Composite parent) {
+				final ClosedFilter closedFilter = new ClosedFilter();
+				closedFilter.hideClosed = true;
+				addFilter(closedFilter);
+				
+				addTextSearch(parent);
+				
+				final Button closedControl = new Button(parent, SWT.TOGGLE);
+				closedControl.setImage(IconManager.getIconImage("filter-experiment-closed.png"));
+				closedControl.setToolTipText("Hide Closed Experiments");
+				closedControl.setSelection(closedFilter.hideClosed);
+				closedControl.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						closedFilter.hideClosed = closedControl.getSelection();
+						refresh(true);
+					}
+				});
+			}
+		};
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.applyColumnConfig(ExperimentTableColumns.configureColumns(this.dataLoader));
 		tableViewer.setDefaultSearchColumn("Name");
@@ -156,7 +199,7 @@ public class ExperimentBrowser extends EditorPart {
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent,
 				"eu.openanalytics.phaedra.ui.help.viewExperimentBrowser");
 	}
-
+	
 	@Override
 	public void setFocus() {
 		tableViewer.getTable().setFocus();

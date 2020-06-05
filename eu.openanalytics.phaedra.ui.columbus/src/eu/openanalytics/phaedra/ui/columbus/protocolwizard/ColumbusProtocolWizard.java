@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.script.ScriptException;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.graphics.ImageData;
@@ -25,8 +26,7 @@ import eu.openanalytics.phaedra.datacapture.columbus.ws.operation.GetUsers.User;
 import eu.openanalytics.phaedra.datacapture.util.FeatureDefinition;
 import eu.openanalytics.phaedra.link.importer.ImportService;
 import eu.openanalytics.phaedra.link.importer.ImportTask;
-import eu.openanalytics.phaedra.model.plate.PlateService;
-import eu.openanalytics.phaedra.model.plate.vo.Experiment;
+import eu.openanalytics.phaedra.link.importer.ImportUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ImageChannel;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.protocol.template.ProtocolTemplateService;
@@ -65,20 +65,23 @@ public class ColumbusProtocolWizard extends BaseStatefulWizard {
 		
 		// If user requested a new experiment, create it now.
 		if (task.targetExperiment == null) {
-			Experiment experiment = PlateService.getInstance().createExperiment(p);
-			experiment.setName(state.screen.screenName);
-			try {
-				PlateService.getInstance().updateExperiment(experiment);
-			} catch (Throwable t) {
-				MessageDialog.openError(getShell(), "Error", "Failed to create experiment:\n" + t.getMessage());
+			if (!checkFinish(ImportUtils.createExperiment(task, p, state.screen.screenName))) {
 				return false;
 			}
-			task.targetExperiment = experiment;
 		}
-
-		ImportService.getInstance().startJob(task);
+		
+		return checkFinish(
+				ImportService.getInstance().startJob(task) );
+	}
+	
+	private boolean checkFinish(final IStatus status) {
+		if (status.getSeverity() == IStatus.ERROR) {
+			MessageDialog.openError(getShell(), "Import", status.getMessage());
+			return false;
+		}
 		return true;
 	}
+	
 	
 	public static class WizardState implements IWizardState {
 		

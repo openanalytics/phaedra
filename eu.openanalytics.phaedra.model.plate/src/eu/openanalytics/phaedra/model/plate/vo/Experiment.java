@@ -52,7 +52,10 @@ public class Experiment extends PlatformObject implements IValueObject, Serializ
 	
 	@Column(name="description")
 	private String description;
-
+	
+	@Column(name="closed")
+	private boolean closed;
+	
 	@Column(name="comments")
 	private String comments;
 
@@ -128,6 +131,14 @@ public class Experiment extends PlatformObject implements IValueObject, Serializ
 		this.description = description;
 	}
 
+	public boolean isClosed() {
+		return this.closed;
+	}
+	
+	public void setClosed(boolean closed) {
+		this.closed = closed;
+	}
+	
 	public String getComments() {
 		return comments;
 	}

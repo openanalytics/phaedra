@@ -1,6 +1,12 @@
 package eu.openanalytics.phaedra.link.importer;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
 import eu.openanalytics.phaedra.datacapture.DataCaptureService;
 import eu.openanalytics.phaedra.datacapture.DataCaptureTask;
@@ -8,7 +14,9 @@ import eu.openanalytics.phaedra.datacapture.config.CaptureConfig;
 import eu.openanalytics.phaedra.datacapture.config.ModuleConfig;
 import eu.openanalytics.phaedra.datacapture.model.PlateReading;
 import eu.openanalytics.phaedra.datacapture.util.CaptureUtils;
+import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
+import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 
 public class ImportUtils {
@@ -67,4 +75,47 @@ public class ImportUtils {
 		}
 		return readings;
 	}
+	
+	
+	public static IStatus createExperiment(final ImportTask task,
+			final Protocol protocol, final String name) {
+		try {
+			Experiment experiment = PlateService.getInstance().createExperiment(protocol);
+			experiment.setName(name);
+			PlateService.getInstance().updateExperiment(experiment);
+			task.targetExperiment = experiment;
+			return Status.OK_STATUS;
+		} catch (Exception t) {
+			return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+					"Failed to create Experiment.\n\n" + t.getMessage());
+		}
+	}
+	
+	public static IStatus precheckTask(final ImportTask task) {
+		Collection<Experiment> experiments = Collections.emptyList();
+		if (task.targetExperiment != null) {
+			experiments = Collections.singletonList(task.targetExperiment);
+		}
+		else if (task.plateMapping != null) {
+			experiments = task.plateMapping.values().stream()
+					.map(Plate::getExperiment)
+					.collect(Collectors.toSet());
+		}
+		if (!experiments.isEmpty()) {
+			final List<Experiment> closed = experiments.stream().filter(Experiment::isClosed)
+					.collect(Collectors.toList());
+			if (!closed.isEmpty()) {
+				final Experiment experiment0 = closed.get(0);
+				return new Status(IStatus.ERROR, Activator.PLUGIN_ID,
+						(experiments.size() == 1) ?
+								String.format("The target experiment '%1$s' (%2$s) is closed.",
+										experiment0.getName(), experiment0.getId() ) :
+								String.format("%3$s of the target experiments ('%1$s' (%2$s), ...) are closed.",
+										experiment0.getName(), experiment0.getId(), closed.size() ));
+			}
+		}
+		
+		return Status.OK_STATUS;
+	}
+	
 }
