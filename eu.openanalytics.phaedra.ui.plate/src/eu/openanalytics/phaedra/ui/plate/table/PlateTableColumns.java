@@ -130,10 +130,43 @@ public class PlateTableColumns {
 			config.setLabelProvider(createProgressLabelProvider(config,
 					(p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("zprime", f, null, null)),
 					(p, f) -> summaryLoader.getSummary(p).getStat("zprime", f, null, null)));
-			
+
 			config.setSorter(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("zprime", f, null, null)));
 			config.setTooltip("ZPrime");
 			configs.add(config);
+
+			// UR-015: Add Robust Z-Prime
+			config = ColumnConfigFactory.create("Robust ZPrime", ColumnDataType.Numeric, 75);
+			config.setLabelProvider(createProgressLabelProvider(config,
+					(p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("robustzprime", f, null, null)),
+					(p, f) -> summaryLoader.getSummary(p).getStat("robustzprime", f, null, null)));
+
+			config.setSorter(
+					createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("robustzprime", f, null, null)));
+			config.setTooltip("Robust ZPrime");
+			configs.add(config);
+
+			// UR-015: Add Pearson correlation coefficient
+			config = ColumnConfigFactory.create("Pearson CC", ColumnDataType.Numeric, 75);
+			config.setLabelProvider(createProgressLabelProvider(config,
+					(p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("pearsoncc", f, null, null)),
+					(p, f) -> summaryLoader.getSummary(p).getStat("pearsoncc", f, null, null)));
+
+			config.setSorter(
+					createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("pearsoncc", f, null, null)));
+			config.setTooltip("Pearson CC");
+			configs.add(config);
+
+			// UR-015: Add Spearman correlation coefficient
+			config = ColumnConfigFactory.create("Spearman CC", ColumnDataType.Numeric, 75);
+			config.setLabelProvider(createProgressLabelProvider(config,
+					(p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("spearmancc", f, null, null)),
+					(p, f) -> summaryLoader.getSummary(p).getStat("spearmancc", f, null, null)));
+
+			config.setSorter(
+					createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("spearmancc", f, null, null)));
+			config.setTooltip("Spearman CC");
+			configs.add(config);			
 		}
 
 		config = ColumnConfigFactory.create("Description", ColumnDataType.String, 200);
@@ -173,12 +206,21 @@ public class PlateTableColumns {
 			config.setTooltip("Signal/Noise");
 			configs.add(config);
 			
-			String[] controlTypes = { "LC", "HC" };
-			for (String controlType: controlTypes) {
-				config = ColumnConfigFactory.create("%CV " + controlType, ColumnDataType.Numeric, 75);
-				config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("cv", f, controlType, null))));
-				config.setSorter(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("cv", f, controlType, null)));
-				config.setTooltip("%CV " + controlType);
+//			String[] controlTypes = { "LC", "HC" };
+//			for (String controlType: controlTypes) {
+//				config = ColumnConfigFactory.create("%CV " + controlType, ColumnDataType.Numeric, 75);
+//				config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("cv", f, controlType, null))));
+//				config.setSorter(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("cv", f, controlType, null)));
+//				config.setTooltip("%CV " + controlType);
+//				configs.add(config);
+//			}
+			// UR-015: LC and HC refer to Low Count and High Count respectively
+			String[] countTypes = { "LC", "HC" };
+			for (String countType: countTypes) {
+				config = ColumnConfigFactory.create("%CV " + countType, ColumnDataType.Numeric, 75);
+				config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("cv", f, countType, null))));
+				config.setSorter(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("cv", f, countType, null)));
+				config.setTooltip("%CV " + countType);
 				configs.add(config);
 			}
 		}

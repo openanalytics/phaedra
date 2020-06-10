@@ -82,6 +82,14 @@
             class="eu.openanalytics.phaedra.calculation.stat.impl.RobustZPrimeCalculator"
             name="robustzprime">
       </statCalculator>
+      <statCalculator
+            class="eu.openanalytics.phaedra.calculation.stat.impl.PearsonCorrCoeffCalculator"
+            name="pearsoncc">
+      </statCalculator>
+      <statCalculator
+            class="eu.openanalytics.phaedra.calculation.stat.impl.SpearmanCorrCoeffCalculator"
+            name="spearmancc">
+      </statCalculator>
    </extension>
    <extension
          point="eu.openanalytics.phaedra.calculation.normalizer">

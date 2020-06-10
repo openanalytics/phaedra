@@ -20,6 +20,11 @@ public class PlateStatisticsProvider {
 
 		stats.add(new PlateStatistic("zprime", "Z-Prime"));
 		stats.add(new PlateStatistic("robustzprime", "Robust Z-Prime"));
+		
+		// UR-015: Add Pearson and Spearman correlation coefficient 
+		stats.add(new PlateStatistic("pearsoncc", "Pearson correlation coefficient"));
+		stats.add(new PlateStatistic("spearmancc", "Spearman correlation coefficient"));
+		
 		stats.add(new PlateStatistic("sn", "Signal/Noise"));
 		stats.add(new PlateStatistic("sb", "Signal/Background"));
 
