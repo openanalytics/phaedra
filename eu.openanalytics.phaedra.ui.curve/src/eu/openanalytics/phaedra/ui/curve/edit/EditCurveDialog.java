@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
-import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDatabindingDialog;
+import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDataBindingDialog;
 import eu.openanalytics.phaedra.model.curve.CurveFitException;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.CurveFitSettings;
@@ -26,8 +26,11 @@ import eu.openanalytics.phaedra.model.curve.vo.Curve;
  * the plate is recalculated.</strong>
  *  </p>
  */
-public class EditCurveDialog extends TitleAreaDatabindingDialog {
+public class EditCurveDialog extends TitleAreaDataBindingDialog {
 
+	private static final int APPLY_ID = IDialogConstants.YES_ID;
+	
+	
 	private CurveFitSettings customizedSettings;
 	private Curve[] curves;
 	
@@ -63,14 +66,20 @@ public class EditCurveDialog extends TitleAreaDatabindingDialog {
 	
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, 2, "Apply", true);
+		createButton(parent, APPLY_ID, "Apply", true);
 		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, false);
 		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
 	}
 	
 	@Override
+	protected void applyValidationResult(final boolean isValid) {
+		super.applyValidationResult(isValid);
+		getButton(APPLY_ID).setEnabled(isValid);
+	}
+	
+	@Override
 	protected void buttonPressed(int buttonId) {
-		if (buttonId == 2) {
+		if (buttonId == APPLY_ID) {
 			fitCustomCurve();
 		} else {
 			super.buttonPressed(buttonId);

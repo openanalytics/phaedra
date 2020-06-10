@@ -8,6 +8,7 @@ import org.eclipse.swt.graphics.RGB;
 import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
 import eu.openanalytics.phaedra.model.curve.CurveFitInput;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
+import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.render.ICurveRenderer;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 
@@ -20,10 +21,13 @@ public class Receptor2CurveRenderer implements ICurveRenderer {
 
 	@Override
 	public double[][] getCurveSamples(Curve curve, CurveFitInput input) {
-		// TODO Auto-generated method stub
-		return null;
+		Value value = CurveParameter.find(curve.getOutputParameters(), "Predicted Curve Points");
+		if (value == null) return null;
+		
+		double[][] samples = (double[][]) CurveParameter.getBinaryValue(value);
+		return samples;
 	}
-
+	
 	@Override
 	public CurveRendererType getCurveRendererType(Curve curve, CurveFitInput input) {
 		return CurveRendererType.Line;
@@ -42,8 +46,8 @@ public class Receptor2CurveRenderer implements ICurveRenderer {
 		};
 		for (int i = 0; i < input.getValid().length; i++) {
 			if (input.getValid()[i] && !Double.isNaN(input.getValues()[i])) {
-				bounds[0] = Math.min(bounds[0], input.getValues()[i]);
-				bounds[1] = Math.max(bounds[1], input.getValues()[i]);
+				bounds[0] = Double.isNaN(bounds[0]) ? input.getValues()[i] : Math.min(bounds[0], input.getValues()[i]);
+				bounds[1] = Double.isNaN(bounds[1]) ? input.getValues()[i] : Math.max(bounds[1], input.getValues()[i]);
 			}
 		}
 		double diff = bounds[1] - bounds[0];
@@ -61,13 +65,14 @@ public class Receptor2CurveRenderer implements ICurveRenderer {
 				CurveParameter.find(curve.getOutputParameters(), "Bottom").numericValue,
 				CurveParameter.find(curve.getOutputParameters(), "Top").numericValue
 		};
-		double[] ic50 = new double[] { 
-			-CurveParameter.find(curve.getOutputParameters(), "pIC50").numericValue,
-			(bounds[0] + (bounds[1] - bounds[0]) / 2)	
-		};
 		
-		annotations.add(new CurveAnnotation(2.0f, 0x000000, ic50[0], Integer.MIN_VALUE, ic50[0], ic50[1]));
-		annotations.add(new CurveAnnotation(2.0f, 0x000000, Integer.MIN_VALUE, ic50[1], ic50[0], ic50[1]));
+		Value value = CurveParameter.find(curve.getOutputParameters(), "Predicted pIC50 PlotLocation");
+		double[] ic50 = null;
+		if (value != null) ic50 = (double[]) CurveParameter.getBinaryValue(value);
+		if (ic50 != null) {
+			annotations.add(new CurveAnnotation(2.0f, 0x000000, ic50[0], Integer.MIN_VALUE, ic50[0], ic50[1]));
+			annotations.add(new CurveAnnotation(2.0f, 0x000000, Integer.MIN_VALUE, ic50[1], ic50[0], ic50[1]));
+		}
 		
 		RGB lbColor = new RGB(0, 255, 0);;
 		RGB ubColor = new RGB(255, 0, 0);
@@ -80,7 +85,29 @@ public class Receptor2CurveRenderer implements ICurveRenderer {
 
 	@Override
 	public CurveBand[] getBands(Curve curve, CurveFitInput input) {
-		return new CurveBand[0];
+		Value value = CurveParameter.find(curve.getOutputParameters(), "Confidence Band");
+		if (value == null) return null;
+		
+		double[][] ciGrid = (double[][]) CurveParameter.getBinaryValue(value);
+		if (ciGrid == null) return null;
+
+		int points = ciGrid[0].length;
+		double[] lowerX = new double[points];
+		double[] lowerY = new double[points];
+		double[] upperX = new double[points];
+		double[] upperY = new double[points];
+		
+		for (int i=0; i<points; i++) {
+			lowerX[i] = ciGrid[0][i];
+			lowerY[i] = ciGrid[1][i];
+			upperX[i] = ciGrid[0][i];
+			upperY[i] = ciGrid[2][i];
+		}
+		
+		float alpha = 0.25f;
+		RGB bandColor = new RGB(255, 255, 128);
+		CurveBand ciBand = new CurveBand(ColorUtils.rgbToHex(bandColor), alpha, lowerX, lowerY, upperX, upperY);
+		return new CurveBand[] { ciBand };
 	}
 
 	@Override

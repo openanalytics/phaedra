@@ -23,10 +23,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.VersionUtils;
 import eu.openanalytics.phaedra.base.util.threading.JobUtils;
@@ -45,10 +45,10 @@ public class UserActivityView extends ViewPart {
 	public void createPartControl(Composite parent) {
 		tableViewer = new RichTableViewer(parent, SWT.FULL_SELECTION | SWT.H_SCROLL | SWT.V_SCROLL);
 		List<ColumnConfiguration> configs = new ArrayList<>();
-		configs.add(ColumnConfigFactory.create("User", o -> ((UserActivity) o).getUserName(), ColumnDataType.String, 200));
-		configs.add(ColumnConfigFactory.create("Version", o -> ((UserActivity) o).getLatestSessionVersion(), ColumnDataType.String, 150));
-		configs.add(ColumnConfigFactory.create("# Logins", o -> "" + ((UserActivity) o).getLoginCount(), ColumnDataType.Numeric, 75));
-		configs.add(ColumnConfigFactory.create("Last Login", o -> DATE_FORMAT.format(((UserActivity) o).getLatestSessionDate()), ColumnDataType.Date, 200));
+		configs.add(ColumnConfigFactory.create("User", o -> ((UserActivity) o).getUserName(), DataType.String, 200));
+		configs.add(ColumnConfigFactory.create("Version", o -> ((UserActivity) o).getLatestSessionVersion(), DataType.String, 150));
+		configs.add(ColumnConfigFactory.create("# Logins", o -> "" + ((UserActivity) o).getLoginCount(), DataType.Integer, 75));
+		configs.add(ColumnConfigFactory.create("Last Login", o -> DATE_FORMAT.format(((UserActivity) o).getLatestSessionDate()), DataType.DateTime, 200));
 		tableViewer.applyColumnConfig(configs);
 		tableViewer.setContentProvider(new ArrayContentProvider());
 		tableViewer.setLabelProvider(new ActivityLabelProvider());

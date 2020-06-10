@@ -1,3 +1,11 @@
+checkED50Range          in cases where estimated ED50 is out of range,
+                        checks whether the model fit should be shown or
+                        not
+compoundStatus          determines whether a compound is inactive or
+                        super potent
+determineTheSlope       determines the direction of the curve based on
+                        various factors
+estimateRange           computes the estimated range
 extractLogisticModelFit
                         extracts required stuff from a fitted drc model
 extractLogisticNoModelFit

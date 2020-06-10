@@ -45,6 +45,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
@@ -53,7 +54,6 @@ import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.misc.HyperlinkLabelProvider;
@@ -363,20 +363,20 @@ public class CrcDetailsView extends DecoratedView {
 
 	private ColumnConfiguration[] createTableColumns() {
 		ColumnConfiguration[] config = new ColumnConfiguration[2];
-		config[0] = ColumnConfigFactory.create("Property", ColumnDataType.String, 120);
+		config[0] = ColumnConfigFactory.create("Property", DataType.String, 120);
 		config[0].setLabelProvider(new RichLabelProvider(config[0]){
 			@Override
 			public String getText(Object element) {
 				return ((CurveTextField) element).getLabel();
 			}
 		});
-		config[0].setSorter(new Comparator<CurveTextField>() {
+		config[0].setSortComparator(new Comparator<CurveTextField>() {
 			@Override
 			public int compare(CurveTextField e1, CurveTextField e2) {
 				return Collator.getInstance().compare(e1.getLabel(), e2.getLabel());
 			}
 		});
-		config[1] = ColumnConfigFactory.create("Value", ColumnDataType.String, 250);
+		config[1] = ColumnConfigFactory.create("Value", DataType.String, 250);
 		config[1].setLabelProvider(new HyperlinkLabelProvider(infoTable.getControl(), 1) {
 			@Override
 			public String getText(Object element) {

@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 
 
-public class ByteArrayDescription extends BaseDataDescription {
+public class ByteArrayDescription extends BasicDataDescription {
 	
 	
 	public ByteArrayDescription(final String name, final Class<?> entityType) {

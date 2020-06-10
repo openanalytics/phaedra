@@ -56,7 +56,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final Composite groupComposite = createGroup(composite);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(groupComposite);
 		
-		initDatabinding();
+		initDataBinding();
 		load();
 		
 		return composite;
@@ -106,7 +106,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		return composite;
 	}
 	
-	private void initDatabinding() {
+	private void initDataBinding() {
 		final DataBindingContext dbc = new DataBindingContext();
 		dbc.bindValue(ViewerProperties.singleSelection().observe(this.concentrationUnitViewer),
 				this.concentrationUnit );

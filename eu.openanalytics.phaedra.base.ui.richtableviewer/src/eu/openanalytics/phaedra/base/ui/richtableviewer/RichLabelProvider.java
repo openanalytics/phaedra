@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 
@@ -16,10 +17,16 @@ public class RichLabelProvider extends ColumnLabelProvider {
 	private final static String DEFAULT_DECIMAL_FORMAT = NumberUtils.DEFAULT_DECIMAL_FORMAT;
 	private final static String DEFAULT_DATE_FORMAT = "dd/MM/yyyy";
 	
-	public RichLabelProvider(ColumnConfiguration config) {
+	
+	public RichLabelProvider(ColumnConfiguration config, String formatString) {
 		this.config = config;
-		formatter = createFormatter();
+		formatter = createFormatter(formatString);
 	}
+	
+	public RichLabelProvider(ColumnConfiguration config) {
+		this(config, null);
+	}
+	
 	
 	@Override
 	public String getText(Object element) {
@@ -30,18 +37,22 @@ public class RichLabelProvider extends ColumnLabelProvider {
 		return element.toString();
 	}
 	
-	private Format createFormatter() {
-		String format = config.getFormatString();
+	private Format createFormatter(String formatString) {
+		DataType dataType = config.getDataType();
+		if (dataType == null) {
+			return null;
+		}
 		
-		switch (config.getDataType()) {
-		case Numeric:
-			if (format == null) format = DEFAULT_DECIMAL_FORMAT;
-			return NumberUtils.createDecimalFormat(format);
+		switch (dataType) {
+		case Integer:
+		case Real:
+			if (formatString == null) formatString = DEFAULT_DECIMAL_FORMAT;
+			return NumberUtils.createDecimalFormat(formatString);
 		case String:
 			return null;
-		case Date:
-			if (format == null) format = DEFAULT_DATE_FORMAT;
-			return new SimpleDateFormat(format);
+		case DateTime:
+			if (formatString == null) formatString = DEFAULT_DATE_FORMAT;
+			return new SimpleDateFormat(formatString);
 		case Boolean:
 			return null;
 		default:

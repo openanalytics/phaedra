@@ -22,12 +22,12 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.icons.IconRegistry;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizardPage;
 import eu.openanalytics.phaedra.base.ui.util.wizard.IWizardState;
@@ -140,7 +140,7 @@ public class SelectProtocol extends BaseStatefulWizardPage {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 		
-		config = ColumnConfigFactory.create("", ColumnDataType.String, 30);
+		config = ColumnConfigFactory.create("", DataType.String, 30);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public Image getImage(Object element) {
@@ -154,13 +154,13 @@ public class SelectProtocol extends BaseStatefulWizardPage {
 		config.setLabelProvider(labelProvider);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Protocol", "getName", ColumnDataType.String, 270); 
+		config = ColumnConfigFactory.create("Protocol", "getName", DataType.String, 270);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Id", "getId", ColumnDataType.Numeric, 50);
+		config = ColumnConfigFactory.create("Id", "getId", DataType.Integer, 50);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Protocol Class", ColumnDataType.String, 150);
+		config = ColumnConfigFactory.create("Protocol Class", DataType.String, 150);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -169,7 +169,7 @@ public class SelectProtocol extends BaseStatefulWizardPage {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Protocol>(){
+		config.setSortComparator(new Comparator<Protocol>(){
 			@Override
 			public int compare(Protocol p1, Protocol p2) {
 				if (p1 == null) return -1;

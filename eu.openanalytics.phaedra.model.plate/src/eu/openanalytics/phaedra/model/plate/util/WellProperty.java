@@ -13,19 +13,20 @@ import eu.openanalytics.phaedra.base.datatype.description.EntityIdDescription;
 import eu.openanalytics.phaedra.base.datatype.description.IntegerValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.RealValueDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.model.EntityProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
 
 
-public enum WellProperty {
+public enum WellProperty implements EntityProperty<Well> {
 	
 	Number(new IntegerValueDescription("Well Number", Well.class)),
 	Position(new StringValueDescription("Well Position", Well.class)),
-	Row(new IntegerValueDescription("Well Row", Well.class)),
-	Column(new IntegerValueDescription("Well Column", Well.class)),
-	Type(new StringValueDescription("Well Type", Well.class)),
+	Row(new IntegerValueDescription("Well Row", Well.class), "Row"),
+	Column(new IntegerValueDescription("Well Column", Well.class), "Column"),
+	WellType(new StringValueDescription("Well Type", Well.class)),
 	Compound(new StringValueDescription("Compound", Well.class)),
 	Concentration(new ConcentrationValueDescription("Concentration", Well.class, Molar)),
 	LogConcentration(new RealValueDescription("Log Concentration", Well.class)),
@@ -35,23 +36,42 @@ public enum WellProperty {
 	
 	
 	private final String label;
+	private final String shortLabel;
 	
 	private final DataDescription dataDescription;
 	private final boolean numeric;
 	
 	
-	private WellProperty(final DataDescription dataDescription) {
+	private WellProperty(final DataDescription dataDescription, final String shortLabel) {
 		this.label = dataDescription.getName();
+		this.shortLabel= shortLabel;
 		this.dataDescription = dataDescription;
 		this.numeric = (dataDescription.getDataType() == DataType.Integer || dataDescription.getDataType() == DataType.Real);
 	}
-
-	public String getLabel() {
-		return label;
+	
+	private WellProperty(final DataDescription dataDescription) {
+		this(dataDescription, dataDescription.getName());
 	}
 	
+	
+	@Override
+	public String getKey() {
+		return name();
+	}
+	
+	@Override
+	public String getLabel() {
+		return this.label;
+	}
+	
+	@Override
+	public String getShortLabel() {
+		return this.shortLabel;
+	}
+	
+	@Override
 	public DataDescription getDataDescription() {
-		return dataDescription;
+		return this.dataDescription;
 	}
 	
 	public boolean isNumeric() {
@@ -79,7 +99,7 @@ public enum WellProperty {
 		case Column:
 			return "" + (int)getValue(well);
 		case Position: return PlateUtils.getWellCoordinate(well);
-		case Type: return well.getWellType();
+		case WellType: return well.getWellType();
 		case Compound: return well.getCompound() == null ? well.getWellType() : well.getCompound().toString();
 		case Concentration: return Formatters.getInstance().format(getValue(well), "0.0#E0");
 		case LogConcentration: return Formatters.getInstance().format(getValue(well), "0.00");
@@ -111,6 +131,7 @@ public enum WellProperty {
 		}
 	}
 	
+	@Override
 	public Object getTypedValue(final Well well) {
 		switch (this) {
 		case Number:
@@ -121,10 +142,10 @@ public enum WellProperty {
 			return Integer.valueOf(well.getColumn());
 		case Position:
 			return PlateUtils.getWellCoordinate(well);
-		case Type:
+		case WellType:
 			return well.getWellType();
 		case Compound:
-			return (well.getCompound() == null) ? well.getWellType() : well.getCompound().toString();
+			return well.getCompound();
 		case Concentration:
 			return well.getCompoundConcentration();
 		case LogConcentration:
@@ -141,13 +162,13 @@ public enum WellProperty {
 	}
 	
 	
-	public static WellProperty getByName(String name) {
+	public static WellProperty getByLabel(String name) {
 		for (WellProperty prop: values()) {
 			if (prop.getLabel().equals(name)) return prop;
 		}
 		return null;
 	}
-
+	
 	public static WellProperty[] getNumericProperties() {
 		WellProperty[] allProperties = values();
 		List<WellProperty> numericProperties = new ArrayList<>();

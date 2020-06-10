@@ -12,9 +12,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
@@ -67,9 +67,9 @@ public class OutlierDetectionDialog extends TitleAreaDialog {
 	private void configureColumns() {
 		List<ColumnConfiguration> configs = new ArrayList<>();
 		
-		configs.add(ColumnConfigFactory.create("Well", w -> PlateUtils.getWellCoordinate((Well) w), ColumnDataType.String, 50));
-		configs.add(ColumnConfigFactory.create("Plate", w -> ((Well) w).getPlate().getBarcode(), ColumnDataType.String, 200));
-		configs.add(ColumnConfigFactory.create("Well Type", w -> ((Well) w).getWellType(), ColumnDataType.String, 150));
+		configs.add(ColumnConfigFactory.create("Well", w -> PlateUtils.getWellCoordinate((Well) w), DataType.String, 50));
+		configs.add(ColumnConfigFactory.create("Plate", w -> ((Well) w).getPlate().getBarcode(), DataType.String, 200));
+		configs.add(ColumnConfigFactory.create("Well Type", w -> ((Well) w).getWellType(), DataType.String, 150));
 		
 		tableViewer.applyColumnConfig(configs);
 	}

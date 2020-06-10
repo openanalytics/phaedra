@@ -105,7 +105,7 @@ public class CollectionUtils {
 	 */
 	public static <E> void setContains(Collection<E> c, E element, boolean contains) {
 		if (contains) {
-			if (!c.contains(c)) c.add(element);
+			if (!c.contains(element)) c.add(element);
 		}
 		else {
 			c.remove(element);

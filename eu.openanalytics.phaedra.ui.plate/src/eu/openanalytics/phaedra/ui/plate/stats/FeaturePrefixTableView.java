@@ -37,11 +37,11 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.pinning.SelectionHandlingDecorator;
@@ -150,7 +150,7 @@ public class FeaturePrefixTableView extends DecoratedView {
 	}
 
 	private Protocol getProtocol() {
-		return Optional.of(calculator.getCurrentWell()).map(w -> (Protocol) w.getAdapter(Protocol.class)).orElse(null);
+		return Optional.of(calculator.getCurrentWell()).map(w -> w.getAdapter(Protocol.class)).orElse(null);
 	}
 	
 	private Properties getProperties() {
@@ -181,7 +181,7 @@ public class FeaturePrefixTableView extends DecoratedView {
 
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 
-		ColumnConfiguration config = ColumnConfigFactory.create("", ColumnDataType.String, 100);
+		ColumnConfiguration config = ColumnConfigFactory.create("", DataType.String, 100);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -198,7 +198,7 @@ public class FeaturePrefixTableView extends DecoratedView {
 			for (final String suffix: suffixes) {
 				config = calculator.getColumnState(suffix);
 				if (config == null) {
-					config = ColumnConfigFactory.create(suffix, ColumnDataType.String, 120);
+					config = ColumnConfigFactory.create(suffix, DataType.String, 120);
 				}
 				labelProvider = new RichLabelProvider(config) {
 					@Override

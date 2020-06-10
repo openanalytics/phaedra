@@ -33,6 +33,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 import org.openscada.ui.breadcrumbs.BreadcrumbViewer;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.description.ConcentrationDataDescription;
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
 import eu.openanalytics.phaedra.base.event.IModelEventListener;
@@ -40,7 +41,6 @@ import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnViewerSorter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
@@ -395,7 +395,7 @@ public class WellInspector extends DecoratedView {
 		col.setText("Feature");
 		col.setToolTipText("Feature (Group)");
 		col.setWidth(180);
-		new ColumnViewerSorter<>(treeViewer, column, (o1, o2) -> {
+		new ColumnViewerSorter<>(column, (o1, o2) -> {
 			if (o1 instanceof FeatureGroup && o2 instanceof FeatureGroup) {
 				FeatureGroup f1 = (FeatureGroup) o1;
 				FeatureGroup f2 = (FeatureGroup) o2;
@@ -414,7 +414,7 @@ public class WellInspector extends DecoratedView {
 		col.setText("Normalized");
 		col.setToolTipText("Normalized Feature Value");
 		col.setWidth(100);
-		new ColumnViewerSorter<>(treeViewer, column, (o1, o2) -> {
+		new ColumnViewerSorter<>(column, (o1, o2) -> {
 			if (o1 instanceof FeatureGroup && o2 instanceof Feature) {
 				Feature f1 = (Feature) o1;
 				Feature f2 = (Feature) o2;
@@ -438,7 +438,7 @@ public class WellInspector extends DecoratedView {
 		col.setText("Raw");
 		col.setToolTipText("Raw Feature Value");
 		col.setWidth(100);
-		new ColumnViewerSorter<>(treeViewer, column, (o1, o2) -> {
+		new ColumnViewerSorter<>(column, (o1, o2) -> {
 			if (o1 instanceof FeatureGroup && o2 instanceof Feature) {
 				Feature f1 = (Feature) o1;
 				Feature f2 = (Feature) o2;
@@ -454,16 +454,16 @@ public class WellInspector extends DecoratedView {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Timestamp", ColumnDataType.Date, 120);
+		config = ColumnConfigFactory.create("Timestamp", DataType.DateTime, 120);
 		ColumnConfigFactory.createLabelProvider(config, "getTimestamp", "dd/MM/yyyy HH:mm:ss");
-		config.setSorter((ObjectLog o1, ObjectLog o2) -> {
+		config.setSortComparator((ObjectLog o1, ObjectLog o2) -> {
 			if (o1 == null && o2 == null) return 0;
 			if (o1 == null) return -1;
 			return o1.getTimestamp().compareTo(o2.getTimestamp());
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("User", ColumnDataType.String, 70);
+		config = ColumnConfigFactory.create("User", DataType.String, 70);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -473,7 +473,7 @@ public class WellInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Field", ColumnDataType.String, 80);
+		config = ColumnConfigFactory.create("Field", DataType.String, 80);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -486,7 +486,7 @@ public class WellInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Old Value", ColumnDataType.String, 70);
+		config = ColumnConfigFactory.create("Old Value", DataType.String, 70);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -496,7 +496,7 @@ public class WellInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("New Value", ColumnDataType.String, 70);
+		config = ColumnConfigFactory.create("New Value", DataType.String, 70);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {
@@ -506,7 +506,7 @@ public class WellInspector extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Remark", ColumnDataType.String, 80);
+		config = ColumnConfigFactory.create("Remark", DataType.String, 80);
 		config.setLabelProvider(new CellLabelProvider() {
 			@Override
 			public void update(ViewerCell cell) {

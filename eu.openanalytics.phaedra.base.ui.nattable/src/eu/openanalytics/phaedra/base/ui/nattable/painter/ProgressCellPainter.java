@@ -7,6 +7,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 
+import eu.openanalytics.phaedra.base.ui.theme.PhaedraThemes;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 
 /**
@@ -18,15 +19,17 @@ public class ProgressCellPainter extends ImageTextPainter {
 
 	private double max;
 
-	private static Color background = new Color(null, 170, 255, 170);
+	private Color background;
 
+	public ProgressCellPainter(double max) {
+		this.max = max;
+		this.background = PhaedraThemes.GREEN_BACKGROUND_INDICATOR_COLOR.getColor();
+	}
+	
 	public ProgressCellPainter() {
 		this(1.0d);
 	}
 
-	public ProgressCellPainter(double max) {
-		this.max = max;
-	}
 
 	@Override
 	public void paintCell(ILayerCell cell, GC gc, Rectangle adjustedCellBounds, IConfigRegistry configRegistry) {

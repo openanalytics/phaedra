@@ -30,7 +30,7 @@ public class WellPropertySiloScanner extends BaseScanner<SiloDataset> {
 
 	@Override
 	protected Object getValueForRef(String scope, String[] fieldNames, SiloDataset dataset) {
-		WellProperty prop = WellProperty.getByName(fieldNames[0]);
+		WellProperty prop = WellProperty.getByLabel(fieldNames[0]);
 
 		if (prop == null) {
 			throw new CalculationException("No well property with name: " + fieldNames[0]);

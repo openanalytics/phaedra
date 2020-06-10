@@ -2,5 +2,21 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point id="iconProvider" name="IconProvider" schema="schema/iconProvider.exsd"/>
+   
+   <extension
+         point="org.eclipse.ui.themes">
+      <colorDefinition
+            id="eu.openanalytics.phaedra.base.ui.theme.GREEN_BACKGROUND_INDICATOR_COLOR"
+            isEditable="false"
+            label=""
+            value="170,255,170">
+      </colorDefinition>
+      <colorDefinition
+            id="eu.openanalytics.phaedra.base.ui.theme.RED_BACKGROUND_INDICATOR_COLOR"
+            isEditable="false"
+            label=""
+            value="255,170,170">
+      </colorDefinition>
+   </extension>
 
 </plugin>

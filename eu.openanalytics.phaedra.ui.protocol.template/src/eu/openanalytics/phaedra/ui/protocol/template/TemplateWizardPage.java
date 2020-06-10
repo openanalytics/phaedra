@@ -20,10 +20,10 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Widget;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.split.SplitComposite;
 import eu.openanalytics.phaedra.base.ui.util.split.SplitCompositeFactory;
@@ -124,8 +124,8 @@ public class TemplateWizardPage extends BaseStatefulWizardPage {
 		availableSettingsViewer = new RichTableViewer(container, SWT.BORDER);
 		availableSettingsViewer.setContentProvider(new ArrayContentProvider());
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
-		configs.add(ColumnConfigFactory.create("Name", e -> ((TemplateSettingKey)e).name, ColumnDataType.String, 190));
-		configs.add(ColumnConfigFactory.create("Description", e -> ((TemplateSettingKey)e).description, ColumnDataType.String, 250));
+		configs.add(ColumnConfigFactory.create("Name", e -> ((TemplateSettingKey)e).name, DataType.String, 190));
+		configs.add(ColumnConfigFactory.create("Description", e -> ((TemplateSettingKey)e).description, DataType.String, 250));
 		availableSettingsViewer.applyColumnConfig(configs);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(availableSettingsViewer.getControl());
 		
@@ -139,7 +139,7 @@ public class TemplateWizardPage extends BaseStatefulWizardPage {
 		validationViewer.setContentProvider(new ArrayContentProvider());
 		configs = new ArrayList<ColumnConfiguration>();
 		configs.add(ColumnConfigFactory.create("", e -> TemplateUtils.getImage((ValidationItem)e), 30));
-		configs.add(ColumnConfigFactory.create("Description", e -> ((ValidationItem)e).text, ColumnDataType.String, 350));
+		configs.add(ColumnConfigFactory.create("Description", e -> ((ValidationItem)e).text, DataType.String, 350));
 		validationViewer.applyColumnConfig(configs);
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(validationViewer.getControl());
 		

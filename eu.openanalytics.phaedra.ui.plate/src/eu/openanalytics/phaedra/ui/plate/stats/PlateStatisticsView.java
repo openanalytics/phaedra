@@ -19,10 +19,10 @@ import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.copy.CopyableDecorator;
 import eu.openanalytics.phaedra.base.ui.util.misc.FormEditorUtils;
@@ -140,7 +140,7 @@ public class PlateStatisticsView extends DecoratedView {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 		
-		config = ColumnConfigFactory.create("Statistic", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Statistic", DataType.String, 100);
 		config.setLabelProvider(new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -148,7 +148,7 @@ public class PlateStatisticsView extends DecoratedView {
 				return statistic.label;
 			}
 		});
-		config.setSorter(new Comparator<PlateStatistic>(){
+		config.setSortComparator(new Comparator<PlateStatistic>(){
 			@Override
 			public int compare(PlateStatistic s1, PlateStatistic s2) {
 				if (s1 == null && s2 != null) return -1;
@@ -158,7 +158,7 @@ public class PlateStatisticsView extends DecoratedView {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Value", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Value", DataType.String, 100);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -167,7 +167,7 @@ public class PlateStatisticsView extends DecoratedView {
 				return statistic.getFormattedValue(currentPlate, currentFeature);
 			}
 		};
-		config.setSorter(new Comparator<PlateStatistic>(){
+		config.setSortComparator(new Comparator<PlateStatistic>(){
 			@Override
 			public int compare(PlateStatistic s1, PlateStatistic s2) {
 				if (s1 == null && s2 != null) return -1;

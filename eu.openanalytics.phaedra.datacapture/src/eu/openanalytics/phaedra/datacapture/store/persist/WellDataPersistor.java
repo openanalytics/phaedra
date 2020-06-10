@@ -30,6 +30,7 @@ public class WellDataPersistor extends BaseDataPersistor {
 			for (Feature f: PlateUtils.getFeatures(plate)) f.getDisplayName();
 			return wellList;
 		});
+		wells.sort(PlateUtils.WELL_NR_SORTER);
 		
 		// Retrieve existing well data, if any.
 		List<FeatureValue> existingData = PlateService.getInstance().getWellData(plate);

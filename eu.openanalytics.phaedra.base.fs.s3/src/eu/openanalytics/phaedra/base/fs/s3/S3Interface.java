@@ -85,7 +85,20 @@ public class S3Interface extends BaseFileServer {
 	
 	@Override
 	public boolean exists(String path) throws IOException {
-		return s3.doesObjectExist(bucketName, getKey(path));
+		boolean exists = s3.doesObjectExist(bucketName, getKey(path));
+		if (!exists) {
+			// Fixed: return true for non-empty "folders" in S3
+			String key = getKey(path);
+			if (!key.endsWith("/")) key += "/";
+			if (key.equals("/")) key = "";
+			ListObjectsV2Request req = new ListObjectsV2Request();
+			req.setBucketName(bucketName);
+			req.setPrefix(key);
+			req.setDelimiter("/");
+			req.setMaxKeys(1);
+			exists = s3.listObjectsV2(req).getKeyCount() > 0;
+		}
+		return exists;
 	}
 
 	@Override

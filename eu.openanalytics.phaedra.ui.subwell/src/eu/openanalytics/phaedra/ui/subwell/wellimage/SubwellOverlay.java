@@ -448,6 +448,7 @@ public class SubwellOverlay extends JP2KOverlay {
 			int radius = getEntityRadius(entityIndex);
 			FeatureClass fClassToDraw = null;
 
+			Color color = null;
 			if (feature != null) {
 				// Find the first feature that has a classification.
 				if (rejectionFeature != null) {
@@ -466,9 +467,8 @@ public class SubwellOverlay extends JP2KOverlay {
 				int blue = c % 256;
 
 				if (c != 0) {
-					Color fgColor = new Color(gc.getDevice(), red, green, blue);
-					setGCColor(gc, fgColor);
-					fgColor.dispose();
+					color = new Color(gc.getDevice(), red, green, blue);
+					setGCColor(gc, color);
 				} else {
 					setGCColor(gc, gc.getDevice().getSystemColor(SWT.COLOR_YELLOW));
 				}
@@ -479,6 +479,7 @@ public class SubwellOverlay extends JP2KOverlay {
 				plot = PlotShape.Rectangle;
 			}
 			plot.drawShape(gc, pos.x, pos.y, radius + size, Activator.getDefault().getPreferenceStore().getBoolean((Prefs.CLASSIFICATION_SYMBOL_FILL)));
+			if (color != null) color.dispose();
 		}
 	}
 

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import javax.naming.directory.DirContext;
 import javax.persistence.PersistenceException;
@@ -177,7 +178,7 @@ public class UserService extends BaseJPAService {
 		return (pref == null) ? null : pref.getValue();
 	}
 
-	public void setPreferenceValue(String type, String item, String value) {
+	public boolean setPreferenceValue(String type, String item, String value) {
 		Preference pref = getPreference(type, item);
 		if (pref == null) {
 			pref = new Preference();
@@ -188,8 +189,12 @@ public class UserService extends BaseJPAService {
 			CacheKey key = getPrefCacheKey(type, item);
 			preferenceCache.put(key, pref);
 		}
+		if (Objects.equals(pref.getValue(), value)) {
+			return false;
+		}
 		pref.setValue(value);
 		save(pref);
+		return true;
 	}
 	
 	private void initializePreferences() {

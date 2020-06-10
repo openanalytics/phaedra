@@ -19,10 +19,10 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnViewerSorter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
@@ -102,21 +102,21 @@ public class SelectIntensityFeaturesDialog extends TitleAreaDialog {
 	}
 	
 	private void configureTable() {
-		ColumnConfiguration config = ColumnConfigFactory.create("Channel", "getChannel", ColumnDataType.String, 80);
+		ColumnConfiguration config = ColumnConfigFactory.create("Channel", "getChannel", DataType.String, 80);
 		TableViewerColumn tvc = new TableViewerColumn(tableViewer, SWT.NONE);
 		tvc.getColumn().setText(config.getName());
 		tvc.getColumn().setWidth(config.getWidth());
 		tvc.setLabelProvider(config.getLabelProvider());
-		new ColumnViewerSorter<>(tableViewer, tvc, config.getSorter());
+		new ColumnViewerSorter<>(tvc, config.getSortComparator());
 		
-		config = ColumnConfigFactory.create("Statistic", "getStat", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Statistic", "getStat", DataType.String, 100);
 		tvc = new TableViewerColumn(tableViewer, SWT.NONE);
 		tvc.getColumn().setText(config.getName());
 		tvc.getColumn().setWidth(config.getWidth());
 		tvc.setLabelProvider(config.getLabelProvider());
-		new ColumnViewerSorter<>(tableViewer, tvc, config.getSorter());
+		new ColumnViewerSorter<>(tvc, config.getSortComparator());
 		
-		config = ColumnConfigFactory.create("Saved as Feature", "getFeature", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Saved as Feature", "getFeature", DataType.String, 200);
 		tvc = new TableViewerColumn(tableViewer, SWT.NONE);
 		tvc.getColumn().setText(config.getName());
 		tvc.getColumn().setWidth(config.getWidth());
@@ -162,6 +162,7 @@ public class SelectIntensityFeaturesDialog extends TitleAreaDialog {
 			Collections.sort(features, ProtocolUtils.FEATURE_NAME_SORTER);
 			
 			LabelProvider labelProvider = new LabelProvider() {
+				@Override
 				public String getText (Object element) {
 					return ((SubWellFeature)element).getName();
 				}

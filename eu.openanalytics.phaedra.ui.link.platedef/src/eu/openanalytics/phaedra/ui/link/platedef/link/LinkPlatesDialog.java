@@ -39,10 +39,10 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.util.misc.ThreadsafeDialogHelper;
 import eu.openanalytics.phaedra.link.platedef.PlateDefinitionService;
@@ -169,6 +169,7 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 		editor.minimumWidth = 50;
 
 		table.addMouseListener(new MouseAdapter() {
+			@Override
 			public void mouseDown(MouseEvent event) {
 				// Dispose any existing editor
 				Control old = editor.getEditor();
@@ -193,6 +194,7 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 						Text newEditor = new Text(table, SWT.NONE);
 						newEditor.setText(item.getText(barcodeColumn));
 						newEditor.addModifyListener(new ModifyListener() {
+							@Override
 							public void modifyText(ModifyEvent me) {
 								Text text = (Text) editor.getEditor();
 								editor.getItem().setText(barcodeColumn, text.getText());
@@ -220,6 +222,7 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 		return area;
 	}
 
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		parent.setCapture(true);
 		createButton(parent, IDialogConstants.OK_ID, "Link", true);
@@ -237,6 +240,7 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 		}
 	}
 
+	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == IDialogConstants.CANCEL_ID) {
 			close();
@@ -303,10 +307,10 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 		
-		config = ColumnConfigFactory.create("Sequence", "getSequence", ColumnDataType.Numeric, 80); 
+		config = ColumnConfigFactory.create("Sequence", "getSequence", DataType.Integer, 80); 
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Barcode (click to edit)", ColumnDataType.String, 160);
+		config = ColumnConfigFactory.create("Barcode (click to edit)", DataType.String, 160);
 		RichLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -320,7 +324,7 @@ public class LinkPlatesDialog extends TitleAreaDialog {
 		config.setTooltip("Barcode");
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Status", ColumnDataType.String, 350);
+		config = ColumnConfigFactory.create("Status", DataType.String, 350);
 		labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {

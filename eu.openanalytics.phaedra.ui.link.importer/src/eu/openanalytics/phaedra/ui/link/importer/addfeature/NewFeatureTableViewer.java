@@ -142,7 +142,8 @@ public class NewFeatureTableViewer extends TableViewer{
 			}
 		});
 		col.setEditingSupport(new FeatureAddToProtocolClassEditingSupport(this));
-		new ColumnViewerSorter<>(this, col, new Comparator<Object>() {
+		new ColumnViewerSorter<>(col, new Comparator<Object>() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				Boolean b1 = ((FeatureDefinition)o1).addFeatureToProtocolClass;
 				Boolean b2 = ((FeatureDefinition)o2).addFeatureToProtocolClass;
@@ -160,7 +161,8 @@ public class NewFeatureTableViewer extends TableViewer{
 				return p.name;
 			}
 		});
-		new ColumnViewerSorter<>(this, col, new Comparator<Object>() {
+		new ColumnViewerSorter<>(col, new Comparator<Object>() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				String s1 = ((FeatureDefinition)o1).name;
 				String s2 = ((FeatureDefinition)o2).name;
@@ -189,7 +191,8 @@ public class NewFeatureTableViewer extends TableViewer{
 			}
 		});
 		col.setEditingSupport(new FeatureIsKeyEditingSupport(this));
-		new ColumnViewerSorter<>(this, col, new Comparator<Object>() {
+		new ColumnViewerSorter<>(col, new Comparator<Object>() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				Boolean b1 = ((FeatureDefinition)o1).isKey;
 				Boolean b2 = ((FeatureDefinition)o2).isKey;
@@ -216,7 +219,8 @@ public class NewFeatureTableViewer extends TableViewer{
 			}
 		});
 		col.setEditingSupport(new FeatureIsNumericEditingSupport(this));
-		new ColumnViewerSorter<>(this, col, new Comparator<Object>() {
+		new ColumnViewerSorter<>(col, new Comparator<Object>() {
+			@Override
 			public int compare(Object o1, Object o2) {
 				Boolean b1 = ((FeatureDefinition)o1).isNumeric;
 				Boolean b2 = ((FeatureDefinition)o2).isNumeric;

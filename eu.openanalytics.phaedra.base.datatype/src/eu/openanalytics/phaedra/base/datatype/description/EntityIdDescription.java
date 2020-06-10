@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 
 
-public class EntityIdDescription extends BaseDataDescription {
+public class EntityIdDescription extends BasicDataDescription {
 	
 	
 	private final Class<?> referredEntityType;

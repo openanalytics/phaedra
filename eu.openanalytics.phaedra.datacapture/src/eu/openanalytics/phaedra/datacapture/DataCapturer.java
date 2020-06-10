@@ -99,6 +99,9 @@ public class DataCapturer {
 					ctx.setActiveModule(module);
 					module.execute(ctx, mon.split(progressPerModule));
 				}
+			} catch (Throwable t) {
+				ctx.getTask().getParameters().put("DataCaptureException", t);
+				throw t;
 			} finally {
 				// Remember which module caused an error (if any).
 				IModule lastExecutedModule = ctx.getActiveModule();

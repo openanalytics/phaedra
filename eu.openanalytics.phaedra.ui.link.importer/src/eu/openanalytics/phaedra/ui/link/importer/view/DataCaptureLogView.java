@@ -29,11 +29,11 @@ import org.eclipse.ui.forms.widgets.Form;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.part.ViewPart;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.base.util.misc.StringUtils;
@@ -104,7 +104,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("", ColumnDataType.Image, 30);
+		config = ColumnConfigFactory.create("", DataType.Image, 30);
 		RichLabelProvider labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -124,7 +124,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		config.setLabelProvider(labelProvider);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Date", ColumnDataType.Date, 120);
+		config = ColumnConfigFactory.create("Date", DataType.DateTime, 120);
 		labelProvider = new RichLabelProvider(config) {
 			private SimpleDateFormat format = new SimpleDateFormat("dd/MM/yyyy, HH:mm:ss");
 			@Override
@@ -136,7 +136,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		config.setLabelProvider(labelProvider);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Module", ColumnDataType.String, 130);
+		config = ColumnConfigFactory.create("Module", DataType.String, 130);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -147,7 +147,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		config.setLabelProvider(labelProvider);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Reading", ColumnDataType.String, 110);
+		config = ColumnConfigFactory.create("Reading", DataType.String, 110);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -158,7 +158,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		config.setLabelProvider(labelProvider);
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Message", ColumnDataType.String, 750);
+		config = ColumnConfigFactory.create("Message", DataType.String, 750);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -177,6 +177,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		IToolBarManager mgr = bars.getToolBarManager();
 
 		Action clearAction = new Action("Clear") {
+			@Override
 			public void run() {
 				currentItems.clear();
 				tableViewer.refresh();
@@ -192,6 +193,7 @@ public class DataCaptureLogView extends ViewPart implements IDataCaptureLogListe
 		shell.setText("Validation Item Details");
 		shell.setImage(item.severity.getIcon());
 		shell.addListener(SWT.Traverse, new Listener() {
+			@Override
 			public void handleEvent(Event event) {
 				if (event.detail == SWT.TRAVERSE_ESCAPE) {
 					shell.close();
