@@ -176,6 +176,7 @@ public class RichTableViewer extends TableViewer {
 		if (stateStore == null) {
 			stateStore = StateStoreRegistry.getStore(this.storeId);
 			if (stateStore != null) {
+				this.stateStore = stateStore;
 				stateStore.addListener(tableKey, this.stateStoreListener);
 			}
 		}
@@ -190,11 +191,7 @@ public class RichTableViewer extends TableViewer {
 		}
 	}
 	
-	private void onStateChanged(final List<ColumnConfiguration> configs, final int notification) {
-		System.out.println("XXX");
-	}
-
-
+	
 	public void contributeConfigButton(IMenuManager manager) {
 		manager.add(new Separator());
 		Action configureColumnsAction = new Action("Configure Columns...") {
