@@ -65,11 +65,13 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			new Definition(new RealValueDescription("pIC50 StdErr", Curve.class)),
 			new Definition(new RealValueDescription("Bottom", Curve.class)),
 			new Definition(new RealValueDescription("Top", Curve.class)),
-			new Definition(new RealValueDescription("Slope", Curve.class)),
+			new Definition(new RealValueDescription("Slope", Curve.class), null, true, null, null),
+			
 			new Definition(new RealValueDescription("eMin", Curve.class)),
 			new Definition(new ConcentrationValueDescription("eMin Conc", Curve.class, LogMolar)),
-			new Definition(new RealValueDescription("eMax", Curve.class)),
-			new Definition(new ConcentrationValueDescription("eMax Conc", Curve.class, LogMolar)),
+			new Definition(new RealValueDescription("eMax", Curve.class), null, true, null, null),
+			new Definition(new ConcentrationValueDescription("eMax Conc", Curve.class, LogMolar), null, true, null, null),
+			
 			new Definition(new ConcentrationLogPNamedValueDescription("pIC20", Curve.class, LogMolar)),
 			new Definition(new ConcentrationLogPNamedValueDescription("pIC80", Curve.class, LogMolar)),
 			new Definition(new RealValueDescription("Residual Variance", Curve.class)),
