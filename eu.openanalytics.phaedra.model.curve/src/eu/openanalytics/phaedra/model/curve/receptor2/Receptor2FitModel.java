@@ -67,6 +67,9 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			new Definition(new RealValueDescription("Top", Curve.class)),
 			new Definition(new RealValueDescription("Slope", Curve.class), null, true, null, null),
 			
+			new Definition(new RealValueDescription("Slope Lower CI", Curve.class)),
+			new Definition(new RealValueDescription("Slope Upper CI", Curve.class)),
+			
 			new Definition(new RealValueDescription("eMin", Curve.class)),
 			new Definition(new ConcentrationValueDescription("eMin Conc", Curve.class, LogMolar)),
 			new Definition(new RealValueDescription("eMax", Curve.class), null, true, null, null),
@@ -201,6 +204,8 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 				CurveParameter.find(outParams, "Slope").numericValue = coefs.getNum(0);
 				CurveParameter.find(outParams, "Bottom").numericValue = coefs.getNum(1);
 				CurveParameter.find(outParams, "Top").numericValue = coefs.getNum(2);
+				CurveParameter.find(outParams, "Slope Lower CI").numericValue = coefs.getNum(16);
+				CurveParameter.find(outParams, "Slope Upper CI").numericValue = coefs.getNum(20);
 			}
 			
 			CurveParameter.find(outParams, "Residual Variance").numericValue = RUtils.getDoubleFromList(results, "residulaVariance");
