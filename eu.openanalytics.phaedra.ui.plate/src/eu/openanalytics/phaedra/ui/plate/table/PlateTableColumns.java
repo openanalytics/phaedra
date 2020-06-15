@@ -141,6 +141,39 @@ public class PlateTableColumns {
 			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "zprime", null));
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "zprime", null));
 			configs.add(config);
+
+			// UR-015: Add Robust Z-Prime
+			config = ColumnConfigFactory.create("Robust ZPrime", DataType.Real, 75);
+			config.setTooltip("Robust ZPrime");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "robustzprime", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "robustzprime", null));
+			configs.add(config);
+
+			// UR-015: Add Pearson correlation coefficient and p-value
+			config = ColumnConfigFactory.create("Pearson CC", DataType.Real, 75);
+			config.setTooltip("Pearson CC");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "pearsoncc", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "pearsoncc", null));
+			configs.add(config);
+			
+			config = ColumnConfigFactory.create("Pearson P-Value", DataType.Real, 75);
+			config.setTooltip("Pearson P-Value");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "pearsonpval", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "pearsonpval", null));
+			configs.add(config);
+
+			// UR-015: Add Spearman correlation coefficient and p-value
+			config = ColumnConfigFactory.create("Spearman CC", DataType.Real, 75);
+			config.setTooltip("Spearman CC");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "spearmancc", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "spearmancc", null));
+			configs.add(config);
+			
+			config = ColumnConfigFactory.create("Spearman P-Value", DataType.Real, 75);
+			config.setTooltip("Spearman P-Value");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "spearmanpval", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "spearmanpval", null));
+			configs.add(config);
 		}
 
 		config = ColumnConfigFactory.create("Description", DataType.String, 200);
@@ -336,8 +369,7 @@ public class PlateTableColumns {
 			final Feature f = ProtocolUIService.getInstance().getCurrentFeature();
 			if (f == null) return "";
 			
-			return StatUtils.format(
-					data.getStat(this.stat, f, this.wellType, null) );
+			return StatUtils.format(data.getStat(this.stat, f, this.wellType, null) );
 		}
 		
 	}

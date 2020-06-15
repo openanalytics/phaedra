@@ -9,6 +9,8 @@ import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.stat.StatQuery;
@@ -34,11 +36,19 @@ public class StatContextFactory {
 	private static IStatContext createWellFeatureContext(StatQuery query) {
 		// Gather all wells in a List.
 		List<Well> wells = new ArrayList<>();
+		// UR-015: Container for the duplo wells, if duple plate exists
+		List<Well> duploWells = new ArrayList<Well>();
 		if (query.getObject() instanceof Well) {
 			wells.add((Well)query.getObject());
 		} else if (query.getObject() instanceof Plate) {
 			Plate plate = (Plate)query.getObject();
 			wells.addAll(plate.getWells());
+			// UR-015: Test if the plate has a duplo plate, only if a plate has a duplicate the Pearson and Spearman statics can be calculated 
+			List<Plate> duploPlates = CalculationService.getInstance().getMultiploPlates(plate);
+			if (duploPlates != null && duploPlates.size() == 2) {
+				Plate duploPlate = duploPlates.get(1);
+				duploWells.addAll(duploPlate.getWells());
+			}
 		} else if (query.getObject() instanceof Experiment) {
 			List<Plate> plates = PlateService.getInstance().getPlates((Experiment)query.getObject());
 			for (Plate plate: plates) {
@@ -54,6 +64,11 @@ public class StatContextFactory {
 			.filter(w -> query.isIncludeRejected() || w.getStatus() >= 0)
 			.filter(w -> query.getWellType() == null || query.getWellType().equals(w.getWellType()))
 			.collect(Collectors.toList());
+		// UR-015: If duploWells exists it is filtered to validDuploWells list
+		List<Well> validDuploWells = duploWells.stream()
+				.filter(w -> query.isIncludeRejected() || w.getStatus() >= 0)
+				.filter(w -> query.getWellType() == null || query.getWellType().equals(w.getWellType()))
+				.collect(Collectors.toList());
 		
 		ToDoubleFunction<Well> valueGetter = w -> CalculationService.getInstance().getAccessor(w.getPlate()).getNumericValue(w, feature, norm);
 		DoublePredicate valueFilter = v -> (!Double.isNaN(v));
@@ -66,9 +81,14 @@ public class StatContextFactory {
 		double[] values = validWells.stream().mapToDouble(valueGetter).filter(valueFilter).toArray();
 		double[] lows = validWells.stream().filter(lowFilter).mapToDouble(valueGetter).filter(valueFilter).toArray();
 		double[] highs = validWells.stream().filter(highFilter).mapToDouble(valueGetter).filter(valueFilter).toArray();
-
-		IStatContext ctx = new SimpleStatContext(new double[][] { values, lows, highs });
-		return ctx;
+		// // UR-015: Get all values for the duplo plates 
+		double[] duploValues = validDuploWells.stream().mapToDouble(valueGetter).filter(valueFilter).toArray();
+		
+		if (ArrayUtils.isNotEmpty(duploValues)) {
+			return new SimpleStatContext(new double[][] { values, lows, highs, duploValues });
+		} else {
+			return new SimpleStatContext(new double[][] { values, lows, highs });
+		}
 	}
 	
 	private static IStatContext createSubWellFeatureContext(StatQuery query) {
