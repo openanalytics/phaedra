@@ -7,6 +7,7 @@ import org.eclipse.statet.rj.servi.RServi;
 
 import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;
+import eu.openanalytics.phaedra.calculation.stat.StatUtils;
 import eu.openanalytics.phaedra.calculation.stat.ctx.IStatContext;
 
 public class SpearmanPValueCalculator extends BaseStatCalculator {
@@ -32,7 +33,7 @@ public class SpearmanPValueCalculator extends BaseStatCalculator {
 						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'spearman')", null);
 				double spearmanPValue = spearmanResult.get("p.value").getData().getNum(0);
 
-				return spearmanPValue;
+				return StatUtils.round(spearmanPValue, 2);
 			} catch (CoreException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

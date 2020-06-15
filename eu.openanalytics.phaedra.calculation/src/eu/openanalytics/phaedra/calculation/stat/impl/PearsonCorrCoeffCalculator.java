@@ -7,6 +7,7 @@ import org.eclipse.statet.rj.servi.RServi;
 
 import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;
+import eu.openanalytics.phaedra.calculation.stat.StatUtils;
 import eu.openanalytics.phaedra.calculation.stat.ctx.IStatContext;
 
 public class PearsonCorrCoeffCalculator extends BaseStatCalculator {
@@ -31,7 +32,7 @@ public class PearsonCorrCoeffCalculator extends BaseStatCalculator {
 						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'pearson')", null);
 				double pearson = pearsonResult.get("statistic").getData().getNum(0);
 
-				return pearson;
+				return StatUtils.round(pearson, 2);
 			} catch (CoreException e) {
 				e.printStackTrace();
 			} finally {
