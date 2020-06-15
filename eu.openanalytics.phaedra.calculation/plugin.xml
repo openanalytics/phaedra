@@ -87,8 +87,16 @@
             name="pearsoncc">
       </statCalculator>
       <statCalculator
+            class="eu.openanalytics.phaedra.calculation.stat.impl.PearsonPValueCalculator"
+            name="pearsonpval">
+      </statCalculator>
+      <statCalculator
             class="eu.openanalytics.phaedra.calculation.stat.impl.SpearmanCorrCoeffCalculator"
             name="spearmancc">
+      </statCalculator>
+      <statCalculator
+            class="eu.openanalytics.phaedra.calculation.stat.impl.SpearmanPValueCalculator"
+            name="spearmanpval">
       </statCalculator>
    </extension>
    <extension

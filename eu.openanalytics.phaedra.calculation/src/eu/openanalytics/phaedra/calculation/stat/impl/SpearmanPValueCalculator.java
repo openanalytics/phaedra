@@ -9,7 +9,7 @@ import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;
 import eu.openanalytics.phaedra.calculation.stat.ctx.IStatContext;
 
-public class SpearmanCorrCoeffCalculator extends BaseStatCalculator {
+public class SpearmanPValueCalculator extends BaseStatCalculator {
 
 	@Override
 	public double calculate(IStatContext context) {
@@ -30,10 +30,11 @@ public class SpearmanCorrCoeffCalculator extends BaseStatCalculator {
 				// To calculate spearman:
 				RList spearmanResult = (RList) rServi
 						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'spearman')", null);
-				double spearman = spearmanResult.get("statistic").getData().getNum(0);
+				double spearmanPValue = spearmanResult.get("p.value").getData().getNum(0);
 
-				return spearman;
+				return spearmanPValue;
 			} catch (CoreException e) {
+				// TODO Auto-generated catch block
 				e.printStackTrace();
 				return Double.NaN;
 			} finally {
@@ -44,5 +45,4 @@ public class SpearmanCorrCoeffCalculator extends BaseStatCalculator {
 		}
 		return Double.NaN;
 	}
-
 }

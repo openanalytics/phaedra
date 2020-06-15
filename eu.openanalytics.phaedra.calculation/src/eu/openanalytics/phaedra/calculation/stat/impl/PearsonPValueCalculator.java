@@ -9,7 +9,7 @@ import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;
 import eu.openanalytics.phaedra.calculation.stat.ctx.IStatContext;
 
-public class SpearmanCorrCoeffCalculator extends BaseStatCalculator {
+public class PearsonPValueCalculator extends BaseStatCalculator {
 
 	@Override
 	public double calculate(IStatContext context) {
@@ -27,15 +27,14 @@ public class SpearmanCorrCoeffCalculator extends BaseStatCalculator {
 				rServi.assignData("p1", RUtils.makeNumericRVector(plate1Data), null);
 				rServi.assignData("p2", RUtils.makeNumericRVector(plate2Data), null);
 
-				// To calculate spearman:
-				RList spearmanResult = (RList) rServi
-						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'spearman')", null);
-				double spearman = spearmanResult.get("statistic").getData().getNum(0);
+				// To calculate pearson:
+				RList pearsonResult = (RList) rServi
+						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'pearson')", null);
+				double pearsonPValue = pearsonResult.get("p.value").getData().getNum(0);
 
-				return spearman;
+				return pearsonPValue;
 			} catch (CoreException e) {
 				e.printStackTrace();
-				return Double.NaN;
 			} finally {
 				if (rServi != null) {
 					RService.getInstance().closeSession(rServi);
@@ -44,5 +43,4 @@ public class SpearmanCorrCoeffCalculator extends BaseStatCalculator {
 		}
 		return Double.NaN;
 	}
-
 }

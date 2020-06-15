@@ -23,7 +23,9 @@ public class PlateStatisticsProvider {
 		
 		// UR-015: Add Pearson and Spearman correlation coefficient 
 		stats.add(new PlateStatistic("pearsoncc", "Pearson correlation coefficient"));
+		stats.add(new PlateStatistic("pearsonpval", "Pearson p-value"));
 		stats.add(new PlateStatistic("spearmancc", "Spearman correlation coefficient"));
+		stats.add(new PlateStatistic("spearmanpval", "Spearman p-value"));
 		
 		stats.add(new PlateStatistic("sn", "Signal/Noise"));
 		stats.add(new PlateStatistic("sb", "Signal/Background"));

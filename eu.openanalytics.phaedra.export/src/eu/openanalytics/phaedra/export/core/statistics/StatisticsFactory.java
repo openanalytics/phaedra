@@ -42,6 +42,7 @@ public class StatisticsFactory {
 			Plate plate = allPlates.get(i);
 			
 			double zprime = StatService.getInstance().calculate("zprime", plate, feature, null, null);
+			//TODO: Add Rubust Z Prime, Pearson and Spearman stats also?
 			double sn = StatService.getInstance().calculate("sn", plate, feature, null, null);
 			double sb = StatService.getInstance().calculate("sb", plate, feature, null, null);
 			

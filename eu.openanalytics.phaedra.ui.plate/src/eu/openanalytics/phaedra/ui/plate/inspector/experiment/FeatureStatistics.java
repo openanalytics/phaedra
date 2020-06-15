@@ -19,7 +19,9 @@ public class FeatureStatistics {
 	// UR-015: Add Robust Z prime, Pearson and Spearman correlation coefficient to the plate statistics 
 	private double[] robustZPrimes;
 	private double[] pearsonCCs;
+	private double[] pearsonPValues;
 	private double[] spearmanCCs;
+	private double[] spearmanPValues;
 	
 	private double[] sbs;
 	private double[] sns;
@@ -48,7 +50,9 @@ public class FeatureStatistics {
 			// UR-015: Initialize the new plate statistics 
 			robustZPrimes = new double[nrOfPlates];
 			pearsonCCs = new double[nrOfPlates];
+			pearsonPValues = new double[nrOfPlates];
 			spearmanCCs = new double[nrOfPlates];
+			spearmanPValues = new double[nrOfPlates];
 			
 			sbs = new double[nrOfPlates];
 			sns = new double[nrOfPlates];
@@ -60,7 +64,9 @@ public class FeatureStatistics {
 				// UR-015: Calculate Robust Z prime, Pearson and Spearman correlation coefficient plate statistics
 				robustZPrimes[i] = StatService.getInstance().calculate("robustzprime", p, feature, null, null);
 				pearsonCCs[i] = StatService.getInstance().calculate("pearsoncc", p, feature, null, null);
+				pearsonPValues[i] = StatService.getInstance().calculate("pearsonpval", p, feature, null, null);
 				spearmanCCs[i] = StatService.getInstance().calculate("spearmancc", p, feature, null, null);
+				spearmanPValues[i] = StatService.getInstance().calculate("spearmanpval", p, feature, null, null);
 				
 				sns[i] = StatService.getInstance().calculate("sn", p, feature, null, null);
 				sbs[i] = StatService.getInstance().calculate("sb", p, feature, null, null);

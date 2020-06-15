@@ -104,6 +104,7 @@ public class PlateTableExporter {
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Z-Prime", Well.class));
+					//TODO: Add Rubust Z Prime, Pearson and Spearman stats also?
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/N", Well.class));
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/B", Well.class));
 				}
@@ -130,6 +131,7 @@ public class PlateTableExporter {
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
 					rowValues[col++] = statService.calculate("zprime", plate, feature, null, null);
+					//TODO: Add Rubust Z Prime, Pearson and Spearman stats also?
 					rowValues[col++] = statService.calculate("sn", plate, feature, null, null);
 					rowValues[col++] = statService.calculate("sb", plate, feature, null, null);
 				}

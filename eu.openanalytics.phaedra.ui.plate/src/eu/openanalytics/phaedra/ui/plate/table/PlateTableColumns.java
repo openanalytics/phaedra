@@ -149,19 +149,31 @@ public class PlateTableColumns {
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "robustzprime", null));
 			configs.add(config);
 
-			// UR-015: Add Pearson correlation coefficient
+			// UR-015: Add Pearson correlation coefficient and p-value
 			config = ColumnConfigFactory.create("Pearson CC", DataType.Real, 75);
 			config.setTooltip("Pearson CC");
 			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "pearsoncc", null));
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "pearsoncc", null));
 			configs.add(config);
+			
+			config = ColumnConfigFactory.create("Pearson P-Value", DataType.Real, 75);
+			config.setTooltip("Pearson P-Value");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "pearsonpval", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "pearsonpval", null));
+			configs.add(config);
 
-			// UR-015: Add Spearman correlation coefficient
+			// UR-015: Add Spearman correlation coefficient and p-value
 			config = ColumnConfigFactory.create("Spearman CC", DataType.Real, 75);
 			config.setTooltip("Spearman CC");
 			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "spearmancc", null));
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "spearmancc", null));
-			configs.add(config);			
+			configs.add(config);
+			
+			config = ColumnConfigFactory.create("Spearman P-Value", DataType.Real, 75);
+			config.setTooltip("Spearman P-Value");
+			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "spearmanpval", null));
+			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "spearmanpval", null));
+			configs.add(config);
 		}
 
 		config = ColumnConfigFactory.create("Description", DataType.String, 200);
@@ -205,14 +217,6 @@ public class PlateTableColumns {
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "sn", null));
 			configs.add(config);
 			
-//			// UR-015: LC and HC refer to Low Count and High Count respectively
-//			String[] countTypes = { "LC", "HC" };
-//			for (String countType: countTypes) {
-//				config = ColumnConfigFactory.create("%CV " + countType, ColumnDataType.Numeric, 75);
-//				config.setLabelProvider(createValueLabelProvider(config, (p, f) -> StatUtils.format(summaryLoader.getSummary(p).getStat("cv", f, countType, null))));
-//				config.setSorter(createValueSorter((p, f) -> summaryLoader.getSummary(p).getStat("cv", f, countType, null)));
-//				config.setTooltip("%CV " + countType);
-
 			String[] controlTypes = { "LC", "HC" };
 			for (String controlType: controlTypes) {
 				config = ColumnConfigFactory.create("%CV " + controlType, DataType.Real, 75);
@@ -365,8 +369,7 @@ public class PlateTableColumns {
 			final Feature f = ProtocolUIService.getInstance().getCurrentFeature();
 			if (f == null) return "";
 			
-			return StatUtils.format(
-					data.getStat(this.stat, f, this.wellType, null) );
+			return StatUtils.format(data.getStat(this.stat, f, this.wellType, null) );
 		}
 		
 	}
