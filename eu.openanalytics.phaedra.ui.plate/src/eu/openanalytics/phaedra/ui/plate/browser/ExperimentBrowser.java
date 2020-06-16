@@ -19,8 +19,6 @@ import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -30,6 +28,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IPersistableEditor;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -60,26 +60,14 @@ import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.DynamicColumnSu
 import eu.openanalytics.phaedra.ui.protocol.viewer.dynamiccolumn.EvaluationContext;
 
 
-public class ExperimentBrowser extends EditorPart {
+public class ExperimentBrowser extends EditorPart implements IPersistableEditor {
 	
 	
-	private static class ClosedFilter extends ViewerFilter {
-		
-		private boolean hideClosed;
-		
-		@Override
-		public boolean select(final Viewer viewer, final Object parentElement, final Object element) {
-			if (!this.hideClosed) {
-				return true;
-			}
-			final Experiment experiment = (Experiment)element;
-			return !experiment.isClosed();
-		}
-		
-	}
+	private static final String FILTER_EXCLUDE_CLOSED= "Experiment.excludeClosed";
 	
 	
 	private AsyncDataViewerInput<Experiment, Experiment> viewerInput;
+	private volatile boolean excludeClosed = true;
 	private ProtocolClasses<Experiment> protocolClasses;
 	private AsyncDataLoader<Experiment> dataLoader;
 	
@@ -98,6 +86,23 @@ public class ExperimentBrowser extends EditorPart {
 		setPartName(input.getName());
 	}
 	
+	@Override
+	public void restoreState(final IMemento memento) {
+		final IMemento filter = memento.getChild("filter");
+		if (filter != null) {
+			final Boolean excludeClosed = filter.getBoolean(FILTER_EXCLUDE_CLOSED);
+			if (excludeClosed != null) {
+				this.excludeClosed = excludeClosed;
+			}
+		}
+	}
+	
+	@Override
+	public void saveState(final IMemento memento) {
+		final IMemento filter = memento.createChild("filter");
+		filter.putBoolean(FILTER_EXCLUDE_CLOSED, this.excludeClosed);
+	}
+	
 	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<>("data for experiment browser",
 				new WorkbenchSiteJobScheduler(this) );
@@ -105,14 +110,24 @@ public class ExperimentBrowser extends EditorPart {
 			
 			@Override
 			protected List<Experiment> loadElements() {
+				final boolean excludeClosed = ExperimentBrowser.this.excludeClosed;
 				VOEditorInput input = (VOEditorInput)getEditorInput();
-				List<IValueObject> valueObjects = input.getValueObjects();
+				List<IValueObject> valueObjects = input.getValueObjects(
+						Collections.singletonMap(FILTER_EXCLUDE_CLOSED, excludeClosed) );
 				List<Experiment> experiments = new ArrayList<>();
 				if (!valueObjects.isEmpty()) {
 					if (valueObjects.get(0) instanceof Protocol) {
-						for (IValueObject vo: valueObjects) experiments.addAll(PlateService.getInstance().getExperiments((Protocol)vo));
+						for (IValueObject vo: valueObjects) {
+							experiments.addAll(PlateService.getInstance()
+									.getExperiments((Protocol)vo, excludeClosed) );
+						}
 					} else if (valueObjects.get(0) instanceof Experiment) {
-						for (IValueObject vo: valueObjects) experiments.add((Experiment)vo);
+						for (IValueObject vo: valueObjects) {
+							final Experiment experiment = (Experiment)vo;
+							if (!excludeClosed || !experiment.isClosed()) {
+								experiments.add(experiment);
+							}
+						}
 					}
 				}
 				Collections.sort(experiments, PlateUtils.EXPERIMENT_NAME_SORTER);
@@ -157,21 +172,20 @@ public class ExperimentBrowser extends EditorPart {
 				customColumnSupport, true ) {
 			@Override
 			protected void addFilters(Composite parent) {
-				final ClosedFilter closedFilter = new ClosedFilter();
-				closedFilter.hideClosed = true;
-				addFilter(closedFilter);
-				
 				addTextSearch(parent);
 				
 				final Button closedControl = new Button(parent, SWT.TOGGLE);
 				closedControl.setImage(IconManager.getIconImage("filter-experiment-closed.png"));
 				closedControl.setToolTipText("Hide Closed Experiments");
-				closedControl.setSelection(closedFilter.hideClosed);
+				closedControl.setSelection(ExperimentBrowser.this.excludeClosed);
 				closedControl.addSelectionListener(new SelectionAdapter() {
 					@Override
-					public void widgetSelected(SelectionEvent e) {
-						closedFilter.hideClosed = closedControl.getSelection();
-						refresh(true);
+					public void widgetSelected(final SelectionEvent e) {
+						if (ExperimentBrowser.this.viewerInput.isDisposed()) {
+							return;
+						}
+						ExperimentBrowser.this.excludeClosed = closedControl.getSelection();
+						ExperimentBrowser.this.viewerInput.reloadElements(false);
 					}
 				});
 			}

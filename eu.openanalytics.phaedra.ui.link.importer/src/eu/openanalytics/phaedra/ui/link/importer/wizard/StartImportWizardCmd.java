@@ -88,7 +88,7 @@ public class StartImportWizardCmd extends AbstractHandler implements IHandler {
 		Protocol protocol = SelectionUtils.getFirstObject(selection, Protocol.class);
 		// Return first Experiment of selected Protocol.
 		if (protocol != null) {
-			experiments = PlateService.getInstance().getExperiments(protocol);
+			experiments = PlateService.getInstance().getExperiments(protocol, true);
 			if (!experiments.isEmpty()) return experiments.get(0);
 			else return PlateService.getInstance().createExperiment(protocol);
 		}

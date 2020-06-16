@@ -170,7 +170,7 @@ public class SelectExperiment extends BaseStatefulWizardPage {
 
 		Experiment targetExperiment = importWizardState.task.targetExperiment;
 		Protocol protocol = (Protocol)importWizardState.task.getParameters().get(OperaImportHelper.PARAM_PROTOCOL);
-		availableExperiments = new ArrayList<>(PlateService.getInstance().getOpenExperiments(protocol));
+		availableExperiments = new ArrayList<>(PlateService.getInstance().getExperiments(protocol, true));
 		availableExperiments.sort(PlateUtils.EXPERIMENT_NAME_SORTER);
 
 		existingExperimentCmb.removeAll();

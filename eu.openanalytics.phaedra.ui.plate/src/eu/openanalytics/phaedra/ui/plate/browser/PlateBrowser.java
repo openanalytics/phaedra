@@ -142,7 +142,11 @@ public class PlateBrowser extends DecoratedEditor {
 			}
 			
 			@Override
-			protected void handleEvent(final List<Plate> currentElements, final Object[] eventElements) {
+			protected void updateElements(final List<Plate> currentElements,
+					final Object[] eventElements, final boolean forceUpdateData) {
+				if (eventElements == null) {
+					super.updateElements(currentElements, eventElements, forceUpdateData);
+				}
 				if (eventElements.length > 0) {
 					VOEditorInput input = (VOEditorInput)getEditorInput();
 					if (eventElements[0] instanceof Plate) {
@@ -153,7 +157,7 @@ public class PlateBrowser extends DecoratedEditor {
 								experiment = SelectionUtils.getFirstAsClass(input.getValueObjects(), Experiment.class);
 							}
 							if (plate.getExperiment().equals(experiment) || currentElements.contains(plate)) {
-								super.handleEvent(currentElements, eventElements);
+								super.updateElements(currentElements, eventElements, forceUpdateData);
 								return;
 							}
 						}

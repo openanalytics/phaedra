@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.base.ui.editor;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 
@@ -20,6 +21,6 @@ public interface IDynamicVOCollector {
 	
 	public ImageDescriptor getImageDescriptor();
 	
-	public List<IValueObject> collect();
+	public List<IValueObject> collect(Map<String, Object> filter);
 	
 }

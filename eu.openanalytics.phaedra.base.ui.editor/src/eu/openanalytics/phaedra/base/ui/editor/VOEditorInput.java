@@ -1,7 +1,9 @@
 package eu.openanalytics.phaedra.base.ui.editor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
@@ -30,9 +32,29 @@ public class VOEditorInput implements IEditorInput {
 		this.collector = collector;
 	}
 	
-	public List<IValueObject> getValueObjects() {
-		if (collector != null) return collector.collect();
+	/**
+	 * Returns the value objects of the editor input.
+	 * <p>
+	 * The optional filter allows to prefilter the list of value objects before/while loading.
+	 * The filter is a hint, there is no guarantee that the filter is applied!</p>
+	 * 
+	 * @param filter an optional filter parameters to prefilter the objects
+	 * @return a list with the value objects
+	 */
+	public List<IValueObject> getValueObjects(Map<String, Object> filter) {
+		if (collector != null) {
+			return collector.collect((filter != null) ? filter : Collections.emptyMap());
+		}
 		return valueObjects;
+	}
+	
+	/**
+	 * Returns the value objects of the editor input.
+	 * 
+	 * @return a list with the value objects
+	 */
+	public List<IValueObject> getValueObjects() {
+		return getValueObjects(null);
 	}
 	
 	public IDynamicVOCollector getCollector() {

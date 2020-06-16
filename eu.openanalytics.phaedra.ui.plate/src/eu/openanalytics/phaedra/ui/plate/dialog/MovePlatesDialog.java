@@ -95,7 +95,7 @@ public class MovePlatesDialog extends TitleAreaDialog {
 			List<Protocol> protocols = ProtocolService.getInstance().getProtocols(currentExperiment.getProtocol().getProtocolClass());
 			List<Experiment> experiments = new ArrayList<>();
 			for (Protocol p: protocols) {
-				experiments.addAll(PlateService.getInstance().getOpenExperiments(p));
+				experiments.addAll(PlateService.getInstance().getExperiments(p, true));
 			}
 			Collections.sort(experiments, PlateUtils.EXPERIMENT_NAME_SORTER);
 			

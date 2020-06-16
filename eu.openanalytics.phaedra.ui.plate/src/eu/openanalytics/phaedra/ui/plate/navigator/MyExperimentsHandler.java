@@ -2,6 +2,7 @@ package eu.openanalytics.phaedra.ui.plate.navigator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 
@@ -47,9 +48,10 @@ public class MyExperimentsHandler extends BaseElementHandler {
 		}
 
 		@Override
-		public List<IValueObject> collect() {
-			String user = SecurityService.getInstance().getCurrentUserName();
-			return new ArrayList<>(PlateService.getInstance().getExperiments(user));
+		public List<IValueObject> collect(Map<String, Object> filter) {
+			final String user = SecurityService.getInstance().getCurrentUserName();
+			final boolean excludeClosed= Boolean.TRUE.equals(filter.get("Experiment.excludeClosed"));
+			return new ArrayList<>(PlateService.getInstance().getExperiments(user, excludeClosed));
 		}
 		
 	}

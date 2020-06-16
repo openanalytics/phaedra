@@ -54,9 +54,8 @@ public class ExperimentContentProvider implements IStructuredContentProvider, IT
 			return true;
 		} else if (parent instanceof Protocol) {
 			final Protocol protocol = (Protocol)parent;
-			final List<Experiment> experiments = (this.excludeClosed) ?
-					PlateService.getInstance().getOpenExperiments(protocol) :
-					PlateService.getInstance().getExperiments(protocol);
+			final List<Experiment> experiments = PlateService.getInstance()
+					.getExperiments(protocol, this.excludeClosed );
 			return (!experiments.isEmpty());
 		}
 		return false;
@@ -69,9 +68,8 @@ public class ExperimentContentProvider implements IStructuredContentProvider, IT
 			return protocols.toArray();
 		} else if (parent instanceof Protocol) {
 			final Protocol protocol = (Protocol)parent;
-			final List<Experiment> experiments = (this.excludeClosed) ?
-					PlateService.getInstance().getOpenExperiments(protocol) :
-					PlateService.getInstance().getExperiments(protocol);
+			final List<Experiment> experiments = PlateService.getInstance()
+					.getExperiments(protocol, this.excludeClosed );
 			final Experiment[] array = experiments.toArray(new Experiment[experiments.size()]);
 			Arrays.sort(array, PlateUtils.EXPERIMENT_NAME_SORTER);
 			return array;
