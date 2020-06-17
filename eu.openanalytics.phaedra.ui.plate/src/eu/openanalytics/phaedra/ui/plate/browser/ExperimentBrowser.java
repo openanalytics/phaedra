@@ -96,7 +96,9 @@ public class ExperimentBrowser extends EditorPart {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-		
+	}
+	
+	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<>("data for experiment browser",
 				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<Experiment>(Experiment.class, this.dataLoader) {
@@ -130,14 +132,16 @@ public class ExperimentBrowser extends EditorPart {
 		};
 		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
 				(experiment) -> experiment.getProtocol().getProtocolClass() );
+		
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
 	}
 	
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		initViewerInput();
 		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
-
+		
 		Composite container = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().spacing(0,0).applyTo(container);
 

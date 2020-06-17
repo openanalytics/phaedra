@@ -74,7 +74,9 @@ public class ProtocolBrowser extends EditorPart {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-		
+	}
+	
+	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<Protocol>("data for protocol browser",
 				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<Protocol>(Protocol.class, this.dataLoader) {
@@ -112,12 +114,14 @@ public class ProtocolBrowser extends EditorPart {
 			
 		};
 		this.protocolClasses = new ProtocolClasses<>(this.viewerInput, Protocol::getProtocolClass);
+		
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
 	}
 	
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		initViewerInput();
 		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
 
 		Composite container = new Composite(parent, SWT.NONE);

@@ -116,7 +116,9 @@ public class PlateBrowser extends DecoratedEditor {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-		
+	}
+	
+	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<Plate>("data for plate browser",
 				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<Plate>(Plate.class, this.dataLoader) {
@@ -181,6 +183,8 @@ public class PlateBrowser extends DecoratedEditor {
 		};
 		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
 				(plate) -> plate.getExperiment().getProtocol().getProtocolClass() );
+		
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
 	}
 	
 	private Protocol getProtocol() {
@@ -191,7 +195,7 @@ public class PlateBrowser extends DecoratedEditor {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		initViewerInput();
 		this.dataFormatSupport = new DataFormatSupport(() -> { this.viewerInput.refreshViewer(); reloadHeadmaps(); });
 		
 		Composite container = new Composite(parent, SWT.NONE);
