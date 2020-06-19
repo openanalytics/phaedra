@@ -47,6 +47,9 @@ cellularAssayResultsNoAggregation[[1]]$rangeResults # eMin and eMax and their co
 cellularAssayResultsNoAggregation[[1]]$xIC # AIC and BIC of the fitted Model
 cellularAssayResultsNoAggregation[[1]]$dataPredict2Plot # predicted values to make the curve plot with its confidence bands
 cellularAssayResultsNoAggregation[[1]]$pIC50Location # location of pIC50 to be used in the plot
+cellularAssayResultsNoAggregation[[1]]$xAxisLabels # due to the transformation, the labels and breaks on x-axis needs to be adusted, here are the label
+cellularAssayResultsNoAggregation[[1]]$xAxisBreaks # And the breaks (this is in line with pIC50Location)
+
 ## Note that, warningFit now shows the information about the model fit. For this example the possible outcomes with their frequencies are:
 table(unlist(lapply(cellularAssayResultsNoAggregation,"[[", 20)))
 ## We can also see the type of pIC50's we have got via pIC50toReport

@@ -180,16 +180,17 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			
 			CurveParameter.find(outParams, "pIC50").numericValue = pIC50;
 			CurveParameter.find(outParams, "pIC50 Censor").stringValue = censor;
+			CurveParameter.find(outParams, "pIC50 StdErr").numericValue = Double.NaN;
 			
 			Object data = results.get("validpIC50").getData();
-			if (data instanceof RNumericStore) CurveParameter.find(outParams, "pIC50 StdErr").numericValue = ((RNumericStore) data).getNum(1);
+			if (censor == null && data instanceof RNumericStore) CurveParameter.find(outParams, "pIC50 StdErr").numericValue = ((RNumericStore) data).getNum(1);
 			
 			RDataFrame rangeResults = (RDataFrame) results.get("rangeResults");
 			if (rangeResults != null) {
 				CurveParameter.find(outParams, "eMin").numericValue = rangeResults.get("response").getData().getNum(0);
 				CurveParameter.find(outParams, "eMax").numericValue = rangeResults.get("response").getData().getNum(1);
-				CurveParameter.find(outParams, "eMin Conc").numericValue = rangeResults.get("dose").getData().getNum(0);
-				CurveParameter.find(outParams, "eMax Conc").numericValue = rangeResults.get("dose").getData().getNum(1);
+				CurveParameter.find(outParams, "eMin Conc").numericValue = rangeResults.get("dose").getData().getNum(0) / 2.303f;
+				CurveParameter.find(outParams, "eMax Conc").numericValue = rangeResults.get("dose").getData().getNum(1) / 2.303f;
 			}
 			
 			data = results.get("validpIC20").getData();
@@ -215,7 +216,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			if (data instanceof RDataFrame) {
 				double[][] predict = RUtils.getDouble2DArrayFromRDataFrame((RDataFrame) data);
 				if (predict.length > 0) {
-					predict[0] = Arrays.stream(predict[0]).map(c -> -c).toArray();
+					predict[0] = Arrays.stream(predict[0]).map(c -> -c / 2.303f).toArray();
 				}
 				if (predict.length >= 2) {
 					CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Predicted Curve Points"), new double[][] { predict[0], predict[1] });
@@ -227,7 +228,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			data = results.get("pIC50Location").getData();
 			if (data instanceof RNumericStore) {
 				RNumericStore s = (RNumericStore) data;
-				double[] location = new double[] { -s.getNum(0), s.getNum(1) };
+				double[] location = new double[] { -s.getNum(0) / 2.303f, s.getNum(1) };
 				CurveParameter.setBinaryValue(CurveParameter.find(outParams, "Predicted pIC50 PlotLocation"), location);
 			}
 			
