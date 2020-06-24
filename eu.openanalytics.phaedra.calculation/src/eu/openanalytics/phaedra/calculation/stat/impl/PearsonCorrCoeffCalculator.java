@@ -14,11 +14,11 @@ public class PearsonCorrCoeffCalculator extends BaseStatCalculator {
 
 	@Override
 	public double calculate(IStatContext context) {
-		if (context.getDataSets() < 4)
+		if (context.getDataSets() < 2)
 			return Double.NaN;
 
 		double[] plate1Data = context.getData(0);
-		double[] plate2Data = context.getData(3);
+		double[] plate2Data = context.getData(1);
 
 		if (ArrayUtils.isNotEmpty(plate1Data) && ArrayUtils.isNotEmpty(plate2Data)) {
 			RServi rServi = null;
@@ -30,7 +30,7 @@ public class PearsonCorrCoeffCalculator extends BaseStatCalculator {
 
 				RList pearsonResult = (RList) rServi
 						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'pearson')", null);
-				double pearson = pearsonResult.get("statistic").getData().getNum(0);
+				double pearson = pearsonResult.get("estimate").getData().getNum(0);
 
 				return StatUtils.round(pearson, 2);
 			} catch (CoreException e) {

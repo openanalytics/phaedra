@@ -14,11 +14,11 @@ public class SpearmanPValueCalculator extends BaseStatCalculator {
 
 	@Override
 	public double calculate(IStatContext context) {
-		if (context.getDataSets() < 4)
+		if (context.getDataSets() < 2)
 			return Double.NaN;
 
 		double[] plate1Data = context.getData(0);
-		double[] plate2Data = context.getData(3);
+		double[] plate2Data = context.getData(1);
 
 		if (ArrayUtils.isNotEmpty(plate1Data) && ArrayUtils.isNotEmpty(plate2Data)) {
 			RServi rServi = null;
