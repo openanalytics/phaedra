@@ -523,6 +523,18 @@ public class ProtocolService extends BaseJPAService {
 	}
 
 	/**
+	 * Retrieve a well feature by the name.
+	 * 
+	 * @param featureName The name of the feeature
+	 * @return The feature matching the given name, or null if no match is found
+	 */
+	public Feature getFeatureByName(String featureName) {
+		Feature f = getEntity("select f from Feature f where f.name = ?1", Feature.class, featureName);
+		if (!SecurityService.getInstance().check(Permissions.PROTOCOLCLASS_OPEN, f)) return null;
+		return f;
+	}
+
+	/**
 	 * Create a new subwell feature. Make sure to call {@link ProtocolService#updateProtocolClass(ProtocolClass)} afterwards.
 	 * 
 	 * @param pClass The protocol class to create the feature in.

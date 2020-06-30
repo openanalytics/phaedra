@@ -26,6 +26,7 @@ public class ScriptService {
 	private List<IScriptEngine> engines;
 	private IScriptEngine defaultEngine;
 	private ScriptCatalog catalog;
+	private FeatureTemplateCatalog featureTemplateCatalog;
 
 	private ScriptService(SecureFileServer fs) {
 		// Hidden constructor
@@ -56,6 +57,7 @@ public class ScriptService {
 		}
 
 		catalog = new ScriptCatalog(fs);
+		featureTemplateCatalog = new FeatureTemplateCatalog(fs);
 	}
 
 	public static synchronized ScriptService createInstance(SecureFileServer fs) {
@@ -82,7 +84,14 @@ public class ScriptService {
 	public ScriptCatalog getCatalog() {
 		return catalog;
 	}
-	
+
+	/**
+	 * Get the {@link FeatureTemplateCatalog} for the current environment.
+	 */
+	public FeatureTemplateCatalog getFeatureTemplateCatalog() {
+		return featureTemplateCatalog;
+	}
+
 	/**
 	 * Get the IDs of supported script engines.
 	 */
