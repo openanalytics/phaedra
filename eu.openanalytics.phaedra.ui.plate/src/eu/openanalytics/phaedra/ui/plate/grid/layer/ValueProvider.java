@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.ui.plate.grid.layer;
 
-import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
@@ -16,7 +15,7 @@ public class ValueProvider {
 	public static final String VALUE_TYPE_PROPERTY = "Well Property";
 	public static final String VALUE_TYPE_NONE = "None";
 	
-	public static String getValue(Well well, ValueKey key, DataFormatter dataFormatter) {
+	public static String getValue(Well well, ValueKey key) {
 		if (well == null) return "";
 
 		switch (key.valueType) {
@@ -24,13 +23,7 @@ public class ValueProvider {
 		case VALUE_TYPE_FEATURE:
 			return getFeatureValue(well, (Feature) key.arg1, (String) key.arg2);
 		case VALUE_TYPE_PROPERTY:
-			WellProperty property = (WellProperty) key.arg1;
-			if (property == WellProperty.LogConcentration) {
-				return property.getStringValue(well);
-			}
-			else {
-				return dataFormatter.format(property.getTypedValue(well), property.getDataDescription());
-			}
+			return ((WellProperty) key.arg1).getStringValue(well);
 		}
 		return "";
 	}

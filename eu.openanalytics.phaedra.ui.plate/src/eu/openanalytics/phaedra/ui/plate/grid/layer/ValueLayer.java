@@ -200,14 +200,13 @@ public class ValueLayer extends PlatesLayer {
 			Well well = wells.get(0);
 			
 			String[] labels = new String[config.getValueKeyLength()];
-			DataFormatter dataFormatter = getDataFormatter();
 			for (int i = 0; i < labels.length; i++) {
 				ValueKey key = config.getValueKey(i);
 				if (ValueProvider.VALUE_TYPE_ACTIVE_FEATURE.equals(key.valueType)) {
 					key.arg1 = currentFeature;
 					key.arg2 = currentNormalization;
 				}
-				labels[i] = ValueProvider.getValue(well, key, dataFormatter);
+				labels[i] = ValueProvider.getValue(well, key);
 			}
 			return labels;
 		}
