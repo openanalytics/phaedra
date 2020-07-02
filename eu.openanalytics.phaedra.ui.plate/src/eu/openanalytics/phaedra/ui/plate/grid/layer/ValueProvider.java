@@ -24,12 +24,11 @@ public class ValueProvider {
 		case VALUE_TYPE_FEATURE:
 			return getFeatureValue(well, (Feature) key.arg1, (String) key.arg2);
 		case VALUE_TYPE_PROPERTY:
-			WellProperty property = (WellProperty) key.arg1;
-			if (property == WellProperty.LogConcentration) {
-				return property.getStringValue(well);
-			}
-			else {
-				return dataFormatter.format(property.getTypedValue(well), property.getDataDescription());
+			WellProperty wellProperty = (WellProperty) key.arg1;
+			if (wellProperty == WellProperty.Concentration) {
+				return dataFormatter.format(wellProperty.getTypedValue(well), wellProperty.getDataDescription());
+			} else {
+				return wellProperty.getStringValue(well);
 			}
 		}
 		return "";

@@ -18,4 +18,6 @@ makingDoseResponseData
                         provided Excel files
 strEndsWith             checks if a strings ends with certain
                         characters
+transformEstimates      transforms the estimated ICx's in natrual log
+                        to log10.
 validEDx                returns the valid estimated EDx results

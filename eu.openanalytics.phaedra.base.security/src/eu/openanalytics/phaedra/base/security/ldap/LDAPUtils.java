@@ -19,6 +19,7 @@ import eu.openanalytics.phaedra.base.security.AuthenticationException;
 import eu.openanalytics.phaedra.base.security.SSL;
 import eu.openanalytics.phaedra.base.security.model.Group;
 import eu.openanalytics.phaedra.base.security.model.Roles;
+import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 
 public class LDAPUtils {
 
@@ -63,23 +64,34 @@ public class LDAPUtils {
 			principal = principalMapping.replace("${username}", userName);
 		}
 		
+		String[] urls = new String[] { cfg.get(AuthConfig.URL) };
+		if (urls[0].contains(",")) {
+			urls = urls[0].split(",");
+		}
+		
 		try {
 			SSL.activatePlatformSSL();
-			
-			Hashtable<String, String> env = new Hashtable<>(11);
-			env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-			env.put(Context.PROVIDER_URL, cfg.get(AuthConfig.URL));
-			env.put(Context.SECURITY_PRINCIPAL, principal);
-			env.put(Context.SECURITY_CREDENTIALS, new String(password));
-			
-			String authType = cfg.get(AuthConfig.AUTH_TYPE);
-			if (authType != null && !authType.isEmpty()) env.put(Context.SECURITY_AUTHENTICATION, authType);
-			
-			DirContext ctx = new InitialDirContext(env);
-			return ctx;
-			
-		} catch (Throwable t) {
-			throw new AuthenticationException("Authentication failed. Please check the username and password.", t);
+			Throwable lastException = null;
+			for (String url: urls) {
+				try {
+					Hashtable<String, String> env = new Hashtable<>(11);
+					env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+					env.put(Context.PROVIDER_URL, url);
+					env.put(Context.SECURITY_PRINCIPAL, principal);
+					env.put(Context.SECURITY_CREDENTIALS, new String(password));
+					env.put("com.sun.jndi.ldap.read.timeout", "10000");
+					
+					String authType = cfg.get(AuthConfig.AUTH_TYPE);
+					if (authType != null && !authType.isEmpty()) env.put(Context.SECURITY_AUTHENTICATION, authType);
+					
+					DirContext ctx = new InitialDirContext(env);
+					return ctx;
+					
+				} catch (Throwable t) {
+					lastException = t;
+				}
+			}
+			throw new AuthenticationException("Authentication failed: " + StringUtils.getStackTrace(lastException, 200));
 		} finally {
 			SSL.activateDefaultSSL();
 		}

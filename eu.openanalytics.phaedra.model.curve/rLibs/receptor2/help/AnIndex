@@ -8,4 +8,5 @@ fittingLogisticModel	fittingLogisticModel
 isSaneEDx	isSaneEDx
 makingDoseResponseData	makingDoseResponseData
 strEndsWith	strEndsWith
+transformEstimates	transformEstimates
 validEDx	validEDx
