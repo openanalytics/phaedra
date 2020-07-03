@@ -10,5 +10,5 @@ Imports: drc, ggplot2
 License:
 RoxygenNote: 7.1.0
 NeedsCompilation: no
-Packaged: 2020-07-02 10:18:15 UTC; vnassiri
-Built: R 3.5.1; ; 2020-07-02 11:05:33 UTC; windows
+Packaged: 2020-07-03 09:46:25 UTC; vnassiri
+Built: R 3.5.1; ; 2020-07-03 10:04:35 UTC; windows
