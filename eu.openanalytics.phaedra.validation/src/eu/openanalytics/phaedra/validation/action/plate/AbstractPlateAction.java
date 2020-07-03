@@ -108,7 +108,7 @@ public abstract class AbstractPlateAction implements IValidationAction {
 			// Remove any invalidation/disapproval remark from the description
 			if (StringUtils.isBlank(currentDescription)) return;
 			else {
-				List<String> temp = Arrays.asList(currentDescription.split(";")).stream()
+				List<String> temp = Arrays.asList(currentDescription.split("; ")).stream()
 						.filter(item -> StringUtils.isNotBlank(item.trim()))
 						.filter(item -> !item.trim().startsWith(keyword))
 						.collect(Collectors.toList());
@@ -121,7 +121,9 @@ public abstract class AbstractPlateAction implements IValidationAction {
 		} else {
 			// Add or replace the invalidation/disapproval remark in the description
 			if (StringUtils.isBlank(currentDescription)) currentDescription = "";
-			String append = " " + keyword + ": " + remark + ";";
+			// Remove all ';' chars and replace them by a comma, because we already use ';' to separate the remarks
+			// between Invalidation and Disapproval
+			String append = " " + keyword + ": " + remark.replaceAll(";", ",") + ";";
 			Matcher matcher = pattern.matcher(currentDescription);
 			if (matcher.matches()) 
 				newDescription = (matcher.group(1) + append + matcher.group(2)).trim();
