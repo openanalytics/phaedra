@@ -106,14 +106,14 @@ public abstract class AbstractPlateAction implements IValidationAction {
 		String newDescription = currentDescription;
 		if (remark == null || remark.trim().isEmpty()) {
 			// Remove any invalidation/disapproval remark from the description
-//			if (currentDescription == null || currentDescription.trim().isEmpty()) return;
 			if (StringUtils.isBlank(currentDescription)) return;
 			else {
 				List<String> temp = Arrays.asList(currentDescription.split(";")).stream()
-						.filter(item -> StringUtils.isNotBlank(item))
+						.filter(item -> StringUtils.isNotBlank(item.trim()))
+						.filter(item -> !item.trim().startsWith(keyword))
 						.collect(Collectors.toList());
 				StringBuffer stringBuffer = new StringBuffer();
-				for (int i = 0; i < temp.size() - 1; i++) {
+				for (int i = 0; i < temp.size(); i++) {
 					stringBuffer.append(temp.get(i)).append(";");
 				}
 				newDescription = stringBuffer.toString();
