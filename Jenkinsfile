@@ -18,9 +18,9 @@ pipeline {
 
                 container('phaedra-build') {
 
-                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                     configFileProvider([]) {
 
-                         sh 'mvn -s $MAVEN_SETTINGS_RSB -U clean install'
+                         sh 'mvn -U clean install'
 
                      }
                 }
