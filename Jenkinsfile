@@ -1,5 +1,4 @@
 pipeline {
-
     agent {
         kubernetes {
             yamlFile 'kubernetesPod.yaml'
@@ -11,18 +10,25 @@ pipeline {
     }
 
     stages {
-
-        stage('build and deploy to nexus'){
-
-            steps {
-
-                container('phaedra-build') {
-
-                     configFileProvider([]) {
-
-                         sh 'mvn -U clean install'
-
-                     }
+        stage('Build and Deploy to nexus') {
+            stages {
+            	// Build phaedra
+                stage('Build') {
+                    steps {
+                        container('phaedra-build') {
+                            sh 'mvn -U clean install'
+                        }
+                    }
+                }
+                // Deploy to nexus
+                stage('Deploy') {
+                    steps {
+                        withCredentials([usernameColonPassword(credentialsId: 'oa-deployment', variable: 'USERPASS')]) {
+                            container('phaedra-build') {
+                                sh 'mvn -U clean deply'
+                            }
+                        }
+                    }
                 }
             }
         }
