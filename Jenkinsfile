@@ -12,9 +12,9 @@ pipeline {
     stages {
         stage('Build and Deploy to nexus') {
             steps {
-                withCredentials([usernameColonPassword(credentialsId: 'oa-jenkins', variable: 'USERPASS')]) {
+                configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
                     container('phaedra-build') {
-                        sh 'mvn -U clean deploy'
+                        sh 'mvn -s $MAVEN_SETTINGS_RSB clean deploy'
                     }
                 }
             }

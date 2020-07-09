@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Cache
 Bundle-SymbolicName: eu.openanalytics.phaedra.base.cache;singleton:=true
-Bundle-Version: 1.0.8.qualifier
+Bundle-Version: 1.0.9.qualifier
 Bundle-Activator: eu.openanalytics.phaedra.base.cache.Activator
 Bundle-Vendor: OpenAnalytics
 Require-Bundle: org.eclipse.core.runtime,

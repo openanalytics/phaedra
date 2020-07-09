@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="Phaedra" uid="eu.openanalytics.phaedra.product.platform" id="eu.openanalytics.phaedra.product.platform" application="eu.openanalytics.phaedra.app" version="1.0.8" useFeatures="true" includeLaunchers="true">
+<product name="Phaedra" uid="eu.openanalytics.phaedra.product.platform" id="eu.openanalytics.phaedra.product.platform" application="eu.openanalytics.phaedra.app" version="1.0.9" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/eu.openanalytics.phaedra.product/icons/phaedra128.png"/>
