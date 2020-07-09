@@ -7,9 +7,9 @@
 	<version>1.0.8-SNAPSHOT</version>
 
 	<properties>
-		<tycho.version>0.25.0</tycho.version>
+		<tycho.version>1.7.0</tycho.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<build.tools.url>http://nexus.openanalytics.eu/nexus/content/sites/phaedra_build_tools</build.tools.url>
+		<build.tools.url>https://nexus.openanalytics.eu/repository/phaedra_build_tools</build.tools.url>
 		<maven.install.skip>true</maven.install.skip>
 		<maven.deploy.skip>true</maven.deploy.skip>
 	</properties>
@@ -18,12 +18,12 @@
 		<snapshotRepository>
 			<id>oa-nexus-snapshots</id>
 			<name>OpenAnalytics Snapshots Repository</name>
-			<url>http://nexus.openanalytics.eu/nexus/content/repositories/snapshots</url>
+			<url>https://nexus.openanalytics.eu/repository/snapshots</url>
 		</snapshotRepository>
 		<repository>
 			<id>oa-nexus-releases</id>
 			<name>OpenAnalytics Release Repository</name>
-			<url>http://nexus.openanalytics.eu/nexus/content/repositories/releases</url>
+			<url>https://nexus.openanalytics.eu/repository/releases</url>
 		</repository>
 	</distributionManagement>
 	
