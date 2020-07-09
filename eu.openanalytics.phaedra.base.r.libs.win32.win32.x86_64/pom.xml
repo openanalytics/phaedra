@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>eu.openanalytics.phaedra</groupId>
 		<artifactId>eu.openanalytics.phaedra.build</artifactId>
-		<version>1.0.8-SNAPSHOT</version>
+		<version>1.0.8</version>
 		<relativePath>../</relativePath>
 	</parent>
 	
