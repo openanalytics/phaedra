@@ -20,7 +20,7 @@ pipeline {
 
                      configFileProvider([]) {
 
-                         sh 'mvn -U -X clean install'
+                         sh 'mvn -U clean install'
 
                      }
                 }
