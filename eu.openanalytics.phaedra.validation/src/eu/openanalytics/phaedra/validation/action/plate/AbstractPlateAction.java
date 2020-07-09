@@ -1,10 +1,14 @@
 package eu.openanalytics.phaedra.validation.action.plate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.Permissions;
@@ -102,17 +106,27 @@ public abstract class AbstractPlateAction implements IValidationAction {
 		String newDescription = currentDescription;
 		if (remark == null || remark.trim().isEmpty()) {
 			// Remove any invalidation/disapproval remark from the description
-			if (currentDescription == null || currentDescription.trim().isEmpty()) return;
+			if (StringUtils.isBlank(currentDescription)) return;
 			else {
-				Matcher matcher = pattern.matcher(currentDescription);
-				if (matcher.matches()) newDescription = (matcher.group(1) + " " + matcher.group(2)).trim();
+				List<String> temp = Arrays.asList(currentDescription.split(";")).stream()
+						.filter(item -> StringUtils.isNotBlank(item.trim()))
+						.filter(item -> !item.trim().startsWith(keyword))
+						.collect(Collectors.toList());
+				StringBuffer stringBuffer = new StringBuffer();
+				for (int i = 0; i < temp.size(); i++) {
+					stringBuffer.append(temp.get(i)).append(";");
+				}
+				newDescription = stringBuffer.toString();
 			}
 		} else {
 			// Add or replace the invalidation/disapproval remark in the description
-			if (currentDescription == null) currentDescription = "";
-			String append = " " + keyword + ": " + remark + ";";
+			if (StringUtils.isBlank(currentDescription)) currentDescription = "";
+			// Remove all ';' chars and replace them by a comma, because we already use ';' to separate the remarks
+			// between Invalidation and Disapproval
+			String append = " " + keyword + ": " + remark.replaceAll(";", ",") + ";";
 			Matcher matcher = pattern.matcher(currentDescription);
-			if (matcher.matches()) newDescription = (matcher.group(1) + append + matcher.group(2)).trim();
+			if (matcher.matches()) 
+				newDescription = (matcher.group(1) + append + matcher.group(2)).trim();
 			else newDescription = (currentDescription + append).trim();
 		}
 		EclipseLog.info(String.format("Changed description from '%s' to '%s'", currentDescription, newDescription), Activator.PLUGIN_ID);

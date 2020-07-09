@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.TestObj1;
-import eu.openanalytics.phaedra.base.datatype.description.BaseDataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.description.BasicDataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.description.ContentType;
 import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 
@@ -65,7 +65,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_CensoredValue_MolarToMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(Molar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(Molar, null);
 		
 		final ConcentrationLogPNamedCensoredValueDescription orgDescr = new ConcentrationLogPNamedCensoredValueDescription("IC50", TestObj1.class, Molar, "IC50 Censor");
 		final ConcentrationLogPNamedCensoredValueDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -75,7 +75,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_Censor_MolarToMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(Molar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(Molar, null);
 		
 		final ConcentrationLogPNamedCensorDescription orgDescr = new ConcentrationLogPNamedCensorDescription("IC50 Censor", TestObj1.class, Molar);
 		final ConcentrationLogPNamedCensorDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -85,7 +85,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_RelatedReal_MolarToMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(Molar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(Molar, null);
 		
 		final RealValueConcentrationLogPNamedDescription orgDescr = new RealValueConcentrationLogPNamedDescription("IC50 Eff", TestObj1.class, Molar);
 		final RealValueConcentrationLogPNamedDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -95,7 +95,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_CensoredValue_MolarToNanoMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(NanoMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(NanoMolar, null);
 		
 		final ConcentrationLogPNamedCensoredValueDescription orgDescr = new ConcentrationLogPNamedCensoredValueDescription("IC50", TestObj1.class, Molar, "IC50 Censor");
 		final ConcentrationLogPNamedCensoredValueDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -115,7 +115,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_Censor_MolarToNanoMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(NanoMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(NanoMolar, null);
 		
 		final ConcentrationLogPNamedCensorDescription orgDescr = new ConcentrationLogPNamedCensorDescription("IC50 Censor", TestObj1.class, Molar);
 		final ConcentrationLogPNamedCensorDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -134,7 +134,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_RelatedReal_MolarToNanoMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(NanoMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(NanoMolar, null);
 		
 		final RealValueConcentrationLogPNamedDescription orgDescr = new RealValueConcentrationLogPNamedDescription("IC50 Eff", TestObj1.class, Molar);
 		final RealValueConcentrationLogPNamedDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -150,7 +150,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_CensoredValue_MolarToLogMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(LogMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(LogMolar, null);
 		
 		final ConcentrationLogPNamedCensoredValueDescription orgDescr = new ConcentrationLogPNamedCensoredValueDescription("IC50", TestObj1.class, Molar, "IC50 Censor");
 		final ConcentrationLogPNamedCensoredValueDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -170,7 +170,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_Censor_MolarToLogMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(LogMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(LogMolar, null);
 		
 		final ConcentrationLogPNamedCensorDescription orgDescr = new ConcentrationLogPNamedCensorDescription("IC50 Censor", TestObj1.class, Molar);
 		final ConcentrationLogPNamedCensorDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -189,7 +189,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_RelatedReal_MolarToLogMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(LogMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(LogMolar, null);
 		
 		final RealValueConcentrationLogPNamedDescription orgDescr = new RealValueConcentrationLogPNamedDescription("IC50 Eff", TestObj1.class, Molar);
 		final RealValueConcentrationLogPNamedDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -205,7 +205,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_CensoredValue_LogMolarToNanoMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(NanoMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(NanoMolar, null);
 		
 		final ConcentrationLogPNamedCensoredValueDescription orgDescr = new ConcentrationLogPNamedCensoredValueDescription("pIC50", TestObj1.class, LogMolar, "pIC50 Censor");
 		final ConcentrationLogPNamedCensoredValueDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -225,7 +225,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_Censor_LogMolarToNanoMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(NanoMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(NanoMolar, null);
 		
 		final ConcentrationLogPNamedCensorDescription orgDescr = new ConcentrationLogPNamedCensorDescription("pIC50 Censor", TestObj1.class, LogMolar);
 		final ConcentrationLogPNamedCensorDescription alteredDescr = orgDescr.alterTo(targetConfig);
@@ -244,7 +244,7 @@ public class ConcentrationLogPNamedTest {
 	
 	@Test
 	public void alter_RelatedReal_LogMolarToNanoMolar() {
-		final DataUnitConfig targetConfig = new BaseDataUnitConfig(NanoMolar, null);
+		final DataUnitConfig targetConfig = new BasicDataUnitConfig(NanoMolar, null);
 		
 		final RealValueConcentrationLogPNamedDescription orgDescr = new RealValueConcentrationLogPNamedDescription("pIC50 Eff", TestObj1.class, LogMolar);
 		final RealValueConcentrationLogPNamedDescription alteredDescr = orgDescr.alterTo(targetConfig);

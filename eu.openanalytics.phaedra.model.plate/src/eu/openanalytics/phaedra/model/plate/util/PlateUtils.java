@@ -142,9 +142,18 @@ public class PlateUtils {
 	/**
 	 * Compare wells by their well number.
 	 */
-	public static Comparator<Well> WELL_NR_SORTER = (w1, w2) -> {
-		return Integer.valueOf(getWellNr(w1)).compareTo(getWellNr(w2));
+	public static final Comparator<Well> WELL_NR_SORTER = (w1, w2) -> {
+		return Integer.compare(getWellNr(w1), getWellNr(w2));
 	};
+	
+	/**
+	 * Returns the index of the well in wells of a plate sorted by {@link #WELL_NR_SORTER}.
+	 * @param well the well
+	 * @return the 0-based index
+	 */
+	public static final int getWellNrIdx(final Well well) {
+		return getWellNr(well) - 1;
+	}
 
 	/**
 	 * Compare plates by:

@@ -36,6 +36,15 @@ public class DBTemplateManager extends AbstractTemplateManager {
 	}
 
 	@Override
+	public List<String> getTemplateIds(long protocolClassId) throws IOException {
+		return select("select template_name from phaedra.hca_plate_template where protocolclass_id = " + protocolClassId, rs -> {
+			List<String> templates = new ArrayList<>();
+			while (rs.next()) templates.add(rs.getString(1));
+			return templates;
+		}, 0);
+	}
+	
+	@Override
 	public List<PlateTemplate> getTemplates(long protocolClassId) throws IOException {
 		return select("select * from phaedra.hca_plate_template where protocolclass_id = " + protocolClassId, rs -> {
 			List<PlateTemplate> templates = new ArrayList<>();

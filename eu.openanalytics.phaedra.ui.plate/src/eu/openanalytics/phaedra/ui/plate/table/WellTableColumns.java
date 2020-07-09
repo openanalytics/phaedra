@@ -6,20 +6,17 @@ import java.util.List;
 import java.util.function.Supplier;
 
 import org.eclipse.jface.viewers.CellLabelProvider;
-import org.eclipse.jface.viewers.ViewerCell;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider.FlagFilter;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.FlagLabelProvider.FlagMapping;
-import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.util.WellProperty;
-import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 
 
@@ -36,7 +33,7 @@ public class WellTableColumns {
 	private static void addPlateColumns(List<ColumnConfiguration> configs) {
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Protocol", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Protocol", DataType.String, 200);
 		CellLabelProvider labelProvider = new RichLabelProvider(config){
 			@Override
 			public String getText(Object element) {
@@ -45,7 +42,7 @@ public class WellTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Well>() {
+		config.setSortComparator(new Comparator<Well>() {
 			@Override
 			public int compare(Well o1, Well o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -57,7 +54,7 @@ public class WellTableColumns {
 		config.setTooltip("Protocol");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Experiment", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Experiment", DataType.String, 200);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -66,7 +63,7 @@ public class WellTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Well>() {
+		config.setSortComparator(new Comparator<Well>() {
 			@Override
 			public int compare(Well o1, Well o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -78,7 +75,7 @@ public class WellTableColumns {
 		config.setTooltip("Experiment");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Plate", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Plate", DataType.String, 100);
 		labelProvider = new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -87,7 +84,7 @@ public class WellTableColumns {
 			}
 		};
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Well>() {
+		config.setSortComparator(new Comparator<Well>() {
 			@Override
 			public int compare(Well o1, Well o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -105,16 +102,8 @@ public class WellTableColumns {
 			final Supplier<DataFormatter> dataFormatSupplier) {
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Well Nr", ColumnDataType.Numeric, 60);
-		config.setLabelProvider(new RichLabelProvider(config) {
-			@Override
-			public void update(ViewerCell cell) {
-				Well well = (Well)cell.getElement();
-				cell.setText(NumberUtils.getWellCoordinate(well.getRow(), well.getColumn()));
-			}
-		});
-		config.setSorter(new Comparator<Well>() {
-
+		config = ColumnConfigFactory.create(WellProperty.Position, dataFormatSupplier, 60);
+		config.setSortComparator(new Comparator<Well>() {
 			@Override
 			public int compare(Well w1, Well w2) {
 				String s1 = (w1.getRow() < 10 ? "0" : "") + w1.getRow() + (w1.getColumn() < 10 ? "0" : "") + w1.getColumn();
@@ -124,10 +113,10 @@ public class WellTableColumns {
 		});
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Row", "getRow", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create(WellProperty.Row, dataFormatSupplier, "Row", 50);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Column", "getColumn", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create(WellProperty.Column, dataFormatSupplier, "Column", 50);
 		configs.add(config);
 
 		FlagMapping[] mappings = new FlagLabelProvider.FlagMapping[] {
@@ -136,10 +125,10 @@ public class WellTableColumns {
 				new FlagLabelProvider.FlagMapping(FlagFilter.All, "flag_white.png")
 		};
 
-		config = ColumnConfigFactory.create("V", ColumnDataType.Numeric, 25);
+		config = ColumnConfigFactory.create("V", DataType.Integer, 25);
 		CellLabelProvider labelProvider = new FlagLabelProvider(config, "getStatus", mappings);
 		config.setLabelProvider(labelProvider);
-		config.setSorter(new Comparator<Well>() {
+		config.setSortComparator(new Comparator<Well>() {
 			@Override
 			public int compare(Well o1, Well o2) {
 				if (o1 == null && o2 == null) return 0;
@@ -151,31 +140,17 @@ public class WellTableColumns {
 		config.setTooltip("Well Validation Status");
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Well Type", "getWellType", ColumnDataType.String, 75);
+		config = ColumnConfigFactory.create(WellProperty.WellType, dataFormatSupplier, 75);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Description", "getDescription", ColumnDataType.String, 75);
+		config = ColumnConfigFactory.create("Description", "getDescription", DataType.String, 75);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Compound", ColumnDataType.String, 100);
-		labelProvider = new RichLabelProvider(config){
-			@Override
-			public String getText(Object element) {
-				Well well = (Well)element;
-				Compound c = well.getCompound();
-				if (c != null) {
-					return c.getType() + " " + c.getNumber();
-				}
-				return "";
-			}
-		};
-		config.setSorter(PlateUtils.WELL_COMPOUND_NR_SORTER);
-		config.setLabelProvider(labelProvider);
-		config.setTooltip("Compound");
+		config = ColumnConfigFactory.create(WellProperty.Compound, dataFormatSupplier, 100);
+		config.setSortComparator(PlateUtils.WELL_COMPOUND_NR_SORTER);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Concentration", "getCompoundConcentration", ColumnDataType.Numeric, 90);
-		config.setLabelProvider(new WellPropertyLabelProvider(config, WellProperty.Concentration, dataFormatSupplier));
+		config = ColumnConfigFactory.create(WellProperty.Concentration, dataFormatSupplier, 90);
 		configs.add(config);
 	}
 	

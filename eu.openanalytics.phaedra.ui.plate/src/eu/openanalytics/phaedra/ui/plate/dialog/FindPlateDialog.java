@@ -20,9 +20,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.plate.PlateService;
@@ -128,16 +128,16 @@ public class FindPlateDialog extends TitleAreaDialog {
 		List<ColumnConfiguration> configs = new ArrayList<ColumnConfiguration>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Id", "getId", ColumnDataType.Numeric, 60);
+		config = ColumnConfigFactory.create("Id", "getId", DataType.Integer, 60);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Sequence", "getSequence", ColumnDataType.Numeric, 75);
+		config = ColumnConfigFactory.create("Sequence", "getSequence", DataType.Integer, 75);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Barcode", "getBarcode", ColumnDataType.String, 100);
+		config = ColumnConfigFactory.create("Barcode", "getBarcode", DataType.String, 100);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("Experiment", "getExperiment", ColumnDataType.String, 250);
+		config = ColumnConfigFactory.create("Experiment", "getExperiment", DataType.String, 250);
 		configs.add(config);
 		
 		return configs.toArray(new ColumnConfiguration[configs.size()]);

@@ -28,11 +28,11 @@ import org.eclipse.swt.widgets.Text;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.security.model.AccessScope;
-import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDatabindingDialog;
+import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDataBindingDialog;
 import eu.openanalytics.phaedra.project.vo.Project;
 
 
-public class EditProjectDialog extends TitleAreaDatabindingDialog {
+public class EditProjectDialog extends TitleAreaDataBindingDialog {
 
 	private Project project;
 
@@ -185,7 +185,7 @@ public class EditProjectDialog extends TitleAreaDatabindingDialog {
 	}
 
 	@Override
-	protected void initDatabinding(DataBindingContext dbc) {
+	protected void initDataBinding(DataBindingContext dbc) {
 		dbc.bindValue(WidgetProperties.text(SWT.Modify).observe(nameControl),
 				PojoProperties.value("name", String.class).observe(project), //$NON-NLS-1$
 				new UpdateValueStrategy().setAfterGetValidator((value) -> {

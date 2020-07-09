@@ -161,20 +161,44 @@ public class ProtocolUIService extends EventManager implements IFeatureProvider 
 	public void setCurrentProtocolClass(ProtocolClass newProtocolClass) {
 		if (newProtocolClass == null || newProtocolClass.equals(currentProtocolClass)) return;
 
-		Feature f = currentFeatures.get(newProtocolClass);
-		if (f == null) f = newProtocolClass.getDefaultFeature();
-		if (f == null && !newProtocolClass.getFeatures().isEmpty()) {
-			f = newProtocolClass.getFeatures().get(0);
-		}
-		setCurrentFeature(f);
+		setCurrentFeature(getCurrentFeature(newProtocolClass));
 	}
 
 	@Override
 	public Feature getCurrentFeature() {
-		if (currentProtocolClass == null) return null;
-		return currentFeatures.get(currentProtocolClass);
+		return getCurrentFeature(currentProtocolClass);
 	}
-
+	
+	/**
+	 * Returns the current feature for the specified protocol class.
+	 * 
+	 * Thread: display thread only.
+	 * 
+	 * @param protocolClass the protocol class
+	 * @return the current feature or <code>null</code>
+	 */
+	public Feature getCurrentFeature(final ProtocolClass protocolClass) {
+		if (protocolClass == null) {
+			return null;
+		}
+		Feature feature = this.currentFeatures.get(protocolClass);
+		if (feature == null) {
+			feature = protocolClass.getDefaultFeature();
+			if (feature == null && !protocolClass.getFeatures().isEmpty()) {
+				feature = protocolClass.getFeatures().get(0);
+			}
+			if (feature != null) {
+				if (protocolClass.equals(this.currentProtocolClass)) {
+					setCurrentFeature(feature);
+				}
+				else {
+					this.currentFeatures.put(protocolClass, feature);
+				}
+			}
+		}
+		return feature;
+	}
+	
 	public void setCurrentFeature(Feature f) {
 		if (f == null || f.equals(getCurrentFeature())) return;
 
@@ -186,8 +210,7 @@ public class ProtocolUIService extends EventManager implements IFeatureProvider 
 
 		updateFeatureGroup(null);
 
-		String normalization = getNormalization(f);
-		currentNormalizations.put(f, normalization);
+		getCurrentNormalization(f);
 
 		UIEvent event = new UIEvent(EventType.FeatureSelectionChanged);
 		fire(event);
@@ -198,9 +221,19 @@ public class ProtocolUIService extends EventManager implements IFeatureProvider 
 
 	@Override
 	public String getCurrentNormalization() {
-		Feature f = getCurrentFeature();
-		if (f == null) return null;
-		return currentNormalizations.get(f);
+		return getCurrentNormalization(getCurrentFeature());
+	}
+	
+	public String getCurrentNormalization(final Feature feature) {
+		if (feature == null) {
+			return null;
+		}
+		String normalization = this.currentNormalizations.get(feature);
+		if (normalization == null) {
+			normalization = feature.getNormalization();
+			this.currentNormalizations.put(feature, normalization);
+		}
+		return normalization;
 	}
 
 	public void setCurrentNormalization(String normalization) {
@@ -263,14 +296,6 @@ public class ProtocolUIService extends EventManager implements IFeatureProvider 
 		for (Object listener: getListeners()) {
 			((IUIEventListener)listener).handle(event);
 		}
-	}
-
-	private String getNormalization(Feature f) {
-		String normalization = currentNormalizations.get(f);
-		if (normalization == null) {
-			normalization = f.getNormalization();
-		}
-		return normalization;
 	}
 
 	private void updateFeatureGroup(FeatureGroup newGroup) {

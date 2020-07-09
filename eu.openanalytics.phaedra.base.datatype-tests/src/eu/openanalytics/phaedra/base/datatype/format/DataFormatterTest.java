@@ -17,7 +17,8 @@ public class DataFormatterTest {
 	
 	@Test
 	public void format_ConcentrationValue_LogMolar() {
-		final DataFormatter dataFormatter = new DataFormatter(new ConcentrationFormat(ConcentrationUnit.LogMolar, 3), null);
+		final DataFormatter dataFormatter = new DataFormatter(new ConcentrationFormat(ConcentrationUnit.LogMolar, 3),
+				null, null );
 		
 		assertEquals("9", dataFormatter.format(1.0e-9, new ConcentrationValueDescription("conc", Object.class, ConcentrationUnit.Molar)));
 		assertEquals("8.824", dataFormatter.format(1.5e-9, new ConcentrationValueDescription("conc", Object.class, ConcentrationUnit.Molar)));
@@ -27,7 +28,8 @@ public class DataFormatterTest {
 	
 	@Test
 	public void format_ConcentrationValue_Molar() {
-		final DataFormatter dataFormatter = new DataFormatter(new ConcentrationFormat(ConcentrationUnit.Molar, 3), null);
+		final DataFormatter dataFormatter = new DataFormatter(new ConcentrationFormat(ConcentrationUnit.Molar, 3),
+				null, null );
 		
 		assertEquals("1E-9", dataFormatter.format(1.0e-9, new ConcentrationValueDescription("conc", Object.class, ConcentrationUnit.Molar)));
 		assertEquals("1.5E-9", dataFormatter.format(1.5e-9, new ConcentrationValueDescription("conc", Object.class, ConcentrationUnit.Molar)));
@@ -41,7 +43,7 @@ public class DataFormatterTest {
 		typeFormats.put(TestObj1.class.getName(), new ConcentrationFormat(ConcentrationUnit.LogMolar, 3));
 		
 		final DataFormatter dataFormatter = new DataFormatter(new ConcentrationFormat(ConcentrationUnit.Molar, 3),
-				typeFormats );
+				typeFormats, null );
 		
 		assertEquals("9", dataFormatter.format(1.0e-9, new ConcentrationValueDescription("conc", TestObj1.class, ConcentrationUnit.Molar)));
 		assertEquals("8.824", dataFormatter.format(1.5e-9, new ConcentrationValueDescription("conc", TestObj1.class, ConcentrationUnit.Molar)));

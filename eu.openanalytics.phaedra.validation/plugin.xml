@@ -19,6 +19,11 @@
             hookPointId="eu.openanalytics.phaedra.validation.validationHookPoint"
             priority="0">
       </hook>
+      <hook
+            class="eu.openanalytics.phaedra.validation.hook.PostResetPlateValidationStatus"
+            hookPointId="eu.openanalytics.phaedra.validation.validationHookPoint"
+            priority="0">
+      </hook>
    </extension>
 
 </plugin>

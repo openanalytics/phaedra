@@ -421,7 +421,7 @@ public class SubWellDataProvider extends JEPAwareDataProvider<Well, Well> {
 			String featureName = getSelectedFeature(dim);
 			SubWellFeature feature = ProtocolUtils.getSubWellFeatureByName(featureName, PlateUtils.getProtocolClass(plate));
 			if (feature == null) {
-				WellProperty prop = WellProperty.getByName(featureName);
+				WellProperty prop = WellProperty.getByLabel(featureName);
 				if (prop != null && prop.isNumeric()) {
 					final DataUnitConfig dataUnitConfig = this.dataUnitSupplier.get();
 					for (Well well : plate.getWells()) {

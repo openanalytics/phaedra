@@ -111,7 +111,7 @@ public class StatService {
 	public double calculate(String stat, Plate p, Feature f, String wellType, String norm) {
 		return calculate(new StatQuery(stat, p, f, wellType, norm));
 	}
-
+	
 	/**
 	 * Perform the given stat computation on the well data of the given experiment.
 	 * 
@@ -168,7 +168,8 @@ public class StatService {
 		if (norm == null || norm.equals("NONE")) query.setNormalization(null);
 
 		// For plate stat queries, make sure persistent (quick-access) stats are loaded.
-		if (query.getObject() instanceof Plate) loadPersistentPlateStats((Plate)query.getObject());
+		if (query.getObject() instanceof Plate)
+			loadPersistentPlateStats((Plate) query.getObject());
 		
 		StatContainer stats = statCache.getStats(query);
 

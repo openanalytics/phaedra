@@ -285,7 +285,7 @@ public class FeatureSelectionTable<F extends IFeature> extends Composite {
 			if (o1 == null) return -1;
 			return o1.getName().toLowerCase().compareTo(o2.getName().toLowerCase());
 		};
-		new ColumnViewerSorter<IFeature>(column.getViewer(), column, sorter);
+		new ColumnViewerSorter<IFeature>(column, sorter);
 
 		column = new TableViewerColumn(configTableViewer, SWT.BORDER);
 		column.getColumn().setWidth(100);
@@ -308,7 +308,7 @@ public class FeatureSelectionTable<F extends IFeature> extends Composite {
 			String s2 = sn2 != null ? sn2 : "";
 			return s1.toLowerCase().compareTo(s2.toLowerCase());
 		};
-		new ColumnViewerSorter<IFeature>(column.getViewer(), column, sorter);
+		new ColumnViewerSorter<IFeature>(column, sorter);
 
 		if (selectedNormalizations != null) {
 			column = new TableViewerColumn(configTableViewer, SWT.BORDER);
@@ -354,7 +354,7 @@ public class FeatureSelectionTable<F extends IFeature> extends Composite {
 			String g2 = fg2 == null ? "" : fg2.getName();
 			return g1.toLowerCase().compareTo(g2.toLowerCase());
 		};
-		new ColumnViewerSorter<IFeature>(column.getViewer(), column, sorter);
+		new ColumnViewerSorter<IFeature>(column, sorter);
 
 		column = new TableViewerColumn(configTableViewer, SWT.BORDER);
 		column.getColumn().setWidth(100);
@@ -381,7 +381,7 @@ public class FeatureSelectionTable<F extends IFeature> extends Composite {
 			String i2 = (selectedFeatures.indexOf(o2) + 1) + "";
 			return i1.compareTo(i2);
 		};
-		new ColumnViewerSorter<IFeature>(column.getViewer(), column, sorter);
+		new ColumnViewerSorter<IFeature>(column, sorter);
 
 		configTableViewer.setContentProvider(new ArrayContentProvider());
 		setInput(filteredFeatures);

@@ -28,7 +28,6 @@ import org.eclipse.nebula.widgets.nattable.config.IConfiguration;
 import org.eclipse.nebula.widgets.nattable.data.convert.DefaultDisplayConverter;
 import org.eclipse.nebula.widgets.nattable.painter.cell.AbstractCellPainter;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
@@ -591,19 +590,16 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 
 		Image tempImg = null;
 		GC gc = null;
-		Color white = null;
 		try {
 			tempImg = new Image(null, imgData);
 			gc = new GC(tempImg);
-			white = new Color(Display.getDefault(), 255, 255, 255);
 			gc.setLineWidth(3);
-			gc.setForeground(white);
+			gc.setForeground(gc.getDevice().getSystemColor(SWT.COLOR_WHITE));
 			gc.drawLine(w-15, 9, w-5, 9);
 			gc.drawLine(w-10, 5, w-10, 15);
 			gc.dispose();
 			return tempImg.getImageData();
 		} finally {
-			if (white != null) white.dispose();
 			if (gc != null) gc.dispose();
 			if (tempImg != null) tempImg.dispose();
 		}

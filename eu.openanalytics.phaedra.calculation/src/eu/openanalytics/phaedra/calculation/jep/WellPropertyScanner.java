@@ -33,7 +33,7 @@ public class WellPropertyScanner extends BaseScanner<Well> {
 
 	@Override
 	protected Object getValueForRef(String scope, String[] fieldNames, Well well) {
-		WellProperty prop = WellProperty.getByName(fieldNames[0]);
+		WellProperty prop = WellProperty.getByLabel(fieldNames[0]);
 		if (prop == null) throw new CalculationException("No well property with name: " + fieldNames[0]);
 
 		Object value = null;

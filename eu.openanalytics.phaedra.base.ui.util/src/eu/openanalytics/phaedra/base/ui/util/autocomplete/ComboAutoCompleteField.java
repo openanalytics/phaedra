@@ -84,21 +84,38 @@ public class ComboAutoCompleteField {
 		comboViewer.getControl().addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				Combo combo = (Combo) e.getSource();
-				// If the combo has no selection when focus is lost, attempt to restore last known selection.
-				if (lastSelectedIndex >= 0 && combo.getSelectionIndex() < 0) {
-					combo.select(lastSelectedIndex);
+				if (e.getSource() instanceof Combo) {
+					Combo combo = (Combo) e.getSource();
+					// If the combo has no selection when focus is lost, attempt to restore last known selection.
+					if (lastSelectedIndex >= 0 && combo.getSelectionIndex() < 0) {
+						combo.select(lastSelectedIndex);
+					}
+				} else if (e.getSource() instanceof CCombo) {
+					CCombo combo = (CCombo) e.getSource();
+					// If the combo has no selection when focus is lost, attempt to restore last known selection.
+					if (lastSelectedIndex >= 0 && combo.getSelectionIndex() < 0) {
+						combo.select(lastSelectedIndex);
+					}
 				}
 			}
 		});
 		comboViewer.getControl().addKeyListener(new KeyListener() {
 			@Override
 			public void keyReleased(KeyEvent e) {
-				Combo combo = (Combo) e.getSource();
-				// If the combo has no selection and the user presses Esc or Enter, restore last known selection.
-				if (lastSelectedIndex >= 0 && combo.getSelectionIndex() < 0) {
-					if (e.character == SWT.CR || e.character == SWT.LF || e.character == SWT.ESC) {
-						combo.select(lastSelectedIndex);
+				if (e.getSource() instanceof Combo) {
+					Combo combo = (Combo) e.getSource();
+					// If the combo has no selection and the user presses Esc or Enter, restore last known selection.
+					if (lastSelectedIndex >= 0 && combo.getSelectionIndex() < 0) {
+						if (e.character == SWT.CR || e.character == SWT.LF || e.character == SWT.ESC) {
+							combo.select(lastSelectedIndex);
+						}
+					}
+				} else if (e.getSource() instanceof CCombo) {
+					CCombo combo = (CCombo) e.getSource();
+					if (lastSelectedIndex >= 0 && combo.getSelectionIndex() < 0) {
+						if (e.character == SWT.CR || e.character == SWT.LF || e.character == SWT.ESC) {
+							combo.select(lastSelectedIndex);
+						}
 					}
 				}
 			}

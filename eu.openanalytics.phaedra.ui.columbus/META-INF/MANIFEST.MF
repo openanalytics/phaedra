@@ -3,10 +3,14 @@ Bundle-ManifestVersion: 2
 Bundle-Name: PerkinElmer UI
 Bundle-SymbolicName: eu.openanalytics.phaedra.ui.columbus;singleton:=true
 Bundle-Version: 1.0.8.qualifier
-Bundle-Activator: eu.openanalytics.phaedra.ui.columbus.Activator
 Bundle-Vendor: OpenAnalytics
+Bundle-ActivationPolicy: lazy
+Bundle-Activator: eu.openanalytics.phaedra.ui.columbus.Activator
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
+ eu.openanalytics.phaedra.base.datatype;bundle-version="1.0.8",
+ eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.plate;bundle-version="1.0.0",
  eu.openanalytics.phaedra.model.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.link.importer;bundle-version="1.0.0",
@@ -14,11 +18,8 @@ Require-Bundle: org.eclipse.ui,
  eu.openanalytics.phaedra.protocol.template;bundle-version="1.0.0",
  eu.openanalytics.phaedra.datacapture;bundle-version="1.0.0",
  eu.openanalytics.phaedra.datacapture.columbus;bundle-version="1.0.0",
- eu.openanalytics.phaedra.base.pref.store;bundle-version="1.0.0",
  eu.openanalytics.phaedra.ui.link.importer;bundle-version="1.0.0",
  eu.openanalytics.phaedra.ui.protocol;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.icons;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.richtableviewer;bundle-version="1.0.0",
  eu.openanalytics.phaedra.base.ui.util;bundle-version="1.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-ActivationPolicy: lazy

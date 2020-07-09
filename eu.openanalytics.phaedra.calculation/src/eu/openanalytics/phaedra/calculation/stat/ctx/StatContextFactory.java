@@ -26,9 +26,35 @@ import eu.openanalytics.phaedra.model.subwell.SubWellService;
 public class StatContextFactory {
 
 	public static IStatContext createContext(StatQuery query) {
-		if (query.getFeature() instanceof Feature) return createWellFeatureContext(query);
+		if (query.getStat().startsWith("pearson") || query.getStat().startsWith("spearman")) return createMultiploContext(query);
+		else if (query.getFeature() instanceof Feature) return createWellFeatureContext(query);
 		else if (query.getFeature() instanceof SubWellFeature) return createSubWellFeatureContext(query);
 		return null;
+	}
+	
+	private static IStatContext createMultiploContext(StatQuery query) {
+		// UR-015: Test if the plate has a duplo plate, only if a plate has a duplicate the Pearson and Spearman statics can be calculated 
+		List<Plate> multiploPlates = new ArrayList<>();
+		if (query.getObject() instanceof Plate) {
+			Plate plate = (Plate)query.getObject();
+			multiploPlates = CalculationService.getInstance().getMultiploPlates(plate);
+		}
+		
+		Feature feature = (Feature)query.getFeature();
+		String norm = ("NONE".equals(query.getNormalization())) ? null : query.getNormalization();
+		ToDoubleFunction<Well> valueGetter = w -> CalculationService.getInstance().getAccessor(w.getPlate()).getNumericValue(w, feature, norm);
+		
+		double[][] data = new double[multiploPlates.size()][];
+		for (int i=0; i<data.length; i++) {
+			data[i] = PlateService.streamableList(multiploPlates.get(i).getWells())
+					.stream()
+					.sorted(PlateUtils.WELL_NR_SORTER)
+					.filter(w -> query.getWellType() == null || query.getWellType().equals(w.getWellType()))
+					.mapToDouble(w -> (w.getStatus() >= 0) ? valueGetter.applyAsDouble(w) : Double.NaN)
+					.toArray();
+		}
+		
+		return new MultiploStatContext(data);
 	}
 	
 	private static IStatContext createWellFeatureContext(StatQuery query) {

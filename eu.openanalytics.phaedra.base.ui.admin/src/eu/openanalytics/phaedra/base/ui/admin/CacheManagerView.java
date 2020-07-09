@@ -19,10 +19,10 @@ import org.eclipse.ui.part.ViewPart;
 
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
+import eu.openanalytics.phaedra.base.datatype.DataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichTableViewer;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
-import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnDataType;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.util.ColumnConfigFactory;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -142,10 +142,10 @@ public class CacheManagerView extends ViewPart {
 		List<ColumnConfiguration> configs = new ArrayList<>();
 		ColumnConfiguration config;
 
-		config = ColumnConfigFactory.create("Cache", "getName", ColumnDataType.String, 200);
+		config = ColumnConfigFactory.create("Cache", "getName", DataType.String, 200);
 		configs.add(config);
 
-		config = ColumnConfigFactory.create("# Keys", ColumnDataType.Numeric, 100);
+		config = ColumnConfigFactory.create("# Keys", DataType.Integer, 100);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -153,7 +153,7 @@ public class CacheManagerView extends ViewPart {
 				return String.valueOf(cache.getKeys().size());
 			}
 		});
-		config.setSorter(new Comparator<ICache>() {
+		config.setSortComparator(new Comparator<ICache>() {
 			@Override
 			public int compare(ICache o1, ICache o2) {
 				return o1.getKeys().size() - o2.getKeys().size();
@@ -161,7 +161,7 @@ public class CacheManagerView extends ViewPart {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Memory Size (MB)", ColumnDataType.Numeric, 100);
+		config = ColumnConfigFactory.create("Memory Size (MB)", DataType.Real, 100);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -169,7 +169,7 @@ public class CacheManagerView extends ViewPart {
 				return NumberUtils.round(cache.getHeapSize()/(1024.0*1024.0), 2);
 			}
 		});
-		config.setSorter(new Comparator<ICache>() {
+		config.setSortComparator(new Comparator<ICache>() {
 			@Override
 			public int compare(ICache o1, ICache o2) {
 				return (int)(o1.getHeapSize() - o2.getHeapSize());
@@ -177,7 +177,7 @@ public class CacheManagerView extends ViewPart {
 		});
 		configs.add(config);
 		
-		config = ColumnConfigFactory.create("Disk Size (MB)", ColumnDataType.Numeric, 100);
+		config = ColumnConfigFactory.create("Disk Size (MB)", DataType.Real, 100);
 		config.setLabelProvider(new RichLabelProvider(config) {
 			@Override
 			public String getText(Object element) {
@@ -185,7 +185,7 @@ public class CacheManagerView extends ViewPart {
 				return NumberUtils.round(cache.getDiskSize()/(1024.0*1024.0), 2);
 			}
 		});
-		config.setSorter(new Comparator<ICache>() {
+		config.setSortComparator(new Comparator<ICache>() {
 			@Override
 			public int compare(ICache o1, ICache o2) {
 				return (int)(o1.getDiskSize() - o2.getDiskSize());

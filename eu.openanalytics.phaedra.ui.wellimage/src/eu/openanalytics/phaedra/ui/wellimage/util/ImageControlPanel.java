@@ -132,7 +132,7 @@ public class ImageControlPanel extends Composite {
 
 		currentPClass = pClass;
 
-		GridDataFactory.fillDefaults().grab(false, false).hint(25*componentBtns.length, 22).applyTo(buttonContainer);
+		GridDataFactory.fillDefaults().grab(false, false).hint(35*componentBtns.length, 22).applyTo(buttonContainer);
 		this.layout();
 		buttonContainer.layout();
 	}

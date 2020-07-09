@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.base.scripting.r;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -33,7 +34,9 @@ public class RScriptEngine extends BaseScriptEngine {
 			@Override
 			protected String processInput(String input) throws Exception {
 				Object output = eval(input, null, consoleSession);
-				return (output == null) ? null : output.toString();
+				if (output == null) return null;
+				if (output instanceof String[]) return Arrays.toString((String[]) output);
+				return output.toString();
 			}
 		};
 		setConsole(console);

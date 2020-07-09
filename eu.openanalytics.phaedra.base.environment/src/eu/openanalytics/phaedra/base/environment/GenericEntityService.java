@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.base.environment;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
@@ -31,8 +33,9 @@ public class GenericEntityService extends BaseJPAService {
 	}
 	
 	public <E> List<E> findEntities(Class<E> entityClass, long[] ids) {
-		String queryString = String.format("select e from %s e where e.id in (?1)", entityClass.getSimpleName());
-		return streamableList(getList(queryString, entityClass, ids)).stream()
+		String queryString = String.format("select e from %s e where e.id in ?1", entityClass.getSimpleName());
+		List<Long> idList = Arrays.stream(ids).mapToObj(l -> l).collect(Collectors.toList());
+		return streamableList(getList(queryString, entityClass, Collections.singletonList(idList))).stream()
 			.filter(e -> SecurityService.getInstance().check(Permissions.PROTOCOLCLASS_OPEN, e))
 			.collect(Collectors.toList());
 	}

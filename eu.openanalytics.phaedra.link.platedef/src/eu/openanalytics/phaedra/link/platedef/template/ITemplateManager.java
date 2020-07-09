@@ -17,6 +17,15 @@ public interface ITemplateManager {
 	public PlateTemplate getTemplate(String id) throws IOException;
 
 	/**
+	 * Get a list of template ids for the given protocol class.
+	 * 
+	 * @param protocolClassId The id of the protocol class to get templates for.
+	 * @return A list of matching template ids.
+	 * @throws IOException If the templates cannot be accessed.
+	 */
+	public List<String> getTemplateIds(long protocolClassId) throws IOException;
+	
+	/**
 	 * Get a list of all templates for the given protocol class.
 	 * 
 	 * @param protocolClassId The id of the protocol class to get templates for.

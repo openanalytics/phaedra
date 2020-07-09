@@ -24,7 +24,8 @@ Require-Bundle: org.eclipse.core.runtime,
  eu.openanalytics.phaedra.base.scripting.jep;bundle-version="1.0.0",
  org.eclipse.persistence.jpa;bundle-version="2.3.0",
  org.eclipse.ui,
- org.eclipse.jface.databinding
+ org.eclipse.jface.databinding,
+ org.eclipse.statet.rj.server
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.model.curve,

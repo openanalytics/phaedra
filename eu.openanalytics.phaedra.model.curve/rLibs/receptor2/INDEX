@@ -1,0 +1,23 @@
+checkED50Range          in cases where estimated ED50 is out of range,
+                        checks whether the model fit should be shown or
+                        not
+compoundStatus          determines whether a compound is inactive or
+                        super potent
+determineTheSlope       determines the direction of the curve based on
+                        various factors
+estimateRange           computes the estimated range
+extractLogisticModelFit
+                        extracts required stuff from a fitted drc model
+extractLogisticNoModelFit
+                        extracts required stuff when no suitable model
+                        could be fitted
+fittingLogisticModel    fits a logistic model to the dose-response data
+isSaneEDx               checks sanity conditions for an estimated ED50
+makingDoseResponseData
+                        creates suitable dose-response data out of the
+                        provided Excel files
+strEndsWith             checks if a strings ends with certain
+                        characters
+transformEstimates      transforms the estimated ICx's in natrual log
+                        to log10.
+validEDx                returns the valid estimated EDx results

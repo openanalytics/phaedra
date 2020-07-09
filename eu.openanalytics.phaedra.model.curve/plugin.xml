@@ -99,5 +99,26 @@
             name="eu.openanalytics.phaedra.model.curve.util.JEPCurvePropertyScanner">
       </jepScanner>
    </extension>
+   <extension
+         point="eu.openanalytics.phaedra.model.curve.fitModel">
+      <fitModel
+            class="eu.openanalytics.phaedra.model.curve.receptor2.Receptor2FitModel"
+            id="receptor2">
+      </fitModel>
+   </extension>
+   <extension
+         point="eu.openanalytics.phaedra.model.curve.curveRenderer">
+      <curveRenderer
+            class="eu.openanalytics.phaedra.model.curve.receptor2.Receptor2CurveRenderer">
+      </curveRenderer>
+   </extension>
+   <extension
+         point="org.eclipse.statet.rj.RSetups">
+      <library
+            group="R_LIBS_USER"
+            location="rLibs/"
+            setupId="eu.openanalytics.phaedra.base.r.embeddedServer">
+      </library>
+   </extension>
 
 </plugin>

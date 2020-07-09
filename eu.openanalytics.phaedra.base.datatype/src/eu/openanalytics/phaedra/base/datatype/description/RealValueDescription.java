@@ -3,7 +3,7 @@ package eu.openanalytics.phaedra.base.datatype.description;
 import eu.openanalytics.phaedra.base.datatype.DataType;
 
 
-public class RealValueDescription extends BaseDataDescription {
+public class RealValueDescription extends BasicDataDescription {
 	
 	
 	public RealValueDescription(final String name, final Class<?> entityType) {

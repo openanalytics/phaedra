@@ -23,14 +23,14 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDatabindingDialog;
+import eu.openanalytics.phaedra.base.ui.util.dialog.TitleAreaDataBindingDialog;
 import eu.openanalytics.phaedra.calculation.formula.FormulaService;
 import eu.openanalytics.phaedra.calculation.formula.model.CalculationFormula;
 import eu.openanalytics.phaedra.calculation.formula.model.InputType;
 import eu.openanalytics.phaedra.calculation.formula.model.Language;
 import eu.openanalytics.phaedra.calculation.formula.model.Scope;
 
-public class EditFormulaDialog extends TitleAreaDatabindingDialog {
+public class EditFormulaDialog extends TitleAreaDataBindingDialog {
 
 	private Text nameTxt;
 	private Text descriptionTxt;
@@ -126,7 +126,7 @@ public class EditFormulaDialog extends TitleAreaDatabindingDialog {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	protected void initDatabinding(DataBindingContext dbc) {
+	protected void initDataBinding(DataBindingContext dbc) {
 		dbc.bindValue(
 				WidgetProperties.text(SWT.Modify).observe(nameTxt),
 				PojoProperties.value("name", String.class).observe(formula));

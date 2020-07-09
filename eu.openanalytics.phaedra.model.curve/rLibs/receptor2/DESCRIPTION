@@ -1,0 +1,14 @@
+Package: receptor2
+Type: Package
+Version: 0.1-0
+Date: 2020-02-14
+Title: Fitting logistic dose-response model
+Author: Vahid Nassiri
+Maintainer: vnassiri <vahid.nassiri@openanalytics.eu>
+Description: Functions to prepare dose-response data from out put of Phaedra and fit logistic model them.
+Imports: drc, ggplot2
+License:
+RoxygenNote: 7.1.0
+NeedsCompilation: no
+Packaged: 2020-07-03 09:46:25 UTC; vnassiri
+Built: R 3.5.1; ; 2020-07-03 10:04:35 UTC; windows

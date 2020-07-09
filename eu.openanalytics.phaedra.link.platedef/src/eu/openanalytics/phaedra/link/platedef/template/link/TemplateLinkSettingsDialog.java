@@ -177,11 +177,8 @@ public class TemplateLinkSettingsDialog extends PlateLinkSettingsDialog {
 		selectedProtocolClassId = protocolClassIds[index];
 
 		try {
-			List<PlateTemplate> templates = PlateDefinitionService.getInstance().getTemplateManager().getTemplates(selectedProtocolClassId);
-			String[] ids = new String[templates.size()];
-			for (int i = 0; i < ids.length; i++) {
-				ids[i] = templates.get(i).getId();
-			}
+			String[] ids = PlateDefinitionService.getInstance().getTemplateManager().getTemplateIds(selectedProtocolClassId)
+					.stream().toArray(i -> new String[i]);
 			templatesCombo.setItems(ids);
 			if (ids.length > 0) {
 				templatesCombo.select(0);

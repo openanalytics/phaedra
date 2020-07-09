@@ -5,9 +5,7 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
@@ -78,7 +76,7 @@ public class AddJEPColumnDialog extends JEPFormulaDialog {
 		
 		errorMessage = new Label(subContainer, SWT.NONE);
 		errorMessage.setText("Please enter a name for the new column");
-		errorMessage.setForeground(new Color(Display.getDefault(), 255, 0, 0));
+		errorMessage.setForeground(errorMessage.getDisplay().getSystemColor(SWT.COLOR_RED));
 		GridDataFactory.fillDefaults().grab(true, true).span(2, 1).applyTo(errorMessage);
 	}
 	
