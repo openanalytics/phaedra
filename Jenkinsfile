@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Build and Deploy to nexus') {
             steps {
-                withCredentials([usernameColonPassword(credentialsId: 'admin', variable: 'USERPASS')]) {
+                withCredentials([usernameColonPassword(credentialsId: 'oa-jenkins', variable: 'USERPASS')]) {
                     container('phaedra-build') {
                         sh 'mvn -U clean deploy'
                     }
