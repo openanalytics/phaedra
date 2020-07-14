@@ -147,6 +147,7 @@ public class ScriptCatalog {
 	}
 	
 	private InputStream getScript(String name) throws IOException {
+		if (name.startsWith("/")) name = name.substring(1);
 		String path = FS_SUBPATH + "/" + name;
 		if (fs.exists(path)) return fs.getContents(path);
 		
