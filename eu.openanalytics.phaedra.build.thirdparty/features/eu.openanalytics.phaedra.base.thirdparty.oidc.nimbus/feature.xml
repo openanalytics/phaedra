@@ -5,12 +5,6 @@
 		provider-name="OpenAnalytics Phaedra"
 		label="Libraries for OIDC (Nimbus)">
 	
-	<description>
-	</description>
-	
-	<license>
-	</license>
-	
 	<plugin id="com.sun.mail.javax.mail"
 			version="1.6.2.qualifier"/>
 			
