@@ -51,19 +51,6 @@ public class LDAPUtils {
 
 		if (password.length == 0) throw new AuthenticationException("Password cannot be empty");
 		
-		// If a default domain has been configured, prepend it to the username (AD only).
-		String defaultDomain = cfg.get(AuthConfig.DEFAULT_DOMAIN);
-		if (defaultDomain != null && !defaultDomain.isEmpty() && !userName.contains("\\")) {
-			userName = defaultDomain + "\\" + userName;
-		}
-		
-		// If a principal mapping has been configured, apply it (e.g. map username to DN).
-		String principal = userName;
-		String principalMapping = cfg.get(AuthConfig.PRINCIPAL_MAPPING);
-		if (principalMapping != null && !principalMapping.isEmpty()) {
-			principal = principalMapping.replace("${username}", userName);
-		}
-		
 		String[] urls = new String[] { cfg.get(AuthConfig.URL) };
 		if (urls[0].contains(",")) {
 			urls = urls[0].split(",");
@@ -77,7 +64,7 @@ public class LDAPUtils {
 					Hashtable<String, String> env = new Hashtable<>(11);
 					env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 					env.put(Context.PROVIDER_URL, url);
-					env.put(Context.SECURITY_PRINCIPAL, principal);
+					env.put(Context.SECURITY_PRINCIPAL, asPrincipal(userName, cfg));
 					env.put(Context.SECURITY_CREDENTIALS, new String(password));
 					env.put("com.sun.jndi.ldap.read.timeout", "10000");
 					
@@ -97,7 +84,7 @@ public class LDAPUtils {
 		}
 	}
 	
-	public static String lookupEmail(String username, DirContext ctx, AuthConfig cfg) {
+	public static String lookupEmail(String userName, DirContext ctx, AuthConfig cfg) {
 		try {
 			String usernameAttribute = cfg.get(AuthConfig.USERNAME_ATTRIBUTE);
 			if (usernameAttribute == null || usernameAttribute.isEmpty()) usernameAttribute = DEFAULT_USERNAME_ATTR;
@@ -105,7 +92,7 @@ public class LDAPUtils {
 			SearchControls ctrl = new SearchControls();
 			ctrl.setReturningAttributes(new String[] { MAIL_ATTR });
 			ctrl.setSearchScope(SearchControls.SUBTREE_SCOPE);
-			NamingEnumeration<SearchResult> resultSet = ctx.search("", "(&" + PERSON_FILTER + "(" + usernameAttribute + "=" + username + "))", ctrl);
+			NamingEnumeration<SearchResult> resultSet = ctx.search("", "(&" + PERSON_FILTER + "(" + usernameAttribute + "=" + asPrincipal(userName, cfg) + "))", ctrl);
 
 			while (resultSet.hasMore()) {
 				SearchResult entry = resultSet.next();
@@ -193,4 +180,26 @@ public class LDAPUtils {
 		return groups;
 	}
 	
+	private static String asPrincipal(String userName, AuthConfig cfg) {
+		String domain = null;
+		if (userName.contains("\\")) {
+			domain = userName.substring(0, userName.indexOf("\\"));
+			userName = userName.substring(userName.indexOf("\\") + 1);
+		}
+		String defaultDomain = cfg.get(AuthConfig.DEFAULT_DOMAIN);
+		if (domain == null && defaultDomain != null && !defaultDomain.trim().isEmpty()) {
+			domain = defaultDomain;
+		}
+		
+		String principal = userName;
+		if (domain != null) principal = userName + "@" + domain;
+		
+		// If a principal mapping has been configured, apply it (e.g. map username to DN).
+		String principalMapping = cfg.get(AuthConfig.PRINCIPAL_MAPPING);
+		if (principalMapping != null && !principalMapping.isEmpty()) {
+			principal = principalMapping.replace("${username}", userName);
+		}
+		
+		return principal;
+	}
 }
