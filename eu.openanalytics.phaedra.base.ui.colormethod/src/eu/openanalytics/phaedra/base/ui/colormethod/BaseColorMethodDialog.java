@@ -24,6 +24,11 @@ public abstract class BaseColorMethodDialog extends TitleAreaDialog {
 	}
 		
 	@Override
+	protected boolean isResizable() {
+		return true;
+	}
+	
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite parentComposite = (Composite) super.createDialogArea(parent);
 
