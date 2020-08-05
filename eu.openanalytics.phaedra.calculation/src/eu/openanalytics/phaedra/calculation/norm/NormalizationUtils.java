@@ -55,5 +55,22 @@ public class NormalizationUtils {
 		double[] values = validWells.stream().mapToDouble(valueGetter).filter(v -> (!Double.isNaN(v))).toArray();
 		return StatService.getInstance().calculate(stat, values);
 	}
+
+	//PHA-674: Robust Z-score on samples (only)
+	public static double getSamplesStat(String stat, NormalizationKey key) {
+		Feature feature = (Feature) key.getFeature();
+		Plate plate = SelectionUtils.getAsClass(key.getDataToNormalize(), Plate.class);
+		List<Well> wells = new ArrayList<>();
+		wells.addAll(plate.getWells());
+		
+		List<Well> validWells = wells.stream()
+				.filter(w -> w.getStatus() >= 0)
+				.filter(w -> WellType.SAMPLE.equals(w.getWellType()))
+				.collect(Collectors.toList());
+		
+		ToDoubleFunction<Well> valueGetter = w -> CalculationService.getInstance().getAccessor(w.getPlate()).getNumericValue(w, feature, null);
+		double[] values = validWells.stream().mapToDouble(valueGetter).filter(v -> (!Double.isNaN(v))).toArray();
+		return StatService.getInstance().calculate(stat, values);
+	}
 	
 }

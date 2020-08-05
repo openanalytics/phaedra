@@ -64,13 +64,13 @@
   "curveType": null
 },
 {
-  "suffix": "Rob Z-score samples and negatives merged smoothed",
+  "suffix": "Rob Z-score samples merged smoothed",
   "keyFeature": true,
   "calcFormula": "#${base.feature} Merged Smoothed#",
   "calcFormulaName": null,
   "calcFormulaId": null, 
   "calcSequence": 2,
-  "normalizationName": "ZScoreRob[S/L]",
+  "normalizationName": "ZScoreRob[S]",
   "normalizationFormula": null,
   "curveModel": null,
   "curveMethod": null,

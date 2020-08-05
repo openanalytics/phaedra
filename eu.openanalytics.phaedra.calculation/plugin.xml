@@ -183,6 +183,10 @@
       </normalizer>
       <normalizer
             id="ZScoreRob[S/L]"
+            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesLowNormalizer">
+      </normalizer>
+      <normalizer
+            id="ZScoreRob[S]"
             class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesNormalizer">
       </normalizer>
       <normalizer
