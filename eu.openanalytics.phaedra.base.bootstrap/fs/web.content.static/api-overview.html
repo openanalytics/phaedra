@@ -1,0 +1,335 @@
+<html>
+<head>
+<title>API Overview</title>
+<style type="text/css">
+	.urlCol {
+		font-weight: bold;
+	}
+</style>
+</head>
+<body>
+	<h1>API Overview</h1>
+	Current API version: <b>v2</b>
+
+	<h2>Introduction</h2>
+	<p>
+	Phaedra exposes a RESTful API that can be used to browse most of its contents, including protocols, experiments, plates, well data, subwell data, images and curves.
+	</p>
+	<p>
+	The API can be used by following these steps:
+	</p>
+	<ol>
+		<li>Receive a token by authenticating with your username and password</li>
+		<li>Make GET or POST calls to the API (see below), passing the token with each request</li>
+		<li>Invalidate the token by posting a request to the logout URL (see below)</li>
+	</ol>
+	Some additional notes:
+	<ul>
+		<li>Structured data (object listings, well data, subwell data, ...) are returned in JSON format.</li>
+		<li>All requests except for /api/v2/login must have a header 'X-Auth-Token' containing a valid token.</li>
+		<li>The token may also be passed as a parameter ?token={token} but using a header is recommended.</li>
+		<li>For security reasons, all requests should be sent over the HTTPS protocol.</li>
+	</ul>
+	<h2>API</h2>
+
+	<h3>Authentication</h3>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol">/api/v2/login?user={userName}&password={password}</td>
+				<td>POST</td>
+				<td>Authenticate and receive a 24-hour token</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/login</td>
+				<td>GET</td>
+				<td>Open a convenient login form</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/logout</td>
+				<td>POST</td>
+				<td>Invalidate your token</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Browsing</h3>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol">/api/v2/browse/protocols/{partOfName}</td>
+				<td>GET</td>
+				<td>List protocols whose names match the given string</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/browse/protocol/{protocolId}</td>
+				<td>GET</td>
+				<td>List the contents of a protocol</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/browse/experiment/{experimentId}</td>
+				<td>GET</td>
+				<td>List the contents of an experiment</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Querying</h3>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol">/api/v2/query/{resultType}</td>
+				<td>GET</td>
+				<td>
+					Perform a query. The {resultType} can be one of:
+					<ul>
+						<li>plates</li>
+						<li>experiments</li>
+						<li>protocols</li>
+						<li>protocolclasses</li>
+						<li>welldata</li>
+						<li>subwelldata</li>
+					</ul>
+					Allowed parameters:
+					<ul>
+						<li>name={exactName} (the name of an experiment, protocol or protocol class)</li>
+						<li>name=~{likeName} (the name of an experiment, protocol or protocol class)</li>
+						<li>barcode={exactBarcode} (the barcode of a plate)</li>
+						<li>barcode=~{likeBarcode} (the barcode of a plate)</li>
+						<li>id={objectId} (the id of the object being queried)</li>
+						<li>plateId={plateId} (for welldata or subwelldata queries, the id of the parent plate)</li>
+						<li>experimentId={experimentId} (for plate queries, the id of the parent experiment)</li>
+						<li>protocolId={protocolId} (for plate/experiment queries, the id of the parent protocol)</li>
+						<li>protocolClassId={protocolClassId} (for plate/experiment/protocol queries, the id of the parent protocol class)</li>
+						<li>featureId=in({featureId1},{featureId3},{featureId3}) (for welldata or subwelldata queries, the list of feature ids)</li>
+						<li>validationStatus={validationStatus}</li>
+						<li>validationDate=between({validationDate1},{validationDate2}) (where dates are formatted as yyyyMMddHHmmss)</li>
+						<li>approvalStatus={approvalStatus}</li>
+						<li>approvalDate=between({approvalDate1},{approvalDate2}) (where dates are formatted as yyyyMMddHHmmss)</li>
+						<li>includeWells=true|false (for plate queries: true to also include well information)</li>
+						<li>valueType=raw|norm (for welldata queries: return either raw or normalized feature values)</li>
+						<li>maxResults=n (return maximum n results, which by default is 100. Use -1 to return all results)</li>
+						<li>excludeFields=(field1,field2,...) (exclude the named fields from the response)</li>
+					</ul>
+					Notes:
+					<ul>
+						<li>Parameters that accept an id (such as id, experimentId, protocolId, etc.) can also accept a list of ids, using the syntax id=in(id1,id2,id3)<br/>
+						or they can accept a range of ids, using the syntax id=between(id1,id2)</li>
+						<li>A welldata or subwelldata query will return its response in CSV format rather than JSON</li>
+					</ul>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Data Retrieval</h3>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol">/api/v2/protocolclass/{protocolclassId}</td>
+				<td>GET</td>
+				<td>Get detailed information about a protocol class</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/plate/{plateId}</td>
+				<td>GET</td>
+				<td>Get detailed information about a plate</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/platestat/{plateId}/{featureId}/{statName}</td>
+				<td>GET</td>
+				<td>Get a statistic for a plate's feature. For a welltype-specific stat, the welltype may be added as a fourth argument.</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/welldata/{raw|norm}/{plateId}/{featureId}</td>
+				<td>GET</td>
+				<td>Get the welldata of a plate. If a feature ID is specified, only that feature will be loaded.<br/>
+					Use 'raw' to obtain the raw (unnormalized) data, or 'norm' to obtain the normalized data, using the
+					normalization formula specified in the protocol class.
+				</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/subwelldata/{wellId}</td>
+				<td>GET</td>
+				<td>Get the subwelldata of a well</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/curve/{compoundId}/{featureId}</td>
+				<td>GET</td>
+				<td>Get a PDF image of a dose-response curve</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/curveinfo/{compoundId}/{featureId}</td>
+				<td>GET</td>
+				<td>Get detailed information about a dose-response curve</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Image Rendering</h3>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol">/api/v2/image/well/{wellId}</td>
+				<td>GET</td>
+				<td>
+					Get a well image. Allowed parameters:<br/>
+					* scale: a scale factor to apply to the well image<br/>
+					* format: an image format to render in. One of: png, jpg, bmp<br/>
+					* region: a rectangular region in the well image to render. Format: x,y,w,h<br/>
+					* cell: the number of a cell to render a single-cell cropped image<br/>
+					* components: a comma-separated list of components to render. Use 1 to render, 0 to not render<br/>
+					* contrast: a comma-separated list of contrast levels, one per component.<br/>
+					To use default contrast, use an empty value (e.g. contrast=,,,)<br/>
+					To set a max only, use a single value (e.g. contrast=,,500)<br/>
+					To set both a min and max, use a hyphen (e.g. contrast=,,100-500)<br/>
+				</td>
+			</tr>
+			<tr>
+				<td class="urlCol">/api/v2/image/plate/{plateId}</td>
+				<td>GET</td>
+				<td>
+					Get a plate's well image raster. Allowed parameters:<br/>
+					* size: the pixel size per well. Default is 30
+				</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Utility</h3>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol"><a href='/api/v2/systemcheck'>/api/v2/systemcheck</a></td>
+				<td>GET</td>
+				<td>Check the status of the server</td>
+			</tr>
+			<tr>
+				<td class="urlCol"><a href='/api/v2/threaddump'>/api/v2/threaddump</a></td>
+				<td>GET</td>
+				<td>Get a thread dump of the server</td>
+			</tr>
+			<tr>
+				<td class="urlCol"><a href='/api/v2/log'>/api/v2/log</a></td>
+				<td>GET</td>
+				<td>Get the contents of the current log file</td>
+			</tr>
+			<tr>
+				<td class="urlCol"><a href='/api/v2/gc'>/api/v2/gc</a></td>
+				<td>GET</td>
+				<td>Perform a Garbage Collection and compare memory before/after</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Approved Data Upload</h3>
+	<p>
+		Phaedra supports the uploading of approved data into a data warehousing or data publishing system.
+		Before data can be uploaded, three requirements must be met:
+		<ol>
+			<li>In the Protocol, the Upload System field must be set to a non-empty value</li>
+			<li>In the Protocol Class, at least one Well Feature must have the Export flag set</li>
+			<li>At least one Plate must have the Approval flag set</li>
+		</ol>
+		When the above conditions are met, the following data can be uploaded for each approved plate:
+		<ul>
+			<li>For each compound: information about the compound, plate and experiment (name, description, owner, creation date, etc.)</li>
+			<li>For each compound: all values for all Well Features with the Export flag set</li>
+			<li>For each compound: all DRC (dose-response curves) for all Well Features with the Export flag set that have a DRC configuration</li>
+		</ul>
+	</p>
+	<table border=1>
+		<thead><tr>
+			<th>URL</th>
+			<th>Method</th>
+			<th>Description</th>
+		</tr></thead>
+		<tbody>
+			<tr>
+				<td class="urlCol"><a href='/api/v2/upload/{systemID}/prepare'>/api/v2/upload/{systemID}/prepare</a></td>
+				<td>POST</td>
+				<td>Prepare a data upload for the given system ID</td>
+			</tr>
+			<tr>
+				<td class="urlCol"><a href='/api/v2/upload/{systemID}/status/{experimentID}/{status}'>/api/v2/upload/{systemID}/status/{experimentID}/{status}</a></td>
+				<td>POST</td>
+				<td>Set the upload status for a given experiment ID</td>
+			</tr>
+		</tbody>
+	</table>
+	<p>
+		To start a data upload procedure, the remote system first calls the /api/v2/upload/{systemID}/prepare URL with a valid system ID.
+		This will copy the approved data into three database tables with respective columns:
+		<ul>
+			<li><b>dbl_hca_upload</b>: platecompound_id, compound_ty, compound_nr, plate_id, plate_barcode, plate_description, plate_info,
+						data_xml, experiment_id, experiment_name, experiment_dt, experiment_user, protocol_id, protocol_name, upload_system</li>
+			<li><b>dbl_hca_upload_point</b>: well_id, platecompound_id, curve_id, feature_id, group1, group2, group3, feature_name,
+						concentration, is_valid, value, normalized</li>
+			<li><b>dbl_hca_upload_result</b>: curve_id, feature_id, feature_name, result_type, qualifier, value</li>
+		</ul>
+		<i>Note</i>: the table names may differ for any particular system ID.
+	</p>
+	<p>
+		The remote system may then read and intake the approved data from these tables.
+		After all data from an experiment has been processed, the remote system calls the /api/v2/upload/{systemID}/status/{experimentID}/{status} URL
+		to inform Phaedra that data for an experiment has been uploaded. The status value may be one of:
+		<ul>
+			<li>0: Data Not Uploaded</li>
+			<li>1: Upload Not Applicable</li>
+			<li>2: Data Uploaded</li>
+		</ul>
+	</p>
+	<h2>Examples</h2>
+	<p>
+	<i>Note that these examples require a valid token to work.</i>
+	</p>
+	<ul>
+		<li><a href='/api/v2/login'>/api/v2/login</a>
+		<li><a href='/api/v2/browse/protocols/synap'>/api/v2/browse/protocols/synap</a>
+		<li><a href='/api/v2/browse/protocol/206'>/api/v2/browse/protocol/206</a>
+		<li><a href='/api/v2/browse/experiment/3899'>/api/v2/browse/experiment/3899</a>
+		<li><a href='/api/v2/query/protocols?name=~cell'>/api/v2/query/protocols?name=~cell</a>
+		<li><a href='/api/v2/query/experiments?protocolClassId=457'>/api/v2/query/experiments?protocolClassId=457</a>
+		<li><a href='/api/v2/query/plates?protocolClassId=400&approvalStatus=2&approvalDate=between(20190101000000,20190301000000)'>/api/v2/query/plates?protocolClassId=400&approvalStatus=2&approvalDate=between(20190101000000,20190301000000)</a>
+		<li><a href='/api/v2/query/welldata?id=between(60652,60654)&valueType=norm'>/api/v2/query/welldata?id=between(60652,60654)&valueType=norm</a>	
+		<li><a href='/api/v2/protocolclass/54'>/api/v2/protocolclass/54</a>
+		<li><a href='/api/v2/plate/60652'>/api/v2/plate/60652</a>
+		<li><a href='/api/v2/platestat/60652/83854/mean'>/api/v2/plate/60652/83854/mean</a>
+		<li><a href='/api/v2/welldata/raw/60652'>/api/v2/welldata/raw/60652</a>
+		<li><a href='/api/v2/subwelldata/21297945'>/api/v2/subwelldata/21297945</a>
+		<li><a href='/api/v2/image/well/21297945?scale=0.25'>/api/v2/image/well/21297945?scale=0.25</a>
+		<li><a href='/api/v2/curve/4166738/83854'>/api/v2/curve/4166738/83854</a>
+	</ul>
+
+</body>
+</html>
