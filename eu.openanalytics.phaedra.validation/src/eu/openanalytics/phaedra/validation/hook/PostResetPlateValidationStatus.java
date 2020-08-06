@@ -10,7 +10,6 @@ import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.validation.ValidationService;
 import eu.openanalytics.phaedra.validation.ValidationService.Action;
-import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
 
 public class PostResetPlateValidationStatus implements IHook {
 
@@ -30,9 +29,9 @@ public class PostResetPlateValidationStatus implements IHook {
 		
 		List<Compound> compoundsToReset = new ArrayList<>();
 		for (Plate plate: plates) {
-			if (plate.getValidationStatus() > 0) continue;
+			if (plate.getValidationStatus() < 0) continue;
 			for (Compound c: plate.getCompounds()) {
-				if (c.getValidationStatus() == CompoundValidationStatus.VALIDATION_NOT_SET.getCode()) continue;
+				if (c.getValidationStatus() >= 0) continue;
 				compoundsToReset.add(c);
 			}
 		}
