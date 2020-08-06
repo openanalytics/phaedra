@@ -16,28 +16,24 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
-import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
-
 
 public class WellDataPersistor extends BaseDataPersistor {
 
 	@Override
 	public void persist(IFileStore store, Plate plate) throws DataCaptureException, IOException {
 		// Prevent JPA deadlock: loop through all wells and features inside a lock to ensure they are cached.
-		final List<Well> wells = GenericEntityService.getInstance().runInLock(() -> {
-			final List<Well> wellList = PlateService.streamableList(plate.getWells());
-			for (Well w: wellList) w.getWellType();
+		GenericEntityService.getInstance().runInLock(() -> {
+			for (Well w: plate.getWells()) w.getWellType();
 			for (Feature f: PlateUtils.getFeatures(plate)) f.getDisplayName();
-			return wellList;
+			return null;
 		});
-		wells.sort(PlateUtils.WELL_NR_SORTER);
 		
 		// Retrieve existing well data, if any.
 		List<FeatureValue> existingData = PlateService.getInstance().getWellData(plate);
 		
 		for (String featureName: getNames(store, DefaultDataCaptureStore.WELL_DATA_PREFIX)) {
 			Object data = store.readValue(DefaultDataCaptureStore.WELL_DATA_PREFIX + featureName);
-			FeatureValueGrid dataGrid = createValueGrid(plate, wells, featureName, data, existingData);
+			FeatureValueGrid dataGrid = createValueGrid(plate, featureName, data, existingData);
 			
 			if (dataGrid == null) continue;
 			if (dataGrid.feature.isNumeric()) {
@@ -51,30 +47,22 @@ public class WellDataPersistor extends BaseDataPersistor {
 		CalculationService.getInstance().getAccessor(plate).reset();
 	}
 	
-	private FeatureValueGrid createValueGrid(Plate plate, List<Well> wells, String featureName, Object data, List<FeatureValue> existingData) {
+	private FeatureValueGrid createValueGrid(Plate plate, String featureName, Object data, List<FeatureValue> existingData) {
 		Feature feature = ProtocolUtils.getFeatureByName(featureName, ProtocolUtils.getProtocolClass(plate));
 		if (feature == null) return null;
 		
 		FeatureValueGrid grid = new FeatureValueGrid(plate, feature, existingData);
 		
 		if (data instanceof float[]) {
-			float[] numData = (float[])data;
-			for (int i = 0; i < wells.size() && i < numData.length; i++) {
-				final Well well = wells.get(i);
-				if (well.getStatus() == WellStatus.REJECTED_DATACAPTURE.getCode()) {
-					continue;
-				}
-				FeatureValue v = getFeatureValue(grid, well);
+			float[] numData = (float[]) data;
+			for (int i=0; i<numData.length; i++) {
+				FeatureValue v = getFeatureValue(grid, i);
 				if (v != null) v.setRawNumericValue(numData[i]);
 			}
 		} else if (data instanceof String[]) {
 			String[] strData = (String[]) data;
-			for (int i = 0; i < wells.size() && i < strData.length; i++) {
-				final Well well = wells.get(i);
-				if (well.getStatus() == WellStatus.REJECTED_DATACAPTURE.getCode()) {
-					continue;
-				}
-				FeatureValue v = getFeatureValue(grid, well);
+			for (int i=0; i<strData.length; i++) {
+				FeatureValue v = getFeatureValue(grid, i);
 				if (v != null) v.setRawStringValue(strData[i]);
 			}
 		}
@@ -82,14 +70,18 @@ public class WellDataPersistor extends BaseDataPersistor {
 		return grid;
 	}
 
-	private static FeatureValue getFeatureValue(FeatureValueGrid grid, Well well) {
-		FeatureValue v = grid.get(well.getRow(), well.getColumn());
+	private FeatureValue getFeatureValue(FeatureValueGrid grid, int index) {
+		int[] pos = NumberUtils.getWellPosition(index+1, grid.plate.getColumns());
+		if (pos[0] > grid.plate.getRows() || pos[1] > grid.plate.getColumns()) return null;
+		
+		FeatureValue v = grid.get(pos[0], pos[1]);
 		if (v == null) {
 			v = new FeatureValue();
-			v.setWell(well);
+			v.setWell(PlateUtils.getWell(grid.plate, pos[0], pos[1]));
 			v.setFeature(grid.feature);
-			grid.addValue(well.getRow(), well.getColumn(), v);
+			grid.addValue(pos[0], pos[1], v);
 		}
+		
 		return v;
 	}
 	
