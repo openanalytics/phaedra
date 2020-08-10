@@ -1,0 +1,14 @@
+<project name="mirror.repos" default="all">
+	<target name="all">
+		<p2.mirror source="${source.repo.path}" destination="${dest.repo.path}">
+			<iu id="eu.openanalytics.phaedra.feature.group" />
+			<iu id="eu.openanalytics.phaedra.base.feature.group" />
+			<iu id="eu.openanalytics.phaedra.base.imaging.feature.group" />
+			<iu id="eu.openanalytics.phaedra.base.r.feature.group" />
+			<iu id="eu.openanalytics.phaedra.base.ui.feature.group" />
+			<iu id="eu.openanalytics.phaedra.base.thirdparty.feature.group" />
+			<iu id="eu.openanalytics.phaedra.hcs.feature.group" />
+			<iu id="eu.openanalytics.phaedra.hcs.ui.feature.group" />
+		</p2.mirror>
+	</target>
+</project>

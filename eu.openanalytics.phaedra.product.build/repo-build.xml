@@ -1,0 +1,35 @@
+<project name="eu.openanalytics.phaedra.create-update-site" default="mirror.repos">
+	
+	<property file="repo-build.properties"/>
+	
+	<target name="clean">
+		<delete failonerror="false">
+			<fileset dir="${dest.repo.path}"/>
+		</delete>
+	</target>
+
+	<target name="download.eclipse">
+		<get src="${eclipse.url}" dest="${project.build.directory}/eclipse.tar.gz" />
+		<untar src="${project.build.directory}/eclipse.tar.gz" compression="gzip" dest="${project.build.directory}" />
+	</target>
+	
+	<target name="mirror.repos" depends="clean, download.eclipse">
+		<java fork="true" failonerror="true" classname="org.eclipse.equinox.launcher.Main">
+			<arg value="-consoleLog"/>
+			<arg value="-nosplash"/>
+			<arg value="-application"/><arg value="org.eclipse.ant.core.antRunner"/>
+			<arg value="-f"/><arg value="repo-mirror.xml"/>
+			<arg value="-Dsource.repo.path=file:////${source.repo.path}"/>
+			<arg value="-Ddest.repo.path=file:////${mirrored.repo.path}"/>
+			<classpath>
+				<fileset dir="${project.build.directory}/eclipse/plugins">
+					<include name="org.eclipse.equinox.launcher_*.jar"/>
+				</fileset>
+			</classpath>
+		</java>
+		<zip destfile="${mirrored.repo.path}.zip">
+			<fileset dir="${mirrored.repo.path}" />
+		</zip>
+	</target>
+
+</project>
