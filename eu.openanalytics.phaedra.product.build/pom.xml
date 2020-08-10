@@ -48,7 +48,7 @@
 						<configuration>
 							<target>
 								<ant antfile="repo-build.xml"/>
-								<attachartifact file="target/p2repo.zip" type="zip"/>
+								<attachartifact file="target/p2repo.zip" type="zip" classifier="updatesite" />
 							</target>
 						</configuration>
 						<goals>
