@@ -305,8 +305,12 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 					Comparator<String> comp = null;
 					Definition def = columnSpecs[i].paramDefinition;
 					if (def != null && def.type.isNumeric()) {
-						if (def.getDataDescription() instanceof CensoredValueDescription) comp = CurveComparators.CENSOR_COMPARATOR;
-						else if (def.type.isNumeric()) comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
+						if (def.getDataDescription() instanceof CensoredValueDescription) {
+							updateLabels();
+							comp = CurveComparators.CENSOR_COMPARATOR;
+						}
+						else if (def.type.isNumeric()) 
+							comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
 					}
 					
 					if (comp != null) {
