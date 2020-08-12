@@ -47,7 +47,7 @@ public class FormulaUtils {
 			s = s.replace("(X_S+LC)", "_{\\welltype{S \\cup LC}}");
 			s = s.replace("(X_HC)", "_{\\welltype{HC}}");
 			s = s.replace("(X_LC)", "_{\\welltype{LC}}");
-			s = s.replace("·", "\\cdot");
+			s = s.replace("ï¿½", "\\cdot");
 			return s;
 		}
 		
@@ -70,32 +70,32 @@ public class FormulaUtils {
 	private static List<Formula> NORM_METHODS = Arrays.asList(
 			
 			new Formula(new PctEffectNormalizer(),
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100" ),
 			new Formula(new MinusPctEffectNormalizer(),
 					"- " +
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100" ),
 			new Formula(new PctEffectMinus100Normalizer(),
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100 " +
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100 " +
 					"- 100"),
 			new Formula(new PctEffectInverseNormalizer(),
 					"100 - " +
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100" ),
 			
 			new Formula(new PctCtlNormalizer(),
-					frac("X_VALUE",                 "Median(X_HC)") +       " · 100" ),
+					frac("X_VALUE",                 "Median(X_HC)") +       " ï¿½ 100" ),
 			new Formula(new PctHighCtl0Normalizer(),
-					frac("Median(X_HC) - X_VALUE",  "Median(X_HC)") +       " · 100" ),
+					frac("Median(X_HC) - X_VALUE",  "Median(X_HC)") +       " ï¿½ 100" ),
 			new Formula(new PctLowCtlNormalizer(),
-					frac("X_VALUE - Median(X_LC)",  "Median(X_LC)") +       " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_LC)") +       " ï¿½ 100" ),
 			new Formula(new PctLowCtl0Normalizer(),
-					frac("X_VALUE - Median(X_LC)",  "Median(X_LC)") +       " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_LC)") +       " ï¿½ 100" ),
 			new Formula(new PctLowCtl100Normalizer(),
-					frac("X_VALUE",                 "Median(X_LC)") +       " · 100" ),
+					frac("X_VALUE",                 "Median(X_LC)") +       " ï¿½ 100" ),
 			new Formula(new PctInvLowCtl0Normalizer(),
 					"- " +
-					frac("X_VALUE - Median(X_LC)",  "Median(X_LC)") +       " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_LC)") +       " ï¿½ 100" ),
 			new Formula(new PctCtlMinNormalizer(),
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100" ),
 			
 			new Formula(new SigmaHighNormalizer(),
 					frac("X_VALUE - Median(X_HC)",  "SD(X_HC)")),
@@ -103,25 +103,26 @@ public class FormulaUtils {
 					frac("X_VALUE - Median(X_LC)",  "SD(X_LC)")),
 			
 			new Formula(new PctInhPosMeanNormalizer(),
-					frac("X_VALUE - Mean(X_LC)",    "Mean(X_HC) - Mean(X_LC)") +        " · 100" ),
+					frac("X_VALUE - Mean(X_LC)",    "Mean(X_HC) - Mean(X_LC)") +        " ï¿½ 100" ),
 			new Formula(new PctInhPosMedianNormalizer(),
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100" ),
 			new Formula(new PctInhNegMeanNormalizer(),
 					"100 - " +
-					frac("X_VALUE - Mean(X_LC)",    "Mean(X_HC) - Mean(X_LC)") +        " · 100" ),
+					frac("X_VALUE - Mean(X_LC)",    "Mean(X_HC) - Mean(X_LC)") +        " ï¿½ 100" ),
 			new Formula(new PctInhNegMedianNormalizer(),
 					"100 - " +
-					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " · 100" ),
+					frac("X_VALUE - Median(X_LC)",  "Median(X_HC) - Median(X_LC)") +    " ï¿½ 100" ),
 			
 			new Formula(new ZScoreSamplesNormalizer(),
 					frac("X_VALUE - Mean(X_S+LC)",  "SD(X_S+LC)") ), 
 			new Formula(new ZScoreLowNormalizer(),
 					frac("X_VALUE - Mean(X_LC)",    "SD(X_LC)") ),
-			new Formula(new ZScoreRobSamplesNormalizer(),
-					frac("X_VALUE - Median(X_S+LC)", "1.4826 · MAD(X_S+LC)") ),
+			new Formula(new ZScoreRobSamplesLowNormalizer(),
+					frac("X_VALUE - Median(X_S+LC)", "1.4826 ï¿½ MAD(X_S+LC)") ),
 			new Formula(new ZScoreRobLowNormalizer(),
-					frac("X_VALUE - Median(X_LC)",  "1.4826 · MAD(X_LC)") )
-			
+					frac("X_VALUE - Median(X_LC)",  "1.4826 ï¿½ MAD(X_LC)") ),
+			new Formula(new ZScoreRobSamplesNormalizer(),
+					frac("X_VALUE - Median(X_S)", "1.4826 ï¿½ MAD(X_S)") )
 			);
 	
 	public static String getBaseFileName(INormalizer normalizer) {
