@@ -216,6 +216,7 @@ public class PlateUtils {
 	 * See {@link ProtocolUtils#isSample(String)}
 	 */
 	public static boolean isSample(Well well) {
+		if (well == null) return false;
 		return ProtocolUtils.isSample(well.getWellType());
 	}
 

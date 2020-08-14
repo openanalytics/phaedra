@@ -100,7 +100,7 @@ public enum WellProperty implements EntityProperty<Well> {
 			return "" + (int)getValue(well);
 		case Position: return PlateUtils.getWellCoordinate(well);
 		case WellType: return well.getWellType();
-		case Compound: return well.getCompound() == null ? well.getWellType() : well.getCompound().toString();
+		case Compound: return PlateUtils.isSample(well) && well.getCompound() != null ? well.getCompound().toString() : well.getWellType();
 		case Concentration: return Formatters.getInstance().format(getValue(well), "0.0#E0");
 		case LogConcentration: return Formatters.getInstance().format(getValue(well), "0.00");
 		default:

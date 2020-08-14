@@ -15,6 +15,10 @@ public class WellType implements Comparable<WellType> {
 	public static final String HC = "HC";
 	public static final String NA = "N/A";
 	
+	//PHA-CR029
+	public static final String CONTROL = "CONTROL";
+	public static final String UNKNOWN = "UNKNOWN";
+	
 	@Id
 	@Column(name="welltype_code")
 	private String code;
