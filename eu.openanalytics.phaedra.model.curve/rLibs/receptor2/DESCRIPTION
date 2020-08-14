@@ -5,10 +5,10 @@ Date: 2020-02-14
 Title: Fitting logistic dose-response model
 Author: Vahid Nassiri
 Maintainer: vnassiri <vahid.nassiri@openanalytics.eu>
-Description: Functions to prepare dose-response data from out put of Phaedra and fit logistic model them.
+Description: Functions to prepare dose-response data from out put of Phaedra and fit logistic model to them.
 Imports: drc, ggplot2
 License:
 RoxygenNote: 7.1.0
 NeedsCompilation: no
-Packaged: 2020-08-09 08:06:32 UTC; vnassiri
-Built: R 3.5.1; ; 2020-08-10 08:30:21 UTC; windows
+Packaged: 2020-08-12 15:51:20 UTC; vnassiri
+Built: R 3.5.1; ; 2020-08-14 08:07:36 UTC; windows
