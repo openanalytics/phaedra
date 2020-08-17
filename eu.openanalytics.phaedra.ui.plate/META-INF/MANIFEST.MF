@@ -43,7 +43,8 @@ Require-Bundle: org.eclipse.core.runtime,
  org.apache.batik.svggen;bundle-version="1.6.0",
  org.apache.poi;bundle-version="3.7.0",
  chemaxon.marvin;bundle-version="1.0.0",
- org.starlink.topcat;bundle-version="1.0.0"
+ org.starlink.topcat;bundle-version="1.0.0",
+ org.eclipse.core.expressions
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Export-Package: eu.openanalytics.phaedra.ui.plate,

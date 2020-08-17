@@ -191,6 +191,10 @@ public class DataCapturer {
 			if (experiment == null) experiment = createNewExperiment(experimentName, protocol, task.getUser());
 		}
 		
+		if (experiment.isClosed()) {
+			throw new DataCaptureException(String.format("The experiment '%1$s' (%2$s) is closed.", experiment.getName(), experiment.getId()));
+		}
+		
 		@SuppressWarnings("unchecked")
 		Map<PlateReading, Plate> plateMapping = (Map<PlateReading, Plate>) task.getParameters().get(DataCaptureParameter.PlateMapping.name());
 		

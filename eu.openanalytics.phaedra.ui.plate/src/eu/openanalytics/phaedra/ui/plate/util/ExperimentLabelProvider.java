@@ -1,6 +1,6 @@
 package eu.openanalytics.phaedra.ui.plate.util;
 
-import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.swt.graphics.Image;
 
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
@@ -8,11 +8,13 @@ import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 
-public class ExperimentLabelProvider extends LabelProvider {
+
+public class ExperimentLabelProvider extends ColumnLabelProvider {
 
 	private static final Image IMG_PROTOCOL_CLASS = IconManager.getIconImage("struct.png");
 	private static final Image IMG_PROTOCOL = IconManager.getIconImage("struct_g.png");
-	private static final Image IMG_EXPERIMENT = IconManager.getIconImage("map.png");
+	private static final Image IMG_EXPERIMENT = IconManager.getIconImage("experiment.png");
+	private static final Image IMG_EXPERIMENT_CLOSED = IconManager.getIconImage("experiment-closed.png");
 
 	@Override
 	public String getText(Object element) {
@@ -36,7 +38,12 @@ public class ExperimentLabelProvider extends LabelProvider {
 		} else if (element instanceof Protocol) {
 			return IMG_PROTOCOL;
 		} else if (element instanceof Experiment) {
-			return IMG_EXPERIMENT;
+			if (((Experiment)element).isClosed()) {
+				return IMG_EXPERIMENT_CLOSED;
+			}
+			else {
+				return IMG_EXPERIMENT;
+			}
 		}
 		return null;
 	}

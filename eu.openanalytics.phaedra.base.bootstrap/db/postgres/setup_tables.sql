@@ -185,6 +185,7 @@ CREATE TABLE phaedra.hca_experiment (
 	experiment_user		varchar(25),
 	protocol_id			bigint,
 	description			varchar(200),
+	closed				boolean default false,
 	comments			varchar(1600),
 	multiplo_method		varchar(100),
 	multiplo_parameter	varchar(100),

@@ -1,13 +1,13 @@
 package eu.openanalytics.phaedra.ui.columbus.importwizard;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.MessageDialog;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
 import eu.openanalytics.phaedra.base.ui.util.wizard.BaseStatefulWizard;
 import eu.openanalytics.phaedra.link.importer.ImportService;
 import eu.openanalytics.phaedra.link.importer.ImportTask;
-import eu.openanalytics.phaedra.model.plate.PlateService;
-import eu.openanalytics.phaedra.model.plate.vo.Experiment;
+import eu.openanalytics.phaedra.link.importer.ImportUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Protocol;
 import eu.openanalytics.phaedra.ui.link.importer.wizard.GenericImportWizard.ImportWizardState;
 
@@ -43,25 +43,26 @@ public class OperaImportWizard extends BaseStatefulWizard {
 
 		// If user requested a new experiment, create it now.
 		if (task.targetExperiment == null) {
-			Protocol protocol = (Protocol)task.getParameters().get(OperaImportHelper.PARAM_PROTOCOL);
-			Experiment experiment = PlateService.getInstance().createExperiment(protocol);
-			String newExperimentName = (String)task.getParameters().get(OperaImportHelper.PARAM_EXPERIMENT_NAME);
-			experiment.setName(newExperimentName);
-			try {
-				PlateService.getInstance().updateExperiment(experiment);
-			} catch (Throwable t) {
-				MessageDialog.openError(getShell(), "Error!", "Failed to create Experiment.\n\n" + t.getMessage());
+			if (!checkFinish(ImportUtils.createExperiment(task,
+					(Protocol)task.getParameters().get(OperaImportHelper.PARAM_PROTOCOL),
+					(String)task.getParameters().get(OperaImportHelper.PARAM_EXPERIMENT_NAME) ))) {
 				return false;
 			}
-			task.targetExperiment = experiment;
 		}
-
+		
 		// Add again as parameters, because some modules (that can't see the ImportTask) need access to it.
 		task.getParameters().put(OperaImportHelper.PARAM_IMPORT_IMG_DATA, task.importImageData);
 		task.getParameters().put(OperaImportHelper.PARAM_IMPORT_SW_DATA, task.importSubWellData);
 
-		ImportService.getInstance().startJob(task);
-		return true;
+		return checkFinish(
+				ImportService.getInstance().startJob(task) );
+	}
+	
+	private boolean checkFinish(final IStatus status) {
+		if (status.getSeverity() == IStatus.ERROR) {
+			MessageDialog.openError(getShell(), "Import", status.getMessage());
+		}
+		return (status.getSeverity() < IStatus.ERROR);
 	}
 
 }

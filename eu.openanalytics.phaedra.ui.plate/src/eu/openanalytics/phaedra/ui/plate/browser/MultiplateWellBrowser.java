@@ -71,7 +71,9 @@ public class MultiplateWellBrowser extends EditorPart {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-		
+	}
+	
+	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<>("data for well browser",
 				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncData1toNViewerInput<Plate, Well>(Plate.class, Well.class, this.dataLoader) {
@@ -106,6 +108,13 @@ public class MultiplateWellBrowser extends EditorPart {
 		};
 		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
 				(plate) -> plate.getExperiment().getProtocol().getProtocolClass() );
+		
+		this.evaluationContext = new EvaluationContext<Plate>(this.viewerInput, this.protocolClasses) {
+			@Override
+			public String getScriptNote() {
+				return "evaluated per plate.";
+			}
+		};
 	}
 	
 	private List<Feature> getFeatures() {
@@ -119,12 +128,7 @@ public class MultiplateWellBrowser extends EditorPart {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.evaluationContext = new EvaluationContext<Plate>(this.viewerInput, this.protocolClasses) {
-			@Override
-			public String getScriptNote() {
-				return "evaluated per plate.";
-			}
-		};
+		initViewerInput();
 		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
 		
 		tabFolder = new CTabFolder(parent, SWT.BOTTOM | SWT.V_SCROLL | SWT.H_SCROLL);

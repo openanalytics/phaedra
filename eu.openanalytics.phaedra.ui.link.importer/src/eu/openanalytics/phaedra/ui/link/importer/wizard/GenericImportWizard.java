@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.link.importer.wizard;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.wizard.IWizardPage;
 
 import eu.openanalytics.phaedra.base.security.SecurityService;
@@ -47,7 +49,7 @@ public class GenericImportWizard extends BaseStatefulWizard {
 	public boolean canFinish() {
 		boolean createNewPlates = ((ImportWizardState)state).task.createNewPlates;
 		for (int i = 0; i < getPages().length; i++) {
-			IWizardPage page = (IWizardPage) getPages()[i];
+			IWizardPage page = getPages()[i];
 			if (page instanceof MapPlatesPage && createNewPlates) continue;
 			if (!page.isPageComplete()) return false;
 		}
@@ -62,9 +64,17 @@ public class GenericImportWizard extends BaseStatefulWizard {
 		String userName = SecurityService.getInstance().getCurrentUserName();
 		task.userName = userName;
 		
-		ImportService.getInstance().startJob(task);
-		return true;
+		return checkFinish(
+				ImportService.getInstance().startJob(task) );
 	}
+	
+	private boolean checkFinish(final IStatus status) {
+		if (status.getSeverity() == IStatus.ERROR) {
+			MessageDialog.openError(getShell(), "Import", status.getMessage());
+		}
+		return (status.getSeverity() < IStatus.ERROR);
+	}
+
 
 	public static class ImportWizardState implements IWizardState {
 		

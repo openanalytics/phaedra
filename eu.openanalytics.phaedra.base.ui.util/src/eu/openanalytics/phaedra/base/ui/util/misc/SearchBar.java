@@ -44,7 +44,7 @@ public class SearchBar extends Composite {
 	public SearchBar(Composite parent, int style, boolean showNameCombo) {
 		super(parent, style);
 
-		GridLayoutFactory.fillDefaults().numColumns(4).spacing(5, 5).applyTo(this);
+		GridLayoutFactory.fillDefaults().numColumns(4).spacing(1, 1).applyTo(this);
 		
 		this.showNameCombo = showNameCombo;
 		if (showNameCombo) {

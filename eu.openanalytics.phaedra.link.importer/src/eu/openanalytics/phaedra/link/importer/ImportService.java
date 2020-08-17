@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.link.importer;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.PartInitException;
@@ -36,7 +38,8 @@ public class ImportService {
 	 * **********
 	 */
 	
-	public void startJob(ImportTask task) {
+	public IStatus startJob(ImportTask task) {
+		IStatus status;
 		
 		// Security check first.
 		boolean access = false;
@@ -48,7 +51,12 @@ public class ImportService {
 				if (!access) break;
 			}
 		}
-		if (!access) return;
+		if (!access) return Status.CANCEL_STATUS;
+		
+		status = ImportUtils.precheckTask(task);
+		if (status.getSeverity() >= IStatus.ERROR) {
+			return status;
+		}
 		
 		// Open the log view, if present.
 		try {
@@ -60,6 +68,7 @@ public class ImportService {
 		importJob.setRule(new ImportJobRule());
 		importJob.setUser(true);
 		importJob.schedule();
+		return Status.OK_STATUS;
 	}
 	
 	private static class ImportJobRule implements ISchedulingRule {

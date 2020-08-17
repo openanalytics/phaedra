@@ -63,7 +63,9 @@ public class ProtocolClassBrowser extends EditorPart {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-		
+	}
+	
+	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<>("data for protocol class browser",
 				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<ProtocolClass>(ProtocolClass.class, this.dataLoader) {
@@ -80,11 +82,14 @@ public class ProtocolClassBrowser extends EditorPart {
 			
 		};
 		this.protocolClasses = new ProtocolClasses<>(this.viewerInput, Function.identity());
+		
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
 	}
-
+	
+	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		initViewerInput();
 		this.dataFormatSupport = new DataFormatSupport(this.viewerInput::refreshViewer);
 		
 		final DynamicColumnSupport<ProtocolClass, ProtocolClass> customColumnSupport = new DynamicColumnSupport<>(

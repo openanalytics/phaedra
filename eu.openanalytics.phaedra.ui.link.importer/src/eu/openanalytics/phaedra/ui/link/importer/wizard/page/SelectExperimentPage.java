@@ -65,7 +65,7 @@ public class SelectExperimentPage extends BaseStatefulWizardPage {
 		setControl(container);
 
 		experimentViewer = FolderBrowserFactory.createBrowser(container);
-		experimentViewer.setContentProvider(new ExperimentContentProvider());
+		experimentViewer.setContentProvider(new ExperimentContentProvider(true));
 		experimentViewer.setLabelProvider(new ExperimentLabelProvider());
 		experimentViewer.setAutoExpandLevel(0);
 		experimentViewer.setInput("root");

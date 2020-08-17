@@ -77,17 +77,58 @@ public class PlateService extends BaseJPAService {
 	}
 
 	/**
+	 * Returns a list of experiments in a protocol.
+	 * 
+	 * @param protocol the protocol whose experiments will be listed
+	 * @param excludeClosed <code>true</code> to exclude closed experiments, or <code>false</code> to not filter based on closed state
+	 * @return a list of matching experiments
+	 */
+	public List<Experiment> getExperiments(final Protocol protocol, final boolean excludeClosed) {
+		if (!SecurityService.getInstance().check(Permissions.PROTOCOL_OPEN, protocol)) return new ArrayList<>();
+		final List<Experiment> experiments = (excludeClosed) ?
+				getList("select e from Experiment e where e.protocol = ?1 and e.closed = false",
+						Experiment.class, protocol ) :
+				getList("select e from Experiment e where e.protocol = ?1",
+						Experiment.class, protocol );
+		return streamableList(experiments);
+	}
+	
+	/**
 	 * Get a list of all experiments in a protocol.
 	 * 
 	 * @param protocol The protocol whose experiments will be listed.
 	 * @return A list of experiments currently in the protocol.
 	 */
 	public List<Experiment> getExperiments(Protocol protocol) {
-		if (!SecurityService.getInstance().check(Permissions.PROTOCOL_OPEN, protocol)) return new ArrayList<>();
-		String query = "select e from Experiment e where e.protocol = ?1";
-		return streamableList(getList(query, Experiment.class, protocol));
+		return getExperiments(protocol, false);
 	}
 
+	/**
+	 * Returns a list of experiments the specified user owns.
+	 * 
+	 * @param owner the owner of the experiments, or <code>null</code> to not filter based on owner
+	 * @param excludeClosed <code>true</code> to exclude closed experiments, or <code>false</code> to not filter based on closed state
+	 * @return a list of matching experiments
+	 */
+	public List<Experiment> getExperiments(final String owner, final boolean excludeClosed) {
+		final List<Experiment> experiments;
+		if (owner == null) {
+			experiments = (excludeClosed) ?
+					getList("select e from Experiment e where e.closed = false", Experiment.class) :
+					getList(Experiment.class);
+		}
+		else {
+			experiments = (excludeClosed) ?
+					getList("select e from Experiment e where e.creator = ?1 and e.closed = false",
+							Experiment.class, owner ) :
+					getList("select e from Experiment e where e.creator = ?1",
+							Experiment.class, owner );
+		}
+		return streamableList(experiments).stream()
+				.filter(e -> SecurityService.getInstance().check(Permissions.EXPERIMENT_OPEN, e))
+				.collect(Collectors.toList());
+	}
+	
 	/**
 	 * Get a list of all experiments the specified user owns.
 	 * 
@@ -95,12 +136,7 @@ public class PlateService extends BaseJPAService {
 	 * @return A list of matching experiments.
 	 */
 	public List<Experiment> getExperiments(String owner) {
-		List<Experiment> experiments = null;
-		if (owner == null) experiments = getList(Experiment.class);
-		else experiments = getList("select e from Experiment e where e.creator = ?1", Experiment.class, owner);
-		return streamableList(experiments).stream()
-				.filter(e -> SecurityService.getInstance().check(Permissions.EXPERIMENT_OPEN, e))
-				.collect(Collectors.toList());
+		return getExperiments(owner, false);
 	}
 	
 	/**

@@ -116,7 +116,9 @@ public class PlateBrowser extends DecoratedEditor {
 		setSite(site);
 		setInput(input);
 		setPartName(input.getName());
-		
+	}
+	
+	private void initViewerInput() {
 		this.dataLoader = new AsyncDataLoader<Plate>("data for plate browser",
 				new WorkbenchSiteJobScheduler(this) );
 		this.viewerInput = new AsyncDataDirectViewerInput<Plate>(Plate.class, this.dataLoader) {
@@ -140,7 +142,11 @@ public class PlateBrowser extends DecoratedEditor {
 			}
 			
 			@Override
-			protected void handleEvent(final List<Plate> currentElements, final Object[] eventElements) {
+			protected void updateElements(final List<Plate> currentElements,
+					final Object[] eventElements, final boolean forceUpdateData) {
+				if (eventElements == null) {
+					super.updateElements(currentElements, eventElements, forceUpdateData);
+				}
 				if (eventElements.length > 0) {
 					VOEditorInput input = (VOEditorInput)getEditorInput();
 					if (eventElements[0] instanceof Plate) {
@@ -151,7 +157,7 @@ public class PlateBrowser extends DecoratedEditor {
 								experiment = SelectionUtils.getFirstAsClass(input.getValueObjects(), Experiment.class);
 							}
 							if (plate.getExperiment().equals(experiment) || currentElements.contains(plate)) {
-								super.handleEvent(currentElements, eventElements);
+								super.updateElements(currentElements, eventElements, forceUpdateData);
 								return;
 							}
 						}
@@ -181,6 +187,8 @@ public class PlateBrowser extends DecoratedEditor {
 		};
 		this.protocolClasses = new ProtocolClasses<>(this.viewerInput,
 				(plate) -> plate.getExperiment().getProtocol().getProtocolClass() );
+		
+		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
 	}
 	
 	private Protocol getProtocol() {
@@ -191,7 +199,7 @@ public class PlateBrowser extends DecoratedEditor {
 	
 	@Override
 	public void createPartControl(Composite parent) {
-		this.evaluationContext = new EvaluationContext<>(this.viewerInput, this.protocolClasses);
+		initViewerInput();
 		this.dataFormatSupport = new DataFormatSupport(() -> { this.viewerInput.refreshViewer(); reloadHeadmaps(); });
 		
 		Composite container = new Composite(parent, SWT.NONE);

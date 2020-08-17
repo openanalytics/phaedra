@@ -31,6 +31,9 @@ public abstract class AsyncDataViewerInput<TEntity, TViewerElement> extends Writ
 	
 	private final Class<TEntity> baseElementType;
 	
+	// note: AsyncDataViewerInput.this is used for synchronization by *ObservableValue
+	private final Object updateElementsLock = new Object();
+	
 	private volatile List<TEntity> baseElements;
 	
 	private final AsyncDataLoader<TEntity> dataLoader;
@@ -65,13 +68,21 @@ public abstract class AsyncDataViewerInput<TEntity, TViewerElement> extends Writ
 		this(baseElementType, null, true);
 	}
 	
+	/**
+	 * Initializes this input. Initially loads the input elements and sets the dependent values.
+	 */
 	protected void init() {
-		setElements(loadElements());
-		updateInput();
+		synchronized (this.updateElementsLock) {
+			final List<TEntity> elements = loadElements();
+			
+			setElements(elements);
+			updateInput();
+		}
 	}
 	
 	@Override
 	public void dispose() {
+		super.dispose();
 		ModelEventService.getInstance().removeEventListener(this.modelListener);
 		this.viewer = null;
 		
@@ -101,6 +112,27 @@ public abstract class AsyncDataViewerInput<TEntity, TViewerElement> extends Writ
 		viewer.setInput(getViewerElements());
 	}
 	
+	/**
+	 * Reloads the input elements.
+	 * 
+	 * @param reloadData <code>true</code> to also reload data of current elements,
+	 *     <code>false</code> to only handle structural changes (added/removed elements)
+	 */
+	public void reloadElements(final boolean reloadData) {
+		synchronized (this.updateElementsLock) {
+			final List<TEntity> currentElements = this.baseElements;
+			if (currentElements == null) {
+				return;
+			}
+			updateElements(currentElements, null, reloadData);
+		}
+	}
+	
+	/**
+	 * Reloads the data for the current input elements.
+	 * 
+	 * @param properties changed properties or <code>null</code>
+	 */
 	public void reload(final Collection<String> properties) {
 		final AsyncDataLoader<TEntity> dataLoader = this.dataLoader;
 		if (dataLoader != null) {
@@ -147,31 +179,54 @@ public abstract class AsyncDataViewerInput<TEntity, TViewerElement> extends Writ
 				return;
 			}
 			
-			final List<TEntity> currentElements = AsyncDataViewerInput.this.baseElements;
-			if (currentElements == null) {
-				return;
-			}
 			final Object[] eventElements = ModelEventService.getEventItems(event);
-			AsyncDataViewerInput.this.handleEvent(currentElements, eventElements);
+			
+			synchronized (AsyncDataViewerInput.this.updateElementsLock) {
+				final List<TEntity> currentElements = AsyncDataViewerInput.this.baseElements;
+				if (currentElements == null) {
+					return;
+				}
+				AsyncDataViewerInput.this.updateElements(currentElements, eventElements, false);
+			}
 		}
 	}
 	
-	protected void handleEvent(final List<TEntity> currentElements, final Object[] eventElements) {
+	protected void updateElements(final List<TEntity> currentElements,
+			final Object[] eventElements, final boolean forceUpdateData) {
 		final List<TEntity> reloadedElements = loadElements();
 		
 		final Set<TEntity> changedElements = new HashSet<>();
 		final Set<TEntity> removedElements = new HashSet<>();
 		
-		checkChangedElements(eventElements, (element) -> {
-			if (element != null) {
-				if (reloadedElements.contains(element)) {
-					changedElements.add(element);
+		if (eventElements != null) {
+			checkChangedElements(eventElements, (element) -> {
+				if (element != null) {
+					if (reloadedElements.contains(element)) {
+						changedElements.add(element);
+					}
+					else if (currentElements.contains(element)) {
+						removedElements.add(element);
+					}
 				}
-				else if (currentElements.contains(element)) {
+			});
+		}
+		else {
+			if (forceUpdateData) {
+				changedElements.addAll(reloadedElements);
+			}
+			else {
+				for (final TEntity element : reloadedElements) {
+					if (!currentElements.contains(element)) {
+						changedElements.add(element);
+					}
+				}
+			}
+			for (final TEntity element : currentElements) {
+				if (!reloadedElements.contains(element)) {
 					removedElements.add(element);
 				}
 			}
-		});
+		}
 		
 		if (!changedElements.isEmpty() || !removedElements.isEmpty()) {
 			setElements(reloadedElements);

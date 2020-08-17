@@ -14,6 +14,7 @@ create table hca_experiment (
 	experiment_user			varchar2(25),
 	protocol_id				number, 
 	description				varchar2(200),
+	closed					number default 0,
 	comments				varchar2(1600),
 	multiplo_method			varchar2(100),
 	multiplo_parameter		varchar2(100),
