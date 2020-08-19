@@ -19,10 +19,10 @@
 <#if welldata.idcolumn??>
 			<parameter key="wellid.column">${welldata.idcolumn}</parameter>
 </#if>
-<#if auto.reject.status.column??>
-			<parameter key="auto.reject.status.column">${auto.reject.status.column}</parameter>
-	<#if auto.reject.status.value??>
-			<parameter key="auto.reject.status.value">${auto.reject.status.value}</parameter>
+<#if autoRejectStatusColumn??>
+			<parameter key="autoRejectStatusColumn">${autoRejectStatusColumn}</parameter>
+	<#if autoRejectStatusValue??>
+			<parameter key="autoRejectStatusValue">${autoRejectStatusValue}</parameter>
 	</#if>
 </#if>
 		</parameters>

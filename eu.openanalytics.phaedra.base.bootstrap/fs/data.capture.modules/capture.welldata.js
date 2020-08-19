@@ -7,8 +7,8 @@ var isOptional = getParameter("optional", false);
 
 // optionally automatically reject wells during data capture
 var autoRejectMissingEnabled = getParameter("auto.reject.missing", false); // true to enable auto reject of empty wells
-var autoRejectStatusColumn = getParameter("auto.reject.status.column"); // the name of column with status values used for auto reject
-var autoRejectStatusValue = getParameter("auto.reject.status.value", 0); // the status value triggering auto reject, default 0
+var autoRejectStatusColumn = getParameter("autoRejectStatusColumn"); // the name of column with status values used for auto reject
+var autoRejectStatusValue = getParameter("autoRejectStatusValue", 0); // the status value triggering auto reject, default 0
 var wellIdColumn = getParameter("wellid.column");
 
 forEachReading(function(reading) {
