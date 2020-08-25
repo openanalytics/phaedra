@@ -5,6 +5,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -39,8 +42,23 @@ public class FolderScannerType extends BaseScannerType {
 		
 		EclipseLog.debug("Scanning path: " + cfg.path, FolderScannerType.class);
 		monitor.subTask("Scanning " + cfg.path);
+		
+		if (cfg.scanDepth == 0) {
+			// Classic scan: root > experiments > plates
+			scanClassic(cfg);
+		} else {
+			// Scan recursively for plates at max depth cfg.scanDepth.
+			scanMaxDepth(cfg);
+		}
+		
+		
+
+		monitor.done();
+	}
+
+	private void scanClassic(FolderScannerConfig cfg) throws ScanException {
 		Pattern expPattern = Pattern.compile(cfg.experimentPattern);
-		try (Stream<Path> contents = streamContents(Paths.get(cfg.path))) {
+		try (Stream<Path> contents = streamContents(Paths.get(cfg.path), 0)) {
 			contents
 				.filter(p -> expPattern.matcher(p.getFileName().toString()).matches())
 				.filter(p -> Files.isDirectory(p))
@@ -48,20 +66,18 @@ public class FolderScannerType extends BaseScannerType {
 		} catch (Exception e) {
 			throw new ScanException("Failed to scan directory", e);
 		}
-
-		monitor.done();
 	}
-
+	
 	private void processExperimentFolder(Path expFolder, FolderScannerConfig cfg) {
 		Pattern platePattern = Pattern.compile(cfg.platePattern);
 		
 		String[] plateIds = {};
-		try (Stream<Path> contents = streamContents(expFolder)) {
+		try (Stream<Path> contents = streamContents(expFolder, 0)) {
 			plateIds = contents
 					.filter(p -> platePattern.matcher(p.getFileName().toString()).matches())
 					.filter(p -> {
 						if (!Files.isDirectory(p) || cfg.plateInProgressFlag == null) return true;
-						try (Stream<Path> subContents = streamContents(p)) {
+						try (Stream<Path> subContents = streamContents(p, 0)) {
 							return subContents.noneMatch(child -> child.getFileName().toString().equalsIgnoreCase(cfg.plateInProgressFlag));
 						}
 					})
@@ -95,9 +111,49 @@ public class FolderScannerType extends BaseScannerType {
 		DataCaptureService.getInstance().queueTask(task, "Folder Scanner");
 	}
 	
-	private Stream<Path> streamContents(Path p) {
+	private void scanMaxDepth(FolderScannerConfig cfg) throws ScanException {
+		Path startPath = Paths.get(cfg.path);
+		Pattern platePattern = Pattern.compile(cfg.platePattern);
+		try (Stream<Path> contents = streamContents(startPath, cfg.scanDepth)) {
+			List<Path> platesToSubmit = Collections.synchronizedList(new ArrayList<>());
+			
+			contents
+				.filter(p -> platePattern.matcher(p.getFileName().toString()).matches())
+				.filter(p -> {
+					if (!Files.isDirectory(p) || cfg.plateInProgressFlag == null) return true;
+					try (Stream<Path> subContents = streamContents(p, 0)) {
+						return subContents.noneMatch(child -> child.getFileName().toString().equalsIgnoreCase(cfg.plateInProgressFlag));
+					}
+				})
+				.filter(p -> !platesToSubmit.contains(p.getParent()))
+				.filter(p -> {
+					if (cfg.forceDuplicateCapture) return true;
+					return !DataCaptureService.getInstance().isReadingAlreadyCaptured(p.toFile().getAbsolutePath());
+				})
+				.forEach(p -> platesToSubmit.add(p));
+			
+			for (Path p: platesToSubmit) {
+				// Create a data capture task.
+				DataCaptureTask task = DataCaptureService.getInstance().createTask(p.toFile().getAbsolutePath(), cfg.protocolId);
+				if (cfg.captureConfig != null) task.setConfigId(cfg.captureConfig);
+				
+				task.getParameters().put(DataCaptureParameter.TargetExperimentName.name(), p.getParent().getFileName().toString());
+				task.getParameters().put(DataCaptureParameter.CreateMissingWellFeatures.name(), cfg.createMissingWellFeatures);
+				task.getParameters().put(DataCaptureParameter.CreateMissingSubWellFeatures.name(), cfg.createMissingSubWellFeatures);
+				
+				// Submit to the data capture service, and log an event.
+				EclipseLog.info(String.format("Submitting data capture job (1 reading): %s", task.getSource()), Activator.getDefault());
+				DataCaptureService.getInstance().queueTask(task, "Folder Scanner");
+			}
+		} catch (Exception e) {
+			throw new ScanException("Failed to scan directory", e);
+		}
+	}
+	
+	private Stream<Path> streamContents(Path p, int maxDepth) {
 		try {
-			return Files.list(p);
+			if (maxDepth == 0) return Files.list(p);
+			else return Files.walk(p, maxDepth);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
@@ -109,6 +165,7 @@ public class FolderScannerType extends BaseScannerType {
 		cfg.path = getConfigValue(doc, "/config/path", null);
 		cfg.experimentPattern = getConfigValue(doc, "/config/experimentPattern", ".*");
 		cfg.platePattern = getConfigValue(doc, "/config/platePattern", ".*");
+		cfg.scanDepth = Integer.valueOf(getConfigValue(doc, "/config/scanDepth", "0"));
 		cfg.plateInProgressFlag = getConfigValue(doc, "/config/plateInProgressFlag", null);
 		cfg.forceDuplicateCapture = Boolean.valueOf(getConfigValue(doc, "/config/forceDuplicateCapture", "false"));
 		cfg.createMissingWellFeatures = Boolean.valueOf(getConfigValue(doc, "/config/createMissingWellFeatures", "false"));
@@ -126,6 +183,7 @@ public class FolderScannerType extends BaseScannerType {
 		public String path;
 		public String experimentPattern;
 		public String platePattern;
+		public int scanDepth;
 		public String plateInProgressFlag;
 		public boolean forceDuplicateCapture;
 		public boolean createMissingWellFeatures;
