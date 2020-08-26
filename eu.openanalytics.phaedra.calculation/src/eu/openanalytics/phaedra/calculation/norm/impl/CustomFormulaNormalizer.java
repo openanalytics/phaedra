@@ -67,7 +67,12 @@ public class CustomFormulaNormalizer implements INormalizer {
 			long formulaId = Long.valueOf(matcher.group(1));
 			CalculationFormula cFormula = FormulaService.getInstance().getFormula(formulaId);
 			if (cFormula == null) throw new NormalizationException("Cannot normalize: formula with ID " + formulaId + " not found.");
-			double[] normValues = FormulaService.getInstance().evaluateFormula(plate, feature, cFormula);
+			double[] normValues;
+			try {
+				normValues = FormulaService.getInstance().evaluateFormula(plate, feature, cFormula);
+			} catch (CalculationException e) {
+				throw new NormalizationException(e.getMessage(), e);
+			}
 			for (Well well: plate.getWells()) {
 				int wellNr = PlateUtils.getWellNr(well);
 				grid[well.getRow()-1][well.getColumn()-1] = normValues[wellNr - 1];
