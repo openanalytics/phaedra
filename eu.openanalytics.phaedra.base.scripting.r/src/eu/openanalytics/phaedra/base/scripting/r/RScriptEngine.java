@@ -86,7 +86,8 @@ public class RScriptEngine extends BaseScriptEngine {
 			}
 			return RUtils.getAsJavaObject(retVal);
 		} catch (CoreException e) {
-			throw new ScriptException(parseRErrorMessage(e.getMessage()));
+			return Double.NaN;
+//			throw new ScriptException(parseRErrorMessage(e.getMessage()));
 		} finally {
 			if (closeSession) RService.getInstance().closeSession(session);
 		}
