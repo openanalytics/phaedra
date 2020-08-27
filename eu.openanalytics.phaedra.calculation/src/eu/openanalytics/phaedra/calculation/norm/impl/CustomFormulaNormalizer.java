@@ -1,11 +1,14 @@
 package eu.openanalytics.phaedra.calculation.norm.impl;
 
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.script.ScriptException;
 
+import eu.openanalytics.phaedra.base.util.misc.EclipseLog;
 import eu.openanalytics.phaedra.base.util.misc.FormulaDescriptor;
+import eu.openanalytics.phaedra.calculation.Activator;
 import eu.openanalytics.phaedra.calculation.CalculationException;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationLanguage;
@@ -67,7 +70,13 @@ public class CustomFormulaNormalizer implements INormalizer {
 			long formulaId = Long.valueOf(matcher.group(1));
 			CalculationFormula cFormula = FormulaService.getInstance().getFormula(formulaId);
 			if (cFormula == null) throw new NormalizationException("Cannot normalize: formula with ID " + formulaId + " not found.");
-			double[] normValues = FormulaService.getInstance().evaluateFormula(plate, feature, cFormula);
+			double[] normValues = new double[plate.getWells().size()];
+			Arrays.fill(normValues, Double.NaN);
+			try {
+				normValues = FormulaService.getInstance().evaluateFormula(plate, feature, cFormula);
+			} catch (CalculationException e) {
+				EclipseLog.warn(String.format("Custom normalization failed: %s", cFormula), e, Activator.PLUGIN_ID);
+			}
 			for (Well well: plate.getWells()) {
 				int wellNr = PlateUtils.getWellNr(well);
 				grid[well.getRow()-1][well.getColumn()-1] = normValues[wellNr - 1];

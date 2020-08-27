@@ -199,23 +199,24 @@ public class CalculationService {
 				String norm = f.getNormalization();
 				if (norm != null && !norm.equals(NormalizationService.NORMALIZATION_NONE)) {
 					// Apply normalization and save the new values.
-					try {
-						double[] normValues = new double[plate.getWells().size()];
-						for (Well well: plate.getWells()) {
-							int row = well.getRow();
-							int col = well.getColumn();
-							int wellNr = PlateUtils.getWellNr(well);
-							double val = NormalizationService.getInstance().getNormalizedValue(plate, f, norm, row, col);
-							normValues[wellNr-1] = val;
-						}
-						PlateService.getInstance().updateWellDataNorm(plate, f, normValues);
-					} catch (NormalizationException e) {
-						if (f.isRequired()) {
-							plate.setCalculationError(e.getMessage());
-							calculationOk = false;
+					double[] normValues = new double[plate.getWells().size()];
+					for (Well well : plate.getWells()) {
+						int row = well.getRow();
+						int col = well.getColumn();
+						int wellNr = PlateUtils.getWellNr(well);
+						try {
+							double val = NormalizationService.getInstance().getNormalizedValue(plate, f, norm, row,	col);
+							normValues[wellNr - 1] = val;
+						} catch (NormalizationException e) {
+							if (f.isRequired()) {
+								plate.setCalculationError(e.getMessage());
+								calculationOk = false;
+							}
+							Arrays.fill(normValues, Double.NaN);
 							break;
 						}
 					}
+					PlateService.getInstance().updateWellDataNorm(plate, f, normValues);
 				}
 				
 				// Perform hit calling, if the feature has any hit calling rules attached to it.
