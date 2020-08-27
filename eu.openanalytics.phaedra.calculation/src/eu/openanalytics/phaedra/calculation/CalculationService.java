@@ -204,7 +204,6 @@ public class CalculationService {
 						int row = well.getRow();
 						int col = well.getColumn();
 						int wellNr = PlateUtils.getWellNr(well);
-						System.out.println("Executing feature " + f.getName() + " on well " + wellNr);
 						try {
 							double val = NormalizationService.getInstance().getNormalizedValue(plate, f, norm, row,	col);
 							normValues[wellNr - 1] = val;
@@ -215,7 +214,6 @@ public class CalculationService {
 							}
 							Arrays.fill(normValues, Double.NaN);
 							break;
-//							normValues[wellNr - 1] = Double.NaN;
 						}
 					}
 					PlateService.getInstance().updateWellDataNorm(plate, f, normValues);
