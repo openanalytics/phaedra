@@ -363,7 +363,12 @@ public class PlateService extends BaseJPAService {
 			PlateActionHookManager.postAction(plate, changeType);
 		} catch (Throwable t) {
 			// Undo the local changes to the plate.
-			refresh(plate);
+			try {
+				refresh(plate);
+			} catch (Throwable t2) {
+				// If the failure was due to a DB problem, plate may be detached.
+				// In this case, the refresh call will fail as well, but this should not mask the outer exception. 
+			}
 			throw t;
 		}
 	}
