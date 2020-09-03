@@ -82,7 +82,7 @@ public class PlateTableExporter {
 			m.done();
 		} catch (Exception e) {
 			writer.rollback();
-			throw new ExportException(e.getMessage(), e);
+			throw new ExportException("Failed to export data", e);
 		}
 	}
 	
@@ -93,7 +93,7 @@ public class PlateTableExporter {
 		boolean includeFeatureControlStats = settings.getIncludes().contains(FeatureControlStatistics);
 		List<Feature> features = settings.getFeatures();
 		int statCount = 0;
-		if (includeFeatureStats) statCount += 3;
+		if (includeFeatureStats) statCount += 8;
 		if (includeFeatureControlStats) statCount += 4;
 		int colCount = features.size() * statCount;
 		int rowCount = baseResult.getRowCount();
@@ -104,7 +104,13 @@ public class PlateTableExporter {
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Z-Prime", Well.class));
-					//TODO: Add Rubust Z Prime, Pearson and Spearman stats also?
+					
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Robust Z-Prime", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Pearson Corr Coeff", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Pearson p-value", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Spearman Corr Coeff", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "Spearman p-value", Well.class));
+					
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/N", Well.class));
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/B", Well.class));
 				}
@@ -131,7 +137,13 @@ public class PlateTableExporter {
 			for (Feature feature : features) {
 				if (includeFeatureStats) {
 					rowValues[col++] = statService.calculate("zprime", plate, feature, null, null);
-					//TODO: Add Rubust Z Prime, Pearson and Spearman stats also?
+					
+					rowValues[col++] = statService.calculate("robustzprime", plate, feature, null, null);
+					rowValues[col++] = statService.calculate("pearsoncc", plate, feature, null, null);
+					rowValues[col++] = statService.calculate("pearsonpval", plate, feature, null, null);
+					rowValues[col++] = statService.calculate("spearmancc", plate, feature, null, null);
+					rowValues[col++] = statService.calculate("spearmanpval", plate, feature, null, null);
+					
 					rowValues[col++] = statService.calculate("sn", plate, feature, null, null);
 					rowValues[col++] = statService.calculate("sb", plate, feature, null, null);
 				}
