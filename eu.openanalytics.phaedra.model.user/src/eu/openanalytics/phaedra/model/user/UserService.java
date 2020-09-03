@@ -1,6 +1,5 @@
 package eu.openanalytics.phaedra.model.user;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Connection;
@@ -13,8 +12,6 @@ import java.util.Objects;
 
 import javax.naming.directory.DirContext;
 import javax.persistence.PersistenceException;
-
-import org.eclipse.core.runtime.Status;
 
 import eu.openanalytics.phaedra.base.cache.CacheConfig;
 import eu.openanalytics.phaedra.base.cache.CacheKey;
@@ -133,8 +130,11 @@ public class UserService extends BaseJPAService {
 		initializePreferences();
 	}
 
+	@SuppressWarnings("deprecation")
 	public String getMailAddress(String userName) {
 		String email = "";
+		if (userName == null || userName.trim().isEmpty()) return email;
+		
 		DirContext ctx = null;
 		try {
 			// Attempt to bind as the current user and then look up the target user's email address in LDAP.
@@ -143,14 +143,15 @@ public class UserService extends BaseJPAService {
 			String currentUserName = SecurityService.getInstance().getCurrentUserName();
 			String password = Screening.getEnvironment().getConfig().resolvePassword(currentUserName);
 			ctx = LDAPUtils.bind(currentUserName, password.getBytes(), ldapConfig);
+			
 			email = LDAPUtils.lookupEmail(userName, ctx, ldapConfig);
 			email = StringUtils.isValidEmail(email)? email.toLowerCase() : "";
-		} catch (IOException e) {
-			Activator.getDefault().getLog().log(
-					new Status(Status.WARNING, Activator.PLUGIN_ID, "Failed to retrieve email addresses. " + e.getMessage()));
+		} catch (Throwable t) {
+			EclipseLog.error("Failed to retrieve email address for " + userName, t, Activator.PLUGIN_ID);
 		} finally {
 			if (ctx != null) try { ctx.close(); } catch (Exception e) {}
 		}
+		
 		return email;
 	}
 
