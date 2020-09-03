@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.ui.plate.cmd.validation;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -25,6 +26,8 @@ public class RejectWells extends AbstractHandler {
 
 	public static void execute(final List<Well> wells) {
 		if (wells == null || wells.isEmpty()) return;
-		new RejectWellsDialog(Display.getDefault().getActiveShell(), wells).open();
+		List<Well> wellsToReject = wells.stream().filter(w -> w.getStatus() >= 0).collect(Collectors.toList());
+		if (wellsToReject.isEmpty()) return;
+		new RejectWellsDialog(Display.getDefault().getActiveShell(), wellsToReject).open();
 	}
 }
