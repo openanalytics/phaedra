@@ -9,7 +9,9 @@ import java.util.function.Function;
 
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
+import eu.openanalytics.phaedra.base.datatype.format.ConcentrationFormat;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
+import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
 import eu.openanalytics.phaedra.model.curve.CurveParameter.Value;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
@@ -36,9 +38,17 @@ public class CurveTextProvider {
 		// Then, the curve fit properties
 		Value[] curveValues = curve == null ? new Value[0] : curve.getOutputParameters();
 		for (Value value : curveValues) {
-			allFields.add(new CurveTextField(value.definition.getDataDescription(),
-					value.definition.getDataDescription().convertNameTo(value.definition.name, dataFormatter),
-					c -> CurveParameter.renderValue(value, curve, dataFormatter) ));
+			if (value.definition.name.equalsIgnoreCase("pIC50")) {
+				allFields.add(new CurveTextField(value.definition.getDataDescription(), "IC50",
+						c -> CurveParameter.renderValue(value, curve, dataFormatter)));
+				
+				allFields.add(new CurveTextField(value.definition.getDataDescription(), value.definition.name,
+						c -> CurveParameter.renderValue(value, curve, DataFormatter.CONC_LOG_FORMATTER)));
+			} else {
+				allFields.add(new CurveTextField(value.definition.getDataDescription(),
+						value.definition.getDataDescription().convertNameTo(value.definition.name, dataFormatter),
+						c -> CurveParameter.renderValue(value, curve, dataFormatter)));
+			}
 		}
 		
 		// Last, the custom compound properties

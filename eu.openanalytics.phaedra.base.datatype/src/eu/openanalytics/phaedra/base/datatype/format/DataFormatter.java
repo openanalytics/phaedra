@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.base.datatype.format;
 
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -8,12 +9,14 @@ import java.time.chrono.ChronoLocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import eu.openanalytics.phaedra.base.datatype.description.ContentType;
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
 import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
+import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 
 
 /**
@@ -23,8 +26,24 @@ import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
  */
 public class DataFormatter implements DataUnitConfig {
 	
+	// Score formatter
+	public static final DecimalFormat SCORE_FORMATTER = NumberUtils.createDecimalFormat("#.##");
 	
-//	public static final int ADD_UNIT = 1 << 0;
+	// Nanomlar (nm) formatter round of to 3 decimals
+	public static final DataFormatter CONC_NM_FORMATTER = new DataFormatter(
+			new ConcentrationFormat(ConcentrationUnit.NanoMolar, 3) {
+				public String format(String censor, double conc, ConcentrationUnit unit) {
+					double nanoValue = getUnit().convert(conc, unit);
+					if (Double.isNaN(nanoValue))
+						return String.valueOf(nanoValue);
+					String formattedConc = SCORE_FORMATTER.format(nanoValue);
+					return (censor != null) ? getUnit().convertCensor(censor, unit) + formattedConc : formattedConc;
+				};
+			}, new HashMap<String, ConcentrationFormat>(), null);
+
+	// Negative log of molar formatter round of to 3 decimals
+	public static final DataFormatter CONC_LOG_FORMATTER = new DataFormatter(
+			new ConcentrationFormat(ConcentrationUnit.LogMolar, 3), new HashMap<String, ConcentrationFormat>(), null);
 	
 	
 	private final NumberFormat defaultRealFormat;
