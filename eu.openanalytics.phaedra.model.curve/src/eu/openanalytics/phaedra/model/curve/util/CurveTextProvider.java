@@ -9,7 +9,6 @@ import java.util.function.Function;
 
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
-import eu.openanalytics.phaedra.base.datatype.format.ConcentrationFormat;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.datatype.unit.ConcentrationUnit;
 import eu.openanalytics.phaedra.model.curve.CurveParameter;
@@ -39,9 +38,12 @@ public class CurveTextProvider {
 		Value[] curveValues = curve == null ? new Value[0] : curve.getOutputParameters();
 		for (Value value : curveValues) {
 			if (value.definition.name.equalsIgnoreCase("pIC50")) {
-				allFields.add(new CurveTextField(value.definition.getDataDescription(), "IC50",
-						c -> CurveParameter.renderValue(value, curve, dataFormatter)));
-				
+				ConcentrationUnit configuredConUnit = dataFormatter.getConcentrationUnit(value.definition.getDataDescription()); 
+				if (!configuredConUnit.equals(ConcentrationUnit.LogMolar)) {
+					allFields.add(new CurveTextField(value.definition.getDataDescription(), "IC50",
+							c -> CurveParameter.renderValue(value, curve, dataFormatter)));
+				}
+
 				allFields.add(new CurveTextField(value.definition.getDataDescription(), value.definition.name,
 						c -> CurveParameter.renderValue(value, curve, DataFormatter.CONC_LOG_FORMATTER)));
 			} else {
