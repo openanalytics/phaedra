@@ -1,9 +1,10 @@
 package eu.openanalytics.phaedra.api.client.impl;
 
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 import eu.openanalytics.phaedra.api.client.APIClient;
@@ -12,7 +13,11 @@ import eu.openanalytics.phaedra.api.client.model.SessionToken;
 
 public class HTTPAPIClient implements APIClient {
 
-	private static CloseableHttpClient httpClient = HttpClients.createDefault();
+	private static CloseableHttpClient httpClient = HttpClientBuilder.create()
+			.setDefaultRequestConfig(RequestConfig.custom()
+					.setConnectTimeout(30 * 1000)
+					.build())
+			.build();
 
 	private String baseURL;
 	private String apiPrefix;
