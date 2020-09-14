@@ -17,7 +17,7 @@ public class ExportPlateTableSettings extends BaseExportExperimentsSettings impl
 	public enum Includes implements ISettingsOption {
 		PlateSummary("Plate Summary (#DRC, #SDP)", true),
 		ApproveAndValidationDetail("Approve and Validation Detail", false),
-		FeatureStatistics("Feature Statistics (Z-Prime, S/B, S/N)", true),
+		FeatureStatistics("Feature Statistics", true),
 		FeatureControlStatistics("Feature LC/HC Statistics (Mean, %CV)", false);
 		
 		private String label;
