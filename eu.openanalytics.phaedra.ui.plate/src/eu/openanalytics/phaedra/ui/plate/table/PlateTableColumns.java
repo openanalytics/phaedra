@@ -156,7 +156,7 @@ public class PlateTableColumns {
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "pearsoncc", null));
 			configs.add(config);
 			
-			config = ColumnConfigFactory.create("Pearson P-Value", DataType.Real, 75);
+			config = ColumnConfigFactory.create("Pearson p-value", DataType.Real, 75);
 			config.setTooltip("Pearson P-Value");
 			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "pearsonpval", null));
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "pearsonpval", null));
@@ -169,7 +169,7 @@ public class PlateTableColumns {
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "spearmancc", null));
 			configs.add(config);
 			
-			config = ColumnConfigFactory.create("Spearman P-Value", DataType.Real, 75);
+			config = ColumnConfigFactory.create("Spearman p-value", DataType.Real, 75);
 			config.setTooltip("Spearman P-Value");
 			config.setLabelProvider(createSummaryStatProgressBarLabelProvider(summaryAccessor, "spearmanpval", null));
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "spearmanpval", null));

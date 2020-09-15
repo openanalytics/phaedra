@@ -10,9 +10,13 @@ import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 public class StatUtils {
 	
 	public final static DecimalFormat DEFAULT_NUMBER_FORMAT = NumberUtils.createDecimalFormat("0.00##");
+	public final static DecimalFormat EXPONENTIAL_FORMAT = NumberUtils.createDecimalFormat("0.00E0");
 	
 	public static String format(double v) {
-		if (canBeFormatted(v)) return DEFAULT_NUMBER_FORMAT.format(v);
+		if (canBeFormatted(v)) {
+			if (v > -0.001 && v < 0.001) return EXPONENTIAL_FORMAT.format(v);
+			else return DEFAULT_NUMBER_FORMAT.format(v);
+		}
 		return ""+v;
 	}
 	
@@ -31,7 +35,7 @@ public class StatUtils {
 	public static double round(double value, int decimals) {
 		if (Double.isNaN(value) || Double.isInfinite(value)) return value;
 		BigDecimal bd = new BigDecimal(value);
-		bd = bd.setScale(decimals, BigDecimal.ROUND_UP);
+		bd = bd.setScale(decimals, BigDecimal.ROUND_HALF_UP);
 		value = bd.doubleValue();
 		return value;
 	}
