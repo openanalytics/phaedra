@@ -308,8 +308,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 						if (def.getDataDescription() instanceof CensoredValueDescription) {
 							updateLabels();
 							comp = CurveComparators.CENSOR_COMPARATOR;
-						}
-						else if (def.type.isNumeric()) 
+						} else if (def.type.isNumeric()) 
 							comp = CurveComparators.NUMERIC_STRING_COMPARATOR;
 					}
 					
@@ -318,7 +317,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 								SortConfigAttributes.SORT_COMPARATOR
 								, comp
 								, DisplayMode.NORMAL
-								, columnSpecs[i].name);
+								, columnSpecs[i].label);
 						configRegistry.registerConfigAttribute(
 								FilterRowConfigAttributes.FILTER_COMPARATOR
 								, comp
