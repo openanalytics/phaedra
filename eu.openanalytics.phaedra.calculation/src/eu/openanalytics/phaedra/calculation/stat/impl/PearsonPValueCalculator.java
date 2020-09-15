@@ -7,7 +7,6 @@ import org.eclipse.statet.rj.servi.RServi;
 
 import eu.openanalytics.phaedra.base.r.rservi.RService;
 import eu.openanalytics.phaedra.base.r.rservi.RUtils;
-import eu.openanalytics.phaedra.calculation.stat.StatUtils;
 import eu.openanalytics.phaedra.calculation.stat.ctx.IStatContext;
 
 public class PearsonPValueCalculator extends BaseStatCalculator {
@@ -33,9 +32,10 @@ public class PearsonPValueCalculator extends BaseStatCalculator {
 						.evalData("cor.test(p1, p2, alternative = 'two.sided', method = 'pearson')", null);
 				double pearsonPValue = pearsonResult.get("p.value").getData().getNum(0);
 
-				return StatUtils.round(pearsonPValue, 2);
+//				return StatUtils.round(pearsonPValue, 2);
+				return pearsonPValue;
 			} catch (CoreException e) {
-				e.printStackTrace();
+				return Double.NaN;
 			} finally {
 				if (rServi != null) {
 					RService.getInstance().closeSession(rServi);
