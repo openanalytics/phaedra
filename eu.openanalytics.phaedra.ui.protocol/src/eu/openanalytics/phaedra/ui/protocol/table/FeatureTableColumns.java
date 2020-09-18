@@ -102,6 +102,7 @@ public class FeatureTableColumns {
 		config.setTooltip("Curve");
 		configs.add(config);
 		
+		//TODO: Update "Low Control" label to config property value 
 		config = ColumnConfigFactory.create("Low Control", DataType.Boolean, 85);
 		labelProvider = new RichLabelProvider(config){
 			@Override
@@ -119,9 +120,10 @@ public class FeatureTableColumns {
 				return FeaturePropertyProvider.getValue("Low Control", f1).compareTo(FeaturePropertyProvider.getValue("Low Control", f2));
 			}
 		});
-		config.setTooltip("High Control");
+		config.setTooltip("Low Control");
 		configs.add(config);
 		
+		//TODO: Update "High Control" label to config property value
 		config = ColumnConfigFactory.create("High Control", DataType.Boolean, 85);
 		labelProvider = new RichLabelProvider(config){
 			@Override

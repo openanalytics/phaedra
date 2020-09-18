@@ -3,6 +3,8 @@ package eu.openanalytics.phaedra.link.platedef.template;
 import java.util.HashMap;
 import java.util.Map;
 
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
+
 public class PlateTemplate implements Cloneable {
 
 	private String id;
@@ -34,7 +36,7 @@ public class PlateTemplate implements Cloneable {
 			if (wt == null) {
 				wt = new WellTemplate();
 				wt.setNr(nr);
-				wt.setWellType("EMPTY");
+				wt.setWellType(WellType.EMPTY);
 				wells.put(nr, wt);
 			}
 		}

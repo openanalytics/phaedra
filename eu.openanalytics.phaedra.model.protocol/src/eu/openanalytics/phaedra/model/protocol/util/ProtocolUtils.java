@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 import org.eclipse.core.runtime.PlatformObject;
 import org.eclipse.swt.graphics.RGB;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
+import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
@@ -289,5 +291,30 @@ public class ProtocolUtils {
 			enabledChannels[i] = detailedView ? channels.get(i).isShowInWellView() : channels.get(i).isShowInPlateView();
 		}
 		return enabledChannels;
+	}
+	
+	// PHA-644
+	private static String lcLabel = Screening.getEnvironment().getConfig().getValue("low.control.short.label");
+	private static String hcLabel = Screening.getEnvironment().getConfig().getValue("high.control.short.label");
+	
+	/**
+	 * Part of the PHA-644 implementation
+	 * Return a custom label for 'HC' and 'LC' wellType codes 
+	 * 
+	 * @param wellTypeCode
+	 * @return custom label set in the config.xml file
+	 */
+	public static String getCustomHCLCLabel(String wellType) {
+		String result = wellType;
+		
+		if (WellType.LC.equals(wellType) 
+				&& !StringUtils.isEmpty(lcLabel)) {
+			result = lcLabel;
+		} else if (WellType.HC.equals(wellType)
+				&& !StringUtils.isEmpty(hcLabel)) {
+			result = hcLabel;
+		}
+		
+		return result; 
 	}
 }

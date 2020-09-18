@@ -212,8 +212,8 @@ public class ProtocolService extends BaseJPAService {
 		pClass.getImageSettings().setPixelSizeZ(1.0f);
 		pClass.getImageSettings().setImageChannels(new ArrayList<ImageChannel>());
 		pClass.setName("New Protocol Class");
-		pClass.setLowWellTypeCode("LC");
-		pClass.setHighWellTypeCode("HC");
+		pClass.setLowWellTypeCode(WellType.LC);
+		pClass.setHighWellTypeCode(WellType.HC);
 		return pClass;
 	}
 

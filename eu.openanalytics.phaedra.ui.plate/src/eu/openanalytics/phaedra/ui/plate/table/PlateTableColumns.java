@@ -29,7 +29,9 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateSummary;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryWithStats;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
@@ -217,7 +219,10 @@ public class PlateTableColumns {
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "sn", null));
 			configs.add(config);
 			
-			String[] controlTypes = { "LC", "HC" };
+			// PHA-644
+			String lcLabel = ProtocolUtils.getCustomHCLCLabel(WellType.LC);
+			String hcLabel = ProtocolUtils.getCustomHCLCLabel(WellType.HC);
+			String[] controlTypes = { lcLabel, hcLabel };
 			for (String controlType: controlTypes) {
 				config = ColumnConfigFactory.create("%CV " + controlType, DataType.Real, 75);
 				config.setLabelProvider(new SummaryStatLabelProvider(summaryAccessor, "cv", controlType));

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.nebula.widgets.nattable.NatTable;
 import org.eclipse.nebula.widgets.nattable.painter.cell.AbstractCellPainter;
@@ -12,6 +13,7 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.IRichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.RichColumnAccessor;
 import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter;
@@ -127,6 +129,11 @@ public class FeatureQueryEditorSupport extends AbstractQueryEditorSupport {
 
 		@Override
 		public String getTooltipText(Feature rowObject, int colIndex) {
+			String lcLabel = Screening.getEnvironment().getConfig().getValue("low.control.label");
+			if (StringUtils.isBlank(lcLabel)) lcLabel = "Low Control ";
+			String hcLabel = Screening.getEnvironment().getConfig().getValue("high.control.label");
+			if (StringUtils.isBlank(hcLabel)) hcLabel = "High Control ";
+			
 			if (rowObject == null) {
 				if (colIndex == 0) return "Feature ID";
 				if (colIndex == 1) return "Feature Name";
@@ -135,8 +142,8 @@ public class FeatureQueryEditorSupport extends AbstractQueryEditorSupport {
 				if (colIndex == 5) return "Numeric Feature";
 				if (colIndex == 6) return "Calculated Feature";
 				if (colIndex == 7) return "Fitted Feature";
-				if (colIndex == 9) return "Low Control";
-				if (colIndex == 10) return "High Control";
+				if (colIndex == 9) return lcLabel;
+				if (colIndex == 10) return hcLabel;
 				if (colIndex == 13) return "Feature Group";
 			}
 

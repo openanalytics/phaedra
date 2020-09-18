@@ -16,6 +16,7 @@ public class PctCtlNormalizer extends BaseNormalizer {
 
 	@Override
 	public String getDescription() {
+		//TODO: Update "high control" label to config property value
 		return "Robust percent of high control with 0% = 0, 100% = HC";
 	}
 

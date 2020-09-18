@@ -73,7 +73,8 @@ public class OverviewTab extends BaseTemplateTab {
 	
 	private static String[] getValueLabels(WellTemplate well) {
 		if (ProtocolUtils.isControl(well.getWellType())) {
-			return new String[] { well.getWellType() };	
+			// PHA-644
+			return new String[] { ProtocolUtils.getCustomHCLCLabel(well.getWellType()) };
 		} else {
 			String type = well.getCompoundType();
 			String nr = well.getCompoundNumber();

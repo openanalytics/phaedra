@@ -6,6 +6,10 @@ import java.util.function.Supplier;
 
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -24,7 +28,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 public class WellTypeTab extends BaseTemplateTab {
 
-	private Combo wellTypeCombo;
+	private ComboViewer wellTypeComboViewer;
 	
 	@Override
 	public String getName() {
@@ -59,12 +63,9 @@ public class WellTypeTab extends BaseTemplateTab {
 		
 		new Label(comp, SWT.NONE).setText("Well type:");
 		
-		wellTypeCombo = new Combo(comp, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
+		Combo wellTypeCombo = new Combo(comp, SWT.BORDER | SWT.DROP_DOWN | SWT.READ_ONLY);
+		createWellTypeComboViewer(wellTypeCombo);
 		GridDataFactory.fillDefaults().hint(100, SWT.DEFAULT).applyTo(wellTypeCombo);
-		for (WellType type: ProtocolService.getInstance().getWellTypes()) {
-			wellTypeCombo.add(type.getCode());
-		}
-		wellTypeCombo.select(0);
 
 		Button applyBtn = new Button(comp, SWT.PUSH);
 		applyBtn.setText("Apply");
@@ -75,25 +76,53 @@ public class WellTypeTab extends BaseTemplateTab {
 			public void widgetSelected(SelectionEvent e) {
 				List<WellTemplate> currentSelection = selectionSupplier.get();
 				if (currentSelection == null || currentSelection.isEmpty()) return;
-				String wellType = wellTypeCombo.getItem(wellTypeCombo.getSelectionIndex());
-				for (WellTemplate well: currentSelection) applyValue(well, wellType);
+				WellType wellType = ((WellType)((IStructuredSelection) wellTypeComboViewer.getSelection()).getFirstElement());
+				for (WellTemplate well: currentSelection) 
+					applyValue(well, wellType.getCode());
 				templateRefresher.run();
 			}
 		});
 		GridDataFactory.fillDefaults().hint(65, 21).applyTo(applyBtn);
 	}
 	
+	/**
+	 * Part of the PHA-644 implementation
+	 * @param wellTypeCombo
+	 */
+	private void createWellTypeComboViewer(Combo wellTypeCombo) {
+		wellTypeComboViewer = new ComboViewer(wellTypeCombo);
+		wellTypeComboViewer.setContentProvider(new IStructuredContentProvider() {
+            public Object[] getElements(Object inputElement) {
+                return ProtocolService.getInstance().getWellTypes().toArray();
+            }
+        });
+		wellTypeComboViewer.setLabelProvider(new LabelProvider() {
+			@Override
+			public String getText(Object element) {
+				WellType wellType = (WellType)element;
+				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+			}
+		});
+		wellTypeComboViewer.getCombo().select(0);
+	}
+	
 	@Override
 	public void selectionChanged(List<WellTemplate> newSelection) {
 		WellTemplate sample = newSelection.get(0);
 		String wellType = newSelection.stream().allMatch(w -> Objects.equals(sample.getWellType(), w.getWellType())) ? sample.getWellType() : "";
-		wellTypeCombo.select(wellTypeCombo.indexOf(wellType));
+		// PHA-644
+		String wellTypeLabel = ProtocolUtils.getCustomHCLCLabel(wellType);
+		wellTypeComboViewer.getCombo().select(wellTypeComboViewer.getCombo().indexOf(wellTypeLabel));
 	}
 	
 	public static class WellTypeCellRenderer extends BaseTemplateCellRenderer {
 		@Override
 		protected String[] doGetLabels(WellTemplate well) {
-			return new String[] { well.getWellType() };
+			// PHA-644
+			return new String[] { ProtocolUtils.getCustomHCLCLabel(well.getWellType()) };
+			
 		}
+		
+		
 	}
 }

@@ -18,6 +18,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.Formatters;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 
 
 public enum WellProperty implements EntityProperty<Well> {
@@ -99,8 +100,8 @@ public enum WellProperty implements EntityProperty<Well> {
 		case Column:
 			return "" + (int)getValue(well);
 		case Position: return PlateUtils.getWellCoordinate(well);
-		case WellType: return well.getWellType();
-		case Compound: return PlateUtils.isSample(well) && well.getCompound() != null ? well.getCompound().toString() : well.getWellType();
+		case WellType: return ProtocolUtils.getCustomHCLCLabel(well.getWellType()); // PHA-644
+		case Compound: return PlateUtils.isSample(well) && well.getCompound() != null ? well.getCompound().toString() : ProtocolUtils.getCustomHCLCLabel(well.getWellType()); // PHA-644
 		case Concentration: return Formatters.getInstance().format(getValue(well), "0.0#E0");
 		case LogConcentration: return Formatters.getInstance().format(getValue(well), "0.00");
 		default:

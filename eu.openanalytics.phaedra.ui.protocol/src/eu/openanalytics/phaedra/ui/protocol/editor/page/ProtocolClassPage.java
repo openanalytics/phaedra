@@ -3,6 +3,7 @@ package eu.openanalytics.phaedra.ui.protocol.editor.page;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
@@ -41,6 +42,7 @@ import org.eclipse.ui.forms.widgets.Hyperlink;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.forms.widgets.Section;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.admin.fs.EditFSFileCmd;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.autocomplete.ComboAutoCompleteField;
@@ -291,7 +293,9 @@ public class ProtocolClassPage extends FormPage {
 		new Label(compositeBase, SWT.NONE);
 		new Label(compositeBase, SWT.NONE);
 
-		toolkit.createLabel(compositeBase, "Default Low Control Type:", SWT.NONE);
+		String lowControlLabel = Screening.getEnvironment().getConfig().getValue("low.control.label");
+		if (StringUtils.isBlank(lowControlLabel)) lowControlLabel = "Low Control ";
+		toolkit.createLabel(compositeBase, "Default " + lowControlLabel + " Type:", SWT.NONE);
 
 		comboLowerBound = new CCombo(compositeBase, SWT.READ_ONLY);
 		final GridData gd_comboLowerBound = new GridData(300, SWT.DEFAULT);
@@ -304,7 +308,9 @@ public class ProtocolClassPage extends FormPage {
 			}
 		});
 
-		toolkit.createLabel(compositeBase, "Default High Control Type:", SWT.NONE);
+		String highControlLabel = Screening.getEnvironment().getConfig().getValue("high.control.label");
+		if (StringUtils.isBlank(highControlLabel)) highControlLabel = "High Control ";
+		toolkit.createLabel(compositeBase, "Default " + highControlLabel + " Type:", SWT.NONE);
 
 		comboHigherBound = new CCombo(compositeBase, SWT.READ_ONLY);
 		final GridData gd_comboHigerBound = new GridData(300, SWT.DEFAULT);

@@ -18,15 +18,17 @@ import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 public class NormalizationUtils {
 
 	public static double getLowStat(String stat, NormalizationKey key) throws NormalizationException {
-		String type = "LC";
+		String type = WellType.LC;
 		if (key.getFeature() instanceof Feature) type = ProtocolUtils.getLowType((Feature)key.getFeature());
+		//TODO: Update "Low Control" label to config property value
 		if (type == null) throw new NormalizationException("No Low Control type configured");
 		return getControlsStat(stat, type, key);
 	}
 	
 	public static double getHighStat(String stat, NormalizationKey key) throws NormalizationException {
-		String type = "HC";
+		String type = WellType.HC;
 		if (key.getFeature() instanceof Feature) type = ProtocolUtils.getHighType((Feature)key.getFeature());
+		//TODO: Update "High Control" label to config property value
 		if (type == null) throw new NormalizationException("No High Control type configured");
 		return getControlsStat(stat, type, key);
 	}

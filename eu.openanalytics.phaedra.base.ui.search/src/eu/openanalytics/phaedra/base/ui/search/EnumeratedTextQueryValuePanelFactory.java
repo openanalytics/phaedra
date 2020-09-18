@@ -57,7 +57,7 @@ public abstract class EnumeratedTextQueryValuePanelFactory extends AbstractQuery
 		return container;
 	}
 
-	private CCombo createCombo(Composite container, QueryEditor queryEditor, final QueryFilter queryFilter) {
+	protected CCombo createCombo(Composite container, QueryEditor queryEditor, final QueryFilter queryFilter) {
 		String selection = (String) queryFilter.getValue();
 		if (selection == null) {
 			queryFilter.setValue(getDefaultValue());

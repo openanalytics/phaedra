@@ -13,6 +13,7 @@ public class PctInvLowCtl0Normalizer extends PctLowCtlNormalizer {
 
 	@Override
 	public String getDescription() {
+		//TODO: Update "Low Control" label to config property value
 		return "Robust percent of low control with 0% = LC, 100% = 0";
 	}
 	

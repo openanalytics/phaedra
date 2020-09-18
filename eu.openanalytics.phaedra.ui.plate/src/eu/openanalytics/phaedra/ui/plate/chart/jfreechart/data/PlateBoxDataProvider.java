@@ -20,6 +20,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class PlateBoxDataProvider implements IDataProvider<Plate> {
@@ -46,10 +47,10 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 		Collections.sort(wellTypes, (o1, o2) -> {
 			if (o1 == null) return -1;
 			if (o2 == null) return 1;
-			if (o1.equalsIgnoreCase("LC")) return -1;
-			if (o1.equalsIgnoreCase("HC")) return 1;
-			if (o2.equalsIgnoreCase("LC")) return 1;
-			if (o2.equalsIgnoreCase("HC")) return -1;
+			if (o1.equalsIgnoreCase(WellType.LC)) return -1;
+			if (o1.equalsIgnoreCase(WellType.HC)) return 1;
+			if (o2.equalsIgnoreCase(WellType.LC)) return 1;
+			if (o2.equalsIgnoreCase(WellType.HC)) return -1;
 			return o1.compareTo(o2);
 		});
 	}

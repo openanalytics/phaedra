@@ -22,6 +22,7 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 /**
  * This class controls the flow of an plate list export process.
@@ -148,10 +149,10 @@ public class PlateTableExporter {
 					rowValues[col++] = statService.calculate("sb", plate, feature, null, null);
 				}
 				if (includeFeatureControlStats) {
-					rowValues[col++] = statService.calculate("mean", plate, feature, "LC", null);
-					rowValues[col++] = statService.calculate("cv", plate, feature, "LC", null);
-					rowValues[col++] = statService.calculate("mean", plate, feature, "HC", null);
-					rowValues[col++] = statService.calculate("cv", plate, feature, "HC", null);
+					rowValues[col++] = statService.calculate("mean", plate, feature, WellType.LC, null);
+					rowValues[col++] = statService.calculate("cv", plate, feature, WellType.LC, null);
+					rowValues[col++] = statService.calculate("mean", plate, feature, WellType.HC, null);
+					rowValues[col++] = statService.calculate("cv", plate, feature, WellType.HC, null);
 				}
 			}
 			featureStats.addRow(rowValues);

@@ -144,7 +144,7 @@ public class TemplateLinkSource extends AbstractDefinitionSource {
 			
 			String wellType = wellTemplate.getWellType();
 			if (wellType == null || wellType.isEmpty()) {
-				wellType = "EMPTY";
+				wellType = WellType.EMPTY;
 			}
 			well.setWellType(wellType);
 			

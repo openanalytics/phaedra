@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.databinding.Binding;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.observable.list.WritableList;
@@ -45,6 +46,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ImageHyperlink;
 import org.eclipse.ui.forms.widgets.Section;
 
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.colormethod.ColorMethodRegistry;
 import eu.openanalytics.phaedra.base.ui.colormethod.IColorMethod;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
@@ -458,14 +460,19 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		normFormulaDisplay.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 		toolkit.adapt(normFormulaDisplay, false, false);
 
+
+		String lowControlLabel = Screening.getEnvironment().getConfig().getValue("low.control.label");
+		if (StringUtils.isBlank(lowControlLabel)) lowControlLabel = "Low Control ";
 		new Label(normalizationCmp, SWT.NONE);
-		label = toolkit.createLabel(normalizationCmp, "Low Control Type:", SWT.NONE);
+		label = toolkit.createLabel(normalizationCmp, lowControlLabel + " Type:", SWT.NONE);
 		comboLowType = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		comboLowType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		toolkit.adapt(comboLowType, true, false);
 
+		String highControlLabel = Screening.getEnvironment().getConfig().getValue("high.control.label");
+		if (StringUtils.isBlank(highControlLabel)) highControlLabel = "High Control ";
 		new Label(normalizationCmp, SWT.NONE);
-		label = toolkit.createLabel(normalizationCmp, "High Control Type:", SWT.NONE);
+		label = toolkit.createLabel(normalizationCmp, highControlLabel + " Type:", SWT.NONE);
 		comboHighType = new CCombo(normalizationCmp, SWT.READ_ONLY);
 		comboHighType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		toolkit.adapt(comboHighType, true, false);

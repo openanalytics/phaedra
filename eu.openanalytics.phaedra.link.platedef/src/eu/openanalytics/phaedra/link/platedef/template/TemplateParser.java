@@ -52,7 +52,8 @@ public class TemplateParser {
 			}
 			Node controlTag = XmlUtils.getNodeByName(wellTag, "control");
 			if (controlTag != null) {
-				well.setWellType(XmlUtils.getNodeValue(controlTag));
+				String wellType = XmlUtils.getNodeValue(controlTag); 
+				well.setWellType(wellType);
 			}
 			Node compoundTypeTag = XmlUtils.getNodeByName(wellTag, "compound-type");
 			if (compoundTypeTag != null) {

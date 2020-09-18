@@ -10,6 +10,7 @@ import eu.openanalytics.phaedra.base.ui.gridviewer.widget.render.BaseGridCellRen
 import eu.openanalytics.phaedra.base.util.misc.ColorStore;
 import eu.openanalytics.phaedra.link.platedef.template.WellTemplate;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 public class TemplateLinkGridCellRenderer extends BaseGridCellRenderer {
 	
@@ -40,7 +41,7 @@ public class TemplateLinkGridCellRenderer extends BaseGridCellRenderer {
 		if (template == null) return super.getBgColor(cell);
 		if (template.isSkip()) return super.getBgColor(cell);
 		RGB rgb = ProtocolUtils.getWellTypeRGB(template.getWellType());
-		if (template.getWellType().equals("SAMPLE")) rgb = new RGB(80,80,200);
+		if (template.getWellType().equals(WellType.SAMPLE)) rgb = new RGB(80,80,200);
 		if (rgb != null) return colorStore.get(rgb);
 		return super.getBgColor(cell);
 	}
