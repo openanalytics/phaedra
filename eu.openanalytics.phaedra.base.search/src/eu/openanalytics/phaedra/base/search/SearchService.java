@@ -179,7 +179,7 @@ public final class SearchService extends BaseJPAService {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<QueryModel> getMyQueries() {
-		List<QueryModel> resultList = executeNamedQuery(QueryModel.NAMED_QUERY_GET_EXAMPLE_QUERIES,
+		List<QueryModel> resultList = executeNamedQuery(QueryModel.NAMED_QUERY_GET_MY_QUERIES,
 				Pair.of("owner", SecurityService.getInstance().getCurrentUserName()));
 		Collections.sort(resultList, queryComparator);
 		return resultList;
