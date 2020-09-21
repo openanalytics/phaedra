@@ -2,6 +2,8 @@ package eu.openanalytics.phaedra.ui.protocol.editor.page;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.databinding.Binding;
@@ -15,8 +17,11 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ComboViewer;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.KeyAdapter;
@@ -61,6 +66,9 @@ import eu.openanalytics.phaedra.ui.protocol.util.MultiploMethodToStringConverter
 import eu.openanalytics.phaedra.ui.protocol.util.StringToMultiploMethodConverter;
 
 public class ProtocolClassPage extends FormPage {
+	// PHA-644
+	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
+			.collect(Collectors.toMap(wellType -> wellType.getCode(), wellType -> wellType));
 
 	private Text textName;
 	private Text textDescription;
@@ -300,13 +308,34 @@ public class ProtocolClassPage extends FormPage {
 		comboLowerBound = new CCombo(compositeBase, SWT.READ_ONLY);
 		final GridData gd_comboLowerBound = new GridData(300, SWT.DEFAULT);
 		comboLowerBound.setLayoutData(gd_comboLowerBound);
-		comboLowerBound.setVisibleItemCount(20);
-		comboLowerBound.addSelectionListener(new SelectionAdapter() {
+		toolkit.adapt(comboLowerBound, true, true);
+		comboLowerBound.addSelectionListener(dirtySelectionAdapter);
+
+		// PHA-644
+		ComboViewer comboViewerLowerBound = new ComboViewer(comboLowerBound);
+		comboViewerLowerBound.setContentProvider(new ArrayContentProvider());
+		comboViewerLowerBound.setInput(WELL_TYPE_CODES.values());
+		comboViewerLowerBound.setLabelProvider(new LabelProvider() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				markDirty();
+			public String getText(Object element) {
+				WellType wellType = (WellType)element;
+				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
 			}
 		});
+		comboViewerLowerBound.setComparator(new ViewerComparator());
+		comboViewerLowerBound.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				WellType selectedWellType = (WellType) ((StructuredSelection) comboViewerLowerBound.getSelection()).getFirstElement();
+				protocolClass.setLowWellTypeCode(selectedWellType.getCode());
+			}
+		});
+		comboViewerLowerBound.getCCombo().setVisibleItemCount(20);
+		if (StringUtils.isNotBlank(protocolClass.getLowWellTypeCode())
+				&& WELL_TYPE_CODES.containsKey(protocolClass.getLowWellTypeCode())) {
+			comboViewerLowerBound.setSelection(new StructuredSelection(WELL_TYPE_CODES.get(protocolClass.getLowWellTypeCode())));
+		}
+		
 
 		String highControlLabel = Screening.getEnvironment().getConfig().getValue("high.control.label");
 		if (StringUtils.isBlank(highControlLabel)) highControlLabel = "High Control ";
@@ -315,17 +344,34 @@ public class ProtocolClassPage extends FormPage {
 		comboHigherBound = new CCombo(compositeBase, SWT.READ_ONLY);
 		final GridData gd_comboHigerBound = new GridData(300, SWT.DEFAULT);
 		comboHigherBound.setLayoutData(gd_comboHigerBound);
-		comboHigherBound.setVisibleItemCount(20);
 		toolkit.adapt(comboHigherBound, true, true);
-		comboHigherBound.addSelectionListener(new SelectionAdapter() {
+		comboHigherBound.addSelectionListener(dirtySelectionAdapter);
+		
+		// PHA-644
+		ComboViewer comboViewerHigherBound = new ComboViewer(comboHigherBound);
+		comboViewerHigherBound.setContentProvider(new ArrayContentProvider());
+		comboViewerHigherBound.setInput(WELL_TYPE_CODES.values());
+		comboViewerHigherBound.setLabelProvider(new LabelProvider() {
 			@Override
-			public void widgetSelected(SelectionEvent e) {
-				markDirty();
+			public String getText(Object element) {
+				WellType wellType = (WellType)element;
+				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
 			}
 		});
-
-		fillComboHigherAndLowerBounds();
-
+		comboViewerHigherBound.setComparator(new ViewerComparator());
+		comboViewerHigherBound.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				WellType selectedWellType = (WellType) ((StructuredSelection) comboViewerHigherBound.getSelection()).getFirstElement();
+				protocolClass.setHighWellTypeCode(selectedWellType.getCode());
+			}
+		});
+		comboViewerHigherBound.getCCombo().setVisibleItemCount(20);
+		if (StringUtils.isNotBlank(protocolClass.getHighWellTypeCode())
+				&& WELL_TYPE_CODES.containsKey(protocolClass.getHighWellTypeCode())) {
+			comboViewerHigherBound.setSelection(new StructuredSelection(WELL_TYPE_CODES.get(protocolClass.getHighWellTypeCode())));
+		}
+		
 		managedForm.getForm().getToolBarManager().add(getEditor().getSaveAction());
 		managedForm.getForm().getToolBarManager().update(true);
 
@@ -380,20 +426,6 @@ public class ProtocolClassPage extends FormPage {
 		}
 	}
 
-	private void fillComboHigherAndLowerBounds() {
-		List<WellType> types = ProtocolService.getInstance().getWellTypes();
-
-		String[] welltypes = new String[types.size()];
-		int i = 0;
-		for (WellType type : types) {
-			welltypes[i] = type.getCode();
-			i++;
-		}
-
-		comboLowerBound.setItems(welltypes);
-		comboHigherBound.setItems(welltypes);
-	}
-
 	@SuppressWarnings("unchecked")
 	protected DataBindingContext initDataBindings() {
 		DataBindingContext dbc = new DataBindingContext();
@@ -404,8 +436,8 @@ public class ProtocolClassPage extends FormPage {
 		FormEditorUtils.bindSelection(checkIsInDevelopment, protocolClass, "inDevelopment", dbc);
 		FormEditorUtils.bindSelection(comboDefaultLinkSource, protocolClass, "defaultLinkSource", dbc);
 		FormEditorUtils.bindSelection(comboDefaultCaptureConfig, protocolClass, "defaultCaptureConfig", dbc);
-		FormEditorUtils.bindSelection(comboHigherBound, protocolClass, "highWellTypeCode", dbc);
-		FormEditorUtils.bindSelection(comboLowerBound, protocolClass, "lowWellTypeCode", dbc);
+//		FormEditorUtils.bindSelection(comboHigherBound, protocolClass, "highWellTypeCode", dbc);
+//		FormEditorUtils.bindSelection(comboLowerBound, protocolClass, "lowWellTypeCode", dbc);
 		
 		dbc.bindValue(ViewerProperties.singleSelection().observe(defaultMultiploMethodViewer),
 				PojoProperties.value("defaultMultiploMethod").observe(protocolClass),
@@ -413,15 +445,23 @@ public class ProtocolClassPage extends FormPage {
 				new UpdateValueStrategy().setConverter(new StringToMultiploMethodConverter()) ).updateModelToTarget();
 		FormEditorUtils.bindText(defaultMultiploParameterControl, protocolClass, "defaultMultiploParameter", dbc);
 		
-		IChangeListener listener = new IChangeListener() {
-			@Override
-			public void handleChange(ChangeEvent event) {
-				markDirty();
-			}
-		};
-		dbc.getBindings().forEach((binding) -> ((Binding)binding).getModel().addChangeListener(listener));
+		dbc.getBindings().forEach((binding) -> ((Binding)binding).getModel().addChangeListener(markDirtyListener));
 		
 		return dbc;
 	}
+	
+	private IChangeListener markDirtyListener = new IChangeListener() {
+		@Override
+		public void handleChange(ChangeEvent event) {
+			markDirty();
+		}
+	};
+	
+	private SelectionAdapter dirtySelectionAdapter = new SelectionAdapter() {
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			markDirtyListener.handleChange(null);
+		}
+	};
 
 }

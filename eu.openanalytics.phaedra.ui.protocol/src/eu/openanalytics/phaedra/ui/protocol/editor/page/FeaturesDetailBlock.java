@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.databinding.Binding;
@@ -13,8 +15,13 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.window.Window;
@@ -64,6 +71,7 @@ import eu.openanalytics.phaedra.calculation.norm.NormalizationService.Normalizat
 import eu.openanalytics.phaedra.model.curve.CurveUIFactory;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
+import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
@@ -76,6 +84,9 @@ import eu.openanalytics.phaedra.ui.protocol.util.ColorMethodFactory;
 import eu.openanalytics.phaedra.ui.protocol.util.ListenerHelper;
 
 public class FeaturesDetailBlock implements IDetailsPage {
+	// PHA-644
+	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
+			.collect(Collectors.toMap(wellType -> wellType.getCode(), wellType -> wellType));
 
 	private Feature feature;
 
@@ -460,7 +471,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		normFormulaDisplay.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 3, 1));
 		toolkit.adapt(normFormulaDisplay, false, false);
 
-
+		// PHA-644
 		String lowControlLabel = Screening.getEnvironment().getConfig().getValue("low.control.label");
 		if (StringUtils.isBlank(lowControlLabel)) lowControlLabel = "Low Control ";
 		new Label(normalizationCmp, SWT.NONE);
@@ -469,6 +480,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		comboLowType.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 2, 1));
 		toolkit.adapt(comboLowType, true, false);
 
+		// PHA-644
 		String highControlLabel = Screening.getEnvironment().getConfig().getValue("high.control.label");
 		if (StringUtils.isBlank(highControlLabel)) highControlLabel = "High Control ";
 		new Label(normalizationCmp, SWT.NONE);
@@ -735,6 +747,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		normScopeCmb.addSelectionListener(dirtySelectionListener);
 		comboGrouping.addSelectionListener(dirtySelectionListener);
 		colorMethods.addSelectionListener(dirtySelectionListener);
+		
 		comboLowType.addSelectionListener(dirtySelectionListener);
 		comboHighType.addSelectionListener(dirtySelectionListener);
 
@@ -797,6 +810,7 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		fillCurveComposite();
 		fillOutlierDetectionSection();
 		fillHitCallSection();
+		fillWellTypeCombos();
 		setActiveColorMethod();
 		
 		boolean isCustomCalc = feature.getCalculationFormulaId() <= 0;
@@ -883,18 +897,55 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	}
 	
 	private void fillWellTypeCombos() {
-		List<WellType> types = ProtocolService.getInstance().getWellTypes();
-
-		String[] welltypes = new String[types.size()+1];
-		welltypes[0] = "";
-		int i = 1;
-		for (WellType type : types) {
-			welltypes[i] = type.getCode();
-			i++;
+		//PHA-644: Low control type -> Negative control type
+		ComboViewer comboViewerLowType = new ComboViewer(comboLowType);
+		comboViewerLowType.setContentProvider(new ArrayContentProvider());
+		comboViewerLowType.setInput(WELL_TYPE_CODES.values());
+		comboViewerLowType.setLabelProvider(new LabelProvider() {
+			@Override
+			public String getText(Object element) {
+				WellType wellType = (WellType)element;
+				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+			}
+		});
+		comboViewerLowType.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				WellType selectedWellType = (WellType) ((StructuredSelection) comboViewerLowType.getSelection()).getFirstElement();
+				feature.setLowWellTypeCode(selectedWellType.getCode());
+			}
+		});
+		comboViewerLowType.getCCombo().setVisibleItemCount(20);
+		if (feature != null 
+				&& StringUtils.isNotBlank(feature.getHighWellTypeCode())
+				&& WELL_TYPE_CODES.containsKey(feature.getLowWellTypeCode())) {
+			comboViewerLowType.setSelection(new StructuredSelection(WELL_TYPE_CODES.get(feature.getLowWellTypeCode())));
 		}
-
-		comboLowType.setItems(welltypes);
-		comboHighType.setItems(welltypes);
+		
+		//PHA-644: High control type -> Positive control type
+		ComboViewer comboViewerHighType = new ComboViewer(comboHighType);
+		comboViewerHighType.setContentProvider(new ArrayContentProvider());
+		comboViewerHighType.setInput(WELL_TYPE_CODES.values());
+		comboViewerHighType.setLabelProvider(new LabelProvider() {
+			@Override
+			public String getText(Object element) {
+				WellType wellType = (WellType)element;
+				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+			}
+		});
+		comboViewerHighType.addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				WellType selectedWellType = (WellType) ((StructuredSelection) comboViewerHighType.getSelection()).getFirstElement();
+				feature.setHighWellTypeCode(selectedWellType.getCode());
+			}
+		});
+		comboViewerHighType.getCCombo().setVisibleItemCount(20);
+		if (feature != null
+				&& StringUtils.isNotBlank(feature.getHighWellTypeCode())
+				&& WELL_TYPE_CODES.containsKey(feature.getHighWellTypeCode())) {
+			comboViewerHighType.setSelection(new StructuredSelection(WELL_TYPE_CODES.get(feature.getHighWellTypeCode())));
+		}
 	}
 
 	private void toggleCalculationButtons(boolean isCustomFormula) {
@@ -977,8 +1028,8 @@ public class FeaturesDetailBlock implements IDetailsPage {
 		FormEditorUtils.bindSelection(comboNormalization, feature, "normalization", ctx);
 		FormEditorUtils.bindText(customNormTxt, feature, "normalizationFormula", ctx);
 		FormEditorUtils.bindSelection(customNormLanguage, new NormalizationLanguageMapper(feature), "language", ctx);
-		FormEditorUtils.bindSelection(comboHighType, feature, "highWellTypeCode", ctx);
-		FormEditorUtils.bindSelection(comboLowType, feature, "lowWellTypeCode", ctx);
+//		FormEditorUtils.bindSelection(comboHighType, feature, "highWellTypeCode", ctx);
+//		FormEditorUtils.bindSelection(comboLowType, feature, "lowWellTypeCode", ctx);
 
 		// Special binding is required for these settings:
 

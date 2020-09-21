@@ -103,6 +103,7 @@ public class WellTypeTab extends BaseTemplateTab {
 				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
 			}
 		});
+		wellTypeComboViewer.setInput(wellTypeCombo.getItems());
 		wellTypeComboViewer.getCombo().select(0);
 	}
 	
