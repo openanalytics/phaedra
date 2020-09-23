@@ -7,6 +7,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
+import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 
 public class PlateSummaryWithStats extends PlateSummary {
@@ -14,6 +15,16 @@ public class PlateSummaryWithStats extends PlateSummary {
 	public static PlateSummaryWithStats loadSummary(Plate item) {
 		PlateSummary summary = PlateService.getInstance().getPlateSummary(item);
 		StatService.getInstance().loadPersistentPlateStats(item);
+		
+		// Workaround for async column loading: new plate stats that are not part of the persistent stats
+		Feature feature = ProtocolUIService.getInstance().getCurrentFeature();
+		if (feature != null) {
+			String[] stats = { "robustzprime", "pearsoncc", "pearsonpval", "spearmancc", "spearmanpval" };
+			for (String stat: stats) {
+				StatService.getInstance().calculate(stat, item, feature, null, null);
+			}
+		}
+		
 		return new PlateSummaryWithStats(item, summary);
 	}
 	

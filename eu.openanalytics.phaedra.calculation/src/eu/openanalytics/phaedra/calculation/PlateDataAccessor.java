@@ -1,8 +1,5 @@
 package eu.openanalytics.phaedra.calculation;
 
-import static eu.openanalytics.phaedra.calculation.WellDataAccessor.CACHE;
-import static eu.openanalytics.phaedra.calculation.WellDataAccessor.MISSING_VALUE;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,9 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
+import eu.openanalytics.phaedra.base.cache.CacheKey;
+import eu.openanalytics.phaedra.base.cache.CacheService;
+import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService.CalculationTrigger;
-import eu.openanalytics.phaedra.calculation.WellDataAccessor.CacheableFeatureValue;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationException;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
@@ -44,6 +43,8 @@ public class PlateDataAccessor implements Serializable {
 
 	private ReentrantLock lock;
 
+	private static final ICache CACHE = CacheService.getInstance().createCache("WellDataCache");
+	
 	public PlateDataAccessor(Plate plate) {
 		this.plate = plate;
 
@@ -79,14 +80,9 @@ public class PlateDataAccessor implements Serializable {
 	public void reset(boolean allFeatures) {
 		lock.lock();
 		try {
-			if (allFeatures) {
-				wells.forEach(w -> uncacheValues(w, null));
-			} else {
-				// Only calculated features
-				List<Feature> features = ProtocolUtils.getProtocolClass(plate).getFeatures();
-				for (Feature f: features) {
-					if (f.isCalculated()) wells.forEach(w -> uncacheValues(w, f));
-				}
+			List<Feature> features = ProtocolUtils.getProtocolClass(plate).getFeatures();
+			for (Feature f: features) {
+				if (allFeatures || f.isCalculated()) removeFromCache(f);
 			}
 		} finally {
 			lock.unlock();
@@ -106,7 +102,7 @@ public class PlateDataAccessor implements Serializable {
 		List<FeatureValue> featureValues = CalculationService.getInstance().runCalculatedFeature(f, plate);
 		lock.lock();
 		try {
-			cacheValues(f, featureValues);
+			addDataToCache(f, featureValues);
 		} finally {
 			lock.unlock();
 		}
@@ -155,10 +151,13 @@ public class PlateDataAccessor implements Serializable {
 	 * @return The string value, possibly null.
 	 */
 	public String getStringValue(Well well, Feature f) {
-		CacheableFeatureValue value = getValue(well, f);
-		if (value == null || value == MISSING_VALUE) return null;
-
-		return value.getRawStringValue();
+		if (f.isNumeric()) return null;
+		
+		String[] data = (String[]) getCachedData(f);
+		if (data == null) return null;
+		
+		int wellNr = PlateUtils.getWellNr(well);
+		return data[wellNr - 1];
 	}
 
 	/**
@@ -198,38 +197,37 @@ public class PlateDataAccessor implements Serializable {
 	 * @return The numeric value, possibly NaN (not-a-number).
 	 */
 	public double getNumericValue(Well well, Feature f, String normalization) {
-		CacheableFeatureValue value = getValue(well, f);
-		if (value == null || value == MISSING_VALUE) return Double.NaN;
-
-		double rawValue = value.getRawNumericValue();
-		if (normalization == null || normalization.equals(NormalizationService.NORMALIZATION_NONE)) return rawValue;
-
-		// Get an ad-hoc normalization. Because value.getNormalizedValue() may be stale.
-		try {
-			return NormalizationService.getInstance().getNormalizedValue(plate, f, normalization, well.getRow(), well.getColumn());
-		} catch (NormalizationException e) {
-			return Double.NaN;
+		if (!f.isNumeric()) return Double.NaN;
+		
+		if (normalization == null || normalization.equals(NormalizationService.NORMALIZATION_NONE)) {
+			double[] data = (double[]) getCachedData(f);
+			if (data == null) {
+				lock.lock();
+				try {
+					// Try again, another thread may have loaded the value while we were waiting.
+					data = (double[]) getCachedData(f);
+					if (data == null) loadData(Collections.singletonList(f));
+				} finally {
+					lock.unlock();
+				}
+				data = (double[]) getCachedData(f);
+			}
+			if (data == null) return Double.NaN;
+			
+			int wellNr = PlateUtils.getWellNr(well);
+			return data[wellNr - 1];
+		} else {
+			// Get an ad-hoc normalization. This class does not cache normalized values.
+			try {
+				return NormalizationService.getInstance().getNormalizedValue(plate, f, normalization, well.getRow(), well.getColumn());
+			} catch (NormalizationException e) {
+				return Double.NaN;
+			}	
 		}
 	}
-
-	private CacheableFeatureValue getValue(Well w, Feature f) {
-		CacheableFeatureValue value = getCachedValue(w, f);
-		if (value == null) {
-			lock.lock();
-			try {
-				// Try again, another thread may have loaded the value while we were waiting.
-				value = getCachedValue(w, f);
-				if (value == null) {
-					// Load the value from the database.
-					loadData(Arrays.asList(f));
-					// Now value is guaranteed to be not null. It's either a valid value, or MISSING_VALUE.
-					value = getCachedValue(w, f);
-				}
-			} finally {
-				lock.unlock();
-			}
-		}
-		return value;
+	
+	public boolean isDataCached(Feature feature) {
+		return isCached(feature);
 	}
 
 	private void loadData(List<Feature> features) {
@@ -238,7 +236,7 @@ public class PlateDataAccessor implements Serializable {
 		try {
 			List<Feature> uncachedFeatures = new ArrayList<>();
 			for (Feature f : features) {
-				if (!isFullyCached(f)) uncachedFeatures.add(f);
+				if (!isCached(f)) uncachedFeatures.add(f);
 			}
 			if (uncachedFeatures.isEmpty()) return;
 			fetchValues(uncachedFeatures);
@@ -282,57 +280,75 @@ public class PlateDataAccessor implements Serializable {
 					for (int i = 0; i < lockCount; i++) lock.lock();
 				}
 			}
-			cacheValues(f, featureValues);
+			addDataToCache(f, featureValues);
 		}
 	}
 
-	private boolean isFullyCached(Feature f) {
-		Well uncachedWell = wells.stream().filter(w -> getCachedValue(w, f) == null).findAny().orElse(null);
-		return (uncachedWell == null);
+	/**
+	 * *******
+	 * Caching
+	 * *******
+	 */
+	
+	private Object getCacheKey(Feature feature) {
+		return CacheKey.create(plate.getId(), feature.getId());
 	}
-
-	private void cacheValues(Feature f, List<FeatureValue> values) {
-		if (values == null) {
-			wells.forEach(w -> getCachedMap(w, true).put(f.getId(), MISSING_VALUE));
-			return;
-		}
-		values.forEach(fv -> {
-			Map<Long, CacheableFeatureValue> map = getCachedMap(fv.getWell(), true);
-			map.put(f.getId(), new CacheableFeatureValue(fv));
-			//TODO Refresh cache entry (for size calculation and disk flushing), but this is very slow:
-//			CACHE.put(getCacheKey(fv.getWell()), map);
-		});
+	
+	private boolean isCached(Feature feature) {
+		if (feature == null) return false;
+		Object key = getCacheKey(feature);
+		return CACHE.contains(key);
 	}
-
-	private void uncacheValues(Well well, Feature f) {
-		if (f == null) {
-			// Remove entire map
-			CACHE.remove(getCacheKey(well));
+	
+	private Object getCachedData(Feature feature) {
+		if (feature == null) return null;
+		Object key = getCacheKey(feature);
+		return CACHE.get(key);
+	}
+	
+	private void addDataToCache(Feature feature, List<FeatureValue> featureValues) {
+		if (feature == null) return;
+		if (featureValues == null || featureValues.isEmpty()) {
+			addDataToCache(feature, null);
 		} else {
-			// Remove one feature from map
-			Map<Long, CacheableFeatureValue> featureValueMap = getCachedMap(well, false);
-			if (featureValueMap != null) featureValueMap.remove(f.getId());
+			int wellCount = PlateUtils.getWellCount(plate);
+			if (feature.isNumeric()) {
+				double[] data = new double[wellCount];
+				for (FeatureValue fv: featureValues) {
+					int wellNr = PlateUtils.getWellNr(fv.getWell());
+					data[wellNr - 1] = fv.getRawNumericValue();
+				}
+				addDataToCache(feature, data);
+			} else {
+				String[] data = new String[wellCount];
+				for (FeatureValue fv: featureValues) {
+					int wellNr = PlateUtils.getWellNr(fv.getWell());
+					data[wellNr - 1] = fv.getRawStringValue();
+				}
+				addDataToCache(feature, data);
+			}
 		}
 	}
-
-	private CacheableFeatureValue getCachedValue(Well well, Feature feature) {
-		Map<Long, CacheableFeatureValue> featureValueMap = getCachedMap(well, false);
-		if (featureValueMap != null) return featureValueMap.get(feature.getId());
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map<Long, CacheableFeatureValue> getCachedMap(Well well, boolean createIfMissing) {
-		Object cacheKey = getCacheKey(well);
-		Map<Long, CacheableFeatureValue> featureValueMap = (Map<Long, CacheableFeatureValue>) CACHE.get(cacheKey);
-		if (featureValueMap == null && createIfMissing) {
-			featureValueMap = new HashMap<>();
-			CACHE.put(cacheKey, featureValueMap);
+	
+	private void addDataToCache(Feature feature, Object data) {
+		if (feature == null) return;
+		Object key = getCacheKey(feature);
+		Object dataToCache = data;
+		if (dataToCache == null) {
+			int wellCount = PlateUtils.getWellCount(plate);
+			if (feature.isNumeric()) {
+				dataToCache = new double[wellCount];
+				Arrays.fill((double[]) dataToCache, Double.NaN);
+			} else {
+				dataToCache = new String[wellCount];
+			}
 		}
-		return featureValueMap;
+		CACHE.put(key, dataToCache);
 	}
-
-	private static Object getCacheKey(Well well) {
-		return well.getId();
+	
+	private void removeFromCache(Feature feature) {
+		if (feature == null) return;
+		Object key = getCacheKey(feature);
+		CACHE.remove(key);
 	}
 }
