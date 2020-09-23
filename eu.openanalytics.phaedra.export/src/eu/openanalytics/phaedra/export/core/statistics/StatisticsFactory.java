@@ -11,7 +11,9 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Experiment;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 public class StatisticsFactory {
 
@@ -52,10 +54,12 @@ public class StatisticsFactory {
 			
 			int index = 3;
 			for (String controlType : controlTypes) {
-				double count = StatService.getInstance().calculate("count", plate, feature, controlType, null);
-				double mean = StatService.getInstance().calculate("mean", plate, feature, controlType, null);
-				double stdev = StatService.getInstance().calculate("stdev", plate, feature, controlType, null);
-				double cv = StatService.getInstance().calculate("cv", plate, feature, controlType, null);
+				//PHA-644
+				WellType wellType = ProtocolService.getInstance().getWellTypeByCode(controlType).orElse(null);
+				double count = StatService.getInstance().calculate("count", plate, feature, wellType, null);
+				double mean = StatService.getInstance().calculate("mean", plate, feature, wellType, null);
+				double stdev = StatService.getInstance().calculate("stdev", plate, feature, wellType, null);
+				double cv = StatService.getInstance().calculate("cv", plate, feature, wellType, null);
 				
 				values[index++][i] = count;
 				values[index++][i] = mean;

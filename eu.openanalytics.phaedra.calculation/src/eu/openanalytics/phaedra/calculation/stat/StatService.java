@@ -25,6 +25,7 @@ import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.SubWellFeature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 /**
  * API for performing statistical computations on plates and wells.
@@ -98,7 +99,22 @@ public class StatService {
 		return doCalculate(stat, new ArgumentStatContext(values, args));
 	}
 
+//	/**
+//	 * Perform the given stat computation on the well data of the given plate.
+//	 * 
+//	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+//	 * @param p The plate whose well data will be used.
+//	 * @param f The feature whose data will be used.
+//	 * @param wellType Only values from wells with this well type will be used. Use null to include all wells.
+//	 * @param norm The normalization to use. Use null to perform calculation on raw values instead.
+//	 * @return The computed value, possibly NaN.
+//	 */
+//	public double calculate(String stat, Plate p, Feature f, String wellType, String norm) {
+//		return calculate(new StatQuery(stat, p, f, wellType, norm));
+//	}
+	
 	/**
+	 * Part of PHA-644
 	 * Perform the given stat computation on the well data of the given plate.
 	 * 
 	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
@@ -108,8 +124,11 @@ public class StatService {
 	 * @param norm The normalization to use. Use null to perform calculation on raw values instead.
 	 * @return The computed value, possibly NaN.
 	 */
-	public double calculate(String stat, Plate p, Feature f, String wellType, String norm) {
-		return calculate(new StatQuery(stat, p, f, wellType, norm));
+	public double calculate(String stat, Plate p, Feature f, WellType wellType, String norm) {
+		if (wellType != null)
+			return calculate(new StatQuery(stat, p, f, wellType.getCode(), norm));
+		else 
+			return calculate(new StatQuery(stat, p, f, null, norm));
 	}
 	
 	/**

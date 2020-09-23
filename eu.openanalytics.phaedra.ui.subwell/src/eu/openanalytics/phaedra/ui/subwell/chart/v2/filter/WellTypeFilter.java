@@ -66,7 +66,8 @@ public class WellTypeFilter extends AbstractSubWellFilter {
 
 	@Override
 	protected String getKey(Well well) {
-		return well.getWellType();
+		// PHA-644
+		return ProtocolUtils.getCustomHCLCLabel(well.getWellType());
 	}
 
 }

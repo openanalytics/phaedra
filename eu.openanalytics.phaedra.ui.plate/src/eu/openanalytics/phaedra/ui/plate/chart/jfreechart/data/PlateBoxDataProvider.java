@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.graphics.RGB;
 import org.jfree.chart.axis.NumberAxis;
@@ -18,12 +19,16 @@ import eu.openanalytics.phaedra.base.ui.charting.render.ICategoryRenderCustomize
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class PlateBoxDataProvider implements IDataProvider<Plate> {
+	// PHA-644
+	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
+			.collect(Collectors.toMap(wellType -> ProtocolUtils.getCustomHCLCLabel(wellType.getCode()), wellType -> wellType));
 
 	private List<Plate> plates;
 	private List<String> wellTypes;
@@ -47,10 +52,10 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 		Collections.sort(wellTypes, (o1, o2) -> {
 			if (o1 == null) return -1;
 			if (o2 == null) return 1;
-			if (o1.equalsIgnoreCase(WellType.LC)) return -1;
-			if (o1.equalsIgnoreCase(WellType.HC)) return 1;
-			if (o2.equalsIgnoreCase(WellType.LC)) return 1;
-			if (o2.equalsIgnoreCase(WellType.HC)) return -1;
+			if (o1.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.LC))) return -1; // PHA-644
+			if (o1.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.HC))) return 1; // PHA-644
+			if (o2.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.LC))) return 1; // PHA-644
+			if (o2.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.HC))) return -1; // PHA-644
 			return o1.compareTo(o2);
 		});
 	}
@@ -87,7 +92,7 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 			ProtocolUIService.getInstance().setCurrentProtocolClass(item.getExperiment().getProtocol().getProtocolClass());
 
 		Feature f = ProtocolUIService.getInstance().getCurrentFeature();
-		String wellType = parameters[0];
+		WellType wellType = WELL_TYPE_CODES.get(parameters[0]); // PHA-644
 		double mean = StatService.getInstance().calculate("mean", item, f, wellType, f.getNormalization());
 		if (Double.isNaN(mean)) return null;
 		double median = StatService.getInstance().calculate("median", item, f, wellType, f.getNormalization());
@@ -155,7 +160,7 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 		Set<String> tempWellTypes = new HashSet<>();
 		for (Plate plate: plates) {
 			for (Well well: plate.getWells()) {
-				String wellType = well.getWellType();
+				String wellType = ProtocolUtils.getCustomHCLCLabel(well.getWellType()); // PHA-644
 				if (wellType != null) tempWellTypes.add(wellType);
 			}
 		}

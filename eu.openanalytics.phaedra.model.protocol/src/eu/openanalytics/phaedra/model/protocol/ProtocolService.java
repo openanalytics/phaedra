@@ -9,8 +9,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import eu.openanalytics.phaedra.base.db.JDBCUtils;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
@@ -77,6 +80,17 @@ public class ProtocolService extends BaseJPAService {
 					return wt1.getCode().compareTo(wt2.getCode());
 				})
 				.collect(Collectors.toList());
+	}
+	
+	/**
+	 * Part of issue PHA-644: Get the a WellType with the existing code
+	 * @param code
+	 * @return
+	 */
+	public Optional<WellType> getWellTypeByCode(String code) {
+		return getWellTypes().stream()
+				.filter(wt -> StringUtils.equalsIgnoreCase(code, wt.getCode()))
+				.findFirst();
 	}
 
 	/**

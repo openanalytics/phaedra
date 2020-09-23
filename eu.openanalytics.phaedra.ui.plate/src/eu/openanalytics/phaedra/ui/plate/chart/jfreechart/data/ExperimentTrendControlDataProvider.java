@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.swt.graphics.RGB;
 import org.jfree.chart.axis.NumberAxis;
@@ -15,11 +16,16 @@ import eu.openanalytics.phaedra.base.ui.charting.data.IDataProviderWPrintSupport
 import eu.openanalytics.phaedra.base.ui.charting.render.IRenderCustomizer;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class ExperimentTrendControlDataProvider extends IDataProviderWPrintSupport<Plate> {
+	//PHA-644
+	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
+			.collect(Collectors.toMap(wellType -> ProtocolUtils.getCustomHCLCLabel(wellType.getCode()), wellType -> wellType));
 
 	private List<Plate> plates = null;
 	private List<String> wellTypes = null;
@@ -61,7 +67,8 @@ public class ExperimentTrendControlDataProvider extends IDataProviderWPrintSuppo
 
 	@Override
 	public double[] getValue(Plate item, String[] parameters, int row) {
-		String wellType = parameters[0];
+		// PHA-644
+		WellType wellType = WELL_TYPE_CODES.get(parameters[0]);
 		if (feature == null) feature = ProtocolUIService.getInstance().getCurrentFeature();
 
 		double mean = StatService.getInstance().calculate("mean", item, feature, wellType, null);
@@ -126,9 +133,9 @@ public class ExperimentTrendControlDataProvider extends IDataProviderWPrintSuppo
 		String low = ProtocolUtils.getLowType(feature);
 		String high = ProtocolUtils.getHighType(feature);
 		if (low != null)
-			welltypes.add(low);
-		if (high != null)
-			welltypes.add(high);
+			welltypes.add(ProtocolUtils.getCustomHCLCLabel(low)); // PHA-644
+		if (high != null) 
+			welltypes.add(ProtocolUtils.getCustomHCLCLabel(high)); // PHA-644
 		welltypes.add("SAMPLE");
 		welltypes.add("EMPTY");
 		return welltypes;

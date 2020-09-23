@@ -4,7 +4,9 @@ import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateSummary;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 
 public class PlateSummaryWithStats extends PlateSummary {
@@ -26,7 +28,9 @@ public class PlateSummaryWithStats extends PlateSummary {
 	}
 	
 	@Override
-	public double getStat(String stat, Feature f, String wellType, String norm) {
+	public double getStat(String stat, Feature f, String wellTypeCode, String norm) {
+		//PHA-644
+		WellType wellType = ProtocolService.getInstance().getWellTypeByCode(wellTypeCode).orElse(null);
 		return StatService.getInstance().calculate(stat, plate, f, wellType, norm);
 	}
 	

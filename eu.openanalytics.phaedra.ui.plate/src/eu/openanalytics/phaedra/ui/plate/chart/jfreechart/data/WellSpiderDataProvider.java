@@ -15,9 +15,11 @@ import eu.openanalytics.phaedra.calculation.PlateDataAccessor;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class WellSpiderDataProvider implements IDataProvider<Well> {
@@ -29,14 +31,14 @@ public class WellSpiderDataProvider implements IDataProvider<Well> {
 		this.well = well;
 
 		this.series = new ArrayList<String>();
-		series.add("LC");
+		series.add(WellType.LC); //PHA-644
 		if (well.getCompound() != null) {
 			series.add(well.getCompound().toString());
 		} else {
 			series.add(NumberUtils.getWellCoordinate(well.getRow(), well.getColumn())
 					+ " (" + well.getWellType() + ")");
 		}
-		series.add("HC");
+		series.add(WellType.HC); //PHA-644
 	}
 
 	@Override
@@ -100,7 +102,8 @@ public class WellSpiderDataProvider implements IDataProvider<Well> {
 			if (f.equals(activeFeature)) normalization = ProtocolUIService.getInstance().getCurrentNormalization();
 
 			if (seriesName.equals("LC") || seriesName.equals("HC")) {
-				values[i] = StatService.getInstance().calculate("mean", item.getPlate(), f, seriesName, normalization);
+				WellType wellType = ProtocolService.getInstance().getWellTypeByCode(seriesName).orElse(null);
+				values[i] = StatService.getInstance().calculate("mean", item.getPlate(), f, wellType, normalization);
 			} else {
 				values[i] = accessor.getNumericValue(item, f, normalization);
 			}

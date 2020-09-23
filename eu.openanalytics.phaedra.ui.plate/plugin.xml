@@ -551,28 +551,6 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.base.ui.util.showSecondaryView"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_spider.png"
-               id="eu.openanalytics.phaedra.ui.plate.showWellSpiderPlot"
-               label="Well Spider Plot"
-               style="push">
-            <parameter
-                  name="org.eclipse.ui.views.showView.viewId"
-                  value="eu.openanalytics.phaedra.ui.plate.chart.jfreechart.WellSpiderView">
-            </parameter>
-            <visibleWhen
-                  checkEnabled="false">
-               <or>
-                  <reference
-                        definitionId="activeSelection.Experiment">
-                  </reference>
-                  <reference
-                        definitionId="activeSelection.Plate">
-                  </reference>
-               </or>
-            </visibleWhen>
-         </command>
-         <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.ShowSVGChart"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/chart_curve.png"
                label="Well SVG Chart"

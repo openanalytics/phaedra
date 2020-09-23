@@ -13,8 +13,10 @@ import eu.openanalytics.phaedra.model.curve.CurveFitService;
 import eu.openanalytics.phaedra.model.curve.vo.Curve;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.validation.ValidationService.CompoundValidationStatus;
 import eu.openanalytics.phaedra.validation.ValidationService.PlateValidationStatus;
 
@@ -52,8 +54,11 @@ public class CurveUtils {
 			bounds[1] = StatService.getInstance().calculate("median", allHighValues);
 		} else {
 			Plate plate = curve.getCompounds().get(0).getPlate();
-			bounds[0] = StatService.getInstance().calculate("median", plate, f, lowType, n);
-			bounds[1] = StatService.getInstance().calculate("median", plate, f, highType, n);
+			//PHA-644
+			WellType wellTypeLC = ProtocolService.getInstance().getWellTypeByCode(lowType).orElse(null);
+			bounds[0] = StatService.getInstance().calculate("median", plate, f, wellTypeLC, n);
+			WellType wellTypeHC = ProtocolService.getInstance().getWellTypeByCode(highType).orElse(null);
+			bounds[1] = StatService.getInstance().calculate("median", plate, f, wellTypeHC, n);
 		}
 		
 		Arrays.sort(bounds);

@@ -51,7 +51,7 @@ public class ProtocolUtils {
 	/**
 	 * Map well types to their String representation.
 	 */
-	public static Function<WellType, String> WELLTYPE_CODES = t -> t.getCode();
+	public static Function<WellType, String> WELLTYPE_CODES = t -> ProtocolUtils.getCustomHCLCLabel(t.getCode()); // PHA-644
 
 	/**
 	 * Sort features by their name.
@@ -250,9 +250,9 @@ public class ProtocolUtils {
 			return new RGB(150,150,150);
 		} else if (wellType.equals(WellType.SAMPLE)) {
 			return new RGB(80,80,200);
-		} else if (wellType.equals(WellType.LC)) {
+		} else if (wellType.equals(ProtocolUtils.getCustomHCLCLabel(WellType.LC))) { //PHA-644
 			return new RGB(200,0,0);
-		} else if (wellType.equals(WellType.HC)) {
+		} else if (wellType.equals(ProtocolUtils.getCustomHCLCLabel(WellType.HC))) { //PHA-644
 			return new RGB(0,200,0);
 		}
 		return new RGB(150,150,0);

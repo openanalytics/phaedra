@@ -18,7 +18,7 @@ import eu.openanalytics.phaedra.ui.plate.chart.v2.data.WellDataProvider;
 public class WellTypeFilter extends AbstractWellFilter {
 
 	private final static List<String> ALL_TYPES = new ArrayList<String>() {
-		private static final long serialVersionUID = -879761699473939504L;
+		private static final long serialVersionUID = 3032882624898284813L;
 		{
 			addAll(CollectionUtils.transform(ProtocolService.getInstance().getWellTypes(), ProtocolUtils.WELLTYPE_CODES));
 		}
@@ -66,7 +66,8 @@ public class WellTypeFilter extends AbstractWellFilter {
 
 	@Override
 	protected String getKey(Well well) {
-		return well.getWellType();
+		//PHA-644
+		return ProtocolUtils.getCustomHCLCLabel(well.getWellType());
 	}
 
 }

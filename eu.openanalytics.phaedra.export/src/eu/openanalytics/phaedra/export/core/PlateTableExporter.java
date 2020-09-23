@@ -21,6 +21,7 @@ import eu.openanalytics.phaedra.export.core.writer.WriterFactory;
 import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
@@ -149,10 +150,14 @@ public class PlateTableExporter {
 					rowValues[col++] = statService.calculate("sb", plate, feature, null, null);
 				}
 				if (includeFeatureControlStats) {
-					rowValues[col++] = statService.calculate("mean", plate, feature, WellType.LC, null);
-					rowValues[col++] = statService.calculate("cv", plate, feature, WellType.LC, null);
-					rowValues[col++] = statService.calculate("mean", plate, feature, WellType.HC, null);
-					rowValues[col++] = statService.calculate("cv", plate, feature, WellType.HC, null);
+					// PHA-644
+					WellType wellTypeLC = ProtocolService.getInstance().getWellTypeByCode(WellType.LC).orElse(null);
+					rowValues[col++] = statService.calculate("mean", plate, feature, wellTypeLC, null);
+					rowValues[col++] = statService.calculate("cv", plate, feature, wellTypeLC, null);
+					// PHA-644
+					WellType wellTypeHC = ProtocolService.getInstance().getWellTypeByCode(WellType.HC).orElse(null);
+					rowValues[col++] = statService.calculate("mean", plate, feature, wellTypeHC, null);
+					rowValues[col++] = statService.calculate("cv", plate, feature, wellTypeHC, null);
 				}
 			}
 			featureStats.addRow(rowValues);

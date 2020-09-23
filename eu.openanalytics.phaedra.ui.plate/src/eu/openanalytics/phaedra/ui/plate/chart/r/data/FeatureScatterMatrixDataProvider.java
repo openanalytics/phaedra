@@ -9,7 +9,9 @@ import eu.openanalytics.phaedra.base.ui.charting.data.IDataProviderR;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
+import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
 public class FeatureScatterMatrixDataProvider implements IDataProviderR {
 
@@ -39,11 +41,13 @@ public class FeatureScatterMatrixDataProvider implements IDataProviderR {
 		for (Plate plate : plates) {
 			i = 1;
 			for (Feature feature : features) {
-				for (String type : PlateUtils.getWellTypes(plate)) {
-					double sol = StatService.getInstance().calculate("mean", plate, feature, type, feature.getNormalization());
+				for (String wellTypeCode : PlateUtils.getWellTypes(plate)) {
+					//PHA-644
+					WellType wellType = ProtocolService.getInstance().getWellTypeByCode(wellTypeCode).orElse(null);
+					double sol = StatService.getInstance().calculate("mean", plate, feature, wellType, feature.getNormalization());
 					if (Double.isNaN(sol)) sol = 0;
 					dataFrame.get("F" + i).add(sol);
-					dataFrame.get(WELLTYPE).add(type);
+					dataFrame.get(WELLTYPE).add(wellTypeCode);
 				}
 				i++;
 			}
