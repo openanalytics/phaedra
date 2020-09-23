@@ -22,6 +22,7 @@ import eu.openanalytics.phaedra.base.cache.CacheKey;
 import eu.openanalytics.phaedra.base.cache.CacheService;
 import eu.openanalytics.phaedra.base.cache.ICache;
 import eu.openanalytics.phaedra.base.db.jpa.BaseJPAService;
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.event.ModelEvent;
 import eu.openanalytics.phaedra.base.event.ModelEventService;
 import eu.openanalytics.phaedra.base.event.ModelEventType;
@@ -83,6 +84,8 @@ public class CurveFitService extends BaseJPAService {
 	private List<ICurveFitModelFactory> modelFactories;
 	private List<ICurveRenderer> curveRenderers;
 	
+	private boolean allowFitOnControlWells;
+	
 	private CurveFitService() {
 		// Hidden constructor
 		curveDAO = new CurveDAO();
@@ -104,6 +107,8 @@ public class CurveFitService extends BaseJPAService {
 		Arrays.sort(knownModelIds);
 		
 		curveRenderers = ExtensionUtils.createInstanceList(ICurveRenderer.EXT_PT_ID, ICurveRenderer.ATTR_CLASS, ICurveRenderer.class);
+		
+		allowFitOnControlWells = Boolean.valueOf(Screening.getEnvironment().getConfig().getValue("allow.curvefit.control.wells"));
 	}
 
 	public static CurveFitService getInstance() {
@@ -617,8 +622,10 @@ public class CurveFitService extends BaseJPAService {
 				WellStatus.REJECTED_PLATEPREP.getCode() };
 		if (CollectionUtils.find(invalidCodes, well.getStatus()) >= 0) return false;
 		
-		// Note: welltype is not checked here because in some rare cases,
-		// users may wish to fit curves on controls or empty wells.
+		if (ProtocolUtils.isControl(well.getWellType()) && !allowFitOnControlWells) {
+			return false;
+		}
+
 		return true;
 	}
 	
