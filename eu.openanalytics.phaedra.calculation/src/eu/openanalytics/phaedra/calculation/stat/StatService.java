@@ -99,19 +99,22 @@ public class StatService {
 		return doCalculate(stat, new ArgumentStatContext(values, args));
 	}
 
-//	/**
-//	 * Perform the given stat computation on the well data of the given plate.
-//	 * 
-//	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
-//	 * @param p The plate whose well data will be used.
-//	 * @param f The feature whose data will be used.
-//	 * @param wellType Only values from wells with this well type will be used. Use null to include all wells.
-//	 * @param norm The normalization to use. Use null to perform calculation on raw values instead.
-//	 * @return The computed value, possibly NaN.
-//	 */
-//	public double calculate(String stat, Plate p, Feature f, String wellType, String norm) {
-//		return calculate(new StatQuery(stat, p, f, wellType, norm));
-//	}
+	/**
+	 * Perform the given stat computation on the well data of the given plate.
+	 * 
+	 * NOTE: this method expects the real welltype codes, not codes that were translated
+	 * using {@link ProtocolUtils#getCustomHCLCLabel(String)}
+	 * 
+	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.
+	 * @param p The plate whose well data will be used.
+	 * @param f The feature whose data will be used.
+	 * @param wellTypeCode Only values from wells with this well type will be used. Use null to include all wells.
+	 * @param norm The normalization to use. Use null to perform calculation on raw values instead.
+	 * @return The computed value, possibly NaN.
+	 */
+	public double calculate(String stat, Plate p, Feature f, String wellTypeCode, String norm) {
+		return calculate(new StatQuery(stat, p, f, wellTypeCode, norm));
+	}
 	
 	/**
 	 * Part of PHA-644
