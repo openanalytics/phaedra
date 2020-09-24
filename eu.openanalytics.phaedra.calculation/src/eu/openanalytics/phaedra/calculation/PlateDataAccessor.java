@@ -309,7 +309,7 @@ public class PlateDataAccessor implements Serializable {
 	private void addDataToCache(Feature feature, List<FeatureValue> featureValues) {
 		if (feature == null) return;
 		if (featureValues == null || featureValues.isEmpty()) {
-			addDataToCache(feature, null);
+			addDataValuesToCache(feature, null);
 		} else {
 			int wellCount = PlateUtils.getWellCount(plate);
 			if (feature.isNumeric()) {
@@ -318,19 +318,19 @@ public class PlateDataAccessor implements Serializable {
 					int wellNr = PlateUtils.getWellNr(fv.getWell());
 					data[wellNr - 1] = fv.getRawNumericValue();
 				}
-				addDataToCache(feature, data);
+				addDataValuesToCache(feature, data);
 			} else {
 				String[] data = new String[wellCount];
 				for (FeatureValue fv: featureValues) {
 					int wellNr = PlateUtils.getWellNr(fv.getWell());
 					data[wellNr - 1] = fv.getRawStringValue();
 				}
-				addDataToCache(feature, data);
+				addDataValuesToCache(feature, data);
 			}
 		}
 	}
 	
-	private void addDataToCache(Feature feature, Object data) {
+	private void addDataValuesToCache(Feature feature, Object data) {
 		if (feature == null) return;
 		Object key = getCacheKey(feature);
 		Object dataToCache = data;
