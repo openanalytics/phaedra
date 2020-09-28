@@ -104,7 +104,7 @@ public class ImageProcessor {
 				String outputFile = outputPath + "/" + CaptureUtils.resolveVars(component.output, false, context,
 						Stream.of(new SimpleEntry<>("wellNr", wellId)).collect(Collectors.toMap(SimpleEntry::getKey, SimpleEntry::getValue)));
 				MTCallable<String> task = new MTCallable<>();
-				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile));
+				task.setDelegate(new MontageWellCallable(wellId, fieldCount, inputFileMap, outputFile, component.overlay));
 				threadPool.queue(task);
 			}
 			threadPool.run(mon.split(95));
@@ -136,12 +136,14 @@ public class ImageProcessor {
 		private int fieldCount;
 		private Map<String,String> inputFileMap;
 		private String outputFile;
+		private boolean isOverlay;
 		
-		public MontageWellCallable(String wellId, int fieldCount, Map<String,String> inputFileMap, String outputFile) {
+		public MontageWellCallable(String wellId, int fieldCount, Map<String,String> inputFileMap, String outputFile, boolean isOverlay) {
 			this.wellId = wellId;
 			this.fieldCount = fieldCount;
 			this.inputFileMap = inputFileMap;
 			this.outputFile = outputFile;
+			this.isOverlay = isOverlay;
 		}
 		
 		@Override
@@ -158,7 +160,9 @@ public class ImageProcessor {
 				String path = inputFileMap.get(key);
 				if (path == null) {
 					try {
-						path = PlaceHolderFactory.getInstance().getPlaceholder(imageDimensions[0], imageDimensions[1], imageDimensions[3], PlaceHolderFactory.MODE_OPAQUE);
+						path = PlaceHolderFactory.getInstance().getPlaceholder(
+								imageDimensions[0], imageDimensions[1], imageDimensions[3], 
+								isOverlay ? PlaceHolderFactory.MODE_OVERLAY : PlaceHolderFactory.MODE_OPAQUE);
 					} catch (IOException e) {
 						throw new DataCaptureException("Failed to generate placeholder image", e);
 					}

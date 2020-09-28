@@ -27,5 +27,6 @@ public class MontageConfig {
 		public String patternFieldGroup;
 		public String frame;
 		public String output;
+		public boolean overlay;
 	}
 }

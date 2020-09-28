@@ -79,6 +79,7 @@ public class MontageConfigParser {
 				component.patternFieldGroup = componentTag.getAttribute("pattern-field-group");
 				component.frame = componentTag.getAttribute("frame");
 				component.output = componentTag.getAttribute("output");
+				component.overlay = Boolean.valueOf(componentTag.getAttribute("overlay"));
 				components.add(component);
 			}
 			config.imageComponents = components.toArray(new ImageComponent[components.size()]);
