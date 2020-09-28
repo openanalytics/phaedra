@@ -220,14 +220,12 @@ public class PlateTableColumns {
 			configs.add(config);
 			
 			// PHA-644
-			String lcLabel = ProtocolUtils.getCustomHCLCLabel(WellType.LC);
-			String hcLabel = ProtocolUtils.getCustomHCLCLabel(WellType.HC);
-			String[] controlTypes = { lcLabel, hcLabel };
+			String[] controlTypes = { WellType.LC, WellType.HC };
 			for (String controlType: controlTypes) {
-				config = ColumnConfigFactory.create("%CV " + controlType, DataType.Real, 75);
+				config = ColumnConfigFactory.create("%CV " + ProtocolUtils.getCustomHCLCLabel(controlType), DataType.Real, 75);
 				config.setLabelProvider(new SummaryStatLabelProvider(summaryAccessor, "cv", controlType));
 				config.setSortComparator(createSummaryStatComparator(summaryAccessor, "cv", controlType));
-				config.setTooltip("%CV " + controlType);
+				config.setTooltip("%CV " + ProtocolUtils.getCustomHCLCLabel(controlType));
 				configs.add(config);
 			}
 		}
