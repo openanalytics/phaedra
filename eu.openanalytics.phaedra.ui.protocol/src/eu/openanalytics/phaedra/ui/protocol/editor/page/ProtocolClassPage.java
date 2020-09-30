@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.ui.protocol.editor.page;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -406,6 +407,7 @@ public class ProtocolClassPage extends FormPage {
 		if (features.isEmpty()) return;
 
 		String[] names = features.stream().map(ProtocolUtils.FEATURE_NAMES).toArray(size -> new String[size]);
+		Arrays.sort(names);
 		defaultFeatureCmbViewer.setInput(names);
 		defaultFeatureAutoComplete.setProposals(names);
 		

@@ -41,5 +41,9 @@ alter table phaedra.hca_subwellfeature_value_part_current
 	references phaedra.hca_subwellfeature(subwellfeature_id)
 	on delete cascade;
 	
+create index hca_subwellfeature_value_part_current_ix 
+	on phaedra.hca_subwellfeature_value_part_current (feature_id)
+	tablespace :tsNameIndex;
+	
 grant INSERT, UPDATE, DELETE on phaedra.hca_subwellfeature_value_part_current to :accountNameWrite;
 grant SELECT on phaedra.hca_subwellfeature_value_part_current to :accountNameRead;
