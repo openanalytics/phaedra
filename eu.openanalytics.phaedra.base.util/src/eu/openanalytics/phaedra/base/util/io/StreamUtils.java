@@ -14,7 +14,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
  */
 public class StreamUtils {
 
-	private final static int DEFAULT_BUFFER_SIZE = 1024*1024;
+//	private final static int DEFAULT_BUFFER_SIZE = 1024*1024;
+	private final static int DEFAULT_BUFFER_SIZE = 64000;
 	
 	/**
 	 * Copy the contents of an InputStream to an OutputStream without closing the streams.
