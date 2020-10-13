@@ -35,7 +35,7 @@ public class QueryBuilder {
 
 		sb.append("SELECT");
 		sb.append(" P.EXPERIMENT_ID, E.EXPERIMENT_NAME, P.PLATE_ID, P.BARCODE, P.SEQUENCE_IN_RUN, P.PLATE_INFO, P.VALIDATE_STATUS, P.APPROVE_STATUS,");
-		sb.append(" " + JDBCUtils.selectConcat("P.DESCRIPTION", "W.DESCRIPTION", ' ') + " REMARKS, W.WELL_ID, W.ROW_NR, W.COL_NR, W.WELLTYPE_CODE,");
+		sb.append(" " + JDBCUtils.selectConcat("P.DESCRIPTION", "W.DESCRIPTION", ' ') + " REMARKS, W.WELL_ID, CONCAT(CHR(64 + W.ROW_NR),W.COL_NR) AS WELL_NR, W.ROW_NR, W.COL_NR, W.WELLTYPE_CODE,");
 		if (settings.getCompoundNameSplit()) sb.append(" PC.COMPOUND_TY, PC.COMPOUND_NR,");
 		else sb.append(" PC.COMPOUND_TY || PC.COMPOUND_NR COMP_NAME,");
 		sb.append(" W.CONCENTRATION, W.IS_VALID");
