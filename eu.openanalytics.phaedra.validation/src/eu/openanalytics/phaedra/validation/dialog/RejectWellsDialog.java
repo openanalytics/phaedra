@@ -82,6 +82,7 @@ public class RejectWellsDialog extends BaseValidationDialog {
 			public String getText(Object element) { return ((WellStatus)element).getLabel(); };
 		});
 		statusComboViewer.setInput(statusCodes);
+		// PHA-862: PHA-CR041 default outlier detection type
 		statusComboViewer.setSelection(new StructuredSelection(WellStatus.getByCode(WellStatus.REJECTED_PHAEDRA.getCode())));
 		
 		statusSelected();
