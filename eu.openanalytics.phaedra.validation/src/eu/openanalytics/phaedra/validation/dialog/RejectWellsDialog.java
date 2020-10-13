@@ -1,5 +1,6 @@
 package eu.openanalytics.phaedra.validation.dialog;
 
+import java.nio.file.DirectoryStream.Filter;
 import java.util.Arrays;
 import java.util.List;
 
@@ -81,7 +82,7 @@ public class RejectWellsDialog extends BaseValidationDialog {
 			public String getText(Object element) { return ((WellStatus)element).getLabel(); };
 		});
 		statusComboViewer.setInput(statusCodes);
-		statusComboViewer.setSelection(new StructuredSelection(statusCodes[0]));
+		statusComboViewer.setSelection(new StructuredSelection(WellStatus.getByCode(WellStatus.REJECTED_PHAEDRA.getCode())));
 		
 		statusSelected();
 		super.initFields();
