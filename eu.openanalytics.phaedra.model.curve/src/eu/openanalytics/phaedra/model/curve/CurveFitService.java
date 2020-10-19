@@ -331,7 +331,8 @@ public class CurveFitService extends BaseJPAService {
 		List<Compound> compounds = CalculationService.getInstance().getMultiploCompounds(compound);
 		if (compounds.isEmpty()) throw new CurveFitException("No compound(s) to fit");
 		for (Compound c: compounds) {
-			if (PlateValidationStatus.INVALIDATED.matches(c.getPlate())) continue;
+			// PHA-861: Let approvers view also the invalidated data
+//			if (PlateValidationStatus.INVALIDATED.matches(c.getPlate())) continue;
 			if (!PlateCalcStatus.CALCULATION_OK.matches(c.getPlate())) throw new CurveFitException(c.getPlate() + ": plate calculation is not OK");
 			if (PlateApprovalStatus.APPROVED.matches(c.getPlate())) throw new CurveFitException(c.getPlate() + ": plate is approved");
 		}
@@ -573,7 +574,7 @@ public class CurveFitService extends BaseJPAService {
 	
 	private CurveFitInput createInput(List<Compound> compounds, Feature feature, CurveGrouping grouping) {
 		Stream<Well> wellStream = streamableList(compounds).stream()
-				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
+//				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
 				.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
 				.flatMap(c -> streamableList(c.getWells()).stream())
 				.filter(w -> isValidDataPoint(w));
