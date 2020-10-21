@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
@@ -331,8 +332,7 @@ public class CurveFitService extends BaseJPAService {
 		List<Compound> compounds = CalculationService.getInstance().getMultiploCompounds(compound);
 		if (compounds.isEmpty()) throw new CurveFitException("No compound(s) to fit");
 		for (Compound c: compounds) {
-			// PHA-861: Let approvers view also the invalidated data
-//			if (PlateValidationStatus.INVALIDATED.matches(c.getPlate())) continue;
+			if (PlateValidationStatus.INVALIDATED.matches(c.getPlate())) continue;
 			if (!PlateCalcStatus.CALCULATION_OK.matches(c.getPlate())) throw new CurveFitException(c.getPlate() + ": plate calculation is not OK");
 			if (PlateApprovalStatus.APPROVED.matches(c.getPlate())) throw new CurveFitException(c.getPlate() + ": plate is approved");
 		}
@@ -572,10 +572,15 @@ public class CurveFitService extends BaseJPAService {
 		if (curve != null) curveIdCache.put(curve.getId(), key);
 	}
 	
+	// PHA-861: Let approvers view also the invalidated data
+	private static String ignoreInvalidatedPlateCheck = Screening.getEnvironment().getConfig().getValue("ignore.invalidated.plate.check");
+	private static boolean isIgnoreInvalidatedPlateCheck = StringUtils.isNotBlank(ignoreInvalidatedPlateCheck) ? Boolean.parseBoolean(ignoreInvalidatedPlateCheck) : false;
+	
 	private CurveFitInput createInput(List<Compound> compounds, Feature feature, CurveGrouping grouping) {
 		Stream<Well> wellStream = streamableList(compounds).stream()
-//				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
-				.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
+				// PHA-861: Let approvers view also the invalidated data
+				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
+				.filter(c -> isIgnoreInvalidatedPlateCheck || !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
 				.flatMap(c -> streamableList(c.getWells()).stream())
 				.filter(w -> isValidDataPoint(w));
 		
