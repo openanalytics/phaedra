@@ -58,6 +58,8 @@ public class EmailNotifier implements IDataCaptureLogListener {
 			experimentName = exp.getName();
 		}
 		
+		if (protocol == null) return;
+		
 		List<String> readings = DataCaptureService.streamableList(DataCaptureService.getInstance().getSavedEvents(item.task.getId()))
 			.stream()
 			.map(e -> e.getReading())
