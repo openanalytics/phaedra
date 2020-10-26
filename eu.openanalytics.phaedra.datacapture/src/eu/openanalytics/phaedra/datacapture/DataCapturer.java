@@ -180,6 +180,10 @@ public class DataCapturer {
 			
 			String experimentName = (String) task.getParameters().get(DataCaptureParameter.TargetExperimentName.name());
 			Protocol protocol = (Protocol) task.getParameters().get(DataCaptureParameter.TargetProtocol.name());
+			// This makes it possible to set a target protocol per reading
+			if (protocol == null)
+				protocol = (Protocol) ctx.getParameters(reading).getParameter(DataCaptureParameter.TargetProtocol.name());
+			
 			if (protocol == null || experimentName == null) throw new DataCaptureException("Cannot create new experiment: target protocol and/or experiment name not set");
 			
 			GenericEntityService.getInstance().refreshEntity(protocol);
