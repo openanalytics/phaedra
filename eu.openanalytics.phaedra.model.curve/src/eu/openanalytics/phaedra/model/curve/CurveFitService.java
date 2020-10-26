@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
@@ -571,10 +572,15 @@ public class CurveFitService extends BaseJPAService {
 		if (curve != null) curveIdCache.put(curve.getId(), key);
 	}
 	
+	// PHA-861: Let approvers view also the invalidated data
+	private static String ignoreInvalidatedPlateCheck = Screening.getEnvironment().getConfig().getValue("ignore.invalidated.plate.check");
+	private static boolean isIgnoreInvalidatedPlateCheck = StringUtils.isNotBlank(ignoreInvalidatedPlateCheck) ? Boolean.parseBoolean(ignoreInvalidatedPlateCheck) : false;
+	
 	private CurveFitInput createInput(List<Compound> compounds, Feature feature, CurveGrouping grouping) {
 		Stream<Well> wellStream = streamableList(compounds).stream()
+				// PHA-861: Let approvers view also the invalidated data
 				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
-				.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
+				.filter(c -> isIgnoreInvalidatedPlateCheck || !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
 				.flatMap(c -> streamableList(c.getWells()).stream())
 				.filter(w -> isValidDataPoint(w));
 		
