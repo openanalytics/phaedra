@@ -225,6 +225,11 @@
              id="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
              name="Outlier Detection">
        </command>
+       <command
+             defaultHandler="eu.openanalytics.phaedra.ui.plate.calculation.ResetOutlierDetectionHandler"
+             id="eu.openanalytics.phaedra.ui.plate.calculation.ResetOutlierDetectionHandler"
+             name="Reset Outlier Detection">
+       </command>
    </extension>
    
    <extension
@@ -320,6 +325,22 @@
                style="push">
          </command>
       </menuContribution>
+      
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:eu.openanalytics.phaedra.ui.plate.outlierMenu">
+	        <command
+	        	 commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
+	        	 label="Detect outlier(s)"
+	             style="push">
+	       	</command>
+	       	<command
+	             commandId="eu.openanalytics.phaedra.ui.plate.calculation.ResetOutlierDetectionHandler"
+	             label="Reset outlier(s)"
+	             style="push">
+	       	</command>
+      </menuContribution>
+      
       <menuContribution
             allPopups="false"
             locationURI="popup:eu.openanalytics.phaedra.ui.plate.chartMenu">
@@ -659,6 +680,7 @@
             </visibleWhen>
          </command>
       </menuContribution>
+      
       <menuContribution
             allPopups="false"
             locationURI="popup:eu.openanalytics.phaedra.ui.plate.browser.ExperimentBrowser">
@@ -691,17 +713,13 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Experiment">
-               </reference>
-            </visibleWhen>
-         </command>
+         
+         <menu
+         	icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
+         	id="eu.openanalytics.phaedra.ui.plate.outlierMenu"
+         	label="Outlier(s)">
+         </menu>
+         
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
@@ -905,6 +923,7 @@
                id="eu.openanalytics.phaedra.ui.plate.approvalMenu"
                label="Approval">
          </menu>
+         
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.cmd.RecalculatePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate.png"
@@ -916,17 +935,13 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Plate">
-               </reference>
-            </visibleWhen>
-         </command>
+         
+		<menu 
+			icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
+         	id="eu.openanalytics.phaedra.ui.plate.outlierMenu"
+         	label="Outlier(s)">
+		</menu>
+         
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
