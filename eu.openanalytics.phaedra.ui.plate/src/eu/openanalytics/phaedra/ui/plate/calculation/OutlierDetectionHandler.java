@@ -1,6 +1,7 @@
 package eu.openanalytics.phaedra.ui.plate.calculation;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -64,13 +65,24 @@ public class OutlierDetectionHandler extends AbstractHandler {
 				}).collect(Collectors.toList());
 		if (outlierWells.isEmpty()) return false;
 		
+		Map<Object, Long> outliersPerPlate = outlierWells
+				.stream()
+				.collect(Collectors.groupingBy(w -> w.getPlate().getBarcode(), Collectors.counting()));
+		
 		OutlierDetectionDialog dialog = new OutlierDetectionDialog(Display.getCurrent().getActiveShell(), plates, outlierWells) {
 			@Override
 			protected void okPressed() {
 				try {
 					String remark = "Rejected by outlier detection rules";
-					String message = String.format("Are you sure you want to auto-reject %d wells  with the reason '%s'?", outlierWells.size(), remark);
-					boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reject Detected Outliers", message);
+//					String message = String.format("Are you sure you want to auto-reject %d wells with the reason '%s'?", outlierWells.size(), remark);
+					StringBuilder message = new StringBuilder();
+					message.append(String.format("Are you sure you want to auto-reject %d wells with the reason '%s'?", outlierWells.size(), remark));
+					message.append("//n").append("//n");
+					for (Object plateBC : outliersPerPlate.keySet()) {
+						message.append(String.format("- '%s' --> '%d'", plateBC, outliersPerPlate.get(plateBC))).append("//n");
+					}
+					
+					boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reject Detected Outliers", message.toString());
 					if (confirmed) ValidationJobHelper.doInJob(Action.REJECT_OUTLIER_WELL, remark, outlierWells);
 					
 					super.okPressed();
