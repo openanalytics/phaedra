@@ -68,7 +68,7 @@ public class ResetOutlierDetectionHandler extends AbstractHandler {
 		StringBuilder message = new StringBuilder();
 		message.append(String.format("Are you sure you want to reset %d auto-rejected well(s) with the reason '%s'? %s", outlierWells.size(), remark, "\n"));
 		
-		boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reset Rejected Detected Outliers", message.toString());
+		boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reset Auto-Rejected Outliers", message.toString());
 		if (confirmed) ValidationJobHelper.doInJob(Action.RESET_WELL, remark, outlierWells);
 		return confirmed;
 	}
