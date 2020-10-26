@@ -73,13 +73,13 @@ public class OutlierDetectionHandler extends AbstractHandler {
 			@Override
 			protected void okPressed() {
 				try {
+					//PHA-653: UR-016: HTS Outlier Detection improvements
 					String remark = "Rejected by outlier detection rules";
-//					String message = String.format("Are you sure you want to auto-reject %d wells with the reason '%s'?", outlierWells.size(), remark);
 					StringBuilder message = new StringBuilder();
-					message.append(String.format("Are you sure you want to auto-reject %d wells with the reason '%s'?", outlierWells.size(), remark));
-					message.append("//n").append("//n");
+					message.append(String.format("Are you sure you want to auto-reject %d wells with the reason %s? %s", outlierWells.size(), remark, "\n"));
+					message.append("\n");
 					for (Object plateBC : outliersPerPlate.keySet()) {
-						message.append(String.format("- '%s' --> '%d'", plateBC, outliersPerPlate.get(plateBC))).append("//n");
+						message.append(String.format("For plate %s auto-reject %d wells %s", plateBC, outliersPerPlate.get(plateBC), "\n"));
 					}
 					
 					boolean confirmed = MessageDialog.openConfirm(Display.getDefault().getActiveShell(), "Reject Detected Outliers", message.toString());
