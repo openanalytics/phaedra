@@ -80,6 +80,9 @@ public class ScannerService extends BaseJPAService {
 		IScannerType type = ScannerTypeRegistry.getScannerType(scanner.getType());
 		if (type == null) throw new ScanException("Unknown scanner type: " + scanner.getType());
 		
+		// Scanner may be a stale copy, refresh to get the latest config.
+		refresh(scanner);
+		
 		if (monitor == null) monitor = new NullProgressMonitor();
 		type.run(scanner, monitor);
 	}
