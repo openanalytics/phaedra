@@ -23,6 +23,7 @@ import org.eclipse.nebula.widgets.nattable.sort.SortConfigAttributes;
 import org.eclipse.nebula.widgets.nattable.style.DisplayMode;
 import org.eclipse.swt.graphics.Point;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
 import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.columnChooser.IColumnMatcher;
@@ -60,6 +61,8 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 	public static final int IMAGE_COLUMN_INDEX = 0;
 
 	private static final String CONCENTRATION = "Concentration";
+	// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
+	private static final String CONCENTRATION_UNIT = "Concentration Unit";
 	private static final String COMPOUND_TYPE = "Compound Type";
 	private static final String COMPOUND_NR = "Compound";
 	private static final String DESCRIPTION = "Description";
@@ -72,9 +75,9 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 	private static final String IMAGE = "Image";
 
 	private static final String[] COLUMNS = new String[] { IMAGE, PLATE, WELL_NR, ROW, COLUMN, WELL_TYPE, WELL_STATUS
-		, DESCRIPTION, COMPOUND_TYPE, COMPOUND_NR, CONCENTRATION };
+		, DESCRIPTION, COMPOUND_TYPE, COMPOUND_NR, CONCENTRATION, CONCENTRATION_UNIT };
 	private static final String[] COLUMNS_TOOLTIPS = new String[] { IMAGE, PLATE, WELL_NR, ROW, "Column", WELL_TYPE, "Well Validation Status"
-		, DESCRIPTION, COMPOUND_TYPE, COMPOUND_NR, CONCENTRATION };
+		, DESCRIPTION, COMPOUND_TYPE, COMPOUND_NR, CONCENTRATION, CONCENTRATION_UNIT };
 	
 	
 	private final Supplier<? extends DataUnitConfig> dataUnitSupplier;
@@ -224,6 +227,9 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 				return (c == null) ? "" : c.getNumber();
 			case CONCENTRATION:
 				return WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get());
+			// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
+			case CONCENTRATION_UNIT:
+				return DataTypePrefs.getDefaultConcentrationUnit();
 			case PLATE:
 				return well.getPlate().getBarcode();
 			default:

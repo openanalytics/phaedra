@@ -39,6 +39,7 @@ import chemaxon.formats.MolFormatException;
 import chemaxon.formats.MolImporter;
 import chemaxon.marvin.util.DispOptConstants;
 import chemaxon.struc.Molecule;
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
 import eu.openanalytics.phaedra.base.datatype.description.CensoredValueDescription;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.datatype.util.DataFormatSupport;
@@ -104,7 +105,11 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 			return gridCompound.getWells().size();
 		}
 	}
-
+	
+	// PHA-651: 
+	static String getConcentrationUnit(CompoundWithGrouping gridCompound) {
+		return DataTypePrefs.getDefaultConcentrationUnit().toString();
+	}
 
 	private static final String CURVE_HEIGHT = "curveHeight";
 	private static final String CURVE_WIDTH = "curveWidth";
@@ -145,6 +150,8 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, c -> c.getSaltform()));
 		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, c -> c.getGrouping()));
 		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, CompoundContentProvider::getSampleCount));
+		// PHA-651: 
+		columnSpecList.add(new ColumnSpec("Concentration Unit",  "Concentration Unit",  150,  null, CompoundContentProvider::getConcentrationUnit));
 		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, c -> {
 			if (smilesImages.containsKey(c)) return smilesImages.get(c);
 			ImageData img = makeSmilesImage(c);
