@@ -25,6 +25,7 @@ import org.eclipse.swt.graphics.Point;
 
 import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
 import eu.openanalytics.phaedra.base.datatype.description.DataUnitConfig;
+import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
 import eu.openanalytics.phaedra.base.ui.nattable.NatTableUtils;
 import eu.openanalytics.phaedra.base.ui.nattable.columnChooser.IColumnMatcher;
 import eu.openanalytics.phaedra.base.ui.nattable.misc.AsyncColumnAccessor;
@@ -227,8 +228,8 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 				return (c == null) ? "" : c.getNumber();
 			case CONCENTRATION:
 				// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
-				double temp = NumberUtils.roundUp(WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get()), DataTypePrefs.getDefaultConcentrationFormatDigits());
-//				return WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get());
+				DataFormatter dataFormatter = DataTypePrefs.getDefaultDataFormatter();
+				String temp = dataFormatter.format(well.getCompoundConcentration(), WellProperty.Concentration.getDataDescription());
 				return temp;
 			// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
 			case CONCENTRATION_UNIT:
