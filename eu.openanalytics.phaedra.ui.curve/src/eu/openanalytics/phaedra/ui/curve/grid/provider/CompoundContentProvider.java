@@ -106,7 +106,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		}
 	}
 	
-	// PHA-651: 
+	// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View 
 	static String getConcentrationUnit(CompoundWithGrouping gridCompound) {
 		return DataTypePrefs.getDefaultConcentrationUnit().toString();
 	}
@@ -150,7 +150,7 @@ public class CompoundContentProvider extends RichColumnAccessor<CompoundWithGrou
 		columnSpecList.add(new ColumnSpec("Saltform", null, 90, null, c -> c.getSaltform()));
 		columnSpecList.add(new ColumnSpec("Grouping", null, 70, null, c -> c.getGrouping()));
 		columnSpecList.add(new ColumnSpec("Samples", null, 90, null, CompoundContentProvider::getSampleCount));
-		// PHA-651: 
+		// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View 
 		columnSpecList.add(new ColumnSpec("Concentration Unit",  "Concentration Unit",  150,  null, CompoundContentProvider::getConcentrationUnit));
 		columnSpecList.add(new ColumnSpec("Smiles", null, -1, null, c -> {
 			if (smilesImages.containsKey(c)) return smilesImages.get(c);
