@@ -28,7 +28,7 @@ public class CurveTextProvider {
 			new CurveTextField("Fit Date", c -> String.valueOf(c.getFitDate())),
 			new CurveTextField("Fit Version", c -> c.getFitVersion()),
 			//PHA-651: 
-			new CurveTextField("Concentration Unit", c -> String.valueOf(DataTypePrefs.getDefaultConcentrationUnit())),
+			new CurveTextField("Concentration Unit", c -> DataTypePrefs.getDefaultConcentrationUnit().getLabel(true)),
 			new CurveTextField("Fit Error", c -> String.valueOf(c.getErrorCode()))
 	);
 	
