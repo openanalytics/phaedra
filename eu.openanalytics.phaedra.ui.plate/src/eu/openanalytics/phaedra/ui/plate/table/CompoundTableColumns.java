@@ -119,13 +119,13 @@ public class CompoundTableColumns {
 		configs.add(config);
 		 
 		//PHA-651:
-		config = ColumnConfigFactory.create("Concentration Unit", new ColumnConfigFactory.ISimpleTextLabelProvider() {
-			@Override
-			public String getText(Object object) {
-				return DataTypePrefs.getDefaultConcentrationUnit().toString();
-			}
-		}, DataType.String, 120);
-		configs.add(config);
+//		config = ColumnConfigFactory.create("Concentration Unit", new ColumnConfigFactory.ISimpleTextLabelProvider() {
+//			@Override
+//			public String getText(Object object) {
+//				return DataTypePrefs.getDefaultConcentrationUnit().toString();
+//			}
+//		}, DataType.String, 120);
+//		configs.add(config);
 
 
 		return configs.toArray(new ColumnConfiguration[configs.size()]);

@@ -226,7 +226,10 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 				c = well.getCompound();
 				return (c == null) ? "" : c.getNumber();
 			case CONCENTRATION:
-				return WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get());
+				// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
+				double temp = NumberUtils.roundUp(WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get()), DataTypePrefs.getDefaultConcentrationFormatDigits());
+//				return WellProperty.Concentration.getRealValue(well, dataUnitSupplier.get());
+				return temp;
 			// PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
 			case CONCENTRATION_UNIT:
 				return DataTypePrefs.getDefaultConcentrationUnit();

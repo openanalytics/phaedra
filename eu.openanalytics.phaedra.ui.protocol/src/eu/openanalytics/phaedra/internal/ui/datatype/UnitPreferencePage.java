@@ -14,6 +14,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -29,7 +30,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 	
 	private ComboViewer concentrationUnitViewer;
 	private ComboViewer curveConcentrationUnitViewer;
-	
+	private Text concentrationUnitNumberDigits;
 	
 	public UnitPreferencePage() {
 		this.concentrationUnit = new WritableValue<>();
@@ -66,7 +67,8 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final Composite composite = new Composite(parent, SWT.NONE);
 		GridLayoutFactory.fillDefaults().numColumns(2).applyTo(composite);
 		
-		{	final Label label = new Label(composite, SWT.NONE);
+		{	
+			final Label label = new Label(composite, SWT.NONE);
 			label.setText("Concentration unit of well compounds:");
 			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
 			
@@ -84,7 +86,8 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 					.applyTo(viewer.getControl());
 			this.concentrationUnitViewer = viewer;
 		}
-		{	final Label label = new Label(composite, SWT.NONE);
+		{	
+			final Label label = new Label(composite, SWT.NONE);
 			label.setText("Concentration unit of curve properties:");
 			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
 			
@@ -101,6 +104,17 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 			GridDataFactory.fillDefaults().align(SWT.LEFT, SWT.CENTER)
 					.applyTo(viewer.getControl());
 			this.curveConcentrationUnitViewer = viewer;
+		}
+		{	
+			final Label label = new Label(composite, SWT.NONE);
+			label.setText("Concentration unit number of digis:");
+			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
+			
+			final Text inputText = new Text(composite, SWT.SINGLE | SWT.BORDER);
+			inputText.setText(String.valueOf(DataTypePrefs.getDefaultConcentrationFormatDigits()));
+			GridDataFactory.fillDefaults().grab(true, false).applyTo(inputText);
+			
+			this.concentrationUnitNumberDigits = inputText;
 		}
 		
 		return composite;
@@ -119,6 +133,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		this.concentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getString(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT)));
 		this.curveConcentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getString(DataTypePrefs.CURVE_CONCENTRATION_UNIT)));
+		this.concentrationUnitNumberDigits.setText(String.valueOf(preferenceStore.getInt((DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS))));
 	}
 	
 	
@@ -127,6 +142,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		this.concentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getDefaultString(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT)));
 		this.curveConcentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getDefaultString(DataTypePrefs.CURVE_CONCENTRATION_UNIT)));
+		this.concentrationUnitNumberDigits.setText(String.valueOf(preferenceStore.getInt((DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS))));
 		
 		super.performDefaults();
 	}
@@ -136,6 +152,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		preferenceStore.setValue(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT, this.concentrationUnit.getValue().name());
 		preferenceStore.setValue(DataTypePrefs.CURVE_CONCENTRATION_UNIT, this.curveConcentrationUnit.getValue().name());
+		preferenceStore.setValue(DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS, this.concentrationUnitNumberDigits.getText());
 		return true;
 	}
 	
