@@ -69,9 +69,9 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			
 			new Definition(new RealValueDescription("Slope Lower CI", Curve.class)),
 			new Definition(new RealValueDescription("Slope Upper CI", Curve.class)),
-			
-			new Definition(new RealValueDescription("eMin", Curve.class)),
-			new Definition(new ConcentrationValueDescription("eMin Conc", Curve.class, LogMolar)),
+
+			new Definition(new RealValueDescription("eMin", Curve.class), null, true, null, null),
+			new Definition(new ConcentrationValueDescription("eMin Conc", Curve.class, LogMolar), null, true, null, null),
 			new Definition(new RealValueDescription("eMax", Curve.class), null, true, null, null),
 			new Definition(new ConcentrationValueDescription("eMax Conc", Curve.class, LogMolar), null, true, null, null),
 			
