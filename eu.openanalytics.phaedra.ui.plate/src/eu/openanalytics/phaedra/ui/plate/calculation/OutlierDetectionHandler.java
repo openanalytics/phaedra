@@ -42,7 +42,7 @@ public class OutlierDetectionHandler extends AbstractHandler {
 				.flatMap(e -> PlateService.getInstance().getPlates(e).stream())
 				.collect(Collectors.toList());
 		if (!plates.isEmpty()) execute(plates);
-		return null;
+		return selection;
 	}
 	
 	public static boolean execute(List<Plate> plates) {

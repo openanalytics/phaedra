@@ -935,12 +935,12 @@
                </reference>
             </visibleWhen>
          </command>
-         
-		<menu 
-			icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
+      
+         <menu 
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
          	id="eu.openanalytics.phaedra.ui.plate.outlierMenu"
          	label="Outlier(s)">
-		</menu>
+	     </menu>
          
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
@@ -1061,17 +1061,13 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Plate">
-               </reference>
-            </visibleWhen>
-         </command>
+
+         <menu 
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
+         	id="eu.openanalytics.phaedra.ui.plate.outlierMenu"
+         	label="Outlier(s)">
+	     </menu>
+
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
@@ -1226,17 +1222,13 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Plate">
-               </reference>
-            </visibleWhen>
-         </command>
+
+         <menu 
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
+         	id="eu.openanalytics.phaedra.ui.plate.outlierMenu"
+         	label="Outlier(s)">
+	     </menu>
+         
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
@@ -1351,17 +1343,13 @@
                </reference>
             </visibleWhen>
          </command>
-         <command
-               commandId="eu.openanalytics.phaedra.ui.plate.calculation.OutlierDetectionHandler"
-               icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
-               style="push">
-            <visibleWhen
-                  checkEnabled="false">
-               <reference
-                     definitionId="activeSelection.Well">
-               </reference>
-            </visibleWhen>
-         </command>
+
+         <menu 
+            icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/outlier_detection.png"
+         	id="eu.openanalytics.phaedra.ui.plate.outlierMenu"
+         	label="Outlier(s)">
+	     </menu>
+         
          <command
                commandId="eu.openanalytics.phaedra.ui.plate.calculation.RunHitCallingHandler"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/arrow_in.png"
