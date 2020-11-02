@@ -54,11 +54,10 @@ public class CurveUtils {
 			bounds[1] = StatService.getInstance().calculate("median", allHighValues);
 		} else {
 			Plate plate = curve.getCompounds().get(0).getPlate();
-			//PHA-644
-			WellType wellTypeLC = ProtocolService.getInstance().getWellTypeByCode(lowType).orElse(null);
-			bounds[0] = StatService.getInstance().calculate("median", plate, f, wellTypeLC, n);
-			WellType wellTypeHC = ProtocolService.getInstance().getWellTypeByCode(highType).orElse(null);
-			bounds[1] = StatService.getInstance().calculate("median", plate, f, wellTypeHC, n);
+			WellType lowWellType = ProtocolService.getInstance().getWellTypeByCode(lowType).orElse(null);
+			bounds[0] = StatService.getInstance().calculate("median", plate, f, lowWellType, n);
+			WellType highWellType = ProtocolService.getInstance().getWellTypeByCode(highType).orElse(null);
+			bounds[1] = StatService.getInstance().calculate("median", plate, f, highWellType, n);
 		}
 		
 		Arrays.sort(bounds);

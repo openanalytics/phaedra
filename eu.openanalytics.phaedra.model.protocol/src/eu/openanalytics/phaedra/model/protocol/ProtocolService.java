@@ -49,7 +49,13 @@ import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 public class ProtocolService extends BaseJPAService {
 
 	private static ProtocolService instance = new ProtocolService();
+
+	private String lcLabel = Screening.getEnvironment().getConfig().getValue("low.control.label");
+	private String hcLabel = Screening.getEnvironment().getConfig().getValue("high.control.label");
 	
+	private String lcDefaultCode = Screening.getEnvironment().getConfig().getValue("low.control.default.code");
+	private String hcDefaultCode = Screening.getEnvironment().getConfig().getValue("high.control.default.code");
+
 	private FeatureGroupManager featureGroupManager;
 	
 	private ProtocolService() {
@@ -65,7 +71,27 @@ public class ProtocolService extends BaseJPAService {
 	public static ProtocolService getInstance() {
 		return instance;
 	}
-
+	
+	public String getLowTypeName() {
+		if (StringUtils.isBlank(lcLabel)) return "Low Control";
+		return lcLabel;
+	}
+	
+	public String getHighTypeName() {
+		if (StringUtils.isBlank(hcLabel)) return "High Control";
+		return hcLabel;
+	}
+	
+	public String getLowTypeDefaultCode() {
+		if (StringUtils.isBlank(lcDefaultCode)) return "LC";
+		return lcDefaultCode;
+	}
+	
+	public String getHighTypeDefaultCode() {
+		if (StringUtils.isBlank(hcDefaultCode)) return "HC";
+		return hcDefaultCode;
+	}
+	
 	/**
 	 * Get a list of all configured well types.
 	 * 
@@ -83,9 +109,10 @@ public class ProtocolService extends BaseJPAService {
 	}
 	
 	/**
-	 * Part of issue PHA-644: Get the a WellType with the existing code
-	 * @param code
-	 * @return
+	 * Find the WellType with the given code
+	 * 
+	 * @param code The welltype code to search for
+	 * @return An Optional containing either the matching WellType, or null.
 	 */
 	public Optional<WellType> getWellTypeByCode(String code) {
 		return getWellTypes().stream()
@@ -226,8 +253,8 @@ public class ProtocolService extends BaseJPAService {
 		pClass.getImageSettings().setPixelSizeZ(1.0f);
 		pClass.getImageSettings().setImageChannels(new ArrayList<ImageChannel>());
 		pClass.setName("New Protocol Class");
-		pClass.setLowWellTypeCode(WellType.LC);
-		pClass.setHighWellTypeCode(WellType.HC);
+		pClass.setLowWellTypeCode(getLowTypeDefaultCode());
+		pClass.setHighWellTypeCode(getHighTypeDefaultCode());
 		return pClass;
 	}
 

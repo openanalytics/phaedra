@@ -47,7 +47,6 @@ import eu.openanalytics.phaedra.model.plate.util.WellProperty;
 import eu.openanalytics.phaedra.model.plate.vo.Compound;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.IFeature;
 import eu.openanalytics.phaedra.ui.plate.Activator;
@@ -211,7 +210,7 @@ public class WellDataCalculator implements ILinkedColumnAccessor<Well>, IRichCol
 			case COLUMN:
 				return well.getColumn();
 			case WELL_TYPE:
-				return ProtocolUtils.getCustomHCLCLabel(well.getWellType()); // PHA-644
+				return well.getWellType();
 			case WELL_STATUS:
 				return well.getStatus();
 			case DESCRIPTION:

@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
@@ -19,15 +17,11 @@ import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class ExperimentTrendStatisticDataProvider extends IDataProviderWPrintSupport<Plate> {
-	//PHA-644
-	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
-			.collect(Collectors.toMap(wellType -> ProtocolUtils.getCustomHCLCLabel(wellType.getCode()), wellType -> wellType));
 
 	private List<Plate> plates;
 	private String selectedStatistic;
@@ -67,9 +61,7 @@ public class ExperimentTrendStatisticDataProvider extends IDataProviderWPrintSup
 			List<String> wellTypes = PlateUtils.getWellTypes(plates.get(0));
 			Collections.sort(wellTypes);
 			for (String type : wellTypes) {
-				// PHA-644
-				String wellType = ProtocolUtils.getCustomHCLCLabel(type);
-				statistics.add("%CV for " + wellType);
+				statistics.add("%CV for " + type);
 			}
 		}
 
@@ -117,7 +109,7 @@ public class ExperimentTrendStatisticDataProvider extends IDataProviderWPrintSup
 			stat = StatService.getInstance().calculate("sb", item, feature, null, null);
 			break;
 		case "%CV":
-			WellType wellType = WELL_TYPE_CODES.get(wellTypeCode);
+			WellType wellType = ProtocolService.getInstance().getWellTypeByCode(wellTypeCode).orElse(null);
 			stat = StatService.getInstance().calculate("cv", item, feature, wellType, null);
 			break;
 		default:

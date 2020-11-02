@@ -31,14 +31,14 @@ public class WellSpiderDataProvider implements IDataProvider<Well> {
 		this.well = well;
 
 		this.series = new ArrayList<String>();
-		series.add(WellType.LC); //PHA-644
+		series.add(ProtocolService.getInstance().getLowTypeDefaultCode());
 		if (well.getCompound() != null) {
 			series.add(well.getCompound().toString());
 		} else {
 			series.add(NumberUtils.getWellCoordinate(well.getRow(), well.getColumn())
 					+ " (" + well.getWellType() + ")");
 		}
-		series.add(WellType.HC); //PHA-644
+		series.add(ProtocolService.getInstance().getHighTypeDefaultCode());
 	}
 
 	@Override
@@ -101,7 +101,7 @@ public class WellSpiderDataProvider implements IDataProvider<Well> {
 			Feature activeFeature = ProtocolUIService.getInstance().getCurrentFeature();
 			if (f.equals(activeFeature)) normalization = ProtocolUIService.getInstance().getCurrentNormalization();
 
-			if (seriesName.equals("LC") || seriesName.equals("HC")) {
+			if (ProtocolUtils.isControl(seriesName)) {
 				WellType wellType = ProtocolService.getInstance().getWellTypeByCode(seriesName).orElse(null);
 				values[i] = StatService.getInstance().calculate("mean", item.getPlate(), f, wellType, normalization);
 			} else {

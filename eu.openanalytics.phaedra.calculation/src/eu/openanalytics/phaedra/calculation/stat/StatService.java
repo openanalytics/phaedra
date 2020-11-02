@@ -114,7 +114,6 @@ public class StatService {
 //	}
 	
 	/**
-	 * Part of PHA-644
 	 * Perform the given stat computation on the well data of the given plate.
 	 * 
 	 * @param stat The computation to perform. See {@link StatService#getAvailableStats()}.

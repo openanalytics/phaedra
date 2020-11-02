@@ -54,8 +54,8 @@ public class StatisticsFactory {
 			
 			int index = 3;
 			for (String controlType : controlTypes) {
-				//PHA-644
 				WellType wellType = ProtocolService.getInstance().getWellTypeByCode(controlType).orElse(null);
+				
 				double count = StatService.getInstance().calculate("count", plate, feature, wellType, null);
 				double mean = StatService.getInstance().calculate("mean", plate, feature, wellType, null);
 				double stdev = StatService.getInstance().calculate("stdev", plate, feature, wellType, null);

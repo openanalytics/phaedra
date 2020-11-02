@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.swt.graphics.RGB;
 import org.jfree.chart.axis.NumberAxis;
@@ -26,9 +25,6 @@ import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
 public class PlateBoxDataProvider implements IDataProvider<Plate> {
-	// PHA-644
-	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
-			.collect(Collectors.toMap(wellType -> ProtocolUtils.getCustomHCLCLabel(wellType.getCode()), wellType -> wellType));
 
 	private List<Plate> plates;
 	private List<String> wellTypes;
@@ -52,11 +48,12 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 		Collections.sort(wellTypes, (o1, o2) -> {
 			if (o1 == null) return -1;
 			if (o2 == null) return 1;
-			if (o1.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.LC))) return -1; // PHA-644
-			if (o1.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.HC))) return 1; // PHA-644
-			if (o2.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.LC))) return 1; // PHA-644
-			if (o2.equalsIgnoreCase(ProtocolUtils.getCustomHCLCLabel(WellType.HC))) return -1; // PHA-644
-			return o1.compareTo(o2);
+			WellType t1 = ProtocolService.getInstance().getWellTypeByCode(o1).orElse(null);
+			WellType t2 = ProtocolService.getInstance().getWellTypeByCode(o2).orElse(null);
+			if (t1 == null && t2 == null) return 0;
+			if (t1 == null) return -1;
+			if (t2 == null) return 1;
+			return t1.compareTo(t2);
 		});
 	}
 
@@ -92,7 +89,8 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 			ProtocolUIService.getInstance().setCurrentProtocolClass(item.getExperiment().getProtocol().getProtocolClass());
 
 		Feature f = ProtocolUIService.getInstance().getCurrentFeature();
-		WellType wellType = WELL_TYPE_CODES.get(parameters[0]); // PHA-644
+		WellType wellType = ProtocolService.getInstance().getWellTypeByCode(parameters[0]).orElse(null);
+		
 		double mean = StatService.getInstance().calculate("mean", item, f, wellType, f.getNormalization());
 		if (Double.isNaN(mean)) return null;
 		double median = StatService.getInstance().calculate("median", item, f, wellType, f.getNormalization());
@@ -160,7 +158,7 @@ public class PlateBoxDataProvider implements IDataProvider<Plate> {
 		Set<String> tempWellTypes = new HashSet<>();
 		for (Plate plate: plates) {
 			for (Well well: plate.getWells()) {
-				String wellType = ProtocolUtils.getCustomHCLCLabel(well.getWellType()); // PHA-644
+				String wellType = well.getWellType();
 				if (wellType != null) tempWellTypes.add(wellType);
 			}
 		}

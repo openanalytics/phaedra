@@ -11,6 +11,7 @@ import eu.openanalytics.phaedra.calculation.stat.StatQuery;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
@@ -18,18 +19,20 @@ import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 public class NormalizationUtils {
 
 	public static double getLowStat(String stat, NormalizationKey key) throws NormalizationException {
-		String type = WellType.LC;
+		String type = null;
 		if (key.getFeature() instanceof Feature) type = ProtocolUtils.getLowType((Feature)key.getFeature());
-		//TODO: Update "Low Control" label to config property value
-		if (type == null) throw new NormalizationException("No Low Control type configured");
+		else type = ProtocolService.getInstance().getLowTypeDefaultCode();
+		
+		if (type == null) throw new NormalizationException("No " + ProtocolService.getInstance().getLowTypeName() + " type configured");
 		return getControlsStat(stat, type, key);
 	}
 	
 	public static double getHighStat(String stat, NormalizationKey key) throws NormalizationException {
-		String type = WellType.HC;
+		String type = null;
 		if (key.getFeature() instanceof Feature) type = ProtocolUtils.getHighType((Feature)key.getFeature());
-		//TODO: Update "High Control" label to config property value
-		if (type == null) throw new NormalizationException("No High Control type configured");
+		else type = ProtocolService.getInstance().getHighTypeDefaultCode();
+		
+		if (type == null) throw new NormalizationException("No " + ProtocolService.getInstance().getHighTypeName() + " type configured");
 		return getControlsStat(stat, type, key);
 	}
 	

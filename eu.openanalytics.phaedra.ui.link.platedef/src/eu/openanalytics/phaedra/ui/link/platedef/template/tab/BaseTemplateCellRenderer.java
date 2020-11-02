@@ -30,9 +30,7 @@ public abstract class BaseTemplateCellRenderer extends BaseGridCellRenderer {
 			double conc = Double.parseDouble(template.getConcentration());
 			return ColorCache.get(ProtocolUtils.getWellConcRGB(conc));
 		} else {
-			// PHA-644
-			String wellType = ProtocolUtils.getCustomHCLCLabel(template.getWellType());
-			return ColorCache.get(ProtocolUtils.getWellTypeRGB(wellType));
+			return ColorCache.get(ProtocolUtils.getWellTypeRGB(template.getWellType()));
 		}
 	}
 	

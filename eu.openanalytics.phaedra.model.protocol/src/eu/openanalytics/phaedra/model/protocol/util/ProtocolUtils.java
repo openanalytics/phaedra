@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import org.eclipse.core.runtime.PlatformObject;
 import org.eclipse.swt.graphics.RGB;
 
-import eu.openanalytics.phaedra.base.environment.Screening;
-import eu.openanalytics.phaedra.base.util.misc.StringUtils;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
@@ -51,7 +49,7 @@ public class ProtocolUtils {
 	/**
 	 * Map well types to their String representation.
 	 */
-	public static Function<WellType, String> WELLTYPE_CODES = t -> ProtocolUtils.getCustomHCLCLabel(t.getCode()); // PHA-644
+	public static Function<WellType, String> WELLTYPE_CODES = t -> t.getCode();
 
 	/**
 	 * Sort features by their name.
@@ -250,9 +248,9 @@ public class ProtocolUtils {
 			return new RGB(150,150,150);
 		} else if (wellType.equals(WellType.SAMPLE)) {
 			return new RGB(80,80,200);
-		} else if (wellType.equals(ProtocolUtils.getCustomHCLCLabel(WellType.LC))) { //PHA-644
+		} else if (wellType.equals(ProtocolService.getInstance().getLowTypeDefaultCode())) {
 			return new RGB(200,0,0);
-		} else if (wellType.equals(ProtocolUtils.getCustomHCLCLabel(WellType.HC))) { //PHA-644
+		} else if (wellType.equals(ProtocolService.getInstance().getHighTypeDefaultCode())) {
 			return new RGB(0,200,0);
 		}
 		return new RGB(150,150,0);
@@ -293,28 +291,4 @@ public class ProtocolUtils {
 		return enabledChannels;
 	}
 	
-	// PHA-644
-	private static String lcLabel = Screening.getEnvironment().getConfig().getValue("low.control.short.label");
-	private static String hcLabel = Screening.getEnvironment().getConfig().getValue("high.control.short.label");
-	
-	/**
-	 * Part of the PHA-644 implementation
-	 * Return a custom label for 'HC' and 'LC' wellType codes 
-	 * 
-	 * @param wellTypeCode
-	 * @return custom label set in the config.xml file
-	 */
-	public static String getCustomHCLCLabel(String wellType) {
-		String result = wellType;
-		
-		if (WellType.LC.equals(wellType) 
-				&& !StringUtils.isEmpty(lcLabel)) {
-			result = lcLabel;
-		} else if (WellType.HC.equals(wellType)
-				&& !StringUtils.isEmpty(hcLabel)) {
-			result = hcLabel;
-		}
-		
-		return result; 
-	}
 }

@@ -55,16 +55,8 @@ public class WellTypeLayer extends PlatesLayer {
 			Set<String> wellTypes = new TreeSet<>();
 
 			for (Well well : wells) {
-				// PHA-644
-				wellTypes.add(ProtocolUtils.getCustomHCLCLabel(well.getWellType()));
+				wellTypes.add(well.getWellType());
 			}
-
-			// Test all types
-			//			wellTypes.add("LC");
-			//			wellTypes.add("HC");
-			//			wellTypes.add("EMPTY");
-			//			wellTypes.add("SAMPLE");
-			//			wellTypes.add("NONE");
 
 			int size = wellTypes.size();
 			int x1, x2, x3;

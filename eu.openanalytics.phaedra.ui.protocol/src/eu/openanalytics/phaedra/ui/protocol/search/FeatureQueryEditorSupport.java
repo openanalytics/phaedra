@@ -22,6 +22,7 @@ import eu.openanalytics.phaedra.base.ui.nattable.painter.FlagCellPainter.FlagMap
 import eu.openanalytics.phaedra.base.ui.search.AbstractQueryEditorSupport;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
 import eu.openanalytics.phaedra.model.curve.util.CurveUtils;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.ui.protocol.util.FeaturePropertyProvider;
@@ -69,8 +70,9 @@ public class FeatureQueryEditorSupport extends AbstractQueryEditorSupport {
 
 	private class FeatureColumnAccessor extends RichColumnAccessor<Feature> {
 
-		private String[] columns = { "ID", "Name", "Protocol Class", "Key", "Req", "Num", "Calc", "Fit"
-				, "Curve", "LC", "HC", "Alias", "Description", "Group" };
+		private String[] columns = { "ID", "Name", "Protocol Class", "Key", "Req", "Num", "Calc", "Fit", "Curve",
+				ProtocolService.getInstance().getLowTypeName(), ProtocolService.getInstance().getHighTypeName(),
+				"Alias", "Description", "Group" };
 
 		@Override
 		public Object getDataValue(Feature rowObject, int columnIndex) {

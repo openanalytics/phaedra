@@ -42,7 +42,6 @@ public class FeatureScatterMatrixDataProvider implements IDataProviderR {
 			i = 1;
 			for (Feature feature : features) {
 				for (String wellTypeCode : PlateUtils.getWellTypes(plate)) {
-					//PHA-644
 					WellType wellType = ProtocolService.getInstance().getWellTypeByCode(wellTypeCode).orElse(null);
 					double sol = StatService.getInstance().calculate("mean", plate, feature, wellType, feature.getNormalization());
 					if (Double.isNaN(sol)) sol = 0;

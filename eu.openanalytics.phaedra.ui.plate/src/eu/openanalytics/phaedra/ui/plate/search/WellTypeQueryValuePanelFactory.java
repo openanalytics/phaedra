@@ -26,7 +26,6 @@ import eu.openanalytics.phaedra.base.ui.search.EnumeratedTextQueryValuePanelFact
 import eu.openanalytics.phaedra.base.ui.search.editor.QueryEditor;
 import eu.openanalytics.phaedra.model.plate.vo.Well;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
@@ -51,9 +50,6 @@ public class WellTypeQueryValuePanelFactory extends EnumeratedTextQueryValuePane
 		return Collections.emptyList();
 	}
 
-	/**
-	 * Part of the PHA-644 implementation 
-	 */
 	@Override
 	protected CCombo createCombo(Composite container, QueryEditor queryEditor, QueryFilter queryFilter) {
 		String selection = (String) queryFilter.getValue();
@@ -69,7 +65,7 @@ public class WellTypeQueryValuePanelFactory extends EnumeratedTextQueryValuePane
 			@Override
 			public String getText(Object element) {
 				WellType wellType = (WellType)element;
-				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+				return wellType.getCode();
 			}
 		});
 		comboViewer.setComparator(new ViewerComparator());

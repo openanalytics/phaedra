@@ -29,9 +29,8 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.util.PlateSummary;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
-import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 import eu.openanalytics.phaedra.ui.plate.util.PlateSummaryWithStats;
 import eu.openanalytics.phaedra.ui.protocol.ProtocolUIService;
 
@@ -219,13 +218,15 @@ public class PlateTableColumns {
 			config.setSortComparator(createSummaryStatComparator(summaryAccessor, "sn", null));
 			configs.add(config);
 			
-			// PHA-644
-			String[] controlTypes = { WellType.LC, WellType.HC };
+			String[] controlTypes = {
+					ProtocolService.getInstance().getLowTypeDefaultCode(),
+					ProtocolService.getInstance().getHighTypeDefaultCode()
+			};
 			for (String controlType: controlTypes) {
-				config = ColumnConfigFactory.create("%CV " + ProtocolUtils.getCustomHCLCLabel(controlType), DataType.Real, 75);
+				config = ColumnConfigFactory.create("%CV " + controlType, DataType.Real, 75);
 				config.setLabelProvider(new SummaryStatLabelProvider(summaryAccessor, "cv", controlType));
 				config.setSortComparator(createSummaryStatComparator(summaryAccessor, "cv", controlType));
-				config.setTooltip("%CV " + ProtocolUtils.getCustomHCLCLabel(controlType));
+				config.setTooltip("%CV " + controlType);
 				configs.add(config);
 			}
 		}

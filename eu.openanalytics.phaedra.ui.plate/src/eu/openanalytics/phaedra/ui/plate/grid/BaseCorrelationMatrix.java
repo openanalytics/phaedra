@@ -271,8 +271,7 @@ public abstract class BaseCorrelationMatrix<FEATURE extends IFeature> extends De
 		List<Well> wells = new ArrayList<>();
 		currentWells.forEach(w -> {
 			if (hasStatusFilter && !wellStatusFilter.contains(getWellStatus(w))) return;
-			// PHA-644
-			if (hasTypeFilter && !wellTypeFilter.contains(ProtocolUtils.getCustomHCLCLabel(w.getWellType()))) return;
+			if (hasTypeFilter && !wellTypeFilter.contains(w.getWellType())) return;
 			wells.add(w);
 		});
 		BaseFeatureInput<FEATURE> input = createBaseFeatureInput(features, wells, sortType, sortOrder);

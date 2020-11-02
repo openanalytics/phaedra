@@ -86,7 +86,6 @@ public class WellTypeTab extends BaseTemplateTab {
 	}
 	
 	/**
-	 * Part of the PHA-644 implementation
 	 * @param wellTypeCombo
 	 */
 	private void createWellTypeComboViewer(Combo wellTypeCombo) {
@@ -100,7 +99,7 @@ public class WellTypeTab extends BaseTemplateTab {
 			@Override
 			public String getText(Object element) {
 				WellType wellType = (WellType)element;
-				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+				return wellType.getCode();
 			}
 		});
 		wellTypeComboViewer.setInput(wellTypeCombo.getItems());
@@ -111,19 +110,13 @@ public class WellTypeTab extends BaseTemplateTab {
 	public void selectionChanged(List<WellTemplate> newSelection) {
 		WellTemplate sample = newSelection.get(0);
 		String wellType = newSelection.stream().allMatch(w -> Objects.equals(sample.getWellType(), w.getWellType())) ? sample.getWellType() : "";
-		// PHA-644
-		String wellTypeLabel = ProtocolUtils.getCustomHCLCLabel(wellType);
-		wellTypeComboViewer.getCombo().select(wellTypeComboViewer.getCombo().indexOf(wellTypeLabel));
+		wellTypeComboViewer.getCombo().select(wellTypeComboViewer.getCombo().indexOf(wellType));
 	}
 	
 	public static class WellTypeCellRenderer extends BaseTemplateCellRenderer {
 		@Override
 		protected String[] doGetLabels(WellTemplate well) {
-			// PHA-644
-			return new String[] { ProtocolUtils.getCustomHCLCLabel(well.getWellType()) };
-			
+			return new String[] { well.getWellType() };
 		}
-		
-		
 	}
 }

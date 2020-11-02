@@ -9,15 +9,11 @@ import javax.persistence.Table;
 @Table(name="hca_welltype", schema="phaedra")
 public class WellType implements Comparable<WellType> {
 
+	// Some invariant well types.
+	// Note that control types are dependent on the environment settings! See ProtocolService for details.
 	public static final String EMPTY = "EMPTY";
 	public static final String SAMPLE = "SAMPLE";
-	public static final String LC = "LC";
-	public static final String HC = "HC";
 	public static final String NA = "N/A";
-	
-	//PHA-CR029
-	public static final String CONTROL = "CONTROL";
-	public static final String UNKNOWN = "UNKNOWN";
 	
 	@Id
 	@Column(name="welltype_code")

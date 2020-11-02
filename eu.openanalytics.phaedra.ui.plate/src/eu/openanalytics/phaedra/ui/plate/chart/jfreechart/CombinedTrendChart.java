@@ -49,7 +49,7 @@ import eu.openanalytics.phaedra.base.ui.charting.select.ChartSelectionListener;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.util.toolitem.DropdownToolItemFactory;
 import eu.openanalytics.phaedra.base.util.misc.Properties;
-import eu.openanalytics.phaedra.model.protocol.vo.WellType;
+import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.ui.plate.chart.jfreechart.data.ExperimentTrendControlDataProvider;
 
 public class CombinedTrendChart<E> extends ChartComposite {
@@ -94,8 +94,8 @@ public class CombinedTrendChart<E> extends ChartComposite {
 
 		//Default Settings
 		currentVisibleControls = new ArrayList<String>();
-		currentVisibleControls.add(WellType.LC); //PHA-644
-		currentVisibleControls.add(WellType.HC); //PHA-644
+		currentVisibleControls.add(ProtocolService.getInstance().getLowTypeDefaultCode());
+		currentVisibleControls.add(ProtocolService.getInstance().getHighTypeDefaultCode());
 
 		currentVisibleStatistics = "Z-Prime";
 	}

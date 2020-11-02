@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.databinding.Binding;
@@ -71,7 +69,6 @@ import eu.openanalytics.phaedra.calculation.norm.NormalizationService.Normalizat
 import eu.openanalytics.phaedra.model.curve.CurveUIFactory;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
 import eu.openanalytics.phaedra.model.protocol.util.GroupType;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureClass;
 import eu.openanalytics.phaedra.model.protocol.vo.FeatureGroup;
@@ -84,9 +81,6 @@ import eu.openanalytics.phaedra.ui.protocol.util.ColorMethodFactory;
 import eu.openanalytics.phaedra.ui.protocol.util.ListenerHelper;
 
 public class FeaturesDetailBlock implements IDetailsPage {
-	// PHA-644
-	private static Map<String, WellType> WELL_TYPE_CODES = ProtocolService.getInstance().getWellTypes().stream()
-			.collect(Collectors.toMap(wellType -> wellType.getCode(), wellType -> wellType));
 
 	private Feature feature;
 
@@ -897,15 +891,14 @@ public class FeaturesDetailBlock implements IDetailsPage {
 	}
 	
 	private void fillWellTypeCombos() {
-		//PHA-644: Low control type -> Negative control type
 		ComboViewer comboViewerLowType = new ComboViewer(comboLowType);
 		comboViewerLowType.setContentProvider(new ArrayContentProvider());
-		comboViewerLowType.setInput(WELL_TYPE_CODES.values());
+		comboViewerLowType.setInput(ProtocolService.getInstance().getWellTypes());
 		comboViewerLowType.setLabelProvider(new LabelProvider() {
 			@Override
 			public String getText(Object element) {
 				WellType wellType = (WellType)element;
-				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+				return wellType.getCode();
 			}
 		});
 		comboViewerLowType.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -916,21 +909,19 @@ public class FeaturesDetailBlock implements IDetailsPage {
 			}
 		});
 		comboViewerLowType.getCCombo().setVisibleItemCount(20);
-		if (feature != null 
-				&& StringUtils.isNotBlank(feature.getHighWellTypeCode())
-				&& WELL_TYPE_CODES.containsKey(feature.getLowWellTypeCode())) {
-			comboViewerLowType.setSelection(new StructuredSelection(WELL_TYPE_CODES.get(feature.getLowWellTypeCode())));
+		if (feature != null && StringUtils.isNotBlank(feature.getLowWellTypeCode())) {
+			WellType lowType = ProtocolService.getInstance().getWellTypeByCode(feature.getLowWellTypeCode()).orElse(null);
+			if (lowType != null) comboViewerLowType.setSelection(new StructuredSelection(lowType));
 		}
 		
-		//PHA-644: High control type -> Positive control type
 		ComboViewer comboViewerHighType = new ComboViewer(comboHighType);
 		comboViewerHighType.setContentProvider(new ArrayContentProvider());
-		comboViewerHighType.setInput(WELL_TYPE_CODES.values());
+		comboViewerHighType.setInput(ProtocolService.getInstance().getWellTypes());
 		comboViewerHighType.setLabelProvider(new LabelProvider() {
 			@Override
 			public String getText(Object element) {
 				WellType wellType = (WellType)element;
-				return ProtocolUtils.getCustomHCLCLabel(wellType.getCode());
+				return wellType.getCode();
 			}
 		});
 		comboViewerHighType.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -941,10 +932,9 @@ public class FeaturesDetailBlock implements IDetailsPage {
 			}
 		});
 		comboViewerHighType.getCCombo().setVisibleItemCount(20);
-		if (feature != null
-				&& StringUtils.isNotBlank(feature.getHighWellTypeCode())
-				&& WELL_TYPE_CODES.containsKey(feature.getHighWellTypeCode())) {
-			comboViewerHighType.setSelection(new StructuredSelection(WELL_TYPE_CODES.get(feature.getHighWellTypeCode())));
+		if (feature != null && StringUtils.isNotBlank(feature.getHighWellTypeCode())) {
+			WellType highType = ProtocolService.getInstance().getWellTypeByCode(feature.getHighWellTypeCode()).orElse(null);
+			if (highType != null) comboViewerHighType.setSelection(new StructuredSelection(highType));
 		}
 	}
 

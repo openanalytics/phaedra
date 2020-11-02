@@ -40,7 +40,6 @@ public class PlateSummaryWithStats extends PlateSummary {
 	
 	@Override
 	public double getStat(String stat, Feature f, String wellTypeCode, String norm) {
-		//PHA-644
 		WellType wellType = ProtocolService.getInstance().getWellTypeByCode(wellTypeCode).orElse(null);
 		return StatService.getInstance().calculate(stat, plate, f, wellType, norm);
 	}

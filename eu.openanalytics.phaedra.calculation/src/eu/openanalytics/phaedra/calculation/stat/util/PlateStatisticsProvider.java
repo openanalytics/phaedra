@@ -3,14 +3,12 @@ package eu.openanalytics.phaedra.calculation.stat.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import eu.openanalytics.phaedra.base.util.misc.NumberUtils;
 import eu.openanalytics.phaedra.calculation.stat.StatService;
 import eu.openanalytics.phaedra.model.plate.util.PlateUtils;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.WellType;
 
@@ -66,12 +64,11 @@ public class PlateStatisticsProvider {
 			if (welltype == null)
 				this.label = label;
 			else
-				this.label = ProtocolUtils.getCustomHCLCLabel(welltype) + " " + label; // PHA-644
+				this.label = welltype + " " + label;
 			this.welltype = welltype;
 		}
 
 		public double getValue(Plate plate, Feature feature) {
-			// PHA-644
 			WellType wellTypeObject = ProtocolService.getInstance().getWellTypeByCode(welltype).orElse(null);
 			return StatService.getInstance().calculate(name, plate, feature, wellTypeObject,  null);
 		}

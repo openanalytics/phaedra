@@ -26,7 +26,6 @@ import eu.openanalytics.phaedra.export.core.filter.CompoundFilter;
 import eu.openanalytics.phaedra.export.core.filter.CompoundFilter.CompoundNr;
 import eu.openanalytics.phaedra.export.core.filter.WellFeatureFilter;
 import eu.openanalytics.phaedra.model.protocol.ProtocolService;
-import eu.openanalytics.phaedra.model.protocol.util.ProtocolUtils;
 import eu.openanalytics.phaedra.model.protocol.vo.Feature;
 import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.export.widget.ShoppingCart;
@@ -174,12 +173,11 @@ public class FilterWellsPage extends BaseExportWizardPage {
 		table.setLinesVisible(true);
 		wellTypeTableViewer = new CheckboxTableViewer(table);
 		wellTypeTableViewer.setContentProvider(new ArrayContentProvider());
-		//PHA-644
 		wellTypeTableViewer.setLabelProvider(new LabelProvider() {
 			@Override
 			public String getText(Object element) {
 				String wellType = (String)element;
-				return ProtocolUtils.getCustomHCLCLabel(wellType);
+				return wellType;
 			}
 		});
 		wellTypeTableViewer.setInput(allWellTypes);
