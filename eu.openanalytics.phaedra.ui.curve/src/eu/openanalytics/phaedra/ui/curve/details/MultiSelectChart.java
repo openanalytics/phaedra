@@ -56,7 +56,7 @@ public class MultiSelectChart extends ChartComposite {
 	public final static int DRAG_MODE_SELECT = 2;
 
 	public MultiSelectChart(Composite comp, int style, JFreeChart chart) {
-		super(comp, style, null,50, 50, 50, 50, 2000, 2000,true, false, true, false, false, false);
+		super(comp, style, null, 50, 50, 50, 50, 4096, 4096, true, false, true, false, false, false);
 
 		setDragMode(DRAG_MODE_SELECT);
 		dragInProgress = false;
