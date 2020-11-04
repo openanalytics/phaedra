@@ -3,31 +3,20 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
-
-/**
- * Positive Percent Inhibition based on median of controls
- * (rawValue - lowMedian) / (highMedian - lowMedian) * 100
- */
-public class PctInhPosMedianNormalizer extends BaseNormalizer {
+public class PINMeanNormalizer extends BaseNormalizer {
 
 	private static int HIGH_STAT = 0;
 	private static int LOW_STAT = 1;
 
-
 	@Override
 	public String getId() {
-		return "PIN[Pos Median]"; // alt %INH %INHIBITION
-	}
-
-	@Override
-	public String getDescription() {
-		return "Positive percent inhibition based on median of controls";
+		return "PIN[Mean]";
 	}
 
 	@Override
 	protected double[] calculateControls(NormalizationKey key) {
-		double highStat = NormalizationUtils.getHighStat("median", key);
-		double lowStat = NormalizationUtils.getLowStat("median", key);
+		double highStat = NormalizationUtils.getHighStat("mean", key);
+		double lowStat = NormalizationUtils.getLowStat("mean", key);
 		return new double[] { highStat, lowStat };
 	}
 

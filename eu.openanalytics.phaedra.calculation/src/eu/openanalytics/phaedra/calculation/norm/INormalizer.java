@@ -9,11 +9,8 @@ public interface INormalizer {
 
 	public final static String EXT_PT_ID = Activator.PLUGIN_ID + ".normalizer";
 	public final static String ATTR_CLASS = "class";
-	public final static String ATTR_ID = "id";
 	
 	public String getId();
-	
-	public String getDescription();
 	
 	public FormulaDescriptor getFormulaDescriptor();
 	

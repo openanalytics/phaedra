@@ -28,16 +28,13 @@ public class NormalizationRegistry {
 	}
 	
 	private void loadNormalizers() {
-		IConfigurationElement[] config = Platform.getExtensionRegistry()
-				.getConfigurationElementsFor(INormalizer.EXT_PT_ID);
+		IConfigurationElement[] config = Platform.getExtensionRegistry().getConfigurationElementsFor(INormalizer.EXT_PT_ID);
 		for (IConfigurationElement el : config) {
 			try {
 				Object o = el.createExecutableExtension(INormalizer.ATTR_CLASS);
 				if (o instanceof INormalizer) {
 					INormalizer normalizer = (INormalizer)o;
-					String id = el.getAttribute(INormalizer.ATTR_ID);
-					// Unescape % signs
-					id = id.replace("\\%", "%");
+					String id = normalizer.getId();
 					normalizers.put(id, normalizer);
 				}
 			} catch (CoreException e) {

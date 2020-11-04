@@ -11,11 +11,6 @@ public class PctEffectNormalizer extends BaseNormalizer {
 	}
 
 	@Override
-	public String getDescription() {
-		return "value = (rawValue - lowMedian) / (highMedian - lowMedian) * 100";
-	}
-
-	@Override
 	protected double[] calculateControls(NormalizationKey key) {
 		double highMedian = NormalizationUtils.getHighStat("median", key);
 		double lowMedian = NormalizationUtils.getLowStat("median", key);

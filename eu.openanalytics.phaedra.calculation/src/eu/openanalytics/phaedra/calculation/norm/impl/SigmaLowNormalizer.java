@@ -11,11 +11,6 @@ public class SigmaLowNormalizer extends BaseNormalizer {
 	}
 
 	@Override
-	public String getDescription() {
-		return "value = (rawValue - lowMedian / lowStDev)";
-	}
-
-	@Override
 	protected double[] calculateControls(NormalizationKey key) {
 		double median = NormalizationUtils.getLowStat("median", key);
 		double stDev = NormalizationUtils.getLowStat("stdev", key);

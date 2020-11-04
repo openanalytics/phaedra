@@ -1,16 +1,10 @@
 package eu.openanalytics.phaedra.calculation.norm.impl;
 
-
 public class PctEffectInverseNormalizer extends PctEffectNormalizer {
 
 	@Override
 	public String getId() {
 		return "%EFFECT (100-x)";
-	}
-
-	@Override
-	public String getDescription() {
-		return "value = 100 - ((rawValue - lowMedian) / (highMedian - lowMedian) * 100)";
 	}
 
 	@Override

@@ -101,97 +101,39 @@
    </extension>
    <extension
          point="eu.openanalytics.phaedra.calculation.normalizer">
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctEffectNormalizer"
-            id="\%EFFECT">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctEffectNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctEffectInverseNormalizer"
-            id="\%EFFECT (100-x)">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctEffectInverseNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlMinNormalizer"
-            id="\%CTLmin">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlNormalizer"
-            id="\%CTL">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.SigmaHighNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.SigmaHighNormalizer"
-            id="Sigma[H]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.SigmaLowNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.SigmaLowNormalizer"
-            id="Sigma[L]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlLow0Normalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctLowCtlNormalizer"
-            id="\%CTL[L]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlLow0InverseNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctLowCtl0Normalizer"
-            id="\%CTL[L=0]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlLow100Normalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInvLowCtl0Normalizer"
-            id="\%CTL[INV L=0]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.CustomFormulaNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctLowCtl100Normalizer"
-            id="\%CTL[L=100]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PctCtlHigh0Normalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.CustomFormulaNormalizer"
-            id="CUSTOM">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PINMeanNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.MinusPctEffectNormalizer"
-            id="\%EFFECT (-x)">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.PINMedianNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctHighCtl0Normalizer"
-            id="\%CTL[H=0]">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreSamplesNCNormalizer">
       </normalizer>
-      <normalizer
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctEffectMinus100Normalizer"
-            id="\%EFFECT (x-100)">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreNCNormalizer">
       </normalizer>
-      <normalizer
-            id="PIN[Pos Mean]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhPosMeanNormalizer">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesNCNormalizer">
       </normalizer>
-      <normalizer
-            id="PIN[Pos Median]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhPosMedianNormalizer">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesNormalizer">
       </normalizer>
-      <normalizer
-            id="PIN[Neg Mean]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhNegMeanNormalizer">
-      </normalizer>
-      <normalizer
-            id="PIN[Neg Median]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.PctInhNegMedianNormalizer">
-      </normalizer>
-      <normalizer
-            id="ZScore[S/L]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreSamplesNormalizer">
-      </normalizer>
-      <normalizer
-            id="ZScore[L]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreLowNormalizer">
-      </normalizer>
-      <normalizer
-            id="ZScoreRob[S/L]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesLowNormalizer">
-      </normalizer>
-      <normalizer
-            id="ZScoreRob[S]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobSamplesNormalizer">
-      </normalizer>
-      <normalizer
-            id="ZScoreRob[L]"
-            class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobLowNormalizer">
+      <normalizer class="eu.openanalytics.phaedra.calculation.norm.impl.ZScoreRobNCNormalizer">
       </normalizer>
    </extension>
    <extension

@@ -3,16 +3,11 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
-public class PctLowCtlNormalizer extends BaseNormalizer {
+public class PctCtlLow100Normalizer extends BaseNormalizer {
 
 	@Override
 	public String getId() {
-		return "%CTL[L]";
-	}
-
-	@Override
-	public String getDescription() {
-		return "value = (rawValue - lowMedian / lowMedian) * 100";
+		return "%CTL[L=100]";
 	}
 
 	@Override
@@ -23,6 +18,6 @@ public class PctLowCtlNormalizer extends BaseNormalizer {
 	
 	@Override
 	protected double normalizeValue(double rawValue, double[] controls) {
-		return ((rawValue - controls[0]) / controls[0]) * 100;
+		return (rawValue / controls[0]) * 100;
 	}
 }

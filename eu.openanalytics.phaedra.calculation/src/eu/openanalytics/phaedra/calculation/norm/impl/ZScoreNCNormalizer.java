@@ -3,25 +3,14 @@ package eu.openanalytics.phaedra.calculation.norm.impl;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationKey;
 import eu.openanalytics.phaedra.calculation.norm.NormalizationUtils;
 
-
-/**
- * Z-Score based on low controls
- * (rawValue - lowMean) / lowSD
- */
-public class ZScoreLowNormalizer extends BaseNormalizer {
+public class ZScoreNCNormalizer extends BaseNormalizer {
 	
 	private static int CENTER = 0;
 	private static int SCALE = 1;
 	
-	
 	@Override
 	public String getId() {
-		return "ZScore[L]";
-	}
-	
-	@Override
-	public String getDescription() {
-		return "Z-score based on low/negative controls";
+		return "ZScore[NC]";
 	}
 	
 	@Override

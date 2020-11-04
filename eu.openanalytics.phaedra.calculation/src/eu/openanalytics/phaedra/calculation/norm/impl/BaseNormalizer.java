@@ -44,7 +44,6 @@ public abstract class BaseNormalizer implements INormalizer {
 		return null;
 	}
 	
-	
 	@Override
 	public FormulaDescriptor getFormulaDescriptor() {
 		return formulaDescr;

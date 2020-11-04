@@ -33,11 +33,6 @@ public class CustomFormulaNormalizer implements INormalizer {
 	public String getId() {
 		return NormalizationService.NORMALIZATION_CUSTOM;
 	}
-
-	@Override
-	public String getDescription() {
-		return "(value depends on the custom normalization formula)";
-	}
 	
 	@Override
 	public FormulaDescriptor getFormulaDescriptor() {
