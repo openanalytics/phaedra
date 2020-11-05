@@ -579,7 +579,7 @@ public class CurveFitService extends BaseJPAService {
 	private CurveFitInput createInput(List<Compound> compounds, Feature feature, CurveGrouping grouping) {
 		Stream<Well> wellStream = streamableList(compounds).stream()
 				// PHA-861: Let approvers view also the invalidated data
-				.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
+				.filter(c -> isIgnoreInvalidatedPlateCheck || !CompoundValidationStatus.INVALIDATED.matches(c))
 				.filter(c -> isIgnoreInvalidatedPlateCheck || !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
 				.flatMap(c -> streamableList(c.getWells()).stream())
 				.filter(w -> isValidDataPoint(w));
