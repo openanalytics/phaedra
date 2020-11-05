@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
 import eu.openanalytics.phaedra.base.datatype.description.DataDescription;
 import eu.openanalytics.phaedra.base.datatype.description.StringValueDescription;
 import eu.openanalytics.phaedra.base.datatype.format.DataFormatter;
@@ -26,7 +27,10 @@ public class CurveTextProvider {
 			new CurveTextField("Model Id", c -> c.getModelId()),
 			new CurveTextField("Fit Date", c -> String.valueOf(c.getFitDate())),
 			new CurveTextField("Fit Version", c -> c.getFitVersion()),
-			new CurveTextField("Fit Error", c -> String.valueOf(c.getErrorCode())) );
+			//PHA-651: UR-007: Add conc units to table view, compound browser and DRC View 
+			new CurveTextField("Concentration Unit", c -> DataTypePrefs.getDefaultConcentrationUnit().getLabel(true)),
+			new CurveTextField("Fit Error", c -> String.valueOf(c.getErrorCode()))
+	);
 	
 
 	public static List<CurveTextField> getColumns(Curve curve, DataFormatter dataFormatter) {

@@ -7,6 +7,7 @@ import java.util.List;
 import org.eclipse.swt.graphics.Image;
 
 import eu.openanalytics.phaedra.base.datatype.DataType;
+import eu.openanalytics.phaedra.base.datatype.DataTypePrefs;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.RichLabelProvider;
 import eu.openanalytics.phaedra.base.ui.richtableviewer.column.ColumnConfiguration;
@@ -116,6 +117,16 @@ public class CompoundTableColumns {
 
 		config = ColumnConfigFactory.create("Saltform", "getSaltform", DataType.String, 120);
 		configs.add(config);
+		 
+		//PHA-651: UR-007: Add conc units to table view, compound browser and DRC View
+//		config = ColumnConfigFactory.create("Concentration Unit", new ColumnConfigFactory.ISimpleTextLabelProvider() {
+//			@Override
+//			public String getText(Object object) {
+//				return DataTypePrefs.getDefaultConcentrationUnit().toString();
+//			}
+//		}, DataType.String, 120);
+//		configs.add(config);
+
 
 		return configs.toArray(new ColumnConfiguration[configs.size()]);
 	}
