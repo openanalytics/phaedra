@@ -1,5 +1,8 @@
 package eu.openanalytics.phaedra.ui.protocol.calculation;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.eclipse.core.databinding.observable.list.WritableList;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -10,6 +13,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewer;
@@ -19,6 +23,7 @@ import org.eclipse.nebula.widgets.tablecombo.TableCombo;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -30,6 +35,8 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 
+import eu.openanalytics.phaedra.base.environment.IEnvironment;
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.ui.icons.IconManager;
 import eu.openanalytics.phaedra.base.util.misc.ColorUtils;
 import eu.openanalytics.phaedra.base.util.misc.SelectionUtils;
@@ -71,6 +78,8 @@ public class RulesetEditor extends Composite {
 		rulesTableViewer.setContentProvider(new ArrayContentProvider());
 		GridDataFactory.fillDefaults().grab(true, true).applyTo(rulesTableViewer.getControl());
 		configureColumns(dirtyListener);
+		
+		ColumnViewerToolTipSupport.enableFor(rulesTableViewer);
 		
 		new Label(group, SWT.NONE);
 		Composite btnComposite = new Composite(group, SWT.NONE);
@@ -197,6 +206,44 @@ public class RulesetEditor extends Composite {
 			}
 		});
 		tvc.setEditingSupport(new ThresholdEditingSupport(rulesTableViewer, dirtyListener));
+		// PHA-893
+		tvc = new TableViewerColumn(rulesTableViewer, SWT.NONE);
+		tvc.getColumn().setText("");
+		tvc.getColumn().setWidth(24);
+		tvc.setLabelProvider(new ColumnLabelProvider() {
+			public String getText(Object element) {
+				return "";
+			}
+
+			public Image getImage(Object element) {
+				FormulaRule formulaRule = (FormulaRule) element;
+				if (getFormulaImage(formulaRule) != null) {
+					Image image = IconManager.getIconImage("formula.png");;
+					return image;
+				} else {
+					return null;
+				}
+			}
+
+			public Image getToolTipImage(Object element) {
+				FormulaRule formulaRule = (FormulaRule) element;
+				return getFormulaImage(formulaRule);
+			}
+		});
+	}
+	
+	private Image getFormulaImage(FormulaRule formulaRule) {
+		if (formulaRule.getFormula() == null) return null;
+		
+		IEnvironment env = Screening.getEnvironment();
+		try {
+			String formulaImgPath = "/formula.images/" + formulaRule.getFormula().getId() + ".png";
+			InputStream formulaImg = env.getFileServer().getContents(formulaImgPath);
+			Image image = new Image(null, formulaImg);
+			return image;
+		} catch (IOException e) {
+			return null;
+		}
 	}
 	
 	private static abstract class BaseEditingSupport extends EditingSupport {
