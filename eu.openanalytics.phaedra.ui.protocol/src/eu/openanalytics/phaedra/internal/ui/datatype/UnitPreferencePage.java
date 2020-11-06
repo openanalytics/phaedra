@@ -107,7 +107,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		}
 		{	
 			final Label label = new Label(composite, SWT.NONE);
-			label.setText("Concentration unit number of digis:");
+			label.setText("Concentration unit number of digits:");
 			GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).applyTo(label);
 			
 			final Text inputText = new Text(composite, SWT.SINGLE | SWT.BORDER);
