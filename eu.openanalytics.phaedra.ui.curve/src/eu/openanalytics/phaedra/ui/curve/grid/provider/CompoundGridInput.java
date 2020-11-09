@@ -8,7 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
+
 import eu.openanalytics.phaedra.base.db.IValueObject;
+import eu.openanalytics.phaedra.base.environment.Screening;
 import eu.openanalytics.phaedra.base.util.CollectionUtils;
 import eu.openanalytics.phaedra.calculation.CalculationService;
 import eu.openanalytics.phaedra.model.curve.CurveFitService;
@@ -197,13 +200,17 @@ public class CompoundGridInput {
 			Compound compound = (Compound) vo;
 			ICompoundItem item;
 			
+			// PHA-861: Let approvers view also the invalidated data
+			String ignoreInvalidatedPlateCheck = Screening.getEnvironment().getConfig().getValue("ignore.invalidated.plate.check");
+			boolean isIgnoreInvalidatedPlateCheck = StringUtils.isNotBlank(ignoreInvalidatedPlateCheck) ? Boolean.parseBoolean(ignoreInvalidatedPlateCheck) : false;
+			
 			List<Compound> multiploCompounds = CalculationService.getInstance().getMultiploCompounds(compound);
 			if (multiploCompounds.size() > 1) {
 				// If this is a multiplo compound, skip it if there is already a multiplo variant in the list.
 				if (!containsV(compound)) {
 					Compound firstCompound = multiploCompounds.stream()
-							.filter(c -> !CompoundValidationStatus.INVALIDATED.matches(c))
-							.filter(c -> !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
+							.filter(c -> isIgnoreInvalidatedPlateCheck || !CompoundValidationStatus.INVALIDATED.matches(c))
+							.filter(c -> isIgnoreInvalidatedPlateCheck || !PlateValidationStatus.INVALIDATED.matches(c.getPlate()))
 							.findFirst().orElse(multiploCompounds.get(0));
 					item = new MultiploCompoundItem(multiploCompounds, firstCompound);
 				} else {
