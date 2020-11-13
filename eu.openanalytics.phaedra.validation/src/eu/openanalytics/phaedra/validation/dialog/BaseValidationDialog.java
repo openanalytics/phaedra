@@ -104,7 +104,7 @@ public abstract class BaseValidationDialog extends TitleAreaDialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText(getTitle());
-		newShell.setSize(450, 350);
+		newShell.setSize(650, 500);
 	}
 	
 	@Override
