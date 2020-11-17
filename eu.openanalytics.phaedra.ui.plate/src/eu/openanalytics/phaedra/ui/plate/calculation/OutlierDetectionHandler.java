@@ -31,6 +31,7 @@ import eu.openanalytics.phaedra.model.protocol.vo.ProtocolClass;
 import eu.openanalytics.phaedra.ui.protocol.Activator;
 import eu.openanalytics.phaedra.validation.ValidationJobHelper;
 import eu.openanalytics.phaedra.validation.ValidationService.Action;
+import eu.openanalytics.phaedra.validation.ValidationService.WellStatus;
 
 public class OutlierDetectionHandler extends AbstractHandler {
 	
@@ -62,7 +63,9 @@ public class OutlierDetectionHandler extends AbstractHandler {
 						if (outliers[wellNr - 1]) return true;
 					}
 					return false;
-				}).collect(Collectors.toList());
+				})
+				.filter(w -> w.getStatus() != WellStatus.REJECTED_OUTLIER_PHAEDRA.getCode())
+				.collect(Collectors.toList());
 		if (outlierWells.isEmpty()) return false;
 		
 		Map<Object, Long> outliersPerPlate = outlierWells
