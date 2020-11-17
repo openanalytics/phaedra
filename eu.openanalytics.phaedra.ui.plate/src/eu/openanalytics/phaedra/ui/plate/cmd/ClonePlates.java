@@ -19,7 +19,7 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.ui.plate.Activator;
 
-public class ClonePlate extends AbstractHandler {
+public class ClonePlates extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
