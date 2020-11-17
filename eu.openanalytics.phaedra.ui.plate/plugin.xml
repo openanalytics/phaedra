@@ -203,7 +203,7 @@
        <command
              defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
              id="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
-             name="Clone Plate">
+             name="Clone Plate(s)">
        </command>
        <command
              defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.EditPlateProperty"
