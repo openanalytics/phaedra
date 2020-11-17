@@ -142,7 +142,7 @@ public class UnitPreferencePage extends org.eclipse.jface.preference.PreferenceP
 		final IPreferenceStore preferenceStore = getPreferenceStore();
 		this.concentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getDefaultString(DataTypePrefs.CONCENTRATION_UNIT_DEFAULT)));
 		this.curveConcentrationUnit.setValue(ConcentrationUnit.valueOf(preferenceStore.getDefaultString(DataTypePrefs.CURVE_CONCENTRATION_UNIT)));
-		this.concentrationUnitNumberDigits.setText(String.valueOf(preferenceStore.getInt((DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS))));
+		this.concentrationUnitNumberDigits.setText(String.valueOf(preferenceStore.getDefaultInt(DataTypePrefs.CONCENTRATION_FORMAT_DEFAULT_DIGITS)));
 		
 		super.performDefaults();
 	}

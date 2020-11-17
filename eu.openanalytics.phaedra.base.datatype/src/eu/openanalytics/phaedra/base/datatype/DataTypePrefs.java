@@ -55,7 +55,7 @@ public class DataTypePrefs {
 	
 	
 	public static int getDefaultConcentrationFormatDigits() {
-		return getPreferenceStore().getInt(CONCENTRATION_FORMAT_DEFAULT_DIGITS);
+		return getPreferenceStore().getDefaultInt(CONCENTRATION_FORMAT_DEFAULT_DIGITS);
 	}
 	
 	public static DateTimeFormatter getDefaultTimestampFormat() {
