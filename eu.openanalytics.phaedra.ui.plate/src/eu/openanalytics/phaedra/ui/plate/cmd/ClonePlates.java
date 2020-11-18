@@ -1,5 +1,7 @@
 package eu.openanalytics.phaedra.ui.plate.cmd;
 
+import java.util.List;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -17,25 +19,27 @@ import eu.openanalytics.phaedra.model.plate.PlateService;
 import eu.openanalytics.phaedra.model.plate.vo.Plate;
 import eu.openanalytics.phaedra.ui.plate.Activator;
 
-public class ClonePlate extends AbstractHandler {
+public class ClonePlates extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		ISelection selection = (ISelection)HandlerUtil.getCurrentSelection(event);
-		Plate plate = SelectionUtils.getFirstObject(selection, Plate.class);
-		execute(plate);
+		
+		List<Plate> plates = SelectionUtils.getObjects(selection, Plate.class);
+		execute(plates);
 		return null;
 	}
 
-	public static void execute(Plate plate) {
-		if (plate == null) return;
-		boolean access = SecurityService.getInstance().checkWithDialog(Permissions.PLATE_EDIT, plate);
+	public static void execute(List<Plate> plates) {
+		if (plates == null) return;
+		boolean access = SecurityService.getInstance().checkWithDialog(Permissions.PLATE_EDIT, plates);
 		if (access) {
-			Job cloneJob = new Job("Clone plate") {
+			Job cloneJob = new Job("Clone plate(s)") {
 				@Override
 				protected IStatus run(IProgressMonitor monitor) {
 					try {
-						PlateService.getInstance().clonePlate(plate, monitor);
+						// Make possible to copy a selection of multiple plates
+						plates.stream().forEach(plate -> PlateService.getInstance().clonePlate(plate, monitor));
 					} catch (Exception e) {
 						return new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e);
 					}

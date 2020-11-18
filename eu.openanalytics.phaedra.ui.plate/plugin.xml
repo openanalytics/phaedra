@@ -201,9 +201,9 @@
              name="Show Image Settings">
        </command>
        <command
-             defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
-             id="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
-             name="Clone Plate">
+             defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
+             id="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
+             name="Clone Plate(s)">
        </command>
        <command
              defaultHandler="eu.openanalytics.phaedra.ui.plate.cmd.EditPlateProperty"
@@ -880,7 +880,7 @@
                style="push">
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate_add.png"
                style="push">
             <visibleWhen>
@@ -1168,7 +1168,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate_add.png"
                style="push">
             <visibleWhen>
@@ -1753,7 +1753,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate_add.png"
                style="push">
             <visibleWhen>
@@ -2738,7 +2738,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate_add.png"
                style="push">
             <visibleWhen>
@@ -2876,7 +2876,7 @@
             </visibleWhen>
          </command>
          <command
-               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlate"
+               commandId="eu.openanalytics.phaedra.ui.plate.cmd.ClonePlates"
                icon="platform:/plugin/eu.openanalytics.phaedra.base.ui.icons/icons/plate_add.png"
                style="push">
             <visibleWhen>

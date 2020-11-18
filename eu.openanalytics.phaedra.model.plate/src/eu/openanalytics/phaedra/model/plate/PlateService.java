@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -476,6 +477,11 @@ public class PlateService extends BaseJPAService {
 		if (plate.isImageAvailable()) {
 			try {
 				String fromImagePath = getImageFSPath(plate);
+				// Fix NullPointerException error when plate images are missing
+				if (StringUtils.isBlank(fromImagePath)) {
+					deletePlate(copy);
+					throw new RuntimeException("Failed to clone plate: unaible to find images for plate: " + plate.getBarcode());
+				}
 				String toImagePath = getPlateFSPath(copy) + "/" + copy.getId() + "." + FileUtils.getExtension(fromImagePath);
 				Screening.getEnvironment().getFileServer().copy(fromImagePath, toImagePath);
 			} catch (IOException e) {
