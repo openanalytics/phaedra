@@ -403,9 +403,12 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 		return new AbstractRegistryConfiguration() {
 			@Override
 			public void configureRegistry(IConfigRegistry configRegistry) {
-				Function<Object, String> mapper = t -> {
-					if (t instanceof EntityStatus) return ((EntityStatus) t).getCode()+"";
-					else return t.toString();
+				
+				Function<Object, String> plateValidationStatusMapper = t -> {
+					if (t instanceof PlateValidationStatus) 
+						return ((PlateValidationStatus) t).getCode() + "";
+					else 
+						return PlateValidationStatus.valueOf(t.toString()).getCode() + "";
 				};
 
 				NatTableUtils.applyAdvancedComboFilter(configRegistry, 2, Arrays.asList(PlateValidationStatus.values())
@@ -418,11 +421,18 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 						}), new FunctionDisplayConverter(canonicalValue -> {
 							if (canonicalValue instanceof List) {
 								// Manually typed expressions will return List<String>, Combobox List<EntityStatus.getCode()>.
-								return ((List<?>) canonicalValue).stream().map(mapper).collect(Collectors.joining(", "));
+								return ((List<?>) canonicalValue).stream().map(plateValidationStatusMapper).collect(Collectors.joining(", "));
 							}
 							return canonicalValue;
 						})
 				);
+				
+				Function<Object, String> compoundValidationStatusMapper = t -> {
+					if (t instanceof CompoundValidationStatus) 
+						return ((CompoundValidationStatus) t).getCode() + "";
+					else 
+						return CompoundValidationStatus.valueOf(t.toString()).getCode() + "";
+				};
 
 				NatTableUtils.applyAdvancedComboFilter(configRegistry, 3, Arrays.asList(CompoundValidationStatus.values())
 						, new DefaultDisplayConverter()
@@ -435,7 +445,7 @@ public class CompoundImageContentProvider extends RichColumnAccessor<CompoundWit
 						}), new FunctionDisplayConverter(canonicalValue -> {
 							if (canonicalValue instanceof List) {
 								// Manually typed expressions will return List<String>, Combobox List<WellStatus>.
-								return ((List<?>) canonicalValue).stream().map(mapper).collect(Collectors.joining(", "));
+								return ((List<?>) canonicalValue).stream().map(compoundValidationStatusMapper).collect(Collectors.joining(", "));
 							}
 							return canonicalValue;
 						})

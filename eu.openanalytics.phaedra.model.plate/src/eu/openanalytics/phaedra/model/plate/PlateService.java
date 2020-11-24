@@ -480,7 +480,7 @@ public class PlateService extends BaseJPAService {
 				// Fix NullPointerException error when plate images are missing
 				if (StringUtils.isBlank(fromImagePath)) {
 					deletePlate(copy);
-					throw new RuntimeException("Failed to clone plate: unaible to find images for plate: " + plate.getBarcode());
+					throw new RuntimeException("Failed to clone plate: unable to find images for plate: " + plate.getBarcode());
 				}
 				String toImagePath = getPlateFSPath(copy) + "/" + copy.getId() + "." + FileUtils.getExtension(fromImagePath);
 				Screening.getEnvironment().getFileServer().copy(fromImagePath, toImagePath);
