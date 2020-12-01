@@ -38,32 +38,44 @@ public class CairoPdfGraphic extends Graphic {
 	public byte[] create(final FunctionCall plot, final RService service, final IProgressMonitor monitor) throws CoreException {
 		final String filename = "plot-"+System.nanoTime()+".pdf";
 		prepare(filename, service, monitor);
-		plot.evalVoid(monitor);
-		service.evalVoid("dev.off()", monitor);
+		try {
+			plot.evalVoid(monitor);
+		} finally {
+			service.evalVoid("dev.off()", monitor);
+		}
 		return service.downloadFile(filename, 0, monitor);
 	}
 	
 	public void create(final FunctionCall plot, final OutputStream out, final RService service, final IProgressMonitor monitor) throws CoreException {
 		final String filename = "plot-"+System.nanoTime()+".pdf";
 		prepare(filename, service, monitor);
-		plot.evalVoid(monitor);
-		service.evalVoid("dev.off()", monitor);
+		try {
+			plot.evalVoid(monitor);
+		} finally {
+			service.evalVoid("dev.off()", monitor);
+		}
 		service.downloadFile(out, filename, 0, monitor);
 	}
 	
 	public byte[] create(final String plotCommand, final RService service, final IProgressMonitor monitor) throws CoreException {
 		final String filename = "plot-"+System.nanoTime()+".pdf";
 		prepare(filename, service, monitor);
-		service.evalVoid(plotCommand, monitor);
-		service.evalVoid("dev.off()", monitor);
+		try {
+			service.evalVoid(plotCommand, monitor);
+		} finally {
+			service.evalVoid("dev.off()", monitor);
+		}
 		return service.downloadFile(filename, 0, monitor);
 	}
 	
 	public void create(final String plotCommand, final OutputStream out, final RService service, final IProgressMonitor monitor) throws CoreException {
 		final String filename = "plot-"+System.nanoTime()+".pdf";
 		prepare(filename, service, monitor);
-		service.evalVoid(plotCommand, monitor);
-		service.evalVoid("dev.off()", monitor);
+		try {
+			service.evalVoid(plotCommand, monitor);
+		} finally {
+			service.evalVoid("dev.off()", monitor);
+		}
 		service.downloadFile(out, filename, 0, monitor);
 	}
 	
