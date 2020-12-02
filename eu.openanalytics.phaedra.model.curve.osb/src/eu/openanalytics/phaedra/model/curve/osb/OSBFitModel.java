@@ -289,18 +289,19 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			CurveParameter.find(outParams, "eMax").numericValue = eMinMax[2];
 			CurveParameter.find(outParams, "eMax Conc").numericValue = eMinMax[3];
 			
-			rServi.evalVoid("library(Cairo)", null);
-			CairoPdfGraphic graphic = new CairoPdfGraphic();
-			// Pdf inch size doesn't matter since we use vectorformat.
-			graphic.setSize(4, 4, Graphic.UNIT_IN);
-			
-			FunctionCall plotFun = rServi.createFunctionCall("plot");
-			plotFun.add("VALUE");
-			plotFun.addChar("main", output.getFeature().getDisplayName());
-			plotFun.addChar("ylab", output.getFeature().getNormalization());
-			byte[] plot = graphic.create(plotFun, rServi, null);
-			output.setPlot(plot);
-			
+			if (output.getErrorCode() != -3) {
+				rServi.evalVoid("library(Cairo)", null);
+				CairoPdfGraphic graphic = new CairoPdfGraphic();
+				// Pdf inch size doesn't matter since we use vectorformat.
+				graphic.setSize(4, 4, Graphic.UNIT_IN);
+				
+				FunctionCall plotFun = rServi.createFunctionCall("plot");
+				plotFun.add("VALUE");
+				plotFun.addChar("main", output.getFeature().getDisplayName());
+				plotFun.addChar("ylab", output.getFeature().getNormalization());
+				byte[] plot = graphic.create(plotFun, rServi, null);
+				output.setPlot(plot);
+			}
 		} catch (CoreException e) {
 			throw new CurveFitException(e.getMessage(), e);
 		} finally {
