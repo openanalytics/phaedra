@@ -150,6 +150,14 @@ public class DataCaptureService extends BaseJPAService {
 			return false;
 		}
 		
+		//Delay the submit of the task for 5000ms 
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		boolean accepted = DataCaptureJobQueue.submit(task);
 		String msg = "Data capture task submitted" + (accepted ? "" : " but rejected");
 		fireLogEvent(new DataCaptureLogItem(submitter, (accepted ? 0 : -1), task, msg, null));
