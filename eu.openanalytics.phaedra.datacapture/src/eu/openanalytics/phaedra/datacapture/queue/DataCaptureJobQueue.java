@@ -40,7 +40,7 @@ public class DataCaptureJobQueue implements IStageEventHandler {
 	public void handleEvent(StageEvent event) throws Exception {
 		DataCaptureTask task = (DataCaptureTask)event.data;
 		// Wait a little bit before executing the next task
-		long sleep = (long)(Math.random() * 5000);
+		long sleep = (long)(Math.random() * 10000);
 		Thread.sleep(sleep);
 		DataCaptureService.getInstance().executeTask(task, null);
 	}
