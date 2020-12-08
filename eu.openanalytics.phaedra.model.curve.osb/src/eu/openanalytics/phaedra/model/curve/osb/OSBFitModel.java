@@ -289,7 +289,8 @@ public class OSBFitModel extends AbstractCurveFitModel {
 			CurveParameter.find(outParams, "eMax").numericValue = eMinMax[2];
 			CurveParameter.find(outParams, "eMax Conc").numericValue = eMinMax[3];
 			
-			if (output.getErrorCode() != -3) {
+//			if (output.getErrorCode() != -3) {
+			if (size > 0) {
 				rServi.evalVoid("library(Cairo)", null);
 				CairoPdfGraphic graphic = new CairoPdfGraphic();
 				// Pdf inch size doesn't matter since we use vectorformat.
