@@ -39,9 +39,6 @@ public class DataCaptureJobQueue implements IStageEventHandler {
 	@Override
 	public void handleEvent(StageEvent event) throws Exception {
 		DataCaptureTask task = (DataCaptureTask)event.data;
-		// Wait a little bit before executing the next task
-		Thread.sleep(5000);
-
 		DataCaptureService.getInstance().executeTask(task, null);
 	}
 
