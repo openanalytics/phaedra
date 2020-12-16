@@ -118,10 +118,12 @@ public class PlateTableExporter {
 					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "S/B", Well.class));
 				}
 				if (includeFeatureControlStats) {
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC Mean", Well.class));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "LC %CV", Well.class));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC Mean", Well.class));
-					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + "HC %CV", Well.class));
+					String lowTypeCode = ProtocolUtils.getLowType(feature);
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + lowTypeCode + " Mean", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + lowTypeCode + " %CV", Well.class));
+					String highTypeCode = ProtocolUtils.getHighType(feature);
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + highTypeCode + " Mean", Well.class));
+					featureStats.addColumn(new RealValueDescription(feature.getName() + " " + highTypeCode + " %CV", Well.class));
 				}
 			}
 		}
