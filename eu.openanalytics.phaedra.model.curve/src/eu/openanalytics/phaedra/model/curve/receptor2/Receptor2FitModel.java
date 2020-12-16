@@ -51,7 +51,7 @@ public class Receptor2FitModel extends AbstractCurveFitModel {
 			new Definition(new RealValueDescription("Confidence Level", Curve.class)),
 
 			new Definition(new StringValueDescription("Method", Curve.class),
-					null, false, null, new CurveParameter.ParameterValueList("mean", "median")),
+					null, false, null, new CurveParameter.ParameterValueList("mean", "median", "tukey")),
 			
 			new Definition(new StringValueDescription("Slope", Curve.class), 
 					null, false, null, new CurveParameter.ParameterValueList("ascending", "descending", "free")),
