@@ -577,6 +577,8 @@ public class CurveFitService extends BaseJPAService {
 	private static boolean isIgnoreInvalidatedPlateCheck = StringUtils.isNotBlank(ignoreInvalidatedPlateCheck) ? Boolean.parseBoolean(ignoreInvalidatedPlateCheck) : false;
 	
 	private CurveFitInput createInput(List<Compound> compounds, Feature feature, CurveGrouping grouping) {
+		
+		//FIXME Extra logic should be added here, to split a multiplo curve in two when one of the plates is invalidated and the other is not.
 		Stream<Well> wellStream = streamableList(compounds).stream()
 				// PHA-861: Let approvers view also the invalidated data
 				.filter(c -> isIgnoreInvalidatedPlateCheck || !CompoundValidationStatus.INVALIDATED.matches(c))
