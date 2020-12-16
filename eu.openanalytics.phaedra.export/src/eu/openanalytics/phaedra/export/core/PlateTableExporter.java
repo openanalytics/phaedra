@@ -155,7 +155,7 @@ public class PlateTableExporter {
 					WellType lowWellType = ProtocolService.getInstance().getWellTypeByCode(lowTypeCode).orElse(null);
 					rowValues[col++] = statService.calculate("mean", plate, feature, lowWellType, null);
 					rowValues[col++] = statService.calculate("cv", plate, feature, lowWellType, null);
-					String highTypeCode = ProtocolUtils.getLowType(feature);
+					String highTypeCode = ProtocolUtils.getHighType(feature);
 					WellType highWellType = ProtocolService.getInstance().getWellTypeByCode(highTypeCode).orElse(null);
 					rowValues[col++] = statService.calculate("mean", plate, feature, highWellType, null);
 					rowValues[col++] = statService.calculate("cv", plate, feature, highWellType, null);
